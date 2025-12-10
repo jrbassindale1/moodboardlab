@@ -1,28 +1,58 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Check, Loader2, Sparkles } from 'lucide-react';
-import { DEFAULT_MATERIAL_PROMPT, MATERIAL_BASE_IMAGE, MATERIAL_PALETTE } from '../constants';
+import {
+  DEFAULT_MATERIAL_PROMPT,
+  MATERIAL_BASE_IMAGE,
+  MATERIAL_PALETTE,
+  STRUCTURE_BASE_IMAGES
+} from '../constants';
+import { MaterialOption } from '../types';
 
 const BASE_RENDER_PROMPT =
-  'A super detailed, realistic V-Ray rendering of contemporary architecture with super realistic details, soft shadows, and atmospheric lighting.';
+  'Generate a Photo-realistic super detailed vray rendering showing contemporary architecture design with super realistic details and soft shadows, atmospheric lighting, extremely detailed materials, soft shadows, atmospheric depth. No illustration, no linework, no cartoon style. Match the realism and style of a vray, photograpghic render.';
 
 const Materiality: React.FC = () => {
-  const [floorMaterial, setFloorMaterial] = useState<string | null>('polished-concrete');
+  const [floorMaterial, setFloorMaterial] = useState<string | null>(null);
   const [structureMaterial, setStructureMaterial] = useState<string | null>(null);
   const [finishMaterial, setFinishMaterial] = useState<string | null>(null);
+  const [externalMaterial, setExternalMaterial] = useState<string | null>(null);
   const [steelColor, setSteelColor] = useState<string>('#ffffff');
-  const [prompt, setPrompt] = useState<string>(DEFAULT_MATERIAL_PROMPT);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [moodboardApplied, setMoodboardApplied] = useState<
+    { name: string; finish: string; category: string }[]
+  >([]);
+  const [autoGenerate, setAutoGenerate] = useState(false);
+  const [carbonDropdowns, setCarbonDropdowns] = useState<{
+    structure: boolean;
+    floor: boolean;
+    finish: boolean;
+    external: boolean;
+  }>({ structure: false, floor: false, finish: false, external: false });
+  const handleDownload = () => {
+    if (!generatedImage) return;
+    const link = document.createElement('a');
+    link.href = generatedImage;
+    link.download = 'materiality-render.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const selectedMaterialIds = useMemo(
-    () => [floorMaterial, structureMaterial, finishMaterial].filter(Boolean) as string[],
-    [floorMaterial, structureMaterial, finishMaterial]
+    () =>
+      [floorMaterial, structureMaterial, finishMaterial, externalMaterial].filter(Boolean) as string[],
+    [floorMaterial, structureMaterial, finishMaterial, externalMaterial]
   );
 
   const selectedMaterialObjects = useMemo(
     () => MATERIAL_PALETTE.filter((mat) => selectedMaterialIds.includes(mat.id)),
     [selectedMaterialIds]
+  );
+  const hasRequiredSelection = useMemo(
+    () => Boolean(floorMaterial && structureMaterial && (finishMaterial || externalMaterial)),
+    [floorMaterial, structureMaterial, finishMaterial, externalMaterial]
   );
 
   const floorMat = useMemo(
@@ -37,17 +67,41 @@ const Materiality: React.FC = () => {
     () => selectedMaterialObjects.find((mat) => mat.category === 'finish') || null,
     [selectedMaterialObjects]
   );
+  const externalMat = useMemo(
+    () => selectedMaterialObjects.find((mat) => mat.category === 'external') || null,
+    [selectedMaterialObjects]
+  );
 
   const materialsByCategory = useMemo(
     () => ({
       floor: MATERIAL_PALETTE.filter((mat) => mat.category === 'floor'),
       structure: MATERIAL_PALETTE.filter((mat) => mat.category === 'structure'),
-      finish: MATERIAL_PALETTE.filter((mat) => mat.category === 'finish')
+      finishInternal: MATERIAL_PALETTE.filter((mat) => mat.category === 'finish'),
+      external: MATERIAL_PALETTE.filter((mat) => mat.category === 'external')
     }),
     []
   );
+  const groupedByCarbon = useMemo(() => {
+    const split = (list: MaterialOption[]) => ({
+      primary: list.filter((mat) => mat.carbonIntensity !== 'high'),
+      carbon: list.filter((mat) => mat.carbonIntensity === 'high')
+    });
+    return {
+      structure: split(materialsByCategory.structure),
+      floor: split(materialsByCategory.floor),
+      finish: split(materialsByCategory.finishInternal),
+      external: split(materialsByCategory.external)
+    };
+  }, [materialsByCategory]);
 
-  const handleCategorySelect = (category: 'floor' | 'structure' | 'finish', id: string) => {
+  const selectedBaseImage = structureMaterial
+    ? STRUCTURE_BASE_IMAGES[structureMaterial] || MATERIAL_BASE_IMAGE
+    : MATERIAL_BASE_IMAGE;
+
+  const handleCategorySelect = (
+    category: 'floor' | 'structure' | 'finish' | 'external',
+    id: string
+  ) => {
     if (category === 'floor') setFloorMaterial(id);
     if (category === 'structure') {
       setStructureMaterial(id);
@@ -56,11 +110,70 @@ const Materiality: React.FC = () => {
       }
     }
     if (category === 'finish') setFinishMaterial(id);
+    if (category === 'external') setExternalMaterial(id);
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('materialitySelection');
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.appliedMaterials) {
+        setMoodboardApplied(parsed.appliedMaterials);
+      }
+
+      const pickLowCarbon = (category: MaterialOption['category']) =>
+        MATERIAL_PALETTE.find((m) => m.category === category && m.carbonIntensity !== 'high')?.id ||
+        MATERIAL_PALETTE.find((m) => m.category === category)?.id ||
+        null;
+
+      const fallbackStructure = pickLowCarbon('structure');
+      const fallbackFloor = pickLowCarbon('floor');
+      const fallbackFinishInternal = pickLowCarbon('finish');
+      const fallbackExternal = pickLowCarbon('external');
+
+      setFloorMaterial(parsed.floorId || fallbackFloor);
+      setStructureMaterial(parsed.structureId || fallbackStructure);
+      if ((parsed.structureId || fallbackStructure) === 'steel-frame' && parsed.steelColor) {
+        setSteelColor(parsed.steelColor);
+      }
+
+      const parsedFinishId = parsed.finishId || null;
+      if (parsedFinishId) {
+        const match = MATERIAL_PALETTE.find((m) => m.id === parsedFinishId);
+        if (match?.category === 'external') {
+          setExternalMaterial(parsedFinishId);
+          setFinishMaterial(fallbackFinishInternal);
+        } else if (match?.category === 'finish') {
+          setFinishMaterial(parsedFinishId);
+          setExternalMaterial(fallbackExternal);
+        } else {
+          setFinishMaterial(fallbackFinishInternal);
+          setExternalMaterial(fallbackExternal);
+        }
+      } else {
+        setFinishMaterial(fallbackFinishInternal);
+        setExternalMaterial(fallbackExternal);
+      }
+
+      setAutoGenerate(true);
+    } catch {
+      // ignore malformed
+    } finally {
+      localStorage.removeItem('materialitySelection');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (autoGenerate && floorMaterial && structureMaterial && (finishMaterial || externalMaterial)) {
+      handleGenerate();
+      setAutoGenerate(false);
+    }
+  }, [autoGenerate, floorMaterial, structureMaterial, finishMaterial, externalMaterial]);
 
   // Convert the shared base image into base64 so Gemini can accept it inline.
   const imageUrlToBase64 = async (url: string): Promise<{ data: string; mimeType: string }> => {
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-cache' });
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -75,8 +188,9 @@ const Materiality: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (selectedMaterialIds.length !== 3) {
-      setError('Select one floor, one structural, and one finish material.');
+    const hasFinish = Boolean(finishMaterial || externalMaterial);
+    if (!floorMaterial || !structureMaterial || !hasFinish) {
+      setError('Select one floor, one structural material, and at least one finish (internal/external).');
       return;
     }
     setIsLoading(true);
@@ -97,19 +211,46 @@ const Materiality: React.FC = () => {
       return;
     }
 
+    // Guard: endpoint must target an image-capable model.
+    if (!endpoint.includes('image')) {
+      setError(
+        'The Gemini endpoint is not an image model. Set VITE_GEMINI_ENDPOINT to gemini-2.5-flash-image:generateContent.'
+      );
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      if (!floorMat || !structureMat || !finishMat) {
-        throw new Error('Select one floor, one structural, and one finish material.');
+      if (!floorMat || !structureMat || (!finishMat && !externalMat)) {
+        throw new Error('Select one floor, one structural, and at least one finish material.');
       }
 
-      const { data: base64Data, mimeType } = await imageUrlToBase64(MATERIAL_BASE_IMAGE);
+      const { data: base64Data, mimeType } = await imageUrlToBase64(selectedBaseImage);
 
       const structureLine =
         structureMat?.id === 'steel-frame'
           ? `${structureMat?.name} (${structureMat?.finish}) painted ${steelColor}`
           : `${structureMat?.name} (${structureMat?.finish})`;
 
-      const promptText = `${BASE_RENDER_PROMPT}\n\n${prompt}\n\nMaterials to apply:\n- Floor: ${floorMat?.name} (${floorMat?.finish})\n- Structure: ${structureLine}\n- Finish: ${finishMat?.name} (${finishMat?.finish})\n\nKeep the perspective, lighting, and composition of the provided image and only change the finishes. Return a photorealistic image render.`;
+      const finishLines: string[] = [];
+      if (finishMat) {
+        finishLines.push(`- Internal finish: ${finishMat?.name} (${finishMat?.finish})`);
+      }
+      if (externalMat) {
+        finishLines.push(`- External finish: ${externalMat?.name} (${externalMat?.finish})`);
+      }
+
+      const moodboardText =
+        moodboardApplied.length > 0
+          ? `Additional materials from moodboard:\n${moodboardApplied
+              .map((m) => `- ${m.category}: ${m.name} (${m.finish})`)
+              .join('\n')}\nUse them where appropriate.`
+          : '';
+
+      const promptText = `${BASE_RENDER_PROMPT}\n\n${DEFAULT_MATERIAL_PROMPT}\n\nMaterials to apply:\n- Floor: ${floorMat?.name} (${floorMat?.finish})\n- Structure: ${structureLine}\n${finishLines.join('\n')}\n${moodboardText}\nApply internal finishes only to interior walls/ceilings and external finishes only to facades/rainscreens—do not swap their locations. Keep the perspective and composition of the provided image and only change the finishes and render style. Do not alter any glazing or glass areas; leave all glass untouched. Keep the structural system exactly as shown in the base image (no structural swaps). Render as a photorealistic V-Ray/CGI still—no illustration, no outlines, no cartoon style. Return a photorealistic image render.`;
+
+      // Debug: log the exact prompt being sent.
+      console.debug('Gemini prompt (text):', promptText);
 
       const requestPayload = {
         contents: [
@@ -124,7 +265,11 @@ const Materiality: React.FC = () => {
               }
             ]
           }
-        ]
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          candidateCount: 1
+        }
       };
 
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
@@ -144,23 +289,61 @@ const Materiality: React.FC = () => {
 
       let imageData: string | null = null;
       let imageMime: string | null = null;
+      let textFallback: string | null = null;
+      let finishSummary: string | null = null;
+
+      // Capture safety or block reasons for better debugging.
+      const blockReason =
+        data?.promptFeedback?.blockReason ||
+        data?.promptFeedback?.block_reason ||
+        data?.prompt_feedback?.block_reason;
+      const blockMessage = blockReason ? `Gemini safety block: ${blockReason}` : null;
 
       const candidates = data?.candidates || [];
       for (const candidate of candidates) {
+        if (!finishSummary && (candidate?.finishMessage || candidate?.finishReason)) {
+          const msg = candidate.finishMessage || candidate.finishReason;
+          finishSummary = typeof msg === 'string' ? msg : JSON.stringify(msg);
+        }
         const parts = candidate?.content?.parts || candidate?.parts || [];
         for (const part of parts) {
-          const inline = part.inlineData || part.inline_data;
+          const inline =
+            part.inline_data ||
+            part.inlineData ||
+            part.inlineRaw ||
+            part.inline_raw ||
+            part.blob ||
+            part.data;
+          const fileData =
+            part.fileData || part.file_data || part.file || part.media || part.image || part.uri;
           if (inline?.data) {
             imageData = inline.data;
-            imageMime = inline.mimeType || inline.mime_type || 'image/png';
+            imageMime = inline.mimeType || inline.mime_type || inline.type || 'image/png';
             break;
+          }
+          if (fileData?.fileUri || fileData?.uri) {
+            imageData = fileData.fileUri || fileData.uri;
+            imageMime = fileData.mimeType || fileData.mime_type || 'image/png';
+            break;
+          }
+          if (part.text && !textFallback) {
+            textFallback = part.text;
+          }
+          if ((part.finishMessage || part.finish_message) && !textFallback) {
+            textFallback = part.finishMessage || part.finish_message;
           }
         }
         if (imageData) break;
       }
 
       if (!imageData) {
-        throw new Error('Gemini did not return an image payload.');
+        console.error('Gemini response (no image found):', data);
+        const readableError =
+          blockMessage ||
+          finishSummary ||
+          textFallback ||
+          'Gemini did not return an image payload.';
+        throw new Error(readableError);
       }
 
       setGeneratedImage(`data:${imageMime || 'image/png'};base64,${imageData}`);
@@ -176,20 +359,165 @@ const Materiality: React.FC = () => {
     }
   };
 
+  const renderCarbonSection = (
+    key: keyof typeof carbonDropdowns,
+    list: MaterialOption[],
+    renderer: (mat: MaterialOption) => React.ReactNode
+  ) => {
+    if (!list.length) return null;
+    return (
+      <div className="border border-amber-200 bg-amber-50 p-3">
+        <button
+          onClick={() =>
+            setCarbonDropdowns((prev) => ({ ...prev, [key]: !prev[key] }))
+          }
+          className="w-full flex items-center justify-between text-left"
+        >
+          <span className="font-mono text-[11px] uppercase tracking-widest text-amber-900">
+            Carbon-intensive options (click to view)
+          </span>
+          <span className="font-mono text-xs text-amber-900">
+            {carbonDropdowns[key] ? '−' : '+'}
+          </span>
+        </button>
+        {carbonDropdowns[key] && <div className="space-y-3 mt-3">{list.map(renderer)}</div>}
+      </div>
+    );
+  };
+
+  const renderStructureChoice = (mat: MaterialOption) => {
+    const isActive = structureMaterial === mat.id;
+    return (
+      <div key={mat.id} className="border border-gray-200">
+        <button
+          onClick={() => handleCategorySelect('structure', mat.id)}
+          className={`w-full flex items-center justify-between p-4 text-left transition-all duration-300 ${
+            isActive
+              ? 'bg-black text-white border-b border-gray-700'
+              : 'bg-white hover:bg-gray-50'
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <span
+              className="w-8 h-8 rounded-full border border-gray-200 shadow-inner mt-1"
+              style={{ backgroundColor: mat.tone }}
+              aria-hidden
+            />
+            <div>
+              <div className="font-display uppercase tracking-wide text-sm">
+                {mat.name}
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-widest">
+                {mat.finish}
+              </div>
+              <p className="font-sans text-sm text-gray-600 mt-1">
+                {mat.description}
+              </p>
+            </div>
+          </div>
+          {isActive && <Check className="w-4 h-4" />}
+        </button>
+        {mat.id === 'steel-frame' && isActive && (
+          <div className="p-4 bg-white flex flex-col gap-3 border-t border-gray-200">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                Steel Colour
+              </span>
+              <div className="flex items-center gap-2">
+                {[
+                  { label: 'White', value: '#ffffff' },
+                  { label: 'Charcoal', value: '#333333' },
+                  { label: 'Oxide Red', value: '#7a2c20' }
+                ].map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => setSteelColor(preset.value)}
+                    className={`px-3 py-1 border text-xs font-mono uppercase tracking-widest ${
+                      steelColor.toLowerCase() === preset.value.toLowerCase()
+                        ? 'border-black bg-black text-white'
+                        : 'border-gray-200 hover:border-black'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={steelColor}
+                onChange={(e) => setSteelColor(e.target.value)}
+                className="w-12 h-10 border border-gray-300"
+              />
+              <input
+                type="text"
+                value={steelColor}
+                onChange={(e) => setSteelColor(e.target.value)}
+                className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
+              />
+            </div>
+            <p className="font-mono text-[11px] text-gray-500 uppercase tracking-widest">
+              Finish: painted steel — select colour (white / charcoal / oxide red / custom RAL).
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderStandardChoice = (
+    mat: MaterialOption,
+    category: 'floor' | 'finish' | 'external'
+  ) => {
+    const isActive =
+      (category === 'floor' && floorMaterial === mat.id) ||
+      (category === 'finish' && finishMaterial === mat.id) ||
+      (category === 'external' && externalMaterial === mat.id);
+    return (
+      <button
+        key={mat.id}
+        onClick={() => handleCategorySelect(category, mat.id)}
+        className={`flex items-center justify-between p-4 border transition-all duration-300 text-left group ${
+          isActive
+            ? 'border-black bg-black text-white'
+            : 'border-gray-200 hover:border-black text-gray-700'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <span
+            className="w-8 h-8 rounded-full border border-gray-200 shadow-inner mt-1"
+            style={{ backgroundColor: mat.tone }}
+            aria-hidden
+          />
+          <div>
+            <div className="font-display uppercase tracking-wide text-sm">
+              {mat.name}
+            </div>
+            <div className="font-mono text-[11px] uppercase tracking-widest">
+              {mat.finish}
+            </div>
+            <p className="font-sans text-sm text-gray-600 mt-1">
+              {mat.description}
+            </p>
+          </div>
+        </div>
+        {isActive && <Check className="w-4 h-4" />}
+      </button>
+    );
+  };
+
   return (
     <div className="w-full min-h-screen pt-20 bg-white animate-in fade-in duration-500">
       <div className="max-w-screen-2xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 border-b border-gray-200 pb-8">
           <div>
             <h2 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-4">
-              Material
-              <br />
-              Lab
+              Material Lab
             </h2>
               <p className="font-sans text-gray-600 max-w-xl">
-                Select one structural and one finish material (floor pre-selected) to reimagine the
-                same base image. Gemini keeps the perspective locked while swapping the material
-                palette.
+                Select one floor, one structural, and one finish material to reimagine the same base
+                image. Gemini keeps the perspective locked while swapping the material palette.
               </p>
           </div>
           <div className="hidden md:block text-right">
@@ -214,86 +542,8 @@ const Materiality: React.FC = () => {
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {materialsByCategory.structure.map((mat) => {
-                    const isActive = structureMaterial === mat.id;
-                    return (
-                      <div key={mat.id} className="border border-gray-200">
-                        <button
-                          onClick={() => handleCategorySelect('structure', mat.id)}
-                          className={`w-full flex items-center justify-between p-4 text-left transition-all duration-300 ${
-                            isActive
-                              ? 'bg-black text-white border-b border-gray-700'
-                              : 'bg-white hover:bg-gray-50'
-                          }`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <span
-                              className="w-8 h-8 rounded-full border border-gray-200 shadow-inner mt-1"
-                              style={{ backgroundColor: mat.tone }}
-                              aria-hidden
-                            />
-                            <div>
-                              <div className="font-display uppercase tracking-wide text-sm">
-                                {mat.name}
-                              </div>
-                              <div className="font-mono text-[11px] uppercase tracking-widest">
-                                {mat.finish}
-                              </div>
-                              <p className="font-sans text-sm text-gray-600 mt-1">
-                                {mat.description}
-                              </p>
-                            </div>
-                          </div>
-                          {isActive && <Check className="w-4 h-4" />}
-                        </button>
-                        {mat.id === 'steel-frame' && isActive && (
-                          <div className="p-4 bg-white flex flex-col gap-3 border-t border-gray-200">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                                Steel Colour
-                              </span>
-                              <div className="flex items-center gap-2">
-                                {[
-                                  { label: 'White', value: '#ffffff' },
-                                  { label: 'Charcoal', value: '#333333' },
-                                  { label: 'Oxide Red', value: '#7a2c20' }
-                                ].map((preset) => (
-                                  <button
-                                    key={preset.value}
-                                    onClick={() => setSteelColor(preset.value)}
-                                    className={`px-3 py-1 border text-xs font-mono uppercase tracking-widest ${
-                                      steelColor.toLowerCase() === preset.value.toLowerCase()
-                                        ? 'border-black bg-black text-white'
-                                        : 'border-gray-200 hover:border-black'
-                                    }`}
-                                  >
-                                    {preset.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <input
-                                type="color"
-                                value={steelColor}
-                                onChange={(e) => setSteelColor(e.target.value)}
-                                className="w-12 h-10 border border-gray-300"
-                              />
-                              <input
-                                type="text"
-                                value={steelColor}
-                                onChange={(e) => setSteelColor(e.target.value)}
-                                className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
-                              />
-                            </div>
-                            <p className="font-mono text-[11px] text-gray-500 uppercase tracking-widest">
-                              Finish: painted steel — select colour (white / charcoal / oxide red / custom RAL).
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {groupedByCarbon.structure.primary.map(renderStructureChoice)}
+                  {renderCarbonSection('structure', groupedByCarbon.structure.carbon, renderStructureChoice)}
                 </div>
               </div>
 
@@ -307,135 +557,55 @@ const Materiality: React.FC = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {materialsByCategory.floor.map((mat) => {
-                    const isActive = floorMaterial === mat.id;
-                    return (
-                      <button
-                        key={mat.id}
-                        onClick={() => handleCategorySelect('floor', mat.id)}
-                        className={`flex items-center justify-between p-4 border transition-all duration-300 text-left group ${
-                          isActive
-                            ? 'border-black bg-black text-white'
-                            : 'border-gray-200 hover:border-black text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span
-                            className="w-8 h-8 rounded-full border border-gray-200 shadow-inner mt-1"
-                            style={{ backgroundColor: mat.tone }}
-                            aria-hidden
-                          />
-                          <div>
-                            <div className="font-display uppercase tracking-wide text-sm">
-                              {mat.name}
-                            </div>
-                            <div className="font-mono text-[11px] uppercase tracking-widest">
-                              {mat.finish}
-                            </div>
-                            <p className="font-sans text-sm text-gray-600 mt-1">
-                              {mat.description}
-                            </p>
-                          </div>
-                        </div>
-                        {isActive && <Check className="w-4 h-4" />}
-                      </button>
-                    );
-                  })}
+                  {groupedByCarbon.floor.primary.map((mat) => renderStandardChoice(mat, 'floor'))}
+                  {renderCarbonSection('floor', groupedByCarbon.floor.carbon, (mat) =>
+                    renderStandardChoice(mat, 'floor')
+                  )}
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-mono text-xs uppercase tracking-widest text-gray-500">
-                    Finish Materials
+                    Internal Finish Materials
                   </h3>
                   <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                     Pick one
                   </span>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {materialsByCategory.finish.map((mat) => {
-                    const isActive = finishMaterial === mat.id;
-                    return (
-                      <button
-                        key={mat.id}
-                        onClick={() => handleCategorySelect('finish', mat.id)}
-                        className={`flex items-center justify-between p-4 border transition-all duration-300 text-left group ${
-                          isActive
-                            ? 'border-black bg-black text-white'
-                            : 'border-gray-200 hover:border-black text-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span
-                            className="w-8 h-8 rounded-full border border-gray-200 shadow-inner mt-1"
-                            style={{ backgroundColor: mat.tone }}
-                            aria-hidden
-                          />
-                          <div>
-                            <div className="font-display uppercase tracking-wide text-sm">
-                              {mat.name}
-                            </div>
-                            <div className="font-mono text-[11px] uppercase tracking-widest">
-                              {mat.finish}
-                            </div>
-                            <p className="font-sans text-sm text-gray-600 mt-1">
-                              {mat.description}
-                            </p>
-                          </div>
-                        </div>
-                        {isActive && <Check className="w-4 h-4" />}
-                      </button>
-                    );
-                  })}
+                  {groupedByCarbon.finish.primary.map((mat) => renderStandardChoice(mat, 'finish'))}
+                  {renderCarbonSection('finish', groupedByCarbon.finish.carbon, (mat) =>
+                    renderStandardChoice(mat, 'finish')
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3 mt-6">
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-gray-500">
+                    External Envelope Materials
+                  </h3>
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                    Pick one
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  {groupedByCarbon.external.primary.map((mat) => renderStandardChoice(mat, 'external'))}
+                  {renderCarbonSection('external', groupedByCarbon.external.carbon, (mat) =>
+                    renderStandardChoice(mat, 'external')
+                  )}
                 </div>
               </div>
 
               <p className="font-mono text-[11px] text-gray-500 mt-3 uppercase tracking-widest">
-                Pick one per category. The base image stays the same every run.
+                Pick one structure, one floor, and at least one finish (internal or external). The base image stays the same every run.
               </p>
-            </div>
-
-            <div className="border border-gray-200 p-4 bg-white space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-display text-base uppercase font-semibold">Prompt</h4>
-                <span className="font-mono text-[11px] text-gray-500 uppercase tracking-widest">
-                  Optional
-                </span>
-              </div>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="w-full border border-gray-300 focus:border-black focus:ring-0 font-sans text-sm text-gray-800 p-3 min-h-[110px] resize-none"
-                placeholder="Describe the material strategy..."
-              />
-              {selectedMaterialIds.length === 3 && (
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedMaterialObjects.map((mat) => (
-                      <span
-                        key={mat.id}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-gray-50 font-mono text-[11px] uppercase tracking-widest text-gray-700"
-                      >
-                        <span
-                          className="w-3 h-3 rounded-full border border-gray-200"
-                          style={{ backgroundColor: mat.tone }}
-                        />
-                        {mat.name} ({mat.category})
-                      </span>
-                    ))}
-                  </div>
-                  <p className="font-mono text-[11px] text-gray-600 uppercase tracking-widest">
-                    Floor: {floorMat?.name} · Structure: {structureMat?.name}
-                    {structureMat?.id === 'steel-frame' ? ` (colour ${steelColor})` : ''} · Finish: {finishMat?.name}
-                  </p>
-                </div>
-              )}
             </div>
 
             <button
               onClick={handleGenerate}
-              disabled={selectedMaterialIds.length !== 3 || isLoading}
+              disabled={!hasRequiredSelection || isLoading}
               className="w-full py-6 bg-black text-white font-mono uppercase tracking-widest text-sm hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
               {isLoading ? (
@@ -468,7 +638,7 @@ const Materiality: React.FC = () => {
 
               <div className="relative aspect-[16/9] w-full bg-arch-gray overflow-hidden border border-gray-200 shadow-xl group">
                 <img
-                  src={generatedImage || MATERIAL_BASE_IMAGE}
+                  src={generatedImage || selectedBaseImage}
                   alt="Materiality visualization"
                   className={`w-full h-full object-cover transition-opacity duration-500 ${
                     isLoading ? 'opacity-50 blur-sm' : generatedImage ? 'opacity-100' : 'grayscale'
@@ -486,28 +656,16 @@ const Materiality: React.FC = () => {
                 )}
               </div>
 
-              {selectedMaterialObjects.length > 0 && (
-                <div className="mt-6 flex flex-wrap gap-3">
-                  {selectedMaterialObjects.map((mat) => (
-                    <div
-                      key={mat.id}
-                      className="flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white shadow-sm"
-                    >
-                      <span
-                        className="w-4 h-4 rounded-full border border-gray-200"
-                        style={{ backgroundColor: mat.tone }}
-                      />
-                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
-                        {mat.name} ({mat.category})
-                      </div>
-                    </div>
-                  ))}
+              {generatedImage && (
+                <div className="mt-6">
+                  <button
+                    onClick={handleDownload}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-800"
+                  >
+                    Download Image
+                  </button>
                 </div>
               )}
-
-              <p className="font-mono text-[11px] text-gray-500 uppercase tracking-widest mt-3">
-                Same base image sent every time for consistent framing.
-              </p>
             </div>
           </div>
         </div>

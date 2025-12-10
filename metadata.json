@@ -1,5 +1,59 @@
 {
-  "name": "Copy of UWE Engineering Proposal",
-  "description": "Architectural presentation website for the new UWE Bristol Engineering Building proposal, featuring an internal street concept.",
-  "requestFramePermissions": []
+  "name": "Moodboard Lab",
+  "description": "Moodboard Lab is a commercial, AI-assisted material and moodboard workspace for architects and designers, enabling users to curate material palettes, receive sustainability insights, generate photorealistic moodboard renders, and apply their selections to uploaded reference images.",
+  "requestFramePermissions": [],
+  "version": "1.0.0",
+  "author": "Jonathan Bassindale",
+  "license": "Proprietary – All Rights Reserved",
+  "lastUpdated": "2025-12-08",
+  "metaTitle": "Moodboard Lab — AI-Assisted Material & Moodboard Workspace",
+  "metaDescription": "Moodboard Lab helps architects and designers curate material palettes, analyse sustainability, and generate photorealistic moodboard renders with AI.",
+  "keywords": [
+    "moodboard",
+    "architecture materials",
+    "AI design tools",
+    "sustainability analysis",
+    "architectural rendering",
+    "material palette"
+  ],
+  "openGraph": {
+    "title": "Moodboard Lab",
+    "description": "AI-assisted material and moodboard workspace for architects and designers.",
+    "type": "website",
+    "image": "/og-image.png"
+  },
+  "icons": {
+    "favicon": "/favicon.ico",
+    "icon32": "/icons/icon-32.png",
+    "icon192": "/icons/icon-192.png",
+    "icon512": "/icons/icon-512.png"
+  },
+  "manifest": {
+    "name": "Moodboard Lab",
+    "short_name": "MoodboardLab",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "icons": [
+      {
+        "src": "/icons/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  },
+  "schema": {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Moodboard Lab",
+    "description": "AI-assisted material and moodboard workspace for architects and designers.",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Any"
+  }
 }

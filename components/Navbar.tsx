@@ -8,9 +8,8 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
   const navItems = [
-    { id: 'concept', label: 'Concept' },
-    { id: 'visuals', label: 'Visuals' },
-    { id: 'specs', label: 'Specifications' },
+    { id: 'concept', label: 'Home' },
+    { id: 'moodboard', label: 'Moodboard' }
   ];
 
   return (
@@ -20,8 +19,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           className="flex flex-col cursor-pointer group" 
           onClick={() => onNavigate('concept')}
         >
-          <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">UWE Bristol</h1>
-          <span className="font-mono text-xs text-gray-500 tracking-widest uppercase">Engineering Proposal</span>
+          <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">
+            Moodboard Lab
+          </h1>
+          <span className="font-mono text-xs text-gray-500 tracking-widest uppercase">
+            Moodboard & Material Workspace
+          </span>
         </div>
         
         <div className="flex items-center gap-8">
