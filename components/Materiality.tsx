@@ -197,20 +197,16 @@ const Materiality: React.FC = () => {
     setError(null);
     setGeneratedImage(null);
 
-    // Temporary local key (user provided). Prefer environment variable in production.
-    const apiKey =
-      import.meta.env.VITE_GEMINI_API_KEY ||
-      'AIzaSyDayDxzY34remqo3mmDwiTqG-su91Mlg9c';
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
     const endpoint =
       import.meta.env.VITE_GEMINI_ENDPOINT ||
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
 
     if (!apiKey) {
-      setError('Gemini API key missing; update the inline key or set VITE_GEMINI_API_KEY.');
+      setError('Gemini API key missing; set VITE_GEMINI_API_KEY in your env file.');
       setIsLoading(false);
       return;
     }
-
     // Guard: endpoint must target an image-capable model.
     if (!endpoint.includes('image')) {
       setError(

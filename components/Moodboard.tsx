@@ -461,9 +461,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setStatus(mode);
     setError(null);
 
-    const apiKey =
-      import.meta.env.VITE_GEMINI_API_KEY ||
-      '';
+    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
 
     if (!apiKey) {
       setError('Gemini API key missing; set VITE_GEMINI_API_KEY.');
