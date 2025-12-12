@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { callGeminiImage, callGeminiText } from '../api';
+import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 
 type BoardItem = MaterialOption;
@@ -497,6 +497,33 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     return board.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
+  const persistGeneration = async (imageDataUri: string, prompt: string, useUploads: boolean) => {
+    const metadata = {
+      renderMode: useUploads ? 'apply-to-upload' : 'moodboard',
+      materialKey: buildMaterialKey(),
+      summary: summaryText,
+      renderNote: renderNote.trim() || undefined,
+      board,
+      uploads: useUploads
+        ? uploadedImages.map((img) => ({
+            id: img.id,
+            name: img.name,
+            mimeType: img.mimeType
+          }))
+        : undefined
+    };
+
+    try {
+      await saveGeneration({
+        prompt,
+        imageDataUri,
+        materials: metadata
+      });
+    } catch (err) {
+      console.error('Failed to save generation to backend', err);
+    }
+  };
+
   const wrapText = (
     ctx: CanvasRenderingContext2D,
     text: string,
@@ -759,6 +786,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   };
   const onFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
     handleFileInput(e.target.files);
+
   const addManualMaterial = () => {
     if (!manualLabel.trim()) return;
     const newMat: MaterialOption = {
@@ -774,16 +802,56 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setManualLabel('');
   };
 
+  const parseAnalysisJson = (cleaned: string) => {
+    try {
+      const parsed = JSON.parse(cleaned);
+      const items = Array.isArray(parsed?.items) ? parsed.items : null;
+      if (!items) return null;
+      const normalized = items
+        .map((entry: any) => ({
+          title: String(entry.title || entry.material || '').trim(),
+          explanation: String(entry.explanation || entry.analysis || entry.detail || '').trim()
+        }))
+        .filter((entry) => entry.title && entry.explanation);
+      return normalized.length ? normalized : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const parseLifecycleJson = (cleaned: string) => {
+    try {
+      const parsed = JSON.parse(cleaned);
+      const items = Array.isArray(parsed?.items) ? parsed.items : null;
+      if (!items) return null;
+      const normalized = items
+        .map((entry: any) => ({
+          material: String(entry.material || '').trim(),
+          sourcing: String(entry.sourcing || '').trim(),
+          fabrication: String(entry.fabrication || '').trim(),
+          transport: String(entry.transport || '').trim(),
+          inUse: String(entry.inUse || entry['in-use'] || '').trim(),
+          maintenance: String(entry.maintenance || entry['maintenance/refurb'] || entry.refurb || '').trim(),
+          endOfLife: String(entry.endOfLife || entry['end-of-life'] || '').trim(),
+          ukTip: String(entry.ukTip || entry['uk tip'] || '').trim()
+        }))
+        .filter((e) => e.material);
+      return normalized.length ? normalized : null;
+    } catch {
+      return null;
+    }
+  };
+
   const runGemini = async (
     mode: 'analysis' | 'render' | 'lifecycle',
-    options?: { useUploads?: boolean; onRender?: (url: string) => void }
+    options?: { useUploads?: boolean; onRender?: (url: string) => void; retryAttempt?: number }
   ) => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
       return;
     }
     setStatus(mode);
-    setError(null);
+    if (!options?.retryAttempt) setError(null);
     if (mode === 'analysis') setAnalysisStructured(null);
 
     const perMaterialLines = board
@@ -852,6 +920,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
+        void persistGeneration(newUrl, prompt, !!options?.useUploads);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
       } finally {
@@ -877,46 +946,44 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
       const cleaned = text.replace(/```json|```/g, '').trim();
+      const retryAttempt = options?.retryAttempt || 0;
+      const canRetry = retryAttempt < 1;
       if (mode === 'analysis') {
-        setAnalysis(cleaned);
-        try {
-          const parsed = JSON.parse(cleaned);
-          const items = Array.isArray(parsed?.items) ? parsed.items : null;
-          if (items) {
-            const normalized = items
-              .map((entry: any) => ({
-                title: String(entry.title || entry.material || '').trim(),
-                explanation: String(entry.explanation || entry.analysis || entry.detail || '').trim()
-              }))
-              .filter((entry) => entry.title && entry.explanation);
-            if (normalized.length) setAnalysisStructured(normalized);
+        const parsed = parseAnalysisJson(cleaned);
+        if (parsed) {
+          setAnalysis(cleaned);
+          setAnalysisStructured(parsed);
+          if (retryAttempt) setError(null);
+        } else {
+          setAnalysis(null);
+          setAnalysisStructured(null);
+          const message = 'Gemini returned malformed analysis JSON.';
+          if (canRetry) {
+            setError(`${message} Retrying once...`);
+            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
+          } else {
+            setError(`${message} Please try again.`);
           }
-        } catch {
-          // fallback to raw text
+          return;
         }
       }
       if (mode === 'lifecycle') {
-        setLifecycleAnalysis(cleaned);
-        try {
-          const parsed = JSON.parse(cleaned);
-          const items = Array.isArray(parsed?.items) ? parsed.items : null;
-          if (items) {
-            const normalized = items
-              .map((entry: any) => ({
-                material: String(entry.material || '').trim(),
-                sourcing: String(entry.sourcing || '').trim(),
-                fabrication: String(entry.fabrication || '').trim(),
-                transport: String(entry.transport || '').trim(),
-                inUse: String(entry.inUse || entry['in-use'] || '').trim(),
-                maintenance: String(entry.maintenance || entry['maintenance/refurb'] || entry.refurb || '').trim(),
-                endOfLife: String(entry.endOfLife || entry['end-of-life'] || '').trim(),
-                ukTip: String(entry.ukTip || entry['uk tip'] || '').trim()
-              }))
-              .filter((e) => e.material);
-            if (normalized.length) setLifecycleStructured(normalized);
+        const parsed = parseLifecycleJson(cleaned);
+        if (parsed) {
+          setLifecycleAnalysis(cleaned);
+          setLifecycleStructured(parsed);
+          if (retryAttempt) setError(null);
+        } else {
+          setLifecycleAnalysis(null);
+          setLifecycleStructured(null);
+          const message = 'Gemini returned malformed lifecycle JSON.';
+          if (canRetry) {
+            setError(`${message} Retrying once...`);
+            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
+          } else {
+            setError(`${message} Please try again.`);
           }
-        } catch {
-          // fallback to raw text
+          return;
         }
       }
     } catch (err) {
