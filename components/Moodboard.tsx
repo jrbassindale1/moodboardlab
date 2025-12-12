@@ -78,6 +78,9 @@ interface MoodboardProps {
 const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [board, setBoard] = useState<BoardItem[]>([]);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysisStructured, setAnalysisStructured] = useState<
+    { title: string; explanation: string }[] | null
+  >(null);
   const [lifecycleAnalysis, setLifecycleAnalysis] = useState<string | null>(null);
   const [lifecycleStructured, setLifecycleStructured] = useState<
     | {
@@ -679,6 +682,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setIsCreatingMoodboard(true);
     setMaterialKey(buildMaterialKey());
     setAnalysis(null);
+    setAnalysisStructured(null);
     setLifecycleAnalysis(null);
     setLifecycleStructured(null);
     setStatus('all');
@@ -746,6 +750,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     }
     setStatus(mode);
     setError(null);
+    if (mode === 'analysis') setAnalysisStructured(null);
 
     const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
 
@@ -765,7 +770,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     const trimmedNote = renderNote.trim();
     const prompt =
       mode === 'analysis'
-        ? `For each material below, provide a concise, professional sustainability assessment tailored to UK construction practice. Format each line as "Material — analysis and improvement". Cover embodied carbon, circularity/reuse potential, UK certifications or standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE where relevant), and a specific improvement or lower-impact alternative. Keep it factual and not chatty.\n\nMaterials:\n${perMaterialLines}`
+        ? `Return ONLY a JSON object with a single key "items" mapping to an array. Each array item must be an object with keys "title" and "explanation". Use the material name (and finish if useful) as the title. The explanation should be one concise UK-focused sustainability assessment covering embodied carbon, circularity/reuse potential, relevant UK certifications/standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE), and a specific improvement or lower-impact alternative. No introductions, no Markdown, no bullet points—JSON only.\nFormat example:\n{"items":[{"title":"Glulam Timber Structure","explanation":"Low embodied carbon, renewable resource; ensure FSC/PEFC certification, design for disassembly/reuse, and prioritise locally sourced timber to cut transport emissions."}]}\n\nMaterials:\n${perMaterialLines}`
         : mode === 'lifecycle'
         ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip". Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused.\nFormat example:\n{"items":[{"material":"Brick","sourcing":"...","fabrication":"...","transport":"...","inUse":"...","maintenance":"...","endOfLife":"...","ukTip":"..."}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
         : options?.useUploads
@@ -870,7 +875,24 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
       const cleaned = text.replace(/```json|```/g, '').trim();
-      if (mode === 'analysis') setAnalysis(cleaned);
+      if (mode === 'analysis') {
+        setAnalysis(cleaned);
+        try {
+          const parsed = JSON.parse(cleaned);
+          const items = Array.isArray(parsed?.items) ? parsed.items : null;
+          if (items) {
+            const normalized = items
+              .map((entry: any) => ({
+                title: String(entry.title || entry.material || '').trim(),
+                explanation: String(entry.explanation || entry.analysis || entry.detail || '').trim()
+              }))
+              .filter((entry) => entry.title && entry.explanation);
+            if (normalized.length) setAnalysisStructured(normalized);
+          }
+        } catch {
+          // fallback to raw text
+        }
+      }
       if (mode === 'lifecycle') {
         setLifecycleAnalysis(cleaned);
         try {
@@ -1156,7 +1178,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
               </div>
             )}
 
-            {analysis && (
+            {(analysisStructured || analysis) && (
               <div className="border border-gray-200">
                 <button
                   onClick={() => setAnalysisAccordionOpen((prev) => !prev)}
@@ -1171,9 +1193,24 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                 </button>
                 {analysisAccordionOpen && (
                   <div className="p-4 bg-white border-t border-gray-200">
-                    <p className="font-sans text-sm text-gray-800 whitespace-pre-line leading-relaxed">
-                      {analysis}
-                    </p>
+                    {analysisStructured ? (
+                      <div className="space-y-4">
+                        {analysisStructured.map((item) => (
+                          <div key={item.title} className="space-y-1">
+                            <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
+                              {item.title}
+                            </div>
+                            <p className="font-sans text-sm text-gray-800 leading-relaxed">
+                              {item.explanation}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="font-sans text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+                        {analysis}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
