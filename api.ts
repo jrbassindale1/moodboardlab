@@ -1,5 +1,6 @@
+// Prod host is the deployed Function App; adjust if you rename the app.
 const API_BASE = import.meta.env.PROD
-  ? "https://moodboardlab-api.azurewebsites.net"
+  ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net"
   : "http://localhost:7071";
 
 async function callGeminiBackend(payload: unknown, mode: "text" | "image" = "text") {
