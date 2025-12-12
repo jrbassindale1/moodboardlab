@@ -674,6 +674,39 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     }
   };
 
+  const handleOpenImage = (url: string) => {
+    if (!url) return;
+    const opened = window.open(url, '_blank');
+    if (!opened) setError('Unable to open image. Please allow pop-ups to save it.');
+    else opened.focus?.();
+  };
+
+  const handleSaveImage = (dataUrl: string, filename: string) => {
+    if (!dataUrl) return;
+    try {
+      const [meta, content] = dataUrl.split(',');
+      if (!meta || !content) throw new Error('Invalid image data.');
+      const mimeMatch = meta.match(/data:(.*);base64/);
+      const mimeType = mimeMatch?.[1] || 'image/png';
+      const byteCharacters = atob(content);
+      const byteArrays = new Uint8Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i += 1) {
+        byteArrays[i] = byteCharacters.charCodeAt(i);
+      }
+      const blob = new Blob([byteArrays], { type: mimeType });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    } catch (err) {
+      console.error('Save image failed, opening instead', err);
+      handleOpenImage(dataUrl);
+    }
+  };
+
   const runMoodboardFlow = async () => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
@@ -1233,31 +1266,33 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                     {lifecycleStructured ? (
                       <div className="space-y-4">
                         {lifecycleStructured.map((item) => (
-                          <div key={item.material}>
-                            <div className="font-display uppercase text-sm">{item.material}</div>
-                            <ul className="list-disc list-inside text-sm text-gray-800 space-y-1">
-                              <li>
+                          <div key={item.material} className="space-y-2">
+                            <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
+                              {item.material}
+                            </div>
+                            <div className="font-sans text-sm text-gray-800 space-y-1 leading-relaxed">
+                              <div>
                                 <span className="font-semibold">Sourcing:</span> {item.sourcing}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">Fabrication:</span> {item.fabrication}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">Transport:</span> {item.transport}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">In-use:</span> {item.inUse}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">Maintenance/Refurb:</span> {item.maintenance}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">End-of-life:</span> {item.endOfLife}
-                              </li>
-                              <li>
+                              </div>
+                              <div>
                                 <span className="font-semibold">UK tip:</span> {item.ukTip}
-                              </li>
-                            </ul>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1278,23 +1313,31 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                       Moodboard Render
                     </div>
-                    <button
-                      onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
-                      disabled={downloadingId === 'moodboard'}
-                      className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {downloadingId === 'moodboard' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Preparing...
-                        </>
-                      ) : (
-                        <>
-                          <ImageDown className="w-4 h-4" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
+                        disabled={downloadingId === 'moodboard'}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      >
+                        {downloadingId === 'moodboard' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Preparing...
+                          </>
+                        ) : (
+                          <>
+                            <ImageDown className="w-4 h-4" />
                           Download
                         </>
                       )}
                     </button>
+                    <button
+                        onClick={() => handleSaveImage(moodboardRenderUrl, 'moodboard.png')}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                      >
+                        Save Image
+                      </button>
+                    </div>
                   </div>
                   <div className="w-full border border-gray-200 bg-gray-50 relative overflow-hidden">
                     <img
@@ -1333,23 +1376,31 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                       Applied Render
                     </div>
-                    <button
-                      onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
-                      disabled={downloadingId === 'applied'}
-                      className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {downloadingId === 'applied' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Preparing...
-                        </>
-                      ) : (
-                        <>
-                          <ImageDown className="w-4 h-4" />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
+                        disabled={downloadingId === 'applied'}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      >
+                        {downloadingId === 'applied' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Preparing...
+                          </>
+                        ) : (
+                          <>
+                            <ImageDown className="w-4 h-4" />
                           Download
                         </>
                       )}
                     </button>
+                    <button
+                        onClick={() => handleSaveImage(appliedRenderUrl, 'applied-render.png')}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                      >
+                        Save Image
+                      </button>
+                    </div>
                   </div>
                   <div className="w-full border border-gray-200 bg-gray-50">
                     <img src={appliedRenderUrl} alt="Applied render" className="w-full h-auto object-contain" />
