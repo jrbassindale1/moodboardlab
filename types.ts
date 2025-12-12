@@ -22,7 +22,20 @@ export type MaterialCategory =
   | 'soffit'
   | 'ceiling'
   | 'window'
-  | 'roof';
+  | 'roof'
+  | 'paint-wall'
+  | 'paint-ceiling'
+  | 'plaster'
+  | 'microcement'
+  | 'timber-panel'
+  | 'tile'
+  | 'wallpaper'
+  | 'acoustic-panel'
+  | 'timber-slat'
+  | 'exposed-structure'
+  | 'joinery'
+  | 'fixture'
+  | 'landscape';
 
 export interface MaterialOption {
   id: string;
@@ -34,6 +47,8 @@ export interface MaterialOption {
   category: MaterialCategory;
   colorOptions?: { label: string; tone: string }[];
   supportsColor?: boolean;
+  finishOptions?: string[];
+  treePaths?: string[];
   carbonIntensity?: 'low' | 'high';
 }
 

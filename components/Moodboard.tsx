@@ -5,6 +5,72 @@ import { MaterialOption, UploadedImage } from '../types';
 
 type BoardItem = MaterialOption;
 
+type MaterialTreeGroup = {
+  id: string;
+  label: string;
+  path: string;
+  description?: string;
+};
+
+const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[] = [
+  {
+    id: 'structure',
+    label: 'Structure',
+    groups: [
+      { id: 'primary-structure', label: 'Primary Structure', path: 'Structure>Primary Structure' },
+      { id: 'secondary-structure', label: 'Secondary Structure', path: 'Structure>Secondary Structure' },
+      { id: 'envelope-substructure', label: 'Envelope Substructure', path: 'Structure>Envelope Substructure' }
+    ]
+  },
+  {
+    id: 'external',
+    label: 'External',
+    groups: [
+      { id: 'facade', label: 'Façade', path: 'External>Façade' },
+      { id: 'glazing', label: 'Glazing', path: 'External>Glazing' },
+      { id: 'roofing', label: 'Roofing', path: 'External>Roofing' },
+      {
+        id: 'landscape',
+        label: 'External Ground / Landscaping',
+        path: 'External>External Ground / Landscaping'
+      }
+    ]
+  },
+  {
+    id: 'internal',
+    label: 'Internal',
+    groups: [
+      { id: 'floors', label: 'Floors', path: 'Internal>Floors' },
+      { id: 'walls', label: 'Walls', path: 'Internal>Walls' },
+      { id: 'paint-standard', label: 'Paint – Standard', path: 'Internal>Paint – Standard' },
+      { id: 'paint-custom', label: 'Paint – Custom Colour', path: 'Internal>Paint – Custom Colour' },
+      { id: 'plaster', label: 'Plaster / Microcement', path: 'Internal>Plaster / Microcement' },
+      { id: 'timber-panels', label: 'Timber Panels', path: 'Internal>Timber Panels' },
+      { id: 'tiles', label: 'Tiles', path: 'Internal>Tiles' },
+      { id: 'wallpaper', label: 'Wallpaper', path: 'Internal>Wallpaper' },
+      { id: 'ceilings', label: 'Ceilings', path: 'Internal>Ceilings' },
+      { id: 'acoustic-panels', label: 'Acoustic Panels', path: 'Internal>Acoustic Panels' },
+      { id: 'timber-slats', label: 'Timber Slats', path: 'Internal>Timber Slats' },
+      { id: 'exposed-structure', label: 'Exposed Structure', path: 'Internal>Exposed Structure' },
+      { id: 'joinery', label: 'Joinery & Furniture', path: 'Internal>Joinery & Furniture' },
+      { id: 'fixtures', label: 'Fixtures & Fittings', path: 'Internal>Fixtures & Fittings' }
+    ]
+  },
+  {
+    id: 'custom',
+    label: 'Custom',
+    groups: [
+      { id: 'upload-image', label: 'Upload Image', path: 'Custom>Upload Image' },
+      {
+        id: 'brand-material',
+        label: 'Brand / Supplier Material',
+        path: 'Custom>Brand / Supplier Material'
+      },
+      { id: 'custom-finish', label: 'Custom Finish / Product Link', path: 'Custom>Custom Finish / Product Link' }
+    ]
+  }
+];
+
 interface MoodboardProps {
   onNavigate?: (page: string) => void;
 }
@@ -39,37 +105,77 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
 
-  const paletteByCategory = useMemo(() => {
-    return {
-      structure: MATERIAL_PALETTE.filter((m) => m.category === 'structure'),
-      floor: MATERIAL_PALETTE.filter((m) => m.category === 'floor'),
-      'wall-internal': MATERIAL_PALETTE.filter((m) => m.category === 'wall-internal'),
-      external: MATERIAL_PALETTE.filter((m) => m.category === 'external'),
-      ceiling: MATERIAL_PALETTE.filter((m) => m.category === 'ceiling'),
-      soffit: MATERIAL_PALETTE.filter((m) => m.category === 'soffit'),
-      window: MATERIAL_PALETTE.filter((m) => m.category === 'window'),
-      roof: MATERIAL_PALETTE.filter((m) => m.category === 'roof'),
-      finish: MATERIAL_PALETTE.filter((m) => m.category === 'finish')
-    };
-  }, []);
+  const treePathFallbacks = useMemo(
+    () => ({
+      structure: ['Structure>Primary Structure', 'Internal>Exposed Structure'],
+      floor: ['Internal>Floors', 'External>External Ground / Landscaping'],
+      'wall-internal': ['Internal>Walls'],
+      external: ['External>Façade'],
+      ceiling: ['Internal>Ceilings'],
+      soffit: ['Internal>Exposed Structure'],
+      window: ['External>Glazing'],
+      roof: ['External>Roofing'],
+      finish: ['Internal>Timber Panels', 'Internal>Acoustic Panels', 'Internal>Timber Slats'],
+      'paint-wall': ['Internal>Paint – Standard'],
+      'paint-ceiling': ['Internal>Ceilings'],
+      plaster: ['Internal>Plaster / Microcement'],
+      microcement: ['Internal>Plaster / Microcement'],
+      'timber-panel': ['Internal>Timber Panels'],
+      tile: ['Internal>Tiles'],
+      wallpaper: ['Internal>Wallpaper'],
+      'acoustic-panel': ['Internal>Acoustic Panels'],
+      'timber-slat': ['Internal>Timber Slats'],
+      'exposed-structure': ['Internal>Exposed Structure'],
+      joinery: ['Internal>Joinery & Furniture'],
+      fixture: ['Internal>Fixtures & Fittings'],
+      landscape: ['External>External Ground / Landscaping']
+    }),
+    []
+  );
 
-  const handleAdd = (mat: MaterialOption, colorChoice?: { label: string; tone: string }) => {
+  const materialsByPath = useMemo(() => {
+    const map: Record<string, MaterialOption[]> = {};
+    MATERIAL_PALETTE.forEach((mat) => {
+      const paths = mat.treePaths?.length ? mat.treePaths : treePathFallbacks[mat.category] || ['Unsorted>Other'];
+      paths.forEach((path) => {
+        map[path] = map[path] || [];
+        map[path].push(mat);
+      });
+    });
+    return map;
+  }, [treePathFallbacks]);
+
+  const [customFinishes, setCustomFinishes] = useState<Record<string, { color: string; finish: string }>>(() => {
+    const initial: Record<string, { color: string; finish: string }> = {};
+    MATERIAL_PALETTE.filter((m) => m.supportsColor && m.finishOptions?.length).forEach((mat) => {
+      initial[mat.id] = { color: mat.tone, finish: mat.finishOptions?.[0] || 'Matte' };
+    });
+    return initial;
+  });
+
+  const handleAdd = (
+    mat: MaterialOption,
+    customization?: { label?: string; tone?: string; finishVariant?: string }
+  ) => {
     const baseSteel = MATERIAL_PALETTE.find((m) => m.id === 'steel-frame');
-    const finishBase = colorChoice ? mat.finish.split(' — ')[0].trim() : mat.finish;
-    const next =
-      mat.id === 'steel-frame'
-        ? {
-            ...mat,
-            tone: steelColor,
-            finish: `${baseSteel?.finish || mat.finish} (${steelColor})`
-          }
-        : colorChoice
-        ? {
-            ...mat,
-            tone: colorChoice.tone,
-            finish: `${finishBase} — ${colorChoice.label}`
-          }
-        : mat;
+    const baseTone = customization?.tone || mat.tone;
+    const finishVariant = customization?.finishVariant ? ` (${customization.finishVariant})` : '';
+    const labelSuffix = customization?.label ? ` — ${customization.label}` : '';
+    let finishText = `${mat.finish}${labelSuffix}${finishVariant}`;
+    let tone = baseTone;
+
+    if (mat.id === 'steel-frame') {
+      tone = customization?.tone || steelColor;
+      finishText = `${baseSteel?.finish || mat.finish} (${tone})`;
+    } else if (mat.supportsColor && customization?.tone) {
+      finishText = `${mat.finish}${finishVariant ? ` ${finishVariant}` : ''} (${customization.tone})`;
+    }
+
+    const next: MaterialOption = {
+      ...mat,
+      tone,
+      finish: finishText
+    };
     setBoard((prev) => [...prev, next]);
   };
 
@@ -88,6 +194,163 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
   };
 
+  const renderMaterialCard = (mat: MaterialOption) => {
+    const customFinish = customFinishes[mat.id] || { color: mat.tone, finish: mat.finishOptions?.[0] || 'Matte' };
+    return (
+      <div
+        key={mat.id}
+        draggable
+        onDragStart={(e) => handleDragStart(mat.id, e)}
+        className="border border-gray-200 bg-white p-4 flex items-start gap-3 cursor-grab active:cursor-grabbing"
+      >
+        <span
+          className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
+          style={{ backgroundColor: mat.id === 'steel-frame' ? steelColor : customFinish.color || mat.tone }}
+          aria-hidden
+        />
+        <div className="space-y-2 flex-1">
+          <div>
+            <div className="font-display uppercase tracking-wide text-sm">{mat.name}</div>
+            <div className="font-mono text-[11px] uppercase tracking-widest">{mat.finish}</div>
+            <p className="font-sans text-sm text-gray-600 mt-1">{mat.description}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() =>
+                handleAdd(mat, {
+                  tone: mat.supportsColor ? (mat.id === 'steel-frame' ? steelColor : customFinish.color) : undefined,
+                  finishVariant: mat.finishOptions?.length ? customFinish.finish : undefined
+                })
+              }
+              className="font-mono text-[11px] uppercase tracking-widest border px-2 py-1 hover:bg-black hover:text-white"
+            >
+              Add to board
+            </button>
+            {mat.supportsColor && mat.finishOptions?.length ? (
+              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                Custom colour + finish ready
+              </span>
+            ) : null}
+          </div>
+
+          {mat.colorOptions?.length ? (
+            <div className="space-y-2">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                {mat.id === 'brick-veneer' ? 'Brick Colours' : 'Colour Options'}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {mat.colorOptions.map((option) => (
+                  <button
+                    key={`${mat.id}-${option.label}`}
+                    onClick={() => handleAdd(mat, { label: option.label, tone: option.tone })}
+                    className="inline-flex items-center gap-2 px-2 py-1 border border-gray-200 hover:border-black"
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border border-gray-200 shadow-inner"
+                      style={{ backgroundColor: option.tone }}
+                      aria-hidden
+                    />
+                    <span className="font-mono text-[11px] uppercase tracking-widest">{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {mat.id === 'steel-frame' ? (
+            <div className="space-y-2">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Steel Colour</div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {[
+                  { label: 'White', value: '#ffffff' },
+                  { label: 'Charcoal', value: '#333333' },
+                  { label: 'Oxide Red', value: '#7a2c20' }
+                ].map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => setSteelColor(preset.value)}
+                    className={`px-3 py-1 border text-xs font-mono uppercase tracking-widest ${
+                      steelColor.toLowerCase() === preset.value.toLowerCase()
+                        ? 'border-black bg-black text-white'
+                        : 'border-gray-200 hover:border-black'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={steelColor}
+                  onChange={(e) => setSteelColor(e.target.value)}
+                  className="w-12 h-10 border border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={steelColor}
+                  onChange={(e) => setSteelColor(e.target.value)}
+                  className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {mat.supportsColor && mat.finishOptions?.length ? (
+            <div className="space-y-2">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                Custom colour & finish
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="color"
+                  value={customFinish.color}
+                  onChange={(e) =>
+                    setCustomFinishes((prev) => ({
+                      ...prev,
+                      [mat.id]: { color: e.target.value, finish: customFinish.finish }
+                    }))
+                  }
+                  className="w-12 h-10 border border-gray-300"
+                />
+                <input
+                  type="text"
+                  value={customFinish.color}
+                  onChange={(e) =>
+                    setCustomFinishes((prev) => ({
+                      ...prev,
+                      [mat.id]: { color: e.target.value, finish: customFinish.finish }
+                    }))
+                  }
+                  className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
+                />
+                <select
+                  value={customFinish.finish}
+                  onChange={(e) =>
+                    setCustomFinishes((prev) => ({
+                      ...prev,
+                      [mat.id]: { color: customFinish.color, finish: e.target.value }
+                    }))
+                  }
+                  className="border border-gray-300 px-2 py-2 text-sm font-sans"
+                >
+                  {mat.finishOptions.map((option) => (
+                    <option key={`${mat.id}-${option}`} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="font-sans text-xs text-gray-600">
+                Custom paint colour rule: pick any HEX/RGB value and finish (matte, satin, gloss) for walls or ceilings.
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
+
   const summaryText = useMemo(() => {
     if (!board.length) return 'No materials selected yet.';
     const grouped = board.reduce((acc: Record<string, MaterialOption[]>, mat) => {
@@ -100,7 +363,11 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     );
     return lines.join('\n');
   }, [board]);
-  const categoryOrder: { id: MaterialOption['category']; label: string }[] = useMemo(
+  const allGroups = useMemo(
+    () => MATERIAL_TREE.flatMap((section) => section.groups.map((g) => g)),
+    []
+  );
+  const manualCategoryOptions: { id: MaterialOption['category']; label: string }[] = useMemo(
     () => [
       { id: 'structure', label: 'Structure' },
       { id: 'floor', label: 'Floors' },
@@ -108,24 +375,37 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       { id: 'external', label: 'External Envelope' },
       { id: 'ceiling', label: 'Ceilings' },
       { id: 'soffit', label: 'Soffits' },
-      { id: 'window', label: 'Window Frames' },
-      { id: 'roof', label: 'Roof' },
-      { id: 'finish', label: 'Finishes' }
+      { id: 'window', label: 'Window Frames / Glazing' },
+      { id: 'roof', label: 'Roofing' },
+      { id: 'finish', label: 'Internal Finishes' },
+      { id: 'paint-wall', label: 'Paint – Walls' },
+      { id: 'paint-ceiling', label: 'Paint – Ceilings' },
+      { id: 'plaster', label: 'Plaster' },
+      { id: 'microcement', label: 'Microcement' },
+      { id: 'timber-panel', label: 'Timber Panels' },
+      { id: 'tile', label: 'Tiles' },
+      { id: 'wallpaper', label: 'Wallpaper' },
+      { id: 'acoustic-panel', label: 'Acoustic Panels' },
+      { id: 'timber-slat', label: 'Timber Slats' },
+      { id: 'exposed-structure', label: 'Exposed Structure' },
+      { id: 'joinery', label: 'Joinery & Furniture' },
+      { id: 'fixture', label: 'Fixtures & Fittings' },
+      { id: 'landscape', label: 'External Ground / Landscaping' }
     ],
     []
   );
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const acc: Record<string, boolean> = {};
-    categoryOrder.forEach((cat) => {
-      acc[cat.id] = false;
+    allGroups.forEach((group) => {
+      acc[group.id] = false;
     });
     acc.custom = false;
     return acc;
   });
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredPaletteByCategory: Record<string, MaterialOption[]> = useMemo(() => {
+  const filteredMaterialsByPath: Record<string, MaterialOption[]> = useMemo(() => {
     const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
-    if (!tokens.length) return paletteByCategory;
+    if (!tokens.length) return materialsByPath;
 
     const matchesSearch = (mat: MaterialOption) => {
       const haystack = [
@@ -142,23 +422,23 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     };
 
     const next: Record<string, MaterialOption[]> = {};
-    Object.entries(paletteByCategory).forEach(([catId, list]) => {
-      next[catId] = list.filter((item) => matchesSearch(item));
+    Object.entries(materialsByPath).forEach(([path, list]) => {
+      next[path] = list.filter((item) => matchesSearch(item));
     });
     return next;
-  }, [normalizedSearch, paletteByCategory]);
+  }, [normalizedSearch, materialsByPath]);
   const hasSearch = normalizedSearch.length > 0;
   const totalSearchResults = useMemo(
-    () => Object.values(filteredPaletteByCategory).reduce((acc, list) => acc + list.length, 0),
-    [filteredPaletteByCategory]
+    () => Object.values(filteredMaterialsByPath).reduce((acc, list) => acc + list.length, 0),
+    [filteredMaterialsByPath]
   );
   const [manualLabel, setManualLabel] = useState('');
   const [manualCategory, setManualCategory] = useState<MaterialOption['category']>('finish');
   const [manualTone, setManualTone] = useState('#e5e7eb');
   const [carbonSectionsOpen, setCarbonSectionsOpen] = useState<Record<string, boolean>>(() => {
     const acc: Record<string, boolean> = {};
-    categoryOrder.forEach((cat) => {
-      acc[cat.id] = false;
+    allGroups.forEach((group) => {
+      acc[group.id] = false;
     });
     return acc;
   });
@@ -170,43 +450,43 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     if (!hasSearch) return;
     setOpenSections((prev) => {
       const next = { ...prev };
-      categoryOrder.forEach((cat) => {
-        next[cat.id] = (filteredPaletteByCategory[cat.id] || []).length > 0;
+      allGroups.forEach((group) => {
+        next[group.id] = (filteredMaterialsByPath[group.path] || []).length > 0;
       });
       return next;
     });
     setCarbonSectionsOpen((prev) => {
       const next = { ...prev };
-      categoryOrder.forEach((cat) => {
-        const list = filteredPaletteByCategory[cat.id] || [];
-        next[cat.id] = list.some((m) => m.carbonIntensity === 'high');
+      allGroups.forEach((group) => {
+        const list = filteredMaterialsByPath[group.path] || [];
+        next[group.id] = list.some((m) => m.carbonIntensity === 'high');
       });
       return next;
     });
-  }, [hasSearch, filteredPaletteByCategory, categoryOrder]);
+  }, [hasSearch, filteredMaterialsByPath, allGroups]);
 
   useEffect(() => {
     if (hasSearch) return;
     setOpenSections((prev) => {
-      const anyOpen = categoryOrder.some((cat) => prev[cat.id]);
+      const anyOpen = allGroups.some((group) => prev[group.id]);
       if (!anyOpen) return prev;
       const next = { ...prev };
-      categoryOrder.forEach((cat) => {
-        next[cat.id] = false;
+      allGroups.forEach((group) => {
+        next[group.id] = false;
       });
       next.custom = prev.custom;
       return next;
     });
     setCarbonSectionsOpen((prev) => {
-      const anyOpen = categoryOrder.some((cat) => prev[cat.id]);
+      const anyOpen = allGroups.some((group) => prev[group.id]);
       if (!anyOpen) return prev;
       const next = { ...prev };
-      categoryOrder.forEach((cat) => {
-        next[cat.id] = false;
+      allGroups.forEach((group) => {
+        next[group.id] = false;
       });
       return next;
     });
-  }, [hasSearch, categoryOrder]);
+  }, [hasSearch, allGroups]);
 
   const buildMaterialKey = () => {
     if (!board.length) return 'No materials selected yet.';
@@ -669,197 +949,70 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                 </div>
               )}
             </div>
-          {categoryOrder.map((cat) => {
-            const items = filteredPaletteByCategory[cat.id] || [];
-            if (hasSearch && items.length === 0) return null;
-            const primaryItems = items.filter((m) => m.carbonIntensity !== 'high');
-            const carbonHeavy = items.filter((m) => m.carbonIntensity === 'high');
-            return (
-              <div key={cat.id} className="border border-gray-200">
-                  <button
-                    onClick={() =>
-                      setOpenSections((prev) => ({ ...prev, [cat.id]: !prev[cat.id] }))
-                    }
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
-                  >
-                    <span className="font-mono text-xs uppercase tracking-widest text-gray-600">
-                      {cat.label}
-                    </span>
-                    <span className="font-mono text-xs text-gray-500">{openSections[cat.id] ? '−' : '+'}</span>
-                  </button>
-                  {openSections[cat.id] && (
-                    <div className="space-y-4 p-4">
-                      {primaryItems.map((mat) => (
-                        <div
-                          key={mat.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(mat.id, e)}
-                          className="border border-gray-200 bg-white p-4 flex items-start gap-3 cursor-grab active:cursor-grabbing"
-                        >
-                          <span
-                            className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
-                            style={{ backgroundColor: mat.tone }}
-                            aria-hidden
-                          />
-                          <div>
-                            <div className="font-display uppercase tracking-wide text-sm">{mat.name}</div>
-                            <div className="font-mono text-[11px] uppercase tracking-widest">
-                              {mat.finish}
-                            </div>
-                            <p className="font-sans text-sm text-gray-600 mt-1">{mat.description}</p>
+            {MATERIAL_TREE.map((section) => (
+            <div key={section.id} className="space-y-2">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 px-4">
+                {section.label}
+              </div>
+              {section.groups.map((group) => {
+                const items = filteredMaterialsByPath[group.path] || [];
+                if (hasSearch && items.length === 0) return null;
+                const primaryItems = items.filter((m) => m.carbonIntensity !== 'high');
+                const carbonHeavy = items.filter((m) => m.carbonIntensity === 'high');
+                const isCustom = section.id === 'custom';
+                return (
+                  <div key={group.id} className="border border-gray-200">
+                    <button
+                      onClick={() => setOpenSections((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
+                    >
+                      <span className="font-mono text-xs uppercase tracking-widest text-gray-600">{group.label}</span>
+                      <span className="font-mono text-xs text-gray-500">{openSections[group.id] ? '−' : '+'}</span>
+                    </button>
+                    {openSections[group.id] && (
+                      <div className="space-y-4 p-4">
+                        {primaryItems.length > 0 ? (
+                          primaryItems.map((mat) => renderMaterialCard(mat))
+                        ) : !isCustom ? (
+                          <p className="font-sans text-sm text-gray-600">No materials in this group yet.</p>
+                        ) : (
+                          <div className="space-y-2 text-sm text-gray-700">
+                            <p>Use uploads or the custom material form below to drop supplier products here.</p>
+                            <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                              Upload reference images or add a URL in "Add Custom Material".
+                            </p>
+                          </div>
+                        )}
+
+                        {carbonHeavy.length > 0 && (
+                          <div className="border border-amber-200 bg-amber-50 p-3">
                             <button
-                              onClick={() => handleAdd(mat)}
-                              className="mt-2 font-mono text-[11px] uppercase tracking-widest border px-2 py-1 hover:bg-black hover:text-white"
+                              onClick={() =>
+                                setCarbonSectionsOpen((prev) => ({ ...prev, [group.id]: !prev[group.id] }))
+                              }
+                              className="w-full flex items-center justify-between text-left"
                             >
-                              Add to board
+                              <span className="font-mono text-[11px] uppercase tracking-widest text-amber-900">
+                                Carbon-intensive options (click to view)
+                              </span>
+                              <span className="font-mono text-xs text-amber-900">
+                                {carbonSectionsOpen[group.id] ? '−' : '+'}
+                              </span>
                             </button>
-                            {mat.colorOptions?.length ? (
-                              <div className="mt-3 space-y-2">
-                                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                                  {mat.id === 'brick-veneer' ? 'Brick Colours' : 'Colour Options'}
-                                </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {mat.colorOptions.map((option) => (
-                                    <button
-                                      key={`${mat.id}-${option.label}`}
-                                      onClick={() => handleAdd(mat, option)}
-                                      className="inline-flex items-center gap-2 px-2 py-1 border border-gray-200 hover:border-black"
-                                    >
-                                      <span
-                                        className="w-4 h-4 rounded-full border border-gray-200 shadow-inner"
-                                        style={{ backgroundColor: option.tone }}
-                                        aria-hidden
-                                      />
-                                      <span className="font-mono text-[11px] uppercase tracking-widest">
-                                        {option.label}
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : null}
-                            {mat.id === 'steel-frame' && (
-                              <div className="mt-3 space-y-2">
-                                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                                  Steel Colour
-                                </div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {[
-                                  { label: 'White', value: '#ffffff' },
-                                  { label: 'Charcoal', value: '#333333' },
-                                  { label: 'Oxide Red', value: '#7a2c20' }
-                                ].map((preset) => (
-                                    <button
-                                      key={preset.value}
-                                      onClick={() => setSteelColor(preset.value)}
-                                      className={`px-3 py-1 border text-xs font-mono uppercase tracking-widest ${
-                                        steelColor.toLowerCase() === preset.value.toLowerCase()
-                                          ? 'border-black bg-black text-white'
-                                          : 'border-gray-200 hover:border-black'
-                                      }`}
-                                    >
-                                      {preset.label}
-                                    </button>
-                                  ))}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="color"
-                                    value={steelColor}
-                                    onChange={(e) => setSteelColor(e.target.value)}
-                                    className="w-12 h-10 border border-gray-300"
-                                  />
-                                  <input
-                                    type="text"
-                                    value={steelColor}
-                                    onChange={(e) => setSteelColor(e.target.value)}
-                                    className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
-                                  />
-                                </div>
+                            {carbonSectionsOpen[group.id] && (
+                              <div className="space-y-3 mt-3">
+                                {carbonHeavy.map((mat) => renderMaterialCard(mat))}
                               </div>
                             )}
                           </div>
-                        </div>
-                      ))}
-
-                      {carbonHeavy.length > 0 && (
-                        <div className="border border-amber-200 bg-amber-50 p-3">
-                          <button
-                            onClick={() =>
-                              setCarbonSectionsOpen((prev) => ({ ...prev, [cat.id]: !prev[cat.id] }))
-                            }
-                            className="w-full flex items-center justify-between text-left"
-                          >
-                            <span className="font-mono text-[11px] uppercase tracking-widest text-amber-900">
-                              Carbon-intensive options (click to view)
-                            </span>
-                            <span className="font-mono text-xs text-amber-900">
-                              {carbonSectionsOpen[cat.id] ? '−' : '+'}
-                            </span>
-                          </button>
-                          {carbonSectionsOpen[cat.id] && (
-                            <div className="space-y-3 mt-3">
-                              {carbonHeavy.map((mat) => (
-                                <div
-                                  key={mat.id}
-                                  draggable
-                                  onDragStart={(e) => handleDragStart(mat.id, e)}
-                                  className="border border-gray-200 bg-white p-4 flex items-start gap-3 cursor-grab active:cursor-grabbing"
-                                >
-                                  <span
-                                    className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
-                                    style={{ backgroundColor: mat.tone }}
-                                    aria-hidden
-                                  />
-                                  <div>
-                                    <div className="font-display uppercase tracking-wide text-sm">{mat.name}</div>
-                                    <div className="font-mono text-[11px] uppercase tracking-widest">
-                                      {mat.finish}
-                                    </div>
-                                    <p className="font-sans text-sm text-gray-600 mt-1">{mat.description}</p>
-                                    <button
-                                      onClick={() => handleAdd(mat)}
-                                      className="mt-2 font-mono text-[11px] uppercase tracking-widest border px-2 py-1 hover:bg-black hover:text-white"
-                                    >
-                                      Add to board
-                                    </button>
-                                    {mat.colorOptions?.length ? (
-                                      <div className="mt-3 space-y-2">
-                                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                                          {mat.id === 'brick-veneer' ? 'Brick Colours' : 'Colour Options'}
-                                        </div>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          {mat.colorOptions.map((option) => (
-                                            <button
-                                              key={`${mat.id}-${option.label}`}
-                                              onClick={() => handleAdd(mat, option)}
-                                              className="inline-flex items-center gap-2 px-2 py-1 border border-gray-200 hover:border-black"
-                                            >
-                                              <span
-                                                className="w-4 h-4 rounded-full border border-gray-200 shadow-inner"
-                                                style={{ backgroundColor: option.tone }}
-                                                aria-hidden
-                                              />
-                                              <span className="font-mono text-[11px] uppercase tracking-widest">
-                                                {option.label}
-                                              </span>
-                                            </button>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
 
             <div className="border border-gray-200">
               <button
@@ -893,7 +1046,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       onChange={(e) => setManualCategory(e.target.value as any)}
                       className="border border-gray-300 px-2 py-2 font-sans text-sm"
                     >
-                      {categoryOrder.map((cat) => (
+                      {manualCategoryOptions.map((cat) => (
                         <option key={cat.id} value={cat.id}>
                           {cat.label}
                         </option>
