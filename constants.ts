@@ -1,9 +1,9 @@
 import { MaterialOption, ProjectImage, SpecSection } from './types';
-import moodboardMain from './images/moodboard-2.png';
-import moodboardAlt1 from './images/moodboard-4.png';
-import moodboardAlt2 from './images/moodboard-5.png';
-import moodboardAlt3 from './images/moodboard-6.png';
-import moodboardAlt4 from './images/moodboard.png';
+import moodboardMain from './images/moodboard-2.webp';
+import moodboardAlt1 from './images/moodboard-4.webp';
+import moodboardAlt2 from './images/moodboard-5.webp';
+import moodboardAlt3 from './images/moodboard-6.webp';
+import moodboardAlt4 from './images/moodboard.webp';
 
 export const MATERIAL_BASE_IMAGE = moodboardMain;
 export const STRUCTURE_BASE_IMAGES: Record<string, string> = {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Wand2 } from 'lucide-react';
 import { SUSTAINABILITY_PYRAMID } from '../constants';
-import heroMoodboard from '../images/moodboard-2.png';
-import carouselA from '../images/moodboard-4.png';
-import carouselB from '../images/moodboard-5.png';
-import carouselC from '../images/moodboard-6.png';
-import carouselD from '../images/moodboard.png';
+import heroMoodboard from '../images/moodboard-2.webp';
+import carouselA from '../images/moodboard-4.webp';
+import carouselB from '../images/moodboard-5.webp';
+import carouselC from '../images/moodboard-6.webp';
+import carouselD from '../images/moodboard.webp';
 
 interface ConceptProps {
   onNavigate: (page: string) => void;
