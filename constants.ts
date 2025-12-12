@@ -364,7 +364,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Natural clay plaster',
     description: 'Breathable clay plaster for walls; warm tone and moisture buffering.',
     keywords: ['wall', 'clay', 'breathable'],
-    category: 'wall-internal'
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls', 'Internal>Plaster / Microcement']
   },
   {
     id: 'gypsum-wall',
@@ -373,7 +374,66 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Painted gypsum board',
     description: 'Standard gypsum board walls with low-VOC paint for clean interiors.',
     keywords: ['wall', 'gypsum', 'paint'],
-    category: 'wall-internal'
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls']
+  },
+  {
+    id: 'mineral-microcement',
+    name: 'Mineral Microcement',
+    tone: '#d5d0c7',
+    finish: 'Seamless mineral microcement',
+    description: 'Thin-coat mineral microcement for walls and floors; seamless, tactile, and hard-wearing.',
+    keywords: ['microcement', 'seamless', 'plaster'],
+    category: 'microcement',
+    treePaths: ['Internal>Plaster / Microcement']
+  },
+  {
+    id: 'standard-wall-paint',
+    name: 'Paint – Standard (Walls)',
+    tone: '#f1f1f1',
+    finish: 'Low-VOC emulsion',
+    description: 'Standard neutral wall paint with low VOC content; pair with the finish selector.',
+    keywords: ['paint', 'walls', 'standard'],
+    category: 'paint-wall',
+    supportsColor: true,
+    finishOptions: ['Matte', 'Satin', 'Gloss'],
+    treePaths: ['Internal>Paint – Standard']
+  },
+  {
+    id: 'custom-wall-paint',
+    name: 'Paint – Custom Colour (Walls)',
+    tone: '#e8e8e8',
+    finish: 'Custom emulsion colour',
+    description: 'Pick any HEX/RGB colour for walls and choose matte, satin, or gloss finish.',
+    keywords: ['paint', 'walls', 'custom colour'],
+    category: 'paint-wall',
+    supportsColor: true,
+    finishOptions: ['Matte', 'Satin', 'Gloss'],
+    treePaths: ['Internal>Paint – Custom Colour']
+  },
+  {
+    id: 'standard-ceiling-paint',
+    name: 'Paint – Standard (Ceilings)',
+    tone: '#f6f6f6',
+    finish: 'Breathable ceiling paint',
+    description: 'Bright ceiling paint optimised for light reflectance with selectable finish.',
+    keywords: ['paint', 'ceiling', 'standard'],
+    category: 'paint-ceiling',
+    supportsColor: true,
+    finishOptions: ['Matte', 'Satin', 'Gloss'],
+    treePaths: ['Internal>Paint – Standard', 'Internal>Ceilings']
+  },
+  {
+    id: 'custom-ceiling-paint',
+    name: 'Paint – Custom Colour (Ceilings)',
+    tone: '#eeeeee',
+    finish: 'Custom ceiling paint colour',
+    description: 'Define a custom HEX/RGB colour for ceilings with matte, satin, or gloss finish.',
+    keywords: ['paint', 'ceiling', 'custom'],
+    category: 'paint-ceiling',
+    supportsColor: true,
+    finishOptions: ['Matte', 'Satin', 'Gloss'],
+    treePaths: ['Internal>Paint – Custom Colour', 'Internal>Ceilings']
   },
   {
     id: 'brick-veneer',
@@ -629,6 +689,61 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'low'
   },
   {
+    id: 'timber-wall-panels',
+    name: 'Timber Wall Panels',
+    tone: '#c5a171',
+    finish: 'Oak-faced acoustic panels',
+    description: 'Prefinished oak-faced panels with integrated acoustic fleece; ideal for walls and joinery fronts.',
+    keywords: ['timber', 'panel', 'acoustic'],
+    category: 'timber-panel',
+    treePaths: ['Internal>Timber Panels', 'Internal>Joinery & Furniture'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'porcelain-tiles',
+    name: 'Large-Format Tiles',
+    tone: '#cfcac3',
+    finish: 'Large-format porcelain tiles',
+    description: 'Durable porcelain tiles with low water absorption; suitable for wet zones and feature walls.',
+    keywords: ['tile', 'porcelain', 'internal'],
+    category: 'tile',
+    treePaths: ['Internal>Tiles'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'textured-wallpaper',
+    name: 'Textured Wallpaper',
+    tone: '#d9d3c8',
+    finish: 'Natural fibre textured wallpaper',
+    description: 'Grasscloth-inspired wallpaper adding warmth and texture to feature walls.',
+    keywords: ['wallpaper', 'feature wall', 'texture'],
+    category: 'wallpaper',
+    treePaths: ['Internal>Wallpaper'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'fabric-acoustic-panels',
+    name: 'Fabric Acoustic Panels',
+    tone: '#cfd2d6',
+    finish: 'Fabric-wrapped acoustic panels',
+    description: 'High NRC fabric panels for walls; demountable and available in wide colour range.',
+    keywords: ['acoustic', 'panels', 'fabric'],
+    category: 'acoustic-panel',
+    treePaths: ['Internal>Acoustic Panels'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'oak-timber-slats',
+    name: 'Oak Timber Slats',
+    tone: '#c19967',
+    finish: 'Solid oak slatted lining',
+    description: 'Solid oak slats on acoustic backing for ceilings or walls; warm tone with rhythm.',
+    keywords: ['timber', 'slats', 'acoustic'],
+    category: 'timber-slat',
+    treePaths: ['Internal>Timber Slats', 'Internal>Ceilings'],
+    carbonIntensity: 'low'
+  },
+  {
     id: 'cork-panels',
     name: 'Cork Wall Panels',
     tone: '#b08a5a',
@@ -692,6 +807,50 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Caramel', tone: '#b2824b' },
       { label: 'Espresso', tone: '#6f4b31' }
     ]
+  },
+  {
+    id: 'secondary-steelwork',
+    name: 'Secondary Steelwork',
+    tone: '#c3c7cc',
+    finish: 'Painted secondary framing',
+    description: 'Secondary steel framing, balustrades, and mezzanine members supporting the primary grid.',
+    keywords: ['secondary', 'structure', 'steel'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure', 'Internal>Exposed Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'permeable-paving',
+    name: 'Permeable Paving',
+    tone: '#a7a9a2',
+    finish: 'Permeable concrete/stone blocks',
+    description: 'Permeable block paving for SuDS-compliant external areas with granular sub-base.',
+    keywords: ['landscape', 'paving', 'suds'],
+    category: 'landscape',
+    treePaths: ['External>External Ground / Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'joinery-built-in',
+    name: 'Built-in Joinery',
+    tone: '#cfa87b',
+    finish: 'Birch plywood joinery',
+    description: 'Birch plywood joinery elements with clear matte lacquer; integrated shelving and benches.',
+    keywords: ['joinery', 'furniture', 'birch'],
+    category: 'joinery',
+    treePaths: ['Internal>Joinery & Furniture'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'brass-fixtures',
+    name: 'Brass Fixtures & Fittings',
+    tone: '#c6a766',
+    finish: 'Satin brass fixtures',
+    description: 'Satin brass hardware and fittings for door sets, taps, and feature lighting.',
+    keywords: ['fixtures', 'brass', 'hardware'],
+    category: 'fixture',
+    treePaths: ['Internal>Fixtures & Fittings'],
+    carbonIntensity: 'high'
   },
   {
     id: 'standing-seam-roof',
