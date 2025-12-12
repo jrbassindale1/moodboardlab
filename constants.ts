@@ -17,7 +17,7 @@ const contextImage = moodboardMain;
 export const SUSTAINABILITY_PYRAMID = [
   {
     id: 'avoid',
-    title: 'Avoid & Reduce',
+    title: 'Avoid and Reduce',
     guidance: 'Eliminate unnecessary materials, reduce quantities, and prioritize passive design moves before adding new products.'
   },
   {
