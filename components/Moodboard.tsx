@@ -437,7 +437,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       return acc;
     }, {});
     const lines = Object.entries(grouped).map(
-      ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish})`).join(', ')}`
+      ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
     );
     return lines.join('\n');
   }, [board]);
@@ -1094,9 +1094,9 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
 
     const prompt = `Analyze this image and identify all architectural materials visible. For each material, provide:
 1. name: The specific material name (e.g., "Oak Timber Flooring", "Polished Concrete")
-2. finish: The finish or surface treatment (e.g., "Oiled oak planks", "Polished concrete slab")
+2. finish: The finish or surface treatment, INCLUDING the color in the description (e.g., "Oiled oak planks in warm honey tone", "Polished concrete slab in light grey")
 3. description: A detailed 1-2 sentence description of the material and its characteristics
-4. tone: A hex color code representing the dominant color of the material (e.g., "#d8b185" for natural oak)
+4. tone: A hex color code representing the EXACT dominant color of the material as seen in the photo (e.g., "#d8b185" for natural oak, "#c5c0b5" for light grey concrete). CRITICAL: Analyze the actual color in the image carefully.
 5. category: One of these categories: floor, structure, finish, wall-internal, external, soffit, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, exposed-structure, joinery, fixture, landscape, insulation, door, balustrade, external-ground
 6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
 7. carbonIntensity: Either "low" or "high" based on the material's embodied carbon (e.g., timber is "low", concrete is "high")
@@ -1106,7 +1106,7 @@ Return ONLY a valid JSON object in this exact format:
   "materials": [
     {
       "name": "material name",
-      "finish": "finish description",
+      "finish": "finish description with color mentioned",
       "description": "detailed description",
       "tone": "#hexcolor",
       "category": "category-name",
@@ -1116,7 +1116,10 @@ Return ONLY a valid JSON object in this exact format:
   ]
 }
 
-Be specific and accurate. Only include materials you can clearly identify in the image.`;
+IMPORTANT:
+- Analyze the ACTUAL colors in the image carefully and provide accurate hex codes
+- Include color descriptions in the finish field (e.g., "White painted steel", "Charcoal powder-coated aluminum")
+- Be specific and accurate. Only include materials you can clearly identify in the image.`;
 
     const payload = {
       contents: [
@@ -1259,7 +1262,7 @@ Be specific and accurate. Only include materials you can clearly identify in the
     const perMaterialLines = board
       .map(
         (item) =>
-          `- ${item.name} (${item.finish}) | category: ${item.category} | description: ${item.description}`
+          `- ${item.name} (${item.finish}) | color: ${item.tone} | category: ${item.category} | description: ${item.description}`
       )
       .join('\n');
 
