@@ -503,6 +503,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       materialKey: buildMaterialKey(),
       summary: summaryText,
       renderNote: renderNote.trim() || undefined,
+      analysisText: analysis || undefined,
+      analysisStructured: analysisStructured || undefined,
+      lifecycleText: lifecycleAnalysis || undefined,
+      lifecycleStructured: lifecycleStructured || undefined,
       board,
       uploads: useUploads
         ? uploadedImages.map((img) => ({
