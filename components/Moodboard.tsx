@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
@@ -655,109 +656,71 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         (lifecycleStructuredRef.current?.length || 0) > 0
     );
 
-  const generateReportImage = async (opts?: { imageUrl?: string; includeImage?: boolean }) => {
-    const includeImage = opts?.includeImage !== false;
-    const chosenImageUrl = includeImage ? opts?.imageUrl || moodboardRenderUrl || appliedRenderUrl : null;
-    const image = chosenImageUrl ? await loadImage(chosenImageUrl) : null;
+  const generateReportPdf = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 48;
+    let cursorY = margin;
 
-    const analysisItems = analysisStructuredRef.current || [];
-    const lifecycleItems = lifecycleStructuredRef.current || [];
-    const baseHeight = 1200;
-    const dynamicHeight =
-      baseHeight +
-      (analysisItems.length + lifecycleItems.length) * 200 +
-      (analysisRef.current || lifecycleAnalysisRef.current ? 200 : 0) +
-      (image ? image.height : 0);
-    const height = Math.max(1800, dynamicHeight);
-    const width = 1240; // ~A4 at ~150dpi
-    const margin = 80;
-    const maxWidth = width - margin * 2;
-    const lineHeight = 26;
+    const ensureSpace = (needed = 0) => {
+      if (cursorY + needed > pageHeight - margin) {
+        doc.addPage();
+        cursorY = margin;
+      }
+    };
 
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas not supported in this browser.');
+    const addHeading = (text: string, size = 16) => {
+      ensureSpace(size * 1.6);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(size);
+      doc.text(text, margin, cursorY);
+      cursorY += size + 10;
+    };
 
-    ctx.fillStyle = '#f9fafb';
-    ctx.fillRect(0, 0, width, height);
-
-    const drawParagraph = (text: string, startY: number, font = '400 16px "Helvetica Neue", Arial, sans-serif') => {
-      ctx.font = font;
-      ctx.fillStyle = '#111827';
-      let cursorY = startY;
-      const blocks = text.split(/\n+/).filter(Boolean);
-      blocks.forEach((block, idx) => {
-        cursorY = wrapText(ctx, block, margin, cursorY, maxWidth, lineHeight) + lineHeight;
-        if (idx < blocks.length - 1) cursorY += lineHeight;
+    const addParagraph = (text: string, size = 12, gap = 8) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(size);
+      const maxWidth = pageWidth - margin * 2;
+      const lines = doc.splitTextToSize(text, maxWidth);
+      lines.forEach((line) => {
+        ensureSpace(size * 1.2);
+        doc.text(line, margin, cursorY);
+        cursorY += size + 4;
       });
-      return cursorY;
+      cursorY += gap;
     };
 
-    const drawHeading = (text: string, y: number, font = '700 20px "Helvetica Neue", Arial, sans-serif') => {
-      ctx.font = font;
-      ctx.fillStyle = '#111827';
-      ctx.fillText(text, margin, y);
-      return y + 32;
-    };
+    // Header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text('Sustainability & Lifecycle Report', margin, cursorY);
+    const brand = 'MOODBOARD-LAB.COM';
+    doc.text(brand, pageWidth - margin, cursorY, { align: 'right' });
+    cursorY += 24;
 
-    ctx.font = '700 32px "Helvetica Neue", Arial, sans-serif';
-    let cursorY = margin + 8;
-    ctx.fillStyle = '#111827';
-    ctx.fillText('Sustainability & Lifecycle Report', margin, cursorY);
-    cursorY += 12;
-
-    const brandText = 'MOODBOARD-LAB.COM';
-    ctx.font = '700 18px "Helvetica Neue", Arial, sans-serif';
-    const brandWidth = ctx.measureText(brandText).width;
-    ctx.fillText(brandText, width - margin - brandWidth, margin + 8);
-
-    cursorY += 40;
-
-    if (image) {
-      const maxImageWidth = maxWidth;
-      const scale = Math.min(1, maxImageWidth / image.width);
-      const imgWidth = Math.round(image.width * scale);
-      const imgHeight = Math.round(image.height * scale);
-      ctx.drawImage(image, margin, cursorY, imgWidth, imgHeight);
-      cursorY += imgHeight + 32;
-    }
-
-    cursorY = drawHeading('Materials', cursorY);
-    cursorY = drawParagraph(materialKey || buildMaterialKey(), cursorY, '400 16px "Helvetica Neue", Arial, sans-serif');
-
-    cursorY = drawHeading('Prompt', cursorY);
-    const promptText = renderNote.trim()
-      ? `${renderNote.trim()}\n\n${summaryText}`
-      : summaryText;
-    cursorY = drawParagraph(promptText, cursorY);
-
-    const hasAnalysis = analysisItems.length || analysisRef.current;
-    if (hasAnalysis) {
-      cursorY = drawHeading('Sustainability Analysis', cursorY);
+    // Sustainability Analysis
+    const analysisItems = analysisStructuredRef.current || [];
+    if (analysisItems.length || analysisRef.current) {
+      addHeading('Sustainability Analysis', 15);
       if (analysisItems.length) {
         analysisItems.forEach((item) => {
-          ctx.font = '700 16px "Helvetica Neue", Arial, sans-serif';
-          ctx.fillText(item.title, margin, cursorY);
-          cursorY += lineHeight;
-          cursorY = drawParagraph(item.explanation, cursorY, '400 16px "Helvetica Neue", Arial, sans-serif');
-          cursorY += 10;
+          addHeading(item.title, 13);
+          addParagraph(item.explanation, 12, 10);
         });
       } else if (analysisRef.current) {
-        cursorY = drawParagraph(analysisRef.current, cursorY);
+        addParagraph(analysisRef.current, 12, 12);
       }
     }
 
-    const hasLifecycle = lifecycleItems.length || lifecycleAnalysisRef.current;
-    if (hasLifecycle) {
-      cursorY = drawHeading('Lifecycle Analysis', cursorY);
+    // Lifecycle Analysis
+    const lifecycleItems = lifecycleStructuredRef.current || [];
+    if (lifecycleItems.length || lifecycleAnalysisRef.current) {
+      addHeading('Lifecycle Analysis', 15);
       if (lifecycleItems.length) {
         lifecycleItems.forEach((item) => {
-          ctx.font = '700 16px "Helvetica Neue", Arial, sans-serif';
-          ctx.fillText(item.material, margin, cursorY);
-          cursorY += lineHeight;
-          const lifecycleSummary = [
+          addHeading(item.material, 13);
+          const summary = [
             `Sourcing: ${item.sourcing}`,
             `Fabrication: ${item.fabrication}`,
             `Transport: ${item.transport}`,
@@ -765,20 +728,21 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
             `Maintenance: ${item.maintenance}`,
             `End-of-life: ${item.endOfLife}`,
             `UK tip: ${item.ukTip}`
-          ].join('  •  ');
-          cursorY = drawParagraph(lifecycleSummary, cursorY);
-          cursorY += 10;
+          ].join('\n');
+          addParagraph(summary, 12, 12);
         });
       } else if (lifecycleAnalysisRef.current) {
-        cursorY = drawParagraph(lifecycleAnalysisRef.current, cursorY);
+        addParagraph(lifecycleAnalysisRef.current, 12, 12);
       }
     }
 
-    ctx.font = '500 12px "Helvetica Neue", Arial, sans-serif';
-    ctx.fillStyle = '#6b7280';
-    ctx.fillText('Generated with Moodboard-Lab', margin, height - margin + 12);
+    // Footer
+    ensureSpace(40);
+    doc.setFont('helvetica', 'medium');
+    doc.setFontSize(10);
+    doc.text('Generated with Moodboard-Lab', margin, pageHeight - margin);
 
-    return canvas.toDataURL('image/png');
+    return doc;
   };
 
   const handleDownloadReport = async () => {
@@ -788,15 +752,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     }
     setExportingReport(true);
     try {
-      const dataUrl = await generateReportImage();
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = 'moodboard-report.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const doc = generateReportPdf();
+      doc.save('moodboard-report.pdf');
     } catch (err) {
-      console.error('Could not create report image', err);
+      console.error('Could not create report PDF', err);
       setError('Could not create the report download.');
     } finally {
       setExportingReport(false);
@@ -810,13 +769,16 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     }
     setExportingReport(true);
     try {
-      const dataUrl = await generateReportImage();
-      const win = window.open(dataUrl, '_blank');
+      const doc = generateReportPdf();
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
       if (!win) {
-        await handleSaveImage(dataUrl, 'moodboard-report.png');
+        doc.save('moodboard-report.pdf');
       }
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (err) {
-      console.error('Could not create report image', err);
+      console.error('Could not create report PDF', err);
       setError('Could not create the mobile report.');
     } finally {
       setExportingReport(false);
@@ -1634,7 +1596,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       Building report…
                     </>
                   ) : (
-                    'Download report (PNG)'
+                    'Download report (PDF)'
                   )}
                 </button>
                 <button
@@ -1648,7 +1610,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       Saving…
                     </>
                   ) : (
-                    'Save report (mobile)'
+                    'Save report (PDF)'
                   )}
                 </button>
               </div>
@@ -1683,7 +1645,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                         onClick={handleMobileSaveReport}
                         className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
                       >
-                        Save (with text)
+                        Save report (PDF)
                       </button>
                     </div>
                   </div>
@@ -1746,7 +1708,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                         onClick={handleMobileSaveReport}
                         className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
                       >
-                        Save (with text)
+                        Save report (PDF)
                       </button>
                     </div>
                   </div>
