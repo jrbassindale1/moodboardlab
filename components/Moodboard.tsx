@@ -37,6 +37,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
   const [steelColor, setSteelColor] = useState('#ffffff');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
 
   const paletteByCategory = useMemo(() => {
     return {
@@ -395,17 +396,22 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       setError('Add materials to the moodboard first.');
       return;
     }
+    setIsCreatingMoodboard(true);
     setMaterialKey(buildMaterialKey());
     setAnalysis(null);
     setLifecycleAnalysis(null);
     setLifecycleStructured(null);
     setStatus('all');
     setError(null);
-    await runGemini('analysis');
-    await runGemini('lifecycle');
-    await runGemini('render', { useUploads: false, onRender: setMoodboardRenderUrl });
-    setStatus('idle');
-    setMaterialsAccordionOpen(false);
+    try {
+      await runGemini('analysis');
+      await runGemini('lifecycle');
+      await runGemini('render', { useUploads: false, onRender: setMoodboardRenderUrl });
+      setMaterialsAccordionOpen(false);
+    } finally {
+      setIsCreatingMoodboard(false);
+      setStatus('idle');
+    }
   };
 
   const handleFileInput = async (files: FileList | null) => {
@@ -970,10 +976,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                   <div className="flex flex-wrap gap-3">
                     <button
                       onClick={runMoodboardFlow}
-                      disabled={status !== 'idle' || !board.length}
+                      disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
                       className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
-                      {status === 'all' ? (
+                      {isCreatingMoodboard ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Creating
@@ -1100,8 +1106,22 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       )}
                     </button>
                   </div>
-                  <div className="w-full border border-gray-200 bg-gray-50">
-                    <img src={moodboardRenderUrl} alt="Moodboard" className="w-full h-auto object-contain" />
+                  <div className="w-full border border-gray-200 bg-gray-50 relative overflow-hidden">
+                    <img
+                      src={moodboardRenderUrl}
+                      alt="Moodboard"
+                      className={`w-full h-auto object-contain transition ${
+                        isCreatingMoodboard ? 'opacity-40 grayscale' : ''
+                      }`}
+                    />
+                    {isCreatingMoodboard && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60">
+                        <Loader2 className="w-12 h-12 animate-spin text-gray-700" />
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
+                          Updating moodboard…
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {materialKey && (
