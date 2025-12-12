@@ -175,14 +175,9 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
-  const [detectedMaterials, setDetectedMaterials] = useState<Array<{
-    name: string;
-    finish: string;
-    description: string;
-    tone: string;
-    category: MaterialCategory;
-  }> | null>(null);
+  const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
   const [showDetectionModal, setShowDetectionModal] = useState(false);
+  const [addedDetectedIds, setAddedDetectedIds] = useState<Set<string>>(new Set());
 
   const treePathFallbacks = useMemo(
     () => ({
@@ -1081,11 +1076,16 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       };
 
       setDetectionImage(uploadedImg);
-      await detectMaterialsFromImage(uploadedImg);
+      // Don't auto-analyze anymore - wait for button press
     } catch (err) {
       console.error('Could not process upload', err);
       setError(`Could not process "${file.name}".`);
     }
+  };
+
+  const startMaterialDetection = async () => {
+    if (!detectionImage) return;
+    await detectMaterialsFromImage(detectionImage);
   };
 
   const detectMaterialsFromImage = async (image: UploadedImage) => {
@@ -1098,6 +1098,8 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
 3. description: A detailed 1-2 sentence description of the material and its characteristics
 4. tone: A hex color code representing the dominant color of the material (e.g., "#d8b185" for natural oak)
 5. category: One of these categories: floor, structure, finish, wall-internal, external, soffit, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, exposed-structure, joinery, fixture, landscape, insulation, door, balustrade, external-ground
+6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
+7. carbonIntensity: Either "low" or "high" based on the material's embodied carbon (e.g., timber is "low", concrete is "high")
 
 Return ONLY a valid JSON object in this exact format:
 {
@@ -1107,7 +1109,9 @@ Return ONLY a valid JSON object in this exact format:
       "finish": "finish description",
       "description": "detailed description",
       "tone": "#hexcolor",
-      "category": "category-name"
+      "category": "category-name",
+      "keywords": ["keyword1", "keyword2", "keyword3"],
+      "carbonIntensity": "low"
     }
   ]
 }
@@ -1143,11 +1147,32 @@ Be specific and accurate. Only include materials you can clearly identify in the
       textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
       const parsed = JSON.parse(textResult);
-      const materials = Array.isArray(parsed?.materials) ? parsed.materials : [];
+      const rawMaterials = Array.isArray(parsed?.materials) ? parsed.materials : [];
 
-      if (materials.length > 0) {
-        setDetectedMaterials(materials);
+      if (rawMaterials.length > 0) {
+        // Convert to full MaterialOption objects with all required fields
+        const fullMaterials: MaterialOption[] = rawMaterials.map((mat: any) => {
+          const category = mat.category as MaterialCategory;
+          const treePaths = treePathFallbacks[category] || ['Custom>Brand / Supplier Material'];
+
+          return {
+            id: `detected-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: mat.name || 'Unknown Material',
+            tone: mat.tone || '#e5e7eb',
+            finish: mat.finish || '',
+            description: mat.description || '',
+            keywords: Array.isArray(mat.keywords) ? mat.keywords : ['detected', 'custom'],
+            category: category,
+            carbonIntensity: (mat.carbonIntensity === 'low' || mat.carbonIntensity === 'high')
+              ? mat.carbonIntensity
+              : undefined,
+            treePaths: treePaths
+          };
+        });
+
+        setDetectedMaterials(fullMaterials);
         setShowDetectionModal(true);
+        setAddedDetectedIds(new Set()); // Reset tracking when showing new materials
       } else {
         setError('No materials detected in the image. Please try another image.');
       }
@@ -1159,24 +1184,20 @@ Be specific and accurate. Only include materials you can clearly identify in the
     }
   };
 
-  const addDetectedMaterialsToBoard = (materials: Array<{
-    name: string;
-    finish: string;
-    description: string;
-    tone: string;
-    category: MaterialCategory;
-  }>) => {
+  const addSingleDetectedMaterial = (material: MaterialOption) => {
+    if (addedDetectedIds.has(material.id)) {
+      return; // Already added, don't add again
+    }
+    handleAdd(material);
+    setAddedDetectedIds((prev) => new Set([...prev, material.id]));
+  };
+
+  const addDetectedMaterialsToBoard = (materials: MaterialOption[]) => {
     materials.forEach((mat) => {
-      const newMat: MaterialOption = {
-        id: `detected-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name: mat.name,
-        tone: mat.tone,
-        finish: mat.finish,
-        description: mat.description,
-        keywords: ['detected', 'custom'],
-        category: mat.category
-      };
-      handleAdd(newMat);
+      if (!addedDetectedIds.has(mat.id)) {
+        handleAdd(mat);
+        setAddedDetectedIds((prev) => new Set([...prev, mat.id]));
+      }
     });
     setShowDetectionModal(false);
     setDetectedMaterials(null);
@@ -1500,7 +1521,7 @@ Be specific and accurate. Only include materials you can clearly identify in the
                   AI Material Detection
                 </div>
                 <p className="font-sans text-sm text-gray-600">
-                  Upload a product photo and AI will automatically detect and extract architectural materials.
+                  Upload a product photo and click analyze to automatically detect architectural materials.
                 </p>
                 <div className="flex items-center gap-3">
                   <input
@@ -1509,21 +1530,34 @@ Be specific and accurate. Only include materials you can clearly identify in the
                     onChange={(e) => handleMaterialDetectionUpload(e.target.files)}
                     className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
                   />
-                  {status === 'detecting' && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="font-mono text-[11px] uppercase tracking-widest">Analyzing...</span>
-                    </div>
-                  )}
                 </div>
                 {detectionImage && (
-                  <div className="border border-gray-200 bg-white p-2 max-w-xs">
-                    <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                      <img src={detectionImage.dataUrl} alt={detectionImage.name} className="w-full h-full object-cover" />
+                  <div className="space-y-3">
+                    <div className="border border-gray-200 bg-white p-2 max-w-xs">
+                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                        <img src={detectionImage.dataUrl} alt={detectionImage.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
+                        {detectionImage.name}
+                      </div>
                     </div>
-                    <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
-                      {detectionImage.name}
-                    </div>
+                    <button
+                      onClick={startMaterialDetection}
+                      disabled={status === 'detecting'}
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                    >
+                      {status === 'detecting' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Analyze Photo
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
@@ -2018,29 +2052,45 @@ Be specific and accurate. Only include materials you can clearly identify in the
 
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {detectedMaterials.map((mat, idx) => (
-                  <div key={idx} className="border border-gray-200 bg-white p-4">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className="w-12 h-12 rounded-full border border-gray-200 shadow-inner flex-shrink-0"
-                        style={{ backgroundColor: mat.tone }}
-                        aria-hidden
-                      />
-                      <div className="flex-1">
-                        <div className="font-display uppercase text-base">{mat.name}</div>
-                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mt-1">
-                          {mat.finish}
-                        </div>
-                        <p className="font-sans text-sm text-gray-600 mt-2">
-                          {mat.description}
-                        </p>
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400 mt-2">
-                          Category: {mat.category}
+                {detectedMaterials.map((mat) => {
+                  const isAdded = addedDetectedIds.has(mat.id);
+                  return (
+                    <div key={mat.id} className="border border-gray-200 bg-white p-4">
+                      <div className="flex items-start gap-3">
+                        <span
+                          className="w-12 h-12 rounded-full border border-gray-200 shadow-inner flex-shrink-0"
+                          style={{ backgroundColor: mat.tone }}
+                          aria-hidden
+                        />
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <div className="font-display uppercase text-base">{mat.name}</div>
+                            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mt-1">
+                              {mat.finish}
+                            </div>
+                            <p className="font-sans text-sm text-gray-600 mt-2">
+                              {mat.description}
+                            </p>
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400 mt-2">
+                              Category: {mat.category}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => addSingleDetectedMaterial(mat)}
+                            disabled={isAdded}
+                            className={`inline-flex items-center gap-2 px-3 py-1 border font-mono text-[11px] uppercase tracking-widest ${
+                              isAdded
+                                ? 'border-green-500 bg-green-50 text-green-700 cursor-not-allowed'
+                                : 'border-black bg-black text-white hover:bg-gray-900'
+                            }`}
+                          >
+                            {isAdded ? 'Added to Board' : 'Add to Board'}
+                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
@@ -2052,7 +2102,7 @@ Be specific and accurate. Only include materials you can clearly identify in the
                   }}
                   className="px-4 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-50"
                 >
-                  Cancel
+                  Close
                 </button>
                 <button
                   onClick={() => addDetectedMaterialsToBoard(detectedMaterials)}
