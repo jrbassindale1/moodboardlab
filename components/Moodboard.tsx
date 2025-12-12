@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
-import { MaterialOption, UploadedImage } from '../types';
+import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 
 type BoardItem = MaterialOption;
 
@@ -35,7 +35,8 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
         id: 'landscape',
         label: 'External Ground / Landscaping',
         path: 'External>External Ground / Landscaping'
-      }
+      },
+      { id: 'insulation', label: 'Insulation', path: 'External>Insulation' }
     ]
   },
   {
@@ -55,7 +56,9 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
       { id: 'timber-slats', label: 'Timber Slats', path: 'Internal>Timber Slats' },
       { id: 'exposed-structure', label: 'Exposed Structure', path: 'Internal>Exposed Structure' },
       { id: 'joinery', label: 'Joinery & Furniture', path: 'Internal>Joinery & Furniture' },
-      { id: 'fixtures', label: 'Fixtures & Fittings', path: 'Internal>Fixtures & Fittings' }
+      { id: 'fixtures', label: 'Fixtures & Fittings', path: 'Internal>Fixtures & Fittings' },
+      { id: 'doors', label: 'Doors', path: 'Internal>Doors' },
+      { id: 'balustrade', label: 'Balustrade & Railings', path: 'Internal>Balustrade & Railings' }
     ]
   },
   {
@@ -163,7 +166,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
   const [renderNote, setRenderNote] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [status, setStatus] = useState<'idle' | 'analysis' | 'render' | 'lifecycle' | 'all'>('idle');
+  const [status, setStatus] = useState<'idle' | 'analysis' | 'render' | 'lifecycle' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -171,6 +174,15 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [steelColor, setSteelColor] = useState('#ffffff');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
+  const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
+  const [detectedMaterials, setDetectedMaterials] = useState<Array<{
+    name: string;
+    finish: string;
+    description: string;
+    tone: string;
+    category: MaterialCategory;
+  }> | null>(null);
+  const [showDetectionModal, setShowDetectionModal] = useState(false);
 
   const treePathFallbacks = useMemo(
     () => ({
@@ -195,7 +207,11 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       'exposed-structure': ['Internal>Exposed Structure'],
       joinery: ['Internal>Joinery & Furniture'],
       fixture: ['Internal>Fixtures & Fittings'],
-      landscape: ['External>External Ground / Landscaping']
+      landscape: ['External>External Ground / Landscaping'],
+      insulation: ['External>Insulation'],
+      door: ['Internal>Doors'],
+      balustrade: ['Internal>Balustrade & Railings'],
+      'external-ground': ['External>External Ground / Landscaping']
     }),
     []
   );
@@ -1035,6 +1051,138 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setManualLabel('');
   };
 
+  const handleMaterialDetectionUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`File exceeds 5 MB limit.`);
+      return;
+    }
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const resized = await downscaleImage(dataUrl);
+      const uploadedImg: UploadedImage = {
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        dataUrl: resized.dataUrl,
+        mimeType: resized.mimeType,
+        sizeBytes: resized.sizeBytes,
+        originalSizeBytes: file.size,
+        width: resized.width,
+        height: resized.height
+      };
+
+      setDetectionImage(uploadedImg);
+      await detectMaterialsFromImage(uploadedImg);
+    } catch (err) {
+      console.error('Could not process upload', err);
+      setError(`Could not process "${file.name}".`);
+    }
+  };
+
+  const detectMaterialsFromImage = async (image: UploadedImage) => {
+    setStatus('detecting');
+    setError(null);
+
+    const prompt = `Analyze this image and identify all architectural materials visible. For each material, provide:
+1. name: The specific material name (e.g., "Oak Timber Flooring", "Polished Concrete")
+2. finish: The finish or surface treatment (e.g., "Oiled oak planks", "Polished concrete slab")
+3. description: A detailed 1-2 sentence description of the material and its characteristics
+4. tone: A hex color code representing the dominant color of the material (e.g., "#d8b185" for natural oak)
+5. category: One of these categories: floor, structure, finish, wall-internal, external, soffit, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, exposed-structure, joinery, fixture, landscape, insulation, door, balustrade, external-ground
+
+Return ONLY a valid JSON object in this exact format:
+{
+  "materials": [
+    {
+      "name": "material name",
+      "finish": "finish description",
+      "description": "detailed description",
+      "tone": "#hexcolor",
+      "category": "category-name"
+    }
+  ]
+}
+
+Be specific and accurate. Only include materials you can clearly identify in the image.`;
+
+    const payload = {
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: image.mimeType,
+                data: image.dataUrl.split(',')[1]
+              }
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.3,
+        topP: 0.95,
+        topK: 40
+      }
+    };
+
+    try {
+      const data = await callGeminiText(payload);
+      let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      // Clean up the response to extract JSON
+      textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+      const parsed = JSON.parse(textResult);
+      const materials = Array.isArray(parsed?.materials) ? parsed.materials : [];
+
+      if (materials.length > 0) {
+        setDetectedMaterials(materials);
+        setShowDetectionModal(true);
+      } else {
+        setError('No materials detected in the image. Please try another image.');
+      }
+    } catch (err) {
+      console.error('Material detection error:', err);
+      setError('Failed to analyze materials. Please try again.');
+    } finally {
+      setStatus('idle');
+    }
+  };
+
+  const addDetectedMaterialsToBoard = (materials: Array<{
+    name: string;
+    finish: string;
+    description: string;
+    tone: string;
+    category: MaterialCategory;
+  }>) => {
+    materials.forEach((mat) => {
+      const newMat: MaterialOption = {
+        id: `detected-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: mat.name,
+        tone: mat.tone,
+        finish: mat.finish,
+        description: mat.description,
+        keywords: ['detected', 'custom'],
+        category: mat.category
+      };
+      handleAdd(newMat);
+    });
+    setShowDetectionModal(false);
+    setDetectedMaterials(null);
+    setDetectionImage(null);
+  };
+
   const parseAnalysisJson = (cleaned: string) => {
     try {
       const parsed = JSON.parse(cleaned);
@@ -1309,9 +1457,9 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                           <p className="font-sans text-sm text-gray-600">No materials in this group yet.</p>
                         ) : (
                           <div className="space-y-2 text-sm text-gray-700">
-                            <p>Use uploads or the custom material form below to drop supplier products here.</p>
+                            <p>Upload product photos to automatically detect and extract architectural materials.</p>
                             <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                              Upload reference images or add a URL in "Add Custom Material".
+                              Or manually add custom materials using the form below.
                             </p>
                           </div>
                         )}
@@ -1346,6 +1494,41 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
             </div>
           ))}
 
+            <div className="border border-gray-200 bg-blue-50">
+              <div className="p-4 space-y-3">
+                <div className="font-mono text-xs uppercase tracking-widest text-gray-700">
+                  AI Material Detection
+                </div>
+                <p className="font-sans text-sm text-gray-600">
+                  Upload a product photo and AI will automatically detect and extract architectural materials.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleMaterialDetectionUpload(e.target.files)}
+                    className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
+                  />
+                  {status === 'detecting' && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="font-mono text-[11px] uppercase tracking-widest">Analyzing...</span>
+                    </div>
+                  )}
+                </div>
+                {detectionImage && (
+                  <div className="border border-gray-200 bg-white p-2 max-w-xs">
+                    <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                      <img src={detectionImage.dataUrl} alt={detectionImage.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
+                      {detectionImage.name}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="border border-gray-200">
               <button
                 onClick={() =>
@@ -1354,7 +1537,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                 className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
               >
                 <span className="font-mono text-xs uppercase tracking-widest text-gray-600">
-                  Add Custom Material
+                  Add Custom Material Manually
                 </span>
                 <span className="font-mono text-xs text-gray-500">
                   {openSections.custom ? '−' : '+'}
@@ -1805,7 +1988,84 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Material Detection Modal */}
+        {showDetectionModal && detectedMaterials && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-2xl uppercase">Detected Materials</h2>
+                  <p className="font-sans text-sm text-gray-600 mt-1">
+                    Select which materials to add to your moodboard palette
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowDetectionModal(false);
+                    setDetectedMaterials(null);
+                    setDetectionImage(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {detectedMaterials.map((mat, idx) => (
+                  <div key={idx} className="border border-gray-200 bg-white p-4">
+                    <div className="flex items-start gap-3">
+                      <span
+                        className="w-12 h-12 rounded-full border border-gray-200 shadow-inner flex-shrink-0"
+                        style={{ backgroundColor: mat.tone }}
+                        aria-hidden
+                      />
+                      <div className="flex-1">
+                        <div className="font-display uppercase text-base">{mat.name}</div>
+                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mt-1">
+                          {mat.finish}
+                        </div>
+                        <p className="font-sans text-sm text-gray-600 mt-2">
+                          {mat.description}
+                        </p>
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400 mt-2">
+                          Category: {mat.category}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
+                <button
+                  onClick={() => {
+                    setShowDetectionModal(false);
+                    setDetectedMaterials(null);
+                    setDetectionImage(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => addDetectedMaterialsToBoard(detectedMaterials)}
+                  className="px-4 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900"
+                >
+                  Add All Materials
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

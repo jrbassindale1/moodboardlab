@@ -35,6 +35,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ openPreferences, onClosePre
       setAdsPreference(parsed.ads);
       setAnalyticsEnabled(parsed.analytics);
       setShowBanner(false);
+      window.dispatchEvent(new CustomEvent('cookieConsentChanged', { detail: parsed }));
     } catch {
       setShowBanner(true);
     }
@@ -59,6 +60,7 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ openPreferences, onClosePre
   const saveConsent = (settings: ConsentSettings, hideBanner = true) => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      window.dispatchEvent(new CustomEvent('cookieConsentChanged', { detail: settings }));
     }
     setShowPreferences(false);
     if (hideBanner) {

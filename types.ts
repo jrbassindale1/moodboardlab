@@ -35,7 +35,11 @@ export type MaterialCategory =
   | 'exposed-structure'
   | 'joinery'
   | 'fixture'
-  | 'landscape';
+  | 'landscape'
+  | 'insulation'
+  | 'door'
+  | 'balustrade'
+  | 'external-ground';
 
 export interface MaterialOption {
   id: string;

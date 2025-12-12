@@ -295,6 +295,96 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'high'
   },
   {
+    id: 'vinyl-planks',
+    name: 'Vinyl Planks (Recycled)',
+    tone: '#d4c9b8',
+    finish: 'Recycled vinyl planks',
+    description: 'Luxury vinyl planks with recycled content; durable, water-resistant, and comfortable underfoot.',
+    keywords: ['vinyl', 'recycled', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'resin-flooring',
+    name: 'Resin Flooring',
+    tone: '#c5c8ca',
+    finish: 'Seamless epoxy resin',
+    description: 'Seamless epoxy resin floor for hard-wearing, easy-clean surfaces with customizable finish.',
+    keywords: ['resin', 'seamless', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'microcement-floor',
+    name: 'Microcement Flooring',
+    tone: '#d0cbc2',
+    finish: 'Seamless mineral microcement',
+    description: 'Thin-coat microcement for floors; seamless, industrial aesthetic with sealed finish.',
+    keywords: ['microcement', 'seamless', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'ceramic-tiles',
+    name: 'Ceramic Tiles',
+    tone: '#e6e4de',
+    finish: 'Glazed ceramic tiles',
+    description: 'Durable glazed ceramic tiles for wet areas and circulation; wide range of sizes and colors.',
+    keywords: ['ceramic', 'tiles', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'epoxy-flooring',
+    name: 'Epoxy Flooring',
+    tone: '#b8bfc7',
+    finish: 'Industrial epoxy coating',
+    description: 'Industrial-grade epoxy coating for high-traffic areas; chemical-resistant and easy to clean.',
+    keywords: ['epoxy', 'industrial', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'travertine-tiles',
+    name: 'Travertine Tiles',
+    tone: '#d8cdb9',
+    finish: 'Honed travertine',
+    description: 'Natural travertine tiles with characteristic pitting; warm neutral tone for circulation.',
+    keywords: ['travertine', 'stone', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'marble-floor',
+    name: 'Marble Flooring',
+    tone: '#e8e5df',
+    finish: 'Polished marble',
+    description: 'Polished natural marble tiles with veining; elegant finish for entrance and feature zones.',
+    keywords: ['marble', 'stone', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'engineered-oak-floor',
+    name: 'Engineered Oak Flooring',
+    tone: '#d4b08a',
+    finish: 'Engineered oak planks',
+    description: 'Wide-plank engineered oak with hardwearing finish; stable and suitable for underfloor heating.',
+    keywords: ['oak', 'engineered', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'linoleum-tiles',
+    name: 'Linoleum Tiles',
+    tone: '#cdd1cf',
+    finish: 'Modular linoleum tiles',
+    description: 'Modular linoleum tiles with natural mottled pattern; easy to replace and maintain.',
+    keywords: ['linoleum', 'tiles', 'floor'],
+    category: 'floor',
+    carbonIntensity: 'low'
+  },
+  {
     id: 'aluminum-frame',
     name: 'Aluminum Window Frame',
     tone: '#c0c6cf',
@@ -326,6 +416,56 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'low'
   },
   {
+    id: 'steel-window-frame',
+    name: 'Steel Window Frame',
+    tone: '#3a3f45',
+    finish: 'Slim steel frames',
+    description: 'Slim steel window frames with minimal sightlines; industrial aesthetic and high strength.',
+    keywords: ['window', 'steel', 'frame'],
+    category: 'window',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'composite-window-frame',
+    name: 'Composite Window Frame',
+    tone: '#c8c3b5',
+    finish: 'Timber-polymer composite',
+    description: 'Composite timber-polymer frames combining low maintenance with natural appearance.',
+    keywords: ['window', 'composite', 'frame'],
+    category: 'window',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'upvc-window-frame',
+    name: 'uPVC Window Frame',
+    tone: '#f0f0f0',
+    finish: 'Multi-chamber uPVC',
+    description: 'Multi-chamber uPVC frames with thermal efficiency; low maintenance and cost-effective.',
+    keywords: ['window', 'upvc', 'frame'],
+    category: 'window',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'curtain-wall-system',
+    name: 'Curtain Wall System',
+    tone: '#b5c0ca',
+    finish: 'Aluminum curtain wall',
+    description: 'Structural glazing curtain wall system for full-height transparency and weatherproofing.',
+    keywords: ['window', 'curtain wall', 'glazing'],
+    category: 'window',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'frameless-glazing',
+    name: 'Frameless Glazing',
+    tone: '#e6f0f5',
+    finish: 'Structural glass with minimal framing',
+    description: 'Minimal-frame or frameless structural glazing for maximum transparency and connection.',
+    keywords: ['window', 'frameless', 'glazing'],
+    category: 'window',
+    carbonIntensity: 'high'
+  },
+  {
     id: 'clay-plaster',
     name: 'Clay Plaster',
     tone: '#d6c0a6',
@@ -342,6 +482,66 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Painted gypsum board',
     description: 'Standard gypsum board walls with low-VOC paint for clean interiors.',
     keywords: ['wall', 'gypsum', 'paint'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls']
+  },
+  {
+    id: 'plasterboard-wall',
+    name: 'Plasterboard Wall',
+    tone: '#ebebeb',
+    finish: 'Smooth plasterboard finish',
+    description: 'Standard plasterboard walls with smooth skim finish; versatile base for paint or wallpaper.',
+    keywords: ['plasterboard', 'wall', 'internal'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls']
+  },
+  {
+    id: 'plywood-panels-wall',
+    name: 'Plywood Wall Panels',
+    tone: '#d8c0a0',
+    finish: 'Birch plywood panels',
+    description: 'Birch plywood panels with natural grain; warm and tactile interior finish.',
+    keywords: ['plywood', 'wall', 'panels'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls', 'Internal>Timber Panels']
+  },
+  {
+    id: 'acoustic-panels-wall',
+    name: 'Acoustic Wall Panels',
+    tone: '#d2d5d8',
+    finish: 'Fabric-wrapped acoustic panels',
+    description: 'Sound-absorbing acoustic panels for walls; demountable and available in custom colors.',
+    keywords: ['acoustic', 'wall', 'panels'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls', 'Internal>Acoustic Panels']
+  },
+  {
+    id: 'glass-partitions',
+    name: 'Glass Partitions',
+    tone: '#e8f2f5',
+    finish: 'Frameless or framed glass',
+    description: 'Transparent glass partitions for spatial division with visual connection; single or double-glazed.',
+    keywords: ['glass', 'partition', 'wall'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls']
+  },
+  {
+    id: 'brick-internal',
+    name: 'Brick (Internal)',
+    tone: '#b8624a',
+    finish: 'Exposed brick wall',
+    description: 'Exposed internal brick wall for texture and warmth; can be sealed or painted.',
+    keywords: ['brick', 'wall', 'internal'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls']
+  },
+  {
+    id: 'concrete-block-wall',
+    name: 'Concrete Block Wall',
+    tone: '#b5b0a5',
+    finish: 'Painted concrete block',
+    description: 'Concrete block walls with painted or exposed finish; durable and fire-resistant.',
+    keywords: ['concrete', 'block', 'wall'],
     category: 'wall-internal',
     treePaths: ['Internal>Walls']
   },
@@ -527,6 +727,96 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'low'
   },
   {
+    id: 'zinc-cladding',
+    name: 'Zinc Cladding',
+    tone: '#97a1ab',
+    finish: 'Standing seam or flat-lock zinc',
+    description: 'Self-patinating zinc cladding with long life and minimal maintenance; distinctive blue-grey patina.',
+    keywords: ['zinc', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'copper-cladding',
+    name: 'Copper Cladding',
+    tone: '#b87333',
+    finish: 'Copper sheets or shingles',
+    description: 'Copper cladding that develops natural verdigris patina; highly durable and distinctive appearance.',
+    keywords: ['copper', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'fiber-cement-panels',
+    name: 'Fiber Cement Panels',
+    tone: '#c5c3bd',
+    finish: 'Fiber cement rainscreen',
+    description: 'Fiber cement panels for durable, low-maintenance cladding; available in various textures and colors.',
+    keywords: ['fiber cement', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'metal-composite-panels',
+    name: 'Metal Composite Panels',
+    tone: '#b8bcc0',
+    finish: 'Aluminum composite panels',
+    description: 'Lightweight aluminum composite panels with polyethylene core; versatile and economical cladding.',
+    keywords: ['composite', 'aluminum', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'gfrc-panels',
+    name: 'GFRC Panels',
+    tone: '#c8c5be',
+    finish: 'Glass fiber reinforced concrete',
+    description: 'Glass fiber reinforced concrete panels offering sculptural possibilities with reduced weight.',
+    keywords: ['gfrc', 'concrete', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'weathering-steel-panels',
+    name: 'Weathering Steel Panels',
+    tone: '#7a4f3c',
+    finish: 'Corten steel panels',
+    description: 'Weathering steel (Corten) panels forming protective rust patina; no coating required.',
+    keywords: ['corten', 'steel', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'slate-cladding',
+    name: 'Slate Cladding',
+    tone: '#5a5f65',
+    finish: 'Natural slate panels',
+    description: 'Natural slate cladding with split or sawn finish; highly durable and weather-resistant.',
+    keywords: ['slate', 'stone', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'cork-rainscreen',
+    name: 'Cork Rainscreen',
+    tone: '#b5935e',
+    finish: 'Expanded cork panels',
+    description: 'Expanded cork rainscreen panels; bio-based, insulating, and naturally fire-resistant.',
+    keywords: ['cork', 'cladding', 'bio-based', 'external'],
+    category: 'external',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'recycled-plastic-cladding',
+    name: 'Recycled Plastic Cladding',
+    tone: '#8a9098',
+    finish: 'Recycled plastic composite',
+    description: 'Recycled plastic composite cladding; durable, low-maintenance, and circular material use.',
+    keywords: ['recycled', 'plastic', 'cladding', 'external'],
+    category: 'external',
+    carbonIntensity: 'low'
+  },
+  {
     id: 'acoustic-ceiling-baffles',
     name: 'Acoustic Ceiling Baffles',
     tone: '#cdd3d8',
@@ -575,6 +865,66 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['ceiling', 'open cell', 'services'],
     category: 'ceiling',
     carbonIntensity: 'high'
+  },
+  {
+    id: 'stretch-fabric-ceiling',
+    name: 'Stretch Fabric Ceiling',
+    tone: '#f5f5f5',
+    finish: 'Tensioned fabric membrane',
+    description: 'Tensioned fabric membrane ceiling with concealed services and lighting; smooth, seamless finish.',
+    keywords: ['fabric', 'ceiling', 'stretch'],
+    category: 'ceiling',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'coffered-ceiling',
+    name: 'Coffered Ceiling',
+    tone: '#d8c9b0',
+    finish: 'Timber or plaster coffers',
+    description: 'Recessed panel coffered ceiling adding architectural depth and rhythm; timber or plaster finish.',
+    keywords: ['coffered', 'ceiling', 'architectural'],
+    category: 'ceiling',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'plasterboard-ceiling',
+    name: 'Plasterboard Ceiling',
+    tone: '#ececec',
+    finish: 'Smooth plasterboard',
+    description: 'Standard smooth plasterboard ceiling with painted finish; versatile and cost-effective.',
+    keywords: ['plasterboard', 'ceiling', 'standard'],
+    category: 'ceiling',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'exposed-clt-ceiling',
+    name: 'Exposed CLT Ceiling',
+    tone: '#c7a276',
+    finish: 'Exposed CLT panels',
+    description: 'Exposed cross-laminated timber ceiling panels showcasing structure; warm and natural finish.',
+    keywords: ['clt', 'timber', 'ceiling', 'exposed'],
+    category: 'ceiling',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'metal-mesh-ceiling',
+    name: 'Metal Mesh Ceiling',
+    tone: '#b8bec5',
+    finish: 'Expanded metal mesh',
+    description: 'Expanded or woven metal mesh ceiling for visual transparency with acoustic backing.',
+    keywords: ['metal', 'mesh', 'ceiling'],
+    category: 'ceiling',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'acoustic-tiles-ceiling',
+    name: 'Acoustic Ceiling Tiles',
+    tone: '#e0e0df',
+    finish: 'Mineral fiber acoustic tiles',
+    description: 'Suspended mineral fiber acoustic tiles in grid system; high sound absorption and easy access.',
+    keywords: ['acoustic', 'tiles', 'ceiling'],
+    category: 'ceiling',
+    carbonIntensity: 'low'
   },
   {
     id: 'exposed-concrete-soffit',
@@ -777,6 +1127,86 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ]
   },
   {
+    id: 'plywood-panels-finish',
+    name: 'Plywood Panels',
+    tone: '#d5be9e',
+    finish: 'Birch or oak plywood',
+    description: 'Structural plywood panels with natural grain; warm, cost-effective interior finish.',
+    keywords: ['plywood', 'panels', 'finish'],
+    category: 'finish',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'marble-panels',
+    name: 'Marble Panels',
+    tone: '#e5e2db',
+    finish: 'Polished marble panels',
+    description: 'Polished natural marble panels with distinctive veining; elegant feature wall material.',
+    keywords: ['marble', 'stone', 'panels'],
+    category: 'finish',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'leather-panels',
+    name: 'Leather Panels',
+    tone: '#8b5a3c',
+    finish: 'Leather wall tiles',
+    description: 'Tactile leather wall tiles or panels; luxurious, warm finish for acoustic and visual softness.',
+    keywords: ['leather', 'panels', 'tactile'],
+    category: 'finish',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'metal-mesh-panels',
+    name: 'Metal Mesh Panels',
+    tone: '#b0b5bb',
+    finish: 'Woven or expanded metal mesh',
+    description: 'Architectural metal mesh panels for partitions and feature walls; semi-transparent and industrial.',
+    keywords: ['metal', 'mesh', 'panels'],
+    category: 'finish',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'glass-panels-finish',
+    name: 'Glass Panels',
+    tone: '#e8f0f3',
+    finish: 'Back-painted or textured glass',
+    description: 'Back-painted or textured glass panels for feature walls; easy to clean and hygienic.',
+    keywords: ['glass', 'panels', 'finish'],
+    category: 'finish',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'acoustic-plaster',
+    name: 'Acoustic Plaster',
+    tone: '#e5e0d8',
+    finish: 'Seamless acoustic plaster',
+    description: 'Seamless acoustic plaster for ceilings and walls; combines sound absorption with smooth finish.',
+    keywords: ['acoustic', 'plaster', 'seamless'],
+    category: 'finish',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'lime-plaster',
+    name: 'Lime Plaster',
+    tone: '#e0d5c5',
+    finish: 'Natural lime plaster',
+    description: 'Breathable natural lime plaster with soft, mottled finish; moisture-regulating and low-carbon.',
+    keywords: ['lime', 'plaster', 'breathable'],
+    category: 'finish',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'tadelakt-plaster',
+    name: 'Tadelakt Plaster',
+    tone: '#d8c8b5',
+    finish: 'Polished Moroccan plaster',
+    description: 'Polished waterproof Moroccan lime plaster; smooth, lustrous finish for wet areas.',
+    keywords: ['tadelakt', 'plaster', 'waterproof'],
+    category: 'finish',
+    carbonIntensity: 'low'
+  },
+  {
     id: 'secondary-steelwork',
     name: 'Secondary Steelwork',
     tone: '#c3c7cc',
@@ -785,6 +1215,76 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['secondary', 'structure', 'steel'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure', 'Internal>Exposed Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'brick-loadbearing',
+    name: 'Brick Load-Bearing Walls',
+    tone: '#a8553c',
+    finish: 'Solid brick masonry',
+    description: 'Traditional solid brick load-bearing construction with lime mortar; thermal mass and durability.',
+    keywords: ['brick', 'masonry', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'hempcrete-structural',
+    name: 'Hempcrete Structural',
+    tone: '#c5bfab',
+    finish: 'Hempcrete infill with timber frame',
+    description: 'Bio-based hempcrete infill within a timber frame; carbon-negative and breathable.',
+    keywords: ['hempcrete', 'bio-based', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'steel-concrete-composite',
+    name: 'Steel-Concrete Composite',
+    tone: '#b2b5b8',
+    finish: 'Composite steel decking with concrete',
+    description: 'Composite steel decking with concrete topping; efficient long-span solution.',
+    keywords: ['composite', 'steel', 'concrete', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'precast-concrete',
+    name: 'Precast Concrete',
+    tone: '#b5b0a8',
+    finish: 'Precast concrete elements',
+    description: 'Factory-made precast concrete beams and slabs for rapid, quality-controlled construction.',
+    keywords: ['precast', 'concrete', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'mass-timber-columns',
+    name: 'Mass Timber Columns',
+    tone: '#c2995d',
+    finish: 'Glulam or CLT columns',
+    description: 'Glulam or CLT columns providing vertical load-bearing with renewable, carbon-storing material.',
+    keywords: ['timber', 'mass timber', 'columns', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'steel-trusses',
+    name: 'Steel Trusses',
+    tone: '#c1c5ca',
+    finish: 'Welded steel trusses',
+    description: 'Long-span steel trusses for efficient roof and floor structures; painted or exposed finish.',
+    keywords: ['steel', 'trusses', 'structure'],
+    category: 'structure',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'prestressed-concrete',
+    name: 'Prestressed Concrete',
+    tone: '#b0aba3',
+    finish: 'Prestressed concrete beams',
+    description: 'Prestressed concrete beams for long spans with reduced material use; efficient structural system.',
+    keywords: ['prestressed', 'concrete', 'structure'],
+    category: 'structure',
     carbonIntensity: 'high'
   },
   {
@@ -869,6 +1369,326 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Shallow attenuation layers to slow stormwater discharge; pairs well with green roofs for SuDS performance.',
     keywords: ['roof', 'water', 'suds'],
     category: 'roof',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'clay-tiles-roof',
+    name: 'Clay Tiles',
+    tone: '#b85a3c',
+    finish: 'Interlocking clay tiles',
+    description: 'Traditional interlocking clay tiles with long lifespan and natural thermal performance.',
+    keywords: ['clay', 'tiles', 'roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'slate-tiles-roof',
+    name: 'Slate Tiles',
+    tone: '#3f444a',
+    finish: 'Natural slate roofing',
+    description: 'Natural slate roofing tiles; durable, low-maintenance, and highly weather-resistant.',
+    keywords: ['slate', 'tiles', 'roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'metal-tiles-roof',
+    name: 'Metal Tiles',
+    tone: '#8a9099',
+    finish: 'Profiled metal tiles',
+    description: 'Lightweight profiled metal tiles mimicking traditional forms; durable and recyclable.',
+    keywords: ['metal', 'tiles', 'roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'epdm-membrane',
+    name: 'EPDM Membrane',
+    tone: '#2b2d30',
+    finish: 'Single-ply EPDM',
+    description: 'Single-ply EPDM rubber membrane for flat roofs; durable, flexible, and UV-resistant.',
+    keywords: ['epdm', 'membrane', 'roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'tpo-membrane',
+    name: 'TPO Membrane',
+    tone: '#e8e8e8',
+    finish: 'White TPO single-ply',
+    description: 'White TPO single-ply membrane with high reflectivity for cool roof performance.',
+    keywords: ['tpo', 'membrane', 'roof', 'cool roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'built-up-roofing',
+    name: 'Built-Up Roofing',
+    tone: '#3a3a3a',
+    finish: 'Bituminous built-up layers',
+    description: 'Traditional built-up bituminous roofing with multiple layers; proven durability for flat roofs.',
+    keywords: ['bitumen', 'built-up', 'roof'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'polycarbonate-roof',
+    name: 'Polycarbonate Roof Panels',
+    tone: '#d8e8f0',
+    finish: 'Multi-wall polycarbonate',
+    description: 'Lightweight multi-wall polycarbonate panels for daylighting; insulating and impact-resistant.',
+    keywords: ['polycarbonate', 'panels', 'roof', 'daylighting'],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'wood-fiber-insulation',
+    name: 'Wood Fiber Insulation',
+    tone: '#c8b49a',
+    finish: 'Rigid wood fiber boards',
+    description: 'Bio-based rigid wood fiber insulation boards; breathable, high thermal mass, and carbon-storing.',
+    keywords: ['insulation', 'wood fiber', 'bio-based'],
+    category: 'insulation',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'hemp-insulation',
+    name: 'Hemp Insulation',
+    tone: '#b5a88a',
+    finish: 'Hemp fiber batts',
+    description: 'Natural hemp fiber insulation batts; breathable, renewable, and excellent moisture management.',
+    keywords: ['insulation', 'hemp', 'bio-based'],
+    category: 'insulation',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'sheep-wool-insulation',
+    name: "Sheep's Wool Insulation",
+    tone: '#e0d8c8',
+    finish: 'Natural wool batts',
+    description: 'Natural sheep wool insulation batts; renewable, moisture-buffering, and non-toxic.',
+    keywords: ['insulation', 'wool', 'natural'],
+    category: 'insulation',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'cork-insulation',
+    name: 'Cork Insulation',
+    tone: '#a18a68',
+    finish: 'Expanded cork boards',
+    description: 'Expanded cork insulation boards; bio-based, naturally fire-resistant, and carbon-negative.',
+    keywords: ['insulation', 'cork', 'bio-based'],
+    category: 'insulation',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'cellulose-insulation',
+    name: 'Cellulose Insulation',
+    tone: '#d5cbb8',
+    finish: 'Recycled paper cellulose',
+    description: 'Blown or batt cellulose from recycled paper; high recycled content and good thermal performance.',
+    keywords: ['insulation', 'cellulose', 'recycled'],
+    category: 'insulation',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'mineral-wool',
+    name: 'Mineral Wool',
+    tone: '#c8c3b5',
+    finish: 'Stone wool batts',
+    description: 'Stone wool insulation batts with excellent fire resistance and acoustic performance.',
+    keywords: ['insulation', 'mineral wool', 'fire-resistant'],
+    category: 'insulation',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'pir-insulation',
+    name: 'PIR/PUR Boards',
+    tone: '#e8d5a0',
+    finish: 'Rigid foam insulation',
+    description: 'High-performance rigid foam insulation boards; thin profile with high R-value.',
+    keywords: ['insulation', 'pir', 'foam'],
+    category: 'insulation',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'aerogel-insulation',
+    name: 'Aerogel Insulation',
+    tone: '#b8c5d0',
+    finish: 'Ultra-thin aerogel blankets',
+    description: 'Ultra-high-performance aerogel insulation blankets; extreme R-value in minimal thickness.',
+    keywords: ['insulation', 'aerogel', 'high-performance'],
+    category: 'insulation',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-door',
+    name: 'Timber Doors',
+    tone: '#b89968',
+    finish: 'Solid or veneered timber',
+    description: 'Solid or engineered timber doors with various finishes; warm, natural, and customizable.',
+    keywords: ['door', 'timber', 'wood'],
+    category: 'door',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'steel-door',
+    name: 'Steel Doors',
+    tone: '#6a7075',
+    finish: 'Powder-coated steel',
+    description: 'Robust steel doors with powder-coat finish; high security and fire-rating options.',
+    keywords: ['door', 'steel', 'security'],
+    category: 'door',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'aluminum-door',
+    name: 'Aluminum Doors',
+    tone: '#b5bcc3',
+    finish: 'Anodized or powder-coated aluminum',
+    description: 'Lightweight aluminum doors with slim profiles; durable and low-maintenance.',
+    keywords: ['door', 'aluminum', 'lightweight'],
+    category: 'door',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'glass-door',
+    name: 'Glass Doors',
+    tone: '#e0ebf0',
+    finish: 'Frameless or framed glass',
+    description: 'Transparent glass doors for maximum light transmission; frameless or minimal framing.',
+    keywords: ['door', 'glass', 'transparent'],
+    category: 'door',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'composite-door',
+    name: 'Composite Doors',
+    tone: '#8a7a65',
+    finish: 'GRP composite with insulated core',
+    description: 'Glass-reinforced plastic composite doors with insulated core; low-maintenance and thermally efficient.',
+    keywords: ['door', 'composite', 'insulated'],
+    category: 'door',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'fire-rated-door',
+    name: 'Fire-Rated Doors',
+    tone: '#a59585',
+    finish: 'Fire-rated timber or steel',
+    description: 'Fire-rated doors with certified performance; timber or steel construction with intumescent seals.',
+    keywords: ['door', 'fire-rated', 'safety'],
+    category: 'door',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'glass-balustrade',
+    name: 'Glass Balustrade',
+    tone: '#e8f0f5',
+    finish: 'Frameless or channel-mounted glass',
+    description: 'Frameless or channel-mounted glass balustrade; transparent, safe, and minimal visual obstruction.',
+    keywords: ['balustrade', 'glass', 'transparent'],
+    category: 'balustrade',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'steel-railing',
+    name: 'Steel Railing',
+    tone: '#4a5055',
+    finish: 'Powder-coated steel',
+    description: 'Powder-coated steel railings with various infill options; durable and customizable.',
+    keywords: ['balustrade', 'steel', 'railing'],
+    category: 'balustrade',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-railing',
+    name: 'Timber Railing',
+    tone: '#c19a6f',
+    finish: 'Hardwood or softwood rails',
+    description: 'Natural timber railings with warm aesthetic; suitable for interior and sheltered exterior use.',
+    keywords: ['balustrade', 'timber', 'railing'],
+    category: 'balustrade',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'cable-railing',
+    name: 'Cable Railing',
+    tone: '#a8b0b8',
+    finish: 'Stainless steel cables',
+    description: 'Minimal stainless steel cable railings; modern aesthetic with unobstructed views.',
+    keywords: ['balustrade', 'cable', 'minimal'],
+    category: 'balustrade',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'mesh-railing',
+    name: 'Mesh Railing',
+    tone: '#9a9fa5',
+    finish: 'Woven or expanded metal mesh',
+    description: 'Metal mesh infill railings; industrial aesthetic with safety and semi-transparency.',
+    keywords: ['balustrade', 'mesh', 'industrial'],
+    category: 'balustrade',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'gravel-paving',
+    name: 'Gravel',
+    tone: '#b5a895',
+    finish: 'Loose gravel or aggregate',
+    description: 'Loose gravel surface for paths and landscaping; permeable and natural drainage.',
+    keywords: ['landscape', 'gravel', 'permeable'],
+    category: 'external-ground',
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'resin-bound-gravel',
+    name: 'Resin-Bound Gravel',
+    tone: '#c8b59a',
+    finish: 'Resin-bound aggregate',
+    description: 'Smooth resin-bound gravel surface; permeable, durable, and low-maintenance.',
+    keywords: ['landscape', 'resin', 'gravel'],
+    category: 'external-ground',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'concrete-paving',
+    name: 'Concrete Paving',
+    tone: '#c5c0b5',
+    finish: 'Poured or slab concrete',
+    description: 'Durable concrete paving for paths and hard standing; versatile and cost-effective.',
+    keywords: ['landscape', 'concrete', 'paving'],
+    category: 'external-ground',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'block-paving',
+    name: 'Block Paving',
+    tone: '#b8a590',
+    finish: 'Concrete or clay block pavers',
+    description: 'Interlocking concrete or clay block pavers; durable and repairable surface.',
+    keywords: ['landscape', 'block', 'paving'],
+    category: 'external-ground',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'grass-reinforcement',
+    name: 'Grass Reinforcement',
+    tone: '#7a9a6f',
+    finish: 'Plastic grid with grass',
+    description: 'Plastic or concrete grid system for reinforced grass areas; permeable and green appearance.',
+    keywords: ['landscape', 'grass', 'reinforcement'],
+    category: 'external-ground',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'decking-external',
+    name: 'Decking (Timber/Composite)',
+    tone: '#b88a5f',
+    finish: 'Timber or composite boards',
+    description: 'Timber or composite decking for terraces and paths; warm finish with good drainage.',
+    keywords: ['landscape', 'decking', 'timber'],
+    category: 'external-ground',
     carbonIntensity: 'low'
   }
 ]; 
