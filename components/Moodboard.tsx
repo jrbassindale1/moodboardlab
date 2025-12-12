@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
@@ -82,8 +82,24 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [analysisStructured, setAnalysisStructured] = useState<
     { title: string; explanation: string }[] | null
   >(null);
+  const analysisRef = useRef<string | null>(null);
+  const analysisStructuredRef = useRef<{ title: string; explanation: string }[] | null>(null);
   const [lifecycleAnalysis, setLifecycleAnalysis] = useState<string | null>(null);
   const [lifecycleStructured, setLifecycleStructured] = useState<
+    | {
+        material: string;
+        sourcing: string;
+        fabrication: string;
+        transport: string;
+        inUse: string;
+        maintenance: string;
+        endOfLife: string;
+        ukTip: string;
+      }[]
+    | null
+  >(null);
+  const lifecycleAnalysisRef = useRef<string | null>(null);
+  const lifecycleStructuredRef = useRef<
     | {
         material: string;
         sourcing: string;
@@ -503,10 +519,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       materialKey: buildMaterialKey(),
       summary: summaryText,
       renderNote: renderNote.trim() || undefined,
-      analysisText: analysis || undefined,
-      analysisStructured: analysisStructured || undefined,
-      lifecycleText: lifecycleAnalysis || undefined,
-      lifecycleStructured: lifecycleStructured || undefined,
+      analysisText: analysisRef.current || undefined,
+      analysisStructured: analysisStructuredRef.current || undefined,
+      lifecycleText: lifecycleAnalysisRef.current || undefined,
+      lifecycleStructured: lifecycleStructuredRef.current || undefined,
       board,
       uploads: useUploads
         ? uploadedImages.map((img) => ({
@@ -957,10 +973,14 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         if (parsed) {
           setAnalysis(cleaned);
           setAnalysisStructured(parsed);
+          analysisRef.current = cleaned;
+          analysisStructuredRef.current = parsed;
           if (retryAttempt) setError(null);
         } else {
           setAnalysis(null);
           setAnalysisStructured(null);
+          analysisRef.current = null;
+          analysisStructuredRef.current = null;
           const message = 'Gemini returned malformed analysis JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
@@ -976,10 +996,14 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         if (parsed) {
           setLifecycleAnalysis(cleaned);
           setLifecycleStructured(parsed);
+          lifecycleAnalysisRef.current = cleaned;
+          lifecycleStructuredRef.current = parsed;
           if (retryAttempt) setError(null);
         } else {
           setLifecycleAnalysis(null);
           setLifecycleStructured(null);
+          lifecycleAnalysisRef.current = null;
+          lifecycleStructuredRef.current = null;
           const message = 'Gemini returned malformed lifecycle JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
