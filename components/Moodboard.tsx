@@ -163,6 +163,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [renderNote, setRenderNote] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [status, setStatus] = useState<'idle' | 'analysis' | 'render' | 'lifecycle' | 'all'>('idle');
+  const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
@@ -645,6 +646,182 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
       img.onerror = reject;
       img.src = src;
     });
+
+  const hasTextContent = () =>
+    Boolean(
+      analysisRef.current ||
+        lifecycleAnalysisRef.current ||
+        (analysisStructuredRef.current?.length || 0) > 0 ||
+        (lifecycleStructuredRef.current?.length || 0) > 0
+    );
+
+  const generateReportImage = async (opts?: { imageUrl?: string; includeImage?: boolean }) => {
+    const includeImage = opts?.includeImage !== false;
+    const chosenImageUrl = includeImage ? opts?.imageUrl || moodboardRenderUrl || appliedRenderUrl : null;
+    const image = chosenImageUrl ? await loadImage(chosenImageUrl) : null;
+
+    const analysisItems = analysisStructuredRef.current || [];
+    const lifecycleItems = lifecycleStructuredRef.current || [];
+    const baseHeight = 1200;
+    const dynamicHeight =
+      baseHeight +
+      (analysisItems.length + lifecycleItems.length) * 200 +
+      (analysisRef.current || lifecycleAnalysisRef.current ? 200 : 0) +
+      (image ? image.height : 0);
+    const height = Math.max(1800, dynamicHeight);
+    const width = 1240; // ~A4 at ~150dpi
+    const margin = 80;
+    const maxWidth = width - margin * 2;
+    const lineHeight = 26;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported in this browser.');
+
+    ctx.fillStyle = '#f9fafb';
+    ctx.fillRect(0, 0, width, height);
+
+    const drawParagraph = (text: string, startY: number, font = '400 16px "Helvetica Neue", Arial, sans-serif') => {
+      ctx.font = font;
+      ctx.fillStyle = '#111827';
+      let cursorY = startY;
+      const blocks = text.split(/\n+/).filter(Boolean);
+      blocks.forEach((block, idx) => {
+        cursorY = wrapText(ctx, block, margin, cursorY, maxWidth, lineHeight) + lineHeight;
+        if (idx < blocks.length - 1) cursorY += lineHeight;
+      });
+      return cursorY;
+    };
+
+    const drawHeading = (text: string, y: number, font = '700 20px "Helvetica Neue", Arial, sans-serif') => {
+      ctx.font = font;
+      ctx.fillStyle = '#111827';
+      ctx.fillText(text, margin, y);
+      return y + 32;
+    };
+
+    ctx.font = '700 32px "Helvetica Neue", Arial, sans-serif';
+    let cursorY = margin + 8;
+    ctx.fillStyle = '#111827';
+    ctx.fillText('Sustainability & Lifecycle Report', margin, cursorY);
+    cursorY += 12;
+
+    const brandText = 'MOODBOARD-LAB.COM';
+    ctx.font = '700 18px "Helvetica Neue", Arial, sans-serif';
+    const brandWidth = ctx.measureText(brandText).width;
+    ctx.fillText(brandText, width - margin - brandWidth, margin + 8);
+
+    cursorY += 40;
+
+    if (image) {
+      const maxImageWidth = maxWidth;
+      const scale = Math.min(1, maxImageWidth / image.width);
+      const imgWidth = Math.round(image.width * scale);
+      const imgHeight = Math.round(image.height * scale);
+      ctx.drawImage(image, margin, cursorY, imgWidth, imgHeight);
+      cursorY += imgHeight + 32;
+    }
+
+    cursorY = drawHeading('Materials', cursorY);
+    cursorY = drawParagraph(materialKey || buildMaterialKey(), cursorY, '400 16px "Helvetica Neue", Arial, sans-serif');
+
+    cursorY = drawHeading('Prompt', cursorY);
+    const promptText = renderNote.trim()
+      ? `${renderNote.trim()}\n\n${summaryText}`
+      : summaryText;
+    cursorY = drawParagraph(promptText, cursorY);
+
+    const hasAnalysis = analysisItems.length || analysisRef.current;
+    if (hasAnalysis) {
+      cursorY = drawHeading('Sustainability Analysis', cursorY);
+      if (analysisItems.length) {
+        analysisItems.forEach((item) => {
+          ctx.font = '700 16px "Helvetica Neue", Arial, sans-serif';
+          ctx.fillText(item.title, margin, cursorY);
+          cursorY += lineHeight;
+          cursorY = drawParagraph(item.explanation, cursorY, '400 16px "Helvetica Neue", Arial, sans-serif');
+          cursorY += 10;
+        });
+      } else if (analysisRef.current) {
+        cursorY = drawParagraph(analysisRef.current, cursorY);
+      }
+    }
+
+    const hasLifecycle = lifecycleItems.length || lifecycleAnalysisRef.current;
+    if (hasLifecycle) {
+      cursorY = drawHeading('Lifecycle Analysis', cursorY);
+      if (lifecycleItems.length) {
+        lifecycleItems.forEach((item) => {
+          ctx.font = '700 16px "Helvetica Neue", Arial, sans-serif';
+          ctx.fillText(item.material, margin, cursorY);
+          cursorY += lineHeight;
+          const lifecycleSummary = [
+            `Sourcing: ${item.sourcing}`,
+            `Fabrication: ${item.fabrication}`,
+            `Transport: ${item.transport}`,
+            `In-use: ${item.inUse}`,
+            `Maintenance: ${item.maintenance}`,
+            `End-of-life: ${item.endOfLife}`,
+            `UK tip: ${item.ukTip}`
+          ].join('  •  ');
+          cursorY = drawParagraph(lifecycleSummary, cursorY);
+          cursorY += 10;
+        });
+      } else if (lifecycleAnalysisRef.current) {
+        cursorY = drawParagraph(lifecycleAnalysisRef.current, cursorY);
+      }
+    }
+
+    ctx.font = '500 12px "Helvetica Neue", Arial, sans-serif';
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText('Generated with Moodboard-Lab', margin, height - margin + 12);
+
+    return canvas.toDataURL('image/png');
+  };
+
+  const handleDownloadReport = async () => {
+    if (!hasTextContent()) {
+      setError('Generate sustainability and lifecycle analysis first.');
+      return;
+    }
+    setExportingReport(true);
+    try {
+      const dataUrl = await generateReportImage();
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'moodboard-report.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Could not create report image', err);
+      setError('Could not create the report download.');
+    } finally {
+      setExportingReport(false);
+    }
+  };
+
+  const handleMobileSaveReport = async () => {
+    if (!hasTextContent()) {
+      setError('Generate sustainability and lifecycle analysis first.');
+      return;
+    }
+    setExportingReport(true);
+    try {
+      const dataUrl = await generateReportImage();
+      const win = window.open(dataUrl, '_blank');
+      if (!win) {
+        await handleSaveImage(dataUrl, 'moodboard-report.png');
+      }
+    } catch (err) {
+      console.error('Could not create report image', err);
+      setError('Could not create the mobile report.');
+    } finally {
+      setExportingReport(false);
+    }
+  };
 
   const handleDownloadBoard = async (url: string, renderId?: string) => {
     if (!url) return;
@@ -1444,6 +1621,39 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
               </div>
             )}
 
+            {hasTextContent() && (
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleDownloadReport}
+                  disabled={exportingReport}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                >
+                  {exportingReport ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Building report…
+                    </>
+                  ) : (
+                    'Download report (PNG)'
+                  )}
+                </button>
+                <button
+                  onClick={handleMobileSaveReport}
+                  disabled={exportingReport}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                >
+                  {exportingReport ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    'Save report (mobile)'
+                  )}
+                </button>
+              </div>
+            )}
+
             {moodboardRenderUrl && (
               <div className="space-y-4">
                 <div className="border border-gray-200 p-4 bg-white space-y-3">
@@ -1470,10 +1680,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       )}
                     </button>
                     <button
-                        onClick={() => handleSaveImage(moodboardRenderUrl, 'moodboard.png')}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                        onClick={handleMobileSaveReport}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
                       >
-                        Save Image
+                        Save (with text)
                       </button>
                     </div>
                   </div>
@@ -1533,10 +1743,10 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
                       )}
                     </button>
                     <button
-                        onClick={() => handleSaveImage(appliedRenderUrl, 'applied-render.png')}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                        onClick={handleMobileSaveReport}
+                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
                       >
-                        Save Image
+                        Save (with text)
                       </button>
                     </div>
                   </div>
