@@ -57,4 +57,8 @@ export interface UploadedImage {
   name: string;
   dataUrl: string;
   mimeType: string;
+  sizeBytes?: number;
+  originalSizeBytes?: number;
+  width?: number;
+  height?: number;
 }

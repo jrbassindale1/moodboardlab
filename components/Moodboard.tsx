@@ -76,6 +76,51 @@ interface MoodboardProps {
   onNavigate?: (page: string) => void;
 }
 
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
+const MAX_UPLOAD_DIMENSION = 1000;
+const RESIZE_QUALITY = 0.82;
+const RESIZE_MIME = 'image/webp';
+
+const dataUrlSizeBytes = (dataUrl: string) => {
+  const base64 = dataUrl.split(',')[1] || '';
+  const padding = (base64.match(/=+$/)?.[0].length ?? 0);
+  return Math.floor((base64.length * 3) / 4) - padding;
+};
+
+const downscaleImage = (
+  dataUrl: string,
+  targetMime = RESIZE_MIME,
+  quality = RESIZE_QUALITY
+): Promise<{ dataUrl: string; width: number; height: number; mimeType: string; sizeBytes: number }> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported in this browser.'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const mime = targetMime || 'image/jpeg';
+      const resizedUrl = canvas.toDataURL(mime, quality);
+      resolve({
+        dataUrl: resizedUrl,
+        width,
+        height,
+        mimeType: mime,
+        sizeBytes: dataUrlSizeBytes(resizedUrl)
+      });
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+
 const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [board, setBoard] = useState<BoardItem[]>([]);
   const [analysis, setAnalysis] = useState<string | null>(null);
@@ -514,21 +559,34 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   };
 
   const persistGeneration = async (imageDataUri: string, prompt: string, useUploads: boolean) => {
+    const trimmedNote = renderNote.trim();
+    const includeAnalysis = !useUploads;
     const metadata = {
       renderMode: useUploads ? 'apply-to-upload' : 'moodboard',
       materialKey: buildMaterialKey(),
       summary: summaryText,
-      renderNote: renderNote.trim() || undefined,
-      analysisText: analysisRef.current || undefined,
-      analysisStructured: analysisStructuredRef.current || undefined,
-      lifecycleText: lifecycleAnalysisRef.current || undefined,
-      lifecycleStructured: lifecycleStructuredRef.current || undefined,
+      renderNote: trimmedNote || undefined,
+      userNote: trimmedNote || undefined,
+      generatedPrompt: prompt,
+      ...(includeAnalysis
+        ? {
+            analysisText: analysisRef.current || undefined,
+            analysisStructured: analysisStructuredRef.current || undefined,
+            lifecycleText: lifecycleAnalysisRef.current || undefined,
+            lifecycleStructured: lifecycleStructuredRef.current || undefined
+          }
+        : {}),
       board,
       uploads: useUploads
         ? uploadedImages.map((img) => ({
             id: img.id,
             name: img.name,
-            mimeType: img.mimeType
+            mimeType: img.mimeType,
+            sizeBytes: img.sizeBytes,
+            originalSizeBytes: img.originalSizeBytes,
+            width: img.width,
+            height: img.height,
+            dataUrl: img.dataUrl
           }))
         : undefined
     };
@@ -782,22 +840,38 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const handleFileInput = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const list: UploadedImage[] = [];
+    let errorMessage: string | null = null;
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      list.push({
-        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name: file.name,
-        dataUrl,
-        mimeType: file.type
-      });
+      if (file.size > MAX_UPLOAD_BYTES) {
+        errorMessage = `Upload "${file.name}" is over the 5 MB limit.`;
+        continue;
+      }
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const resized = await downscaleImage(dataUrl);
+        list.push({
+          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          name: file.name,
+          dataUrl: resized.dataUrl,
+          mimeType: resized.mimeType,
+          sizeBytes: resized.sizeBytes,
+          originalSizeBytes: file.size,
+          width: resized.width,
+          height: resized.height
+        });
+      } catch (err) {
+        console.error('Could not process upload', err);
+        errorMessage = `Could not process "${file.name}".`;
+      }
     }
-    setUploadedImages(list.slice(-3)); // keep latest
+    if (errorMessage) setError(errorMessage);
+    if (list.length) setUploadedImages(list.slice(-3)); // keep latest
   };
 
   const onDropFiles = (e: React.DragEvent<HTMLDivElement>) => {
