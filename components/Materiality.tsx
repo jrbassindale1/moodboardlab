@@ -6,6 +6,7 @@ import {
   MATERIAL_PALETTE,
   STRUCTURE_BASE_IMAGES
 } from '../constants';
+import { callGeminiImage } from '../api';
 import { MaterialOption } from '../types';
 
 const BASE_RENDER_PROMPT =
@@ -197,25 +198,6 @@ const Materiality: React.FC = () => {
     setError(null);
     setGeneratedImage(null);
 
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
-    const endpoint =
-      import.meta.env.VITE_GEMINI_ENDPOINT ||
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
-
-    if (!apiKey) {
-      setError('Gemini API key missing; set VITE_GEMINI_API_KEY in your env file.');
-      setIsLoading(false);
-      return;
-    }
-    // Guard: endpoint must target an image-capable model.
-    if (!endpoint.includes('image')) {
-      setError(
-        'The Gemini endpoint is not an image model. Set VITE_GEMINI_ENDPOINT to gemini-2.5-flash-image:generateContent.'
-      );
-      setIsLoading(false);
-      return;
-    }
-
     try {
       if (!floorMat || !structureMat || (!finishMat && !externalMat)) {
         throw new Error('Select one floor, one structural, and at least one finish material.');
@@ -268,20 +250,7 @@ const Materiality: React.FC = () => {
         }
       };
 
-      const response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestPayload)
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || 'Gemini returned an error.');
-      }
-
-      const data = await response.json();
+      const data = await callGeminiImage(requestPayload);
 
       let imageData: string | null = null;
       let imageMime: string | null = null;
@@ -346,8 +315,8 @@ const Materiality: React.FC = () => {
     } catch (err) {
       setError(
         err instanceof Error
-          ? `${err.message} — ensure your endpoint points to an image-capable Gemini model (e.g., gemini-2.5-flash-image) via VITE_GEMINI_ENDPOINT.`
-          : 'Failed to generate image. Ensure the model supports image output.'
+          ? `${err.message} — ensure the Function App has GEMINI_API_KEY set and an image-capable Gemini model configured.`
+          : 'Failed to generate image from the backend. Ensure the model supports image output.'
       );
       setGeneratedImage(null);
     } finally {

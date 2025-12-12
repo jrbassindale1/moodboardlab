@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
+import { callGeminiImage, callGeminiText } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 
 type BoardItem = MaterialOption;
@@ -785,14 +786,6 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     setError(null);
     if (mode === 'analysis') setAnalysisStructured(null);
 
-    const apiKey = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
-
-    if (!apiKey) {
-      setError('Gemini API key missing; set VITE_GEMINI_API_KEY.');
-      setStatus('idle');
-      return;
-    }
-
     const perMaterialLines = board
       .map(
         (item) =>
@@ -813,9 +806,6 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     if (mode === 'render') {
       // Image render call
       try {
-        const imageEndpoint =
-          import.meta.env.VITE_GEMINI_ENDPOINT ||
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent';
         const payload = {
           contents: [
             {
@@ -843,16 +833,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
           prompt,
           uploadedImages: uploadedImages.length
         });
-        const res = await fetch(`${imageEndpoint}?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || 'Gemini returned an error.');
-        }
-        const data = await res.json();
+        const data = await callGeminiImage(payload);
         let img: string | null = null;
         let mime: string | null = null;
         const candidates = data?.candidates || [];
@@ -872,7 +853,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not reach Gemini image model.');
+        setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
       } finally {
         setStatus('idle');
       }
@@ -892,19 +873,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     console.log('[Gemini prompt]', { mode, promptType: 'analysis', prompt, uploadedImages: uploadedImages.length });
 
     try {
-      const textEndpoint =
-        import.meta.env.VITE_GEMINI_TEXT_ENDPOINT ||
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-      const res = await fetch(`${textEndpoint}?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Gemini returned an error.');
-      }
-      const data = await res.json();
+      const data = await callGeminiText(payload);
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
       const cleaned = text.replace(/```json|```/g, '').trim();
@@ -951,7 +920,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not reach Gemini.');
+      setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
     } finally {
       setStatus('idle');
     }

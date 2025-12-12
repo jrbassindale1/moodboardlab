@@ -80,38 +80,6 @@ export const PROJECT_IMAGES: ProjectImage[] = [
   }
 ];
 
-export const BUILDING_SPECS: SpecSection[] = [
-  {
-    title: 'Social Learning Landscapes',
-    content: 'The building is conceived not just as a container for instruction but as a social landscape. The central "street" acts as the community heart, fostering serendipitous encounters and interdisciplinary collaboration. Circulation areas are generous and inhabited, doubling as breakout and informal study zones.',
-    image: moodboardAlt1,
-    imageAlt: 'Moodboard showing layered materials and social spaces.'
-  },
-  {
-    title: 'Environmental Intelligence',
-    content: 'The architectural form drives environmental performance. The central atrium facilitates a natural ventilation strategy, utilizing the stack effect to draw air through the building. Exposed thermal mass (concrete soffits) helps regulate internal temperatures, reducing reliance on mechanical systems.',
-    image: moodboardAlt2,
-    imageAlt: 'Palette focused on daylighting and neutral tones.'
-  },
-  {
-    title: 'Long Life, Loose Fit',
-    content: 'A robust structural grid ensures long-term adaptability. The plan is organized into "hard" zones (cores and fixed labs) and "soft" zones (partitionable classrooms and offices), allowing the building to evolve with changing pedagogical needs over decades.',
-    image: moodboardAlt3,
-    imageAlt: 'Material stack highlighting adaptable finishes.'
-  },
-  {
-    title: 'Visual Connectivity',
-    content: 'Transparency is key to the "science on display" concept. Extensive internal glazing connects laboratories and teaching spaces to the central street, demystifying the engineering process and allowing natural light to penetrate deep into the plan.',
-    image: moodboardAlt4,
-    imageAlt: 'Board capturing visual links between spaces.'
-  },
-  {
-    title: 'Material Integrity',
-    content: 'A palette of honest, self-finished materials—exposed concrete, timber linings, and steel—is selected for durability and low maintenance. Acoustic attenuation is integrated into the architectural fabric (e.g., timber slats) rather than applied as secondary finishes.',
-    image: moodboardMain,
-    imageAlt: 'Palette with balanced timber, concrete, and metal tones.'
-  }
-];
 
 export const MATERIAL_PALETTE: MaterialOption[] = [
   {
@@ -904,6 +872,3 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'low'
   }
 ];
-
-export const DEFAULT_MATERIAL_PROMPT =
-  'Material study of the engineering atrium: harmonize structure, daylight, and tactile finishes while keeping the social “street” legible.';
