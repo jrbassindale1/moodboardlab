@@ -866,9 +866,9 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     tone: '#6f8ba0',
     finish: 'Attenuation roof with controlled outlets',
     description:
-      'Shallow attenuation layer to slow stormwater discharge; pairs well with green roofs for SuDS performance.',
+      'Shallow attenuation layers to slow stormwater discharge; pairs well with green roofs for SuDS performance.',
     keywords: ['roof', 'water', 'suds'],
     category: 'roof',
     carbonIntensity: 'low'
   }
-];
+]; 
