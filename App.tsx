@@ -7,9 +7,11 @@ import Product from './components/Product';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
+import CookieBanner from './components/CookieBanner';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('concept');
+  const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
 
   const renderPage = () => {
     switch(currentPage) {
@@ -36,7 +38,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar currentPage={currentPage} onNavigate={setCurrentPage} />
-      
+
       <main className={`flex-grow relative ${adRailPadding}`}>
         {showAds && (
           <>
@@ -49,6 +51,11 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      <CookieBanner
+        openPreferences={openConsentPreferences}
+        onClosePreferences={() => setOpenConsentPreferences(false)}
+      />
+
       <footer className="bg-arch-black text-white py-12 border-t border-gray-800">
         <div className={`max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-6 md:items-center ${adRailPadding}`}>
           <div>
@@ -58,6 +65,7 @@ const App: React.FC = () => {
               <button onClick={() => setCurrentPage('privacy')} className="hover:text-white transition-colors">Privacy</button>
               <button onClick={() => setCurrentPage('terms')} className="hover:text-white transition-colors">Terms</button>
               <button onClick={() => setCurrentPage('contact')} className="hover:text-white transition-colors">Contact</button>
+              <button onClick={() => setOpenConsentPreferences(true)} className="hover:text-white transition-colors">Privacy & Cookies</button>
             </div>
           </div>
           <div className="font-mono text-xs text-gray-500 uppercase tracking-widest text-center md:text-right">
