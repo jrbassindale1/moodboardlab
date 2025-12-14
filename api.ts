@@ -15,7 +15,14 @@ async function callGeminiBackend(payload: unknown, mode: "text" | "image" = "tex
   });
 
   if (!res.ok) {
-    const message = await res.text();
+    let message: string | null = null;
+    try {
+      const body = await res.json();
+      message = body?.error?.message || body?.message || null;
+    } catch {
+      // Fall back to plain text if JSON parsing fails
+      message = await res.text();
+    }
     throw new Error(message || "Backend error while calling Gemini.");
   }
 

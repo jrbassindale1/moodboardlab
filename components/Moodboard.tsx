@@ -1358,9 +1358,7 @@ IMPORTANT:
           generationConfig: {
             temperature: 0.35,
             candidateCount: 1,
-            imageConfig: {
-              imageSize: '1K'
-            }
+            responseMimeType: 'image/png'
           }
         };
         console.log('[Gemini prompt]', {
