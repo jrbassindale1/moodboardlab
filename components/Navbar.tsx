@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   currentPage: string;
@@ -7,17 +7,24 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   const navItems = [
     { id: 'concept', label: 'Home' },
     { id: 'moodboard', label: 'Moodboard' }
   ];
+
+  const handleNavigate = (page: string) => {
+    onNavigate(page);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
       <div className="max-w-screen-2xl mx-auto px-6 h-20 flex items-center justify-between">
         <div 
           className="flex flex-col cursor-pointer group" 
-          onClick={() => onNavigate('concept')}
+          onClick={() => handleNavigate('concept')}
         >
           <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">
             Moodboard Lab
@@ -32,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={() => handleNavigate(item.id)}
                 className={`hover:text-black transition-colors relative py-1 ${
                   currentPage === item.id ? 'text-black font-bold' : ''
                 }`}
@@ -44,11 +51,32 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               </button>
             ))}
           </div>
-          <button className="md:hidden">
-            <Menu className="w-6 h-6" />
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-sm">
+          <div className="max-w-screen-2xl mx-auto px-6 py-4 flex flex-col gap-4 font-mono text-sm uppercase tracking-widest text-gray-700">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavigate(item.id)}
+                className={`text-left hover:text-black transition-colors ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
