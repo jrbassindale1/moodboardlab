@@ -125,6 +125,17 @@ const downscaleImage = (
     img.src = dataUrl;
   });
 
+const dataUrlToInlineData = (dataUrl: string) => {
+  const [meta, content] = dataUrl.split(',');
+  const mimeMatch = meta?.match(/data:(.*);base64/);
+  return {
+    inlineData: {
+      mimeType: mimeMatch?.[1] || 'image/png',
+      data: content || ''
+    }
+  };
+};
+
 const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [board, setBoard] = useState<BoardItem[]>([]);
   const [analysis, setAnalysis] = useState<string | null>(null);
@@ -165,6 +176,8 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
   const [renderNote, setRenderNote] = useState('');
+  const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
+  const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [status, setStatus] = useState<'idle' | 'analysis' | 'render' | 'lifecycle' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
@@ -987,6 +1000,46 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
     }
   };
 
+  const handleMoodboardEdit = async () => {
+    const trimmed = moodboardEditPrompt.trim();
+    if (!moodboardRenderUrl) {
+      setError('Generate a moodboard render first.');
+      return;
+    }
+    if (!trimmed) {
+      setError('Add text instructions to update the moodboard render.');
+      return;
+    }
+    setIsCreatingMoodboard(true);
+    try {
+      await runGemini('render', {
+        onRender: setMoodboardRenderUrl,
+        baseImageDataUrl: moodboardRenderUrl,
+        editPrompt: trimmed
+      });
+    } finally {
+      setIsCreatingMoodboard(false);
+    }
+  };
+
+  const handleAppliedEdit = async () => {
+    const trimmed = appliedEditPrompt.trim();
+    if (!appliedRenderUrl) {
+      setError('Render with an upload first.');
+      return;
+    }
+    if (!trimmed) {
+      setError('Add text instructions to update the applied render.');
+      return;
+    }
+    await runGemini('render', {
+      onRender: setAppliedRenderUrl,
+      baseImageDataUrl: appliedRenderUrl,
+      editPrompt: trimmed,
+      useUploads: true
+    });
+  };
+
   const handleFileInput = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const list: UploadedImage[] = [];
@@ -1249,7 +1302,13 @@ IMPORTANT:
 
   const runGemini = async (
     mode: 'analysis' | 'render' | 'lifecycle',
-    options?: { useUploads?: boolean; onRender?: (url: string) => void; retryAttempt?: number }
+    options?: {
+      useUploads?: boolean;
+      onRender?: (url: string) => void;
+      retryAttempt?: number;
+      editPrompt?: string;
+      baseImageDataUrl?: string;
+    }
   ) => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
@@ -1267,11 +1326,15 @@ IMPORTANT:
       .join('\n');
 
     const trimmedNote = renderNote.trim();
+    const isEditingRender = mode === 'render' && options?.editPrompt && options?.baseImageDataUrl;
+
     const prompt =
       mode === 'analysis'
-        ? `Return ONLY a JSON object with a single key "items" mapping to an array. Each array item must be an object with keys "title" and "explanation". Use the material name (and finish if useful) as the title. The explanation should be one concise UK-focused sustainability assessment covering embodied carbon, circularity/reuse potential, relevant UK certifications/standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE), and a specific improvement or lower-impact alternative. No introductions, no Markdown, no bullet points—JSON only.\nFormat example:\n{"items":[{"title":"Glulam Timber Structure","explanation":"Low embodied carbon, renewable resource; ensure FSC/PEFC certification, design for disassembly/reuse, and prioritise locally sourced timber to cut transport emissions."}]}\n\nMaterials:\n${perMaterialLines}`
+        ? `Return ONLY a JSON object with a single key "items" mapping to an array. Each array item must be an object with keys\"title\" and "explanation". Use the material name (and finish if useful) as the title. The explanation should be one concise UK-focused sustainability assessment covering embodied carbon, circularity/reuse potential, relevant UK certifications/standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE), and a specific improvement or lower-impact alternative. No introductions, no Markdown, no bullet points—JSON only.\nFormat example:\n{\"items\":[{\"title\":\"Glulam Timber Structure\",\"explanation\":\"Low embodied carbon, renewable resource; ensure FSC/PEFC certification, design for disassembly/reuse, and prioritise locally sourced timber to cut transport emissions.\"}]}\n\nMaterials:\n${perMaterialLines}`
         : mode === 'lifecycle'
-        ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip". Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused.\nFormat example:\n{"items":[{"material":"Brick","sourcing":"...","fabrication":"...","transport":"...","inUse":"...","maintenance":"...","endOfLife":"...","ukTip":"..."}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
+        ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip". Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused.\nFormat example:\n{\"items\":[{\"material\":\"Brick\",\"sourcing\":\"...\",\"fabrication\":\"...\",\"transport\":\"...\",\"inUse\":\"...\",\"maintenance\":\"...\",\"endOfLife\":\"...\",\"ukTip\":\"...\"}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
+        : isEditingRender
+        ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
         : options?.useUploads
         ? `Apply the following materials to the provided base image(s). Respect the existing composition and lighting. Do not invent new scenes.\n\nMaterials:\n${summaryText}\n\nInstructions:\n- Keep proportions, camera angle, and key features from the uploaded image(s).\n- Apply materials accurately; preserve scale cues like joints, brick coursing, and panel seams.\n- White background not required; keep base context.\n${trimmedNote ? `- Custom instructions: ${trimmedNote}\n` : ''}`
         : `Create one clean, standalone moodboard image showcasing these materials together. White background, balanced composition, soft lighting, no text or labels at all on the image.\n\nMaterials:\n${summaryText}\n`;
@@ -1284,25 +1347,25 @@ IMPORTANT:
             {
               parts: [
                 { text: prompt },
-                ...(options?.useUploads
-                  ? uploadedImages.map((img) => ({
-                      inlineData: {
-                        mimeType: img.mimeType,
-                        data: img.dataUrl.split(',')[1]
-                      }
-                    }))
+                ...(isEditingRender && options?.baseImageDataUrl
+                  ? [dataUrlToInlineData(options.baseImageDataUrl)]
+                  : options?.useUploads
+                  ? uploadedImages.map((img) => dataUrlToInlineData(img.dataUrl))
                   : [])
               ]
             }
           ],
           generationConfig: {
             temperature: 0.35,
-            candidateCount: 1
+            candidateCount: 1,
+            imageConfig: {
+              imageSize: '1K'
+            }
           }
         };
         console.log('[Gemini prompt]', {
           mode,
-          promptType: options?.useUploads ? 'apply-to-base' : 'moodboard',
+          promptType: isEditingRender ? 'edit-render' : options?.useUploads ? 'apply-to-base' : 'moodboard',
           prompt,
           uploadedImages: uploadedImages.length
         });
@@ -1887,6 +1950,37 @@ IMPORTANT:
                     )}
                   </div>
                 </div>
+                <div className="border border-gray-200 p-4 bg-white space-y-2">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                    Edit moodboard render (multi-turn)
+                  </div>
+                  <p className="font-sans text-sm text-gray-700">
+                    Provide new text instructions to adjust the latest moodboard image while keeping composition and materials consistent.
+                  </p>
+                  <textarea
+                    value={moodboardEditPrompt}
+                    onChange={(e) => setMoodboardEditPrompt(e.target.value)}
+                    placeholder="E.g., warm up the lighting and add a softer vignette."
+                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+                  />
+                  <button
+                    onClick={handleMoodboardEdit}
+                    disabled={status !== 'idle' || !moodboardRenderUrl}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {status === 'render' && isCreatingMoodboard ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Updating render
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Apply text edit
+                      </>
+                    )}
+                  </button>
+                </div>
                 {materialKey && (
                   <div className="border border-gray-200 p-4 bg-white">
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
@@ -1934,6 +2028,37 @@ IMPORTANT:
                   </div>
                   <div className="w-full border border-gray-200 bg-gray-50">
                     <img src={appliedRenderUrl} alt="Applied render" className="w-full h-auto object-contain" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                      Edit applied render (multi-turn)
+                    </div>
+                    <p className="font-sans text-sm text-gray-700">
+                      Send another instruction to refine this render without losing the palette application.
+                    </p>
+                    <textarea
+                      value={appliedEditPrompt}
+                      onChange={(e) => setAppliedEditPrompt(e.target.value)}
+                      placeholder="E.g., increase contrast and add dusk lighting."
+                      className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+                    />
+                    <button
+                      onClick={handleAppliedEdit}
+                      disabled={status !== 'idle' || !appliedRenderUrl}
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                    >
+                      {status === 'render' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Updating render
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4" />
+                          Apply text edit
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
