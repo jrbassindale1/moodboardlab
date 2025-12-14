@@ -1358,7 +1358,8 @@ IMPORTANT:
           generationConfig: {
             temperature: 0.35,
             candidateCount: 1,
-            responseMimeType: 'image/png'
+            // Newer Gemini endpoints reject image MIME hints here; request image-only output via response modalities instead.
+            responseModalities: ['IMAGE']
           }
         };
         console.log('[Gemini prompt]', {
