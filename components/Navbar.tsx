@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, ShoppingCart, X } from 'lucide-react';
 
 interface NavbarProps {
   currentPage: string;
@@ -30,12 +30,12 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
           <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">
             Moodboard Lab
           </h1>
-          <span className="font-mono text-xs text-gray-500 tracking-widest uppercase">
+          <span className="hidden sm:block font-mono text-xs text-gray-500 tracking-widest uppercase">
             Moodboard & Material Workspace
           </span>
         </div>
-        
-        <div className="flex items-center gap-8">
+
+        <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden md:flex gap-8 font-mono text-xs uppercase tracking-widest text-gray-600">
             {navItems.map((item) => (
               <button
@@ -52,6 +52,13 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               </button>
             ))}
           </div>
+          <button
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            onClick={() => handleNavigate('product')}
+            aria-label="Go to product page"
+          >
+            <ShoppingCart className="w-6 h-6" />
+          </button>
           <button
             className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
