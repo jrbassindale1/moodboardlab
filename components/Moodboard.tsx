@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search } from 'lucide-react';
+import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
@@ -1470,6 +1470,18 @@ IMPORTANT:
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
+      <div className="fixed right-6 top-24 z-40">
+        <div
+          className="relative flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 shadow-sm backdrop-blur-sm"
+          aria-live="polite"
+        >
+          <ShoppingCart className="h-4 w-4 text-gray-800" aria-hidden />
+          <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">Board</span>
+          <span className="min-w-[28px] rounded-full bg-black px-2 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-widest text-white">
+            {board.length}
+          </span>
+        </div>
+      </div>
       <div className="max-w-screen-2xl mx-auto px-6 py-12 space-y-10">
         <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
           <div>
