@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Search, ShoppingCart, Sparkles, X } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
 import { MaterialOption } from '../types';
@@ -9,28 +9,181 @@ interface MaterialSelectionProps {
   onBoardChange: (items: MaterialOption[]) => void;
 }
 
-const categories: { id: MaterialOption['category']; label: string }[] = [
-  { id: 'structure', label: 'Structure' },
-  { id: 'floor', label: 'Floors' },
-  { id: 'finish', label: 'Internal finishes' },
-  { id: 'external', label: 'External' }
+type MaterialTreeGroup = {
+  id: string;
+  label: string;
+  path: string;
+  description?: string;
+};
+
+const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[] = [
+  {
+    id: 'structure',
+    label: 'Structure',
+    groups: [
+      { id: 'primary-structure', label: 'Primary Structure', path: 'Structure>Primary Structure' },
+      { id: 'secondary-structure', label: 'Secondary Structure', path: 'Structure>Secondary Structure' },
+      { id: 'envelope-substructure', label: 'Envelope Substructure', path: 'Structure>Envelope Substructure' }
+    ]
+  },
+  {
+    id: 'external',
+    label: 'External',
+    groups: [
+      { id: 'facade', label: 'Façade', path: 'External>Façade' },
+      { id: 'glazing', label: 'Glazing', path: 'External>Glazing' },
+      { id: 'roofing', label: 'Roofing', path: 'External>Roofing' },
+      {
+        id: 'landscape',
+        label: 'External Ground / Landscaping',
+        path: 'External>External Ground / Landscaping'
+      },
+      { id: 'insulation', label: 'Insulation', path: 'External>Insulation' }
+    ]
+  },
+  {
+    id: 'internal',
+    label: 'Internal',
+    groups: [
+      { id: 'floors', label: 'Floors', path: 'Internal>Floors' },
+      { id: 'walls', label: 'Walls', path: 'Internal>Walls' },
+      { id: 'paint-standard', label: 'Paint – Standard', path: 'Internal>Paint – Standard' },
+      { id: 'paint-custom', label: 'Paint – Custom Colour', path: 'Internal>Paint – Custom Colour' },
+      { id: 'plaster', label: 'Plaster / Microcement', path: 'Internal>Plaster / Microcement' },
+      { id: 'timber-panels', label: 'Timber Panels', path: 'Internal>Timber Panels' },
+      { id: 'tiles', label: 'Tiles', path: 'Internal>Tiles' },
+      { id: 'wallpaper', label: 'Wallpaper', path: 'Internal>Wallpaper' },
+      { id: 'ceilings', label: 'Ceilings', path: 'Internal>Ceilings' },
+      { id: 'acoustic-panels', label: 'Acoustic Panels', path: 'Internal>Acoustic Panels' },
+      { id: 'timber-slats', label: 'Timber Slats', path: 'Internal>Timber Slats' },
+      { id: 'exposed-structure', label: 'Exposed Structure', path: 'Internal>Exposed Structure' },
+      { id: 'joinery', label: 'Joinery & Furniture', path: 'Internal>Joinery & Furniture' },
+      { id: 'fixtures', label: 'Fixtures & Fittings', path: 'Internal>Fixtures & Fittings' },
+      { id: 'doors', label: 'Doors', path: 'Internal>Doors' },
+      { id: 'balustrade', label: 'Balustrade & Railings', path: 'Internal>Balustrade & Railings' }
+    ]
+  },
+  {
+    id: 'custom',
+    label: 'Custom',
+    groups: [
+      { id: 'upload-image', label: 'Upload Image', path: 'Custom>Upload Image' },
+      {
+        id: 'brand-material',
+        label: 'Brand / Supplier Material',
+        path: 'Custom>Brand / Supplier Material'
+      },
+      { id: 'custom-finish', label: 'Custom Finish / Product Link', path: 'Custom>Custom Finish / Product Link' }
+    ]
+  }
 ];
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<MaterialOption['category']>('structure');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
 
-  const filteredMaterials = useMemo(() => {
-    const normalized = searchTerm.toLowerCase();
-    return MATERIAL_PALETTE.filter(
-      (mat) =>
-        mat.category === selectedCategory &&
-        (mat.name.toLowerCase().includes(normalized) ||
-          mat.description.toLowerCase().includes(normalized) ||
-          mat.keywords.some((kw) => kw.toLowerCase().includes(normalized)))
-    );
-  }, [searchTerm, selectedCategory]);
+  const treePathFallbacks = useMemo(
+    () => ({
+      structure: ['Structure>Primary Structure', 'Internal>Exposed Structure'],
+      floor: ['Internal>Floors', 'External>External Ground / Landscaping'],
+      'wall-internal': ['Internal>Walls'],
+      external: ['External>Façade'],
+      ceiling: ['Internal>Ceilings'],
+      soffit: ['Internal>Exposed Structure'],
+      window: ['External>Glazing'],
+      roof: ['External>Roofing'],
+      finish: ['Internal>Timber Panels', 'Internal>Acoustic Panels', 'Internal>Timber Slats'],
+      'paint-wall': ['Internal>Paint – Standard'],
+      'paint-ceiling': ['Internal>Ceilings'],
+      plaster: ['Internal>Plaster / Microcement'],
+      microcement: ['Internal>Plaster / Microcement'],
+      'timber-panel': ['Internal>Timber Panels'],
+      tile: ['Internal>Tiles'],
+      wallpaper: ['Internal>Wallpaper'],
+      'acoustic-panel': ['Internal>Acoustic Panels'],
+      'timber-slat': ['Internal>Timber Slats'],
+      'exposed-structure': ['Internal>Exposed Structure'],
+      joinery: ['Internal>Joinery & Furniture'],
+      fixture: ['Internal>Fixtures & Fittings'],
+      landscape: ['External>External Ground / Landscaping']
+    }),
+    []
+  );
+
+  const materialsByPath = useMemo(() => {
+    const map: Record<string, MaterialOption[]> = {};
+    MATERIAL_PALETTE.forEach((mat) => {
+      const paths = mat.treePaths?.length ? mat.treePaths : treePathFallbacks[mat.category] || ['Unsorted>Other'];
+      paths.forEach((path) => {
+        map[path] = map[path] || [];
+        map[path].push(mat);
+      });
+    });
+    return map;
+  }, [treePathFallbacks]);
+
+  const allGroups = useMemo(() => MATERIAL_TREE.flatMap((section) => section.groups.map((g) => g)), []);
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const acc: Record<string, boolean> = {};
+    allGroups.forEach((group) => {
+      acc[group.id] = false;
+    });
+    return acc;
+  });
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredMaterialsByPath: Record<string, MaterialOption[]> = useMemo(() => {
+    const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
+    if (!tokens.length) return materialsByPath;
+
+    const matchesSearch = (mat: MaterialOption) => {
+      const haystack = [
+        mat.name,
+        mat.finish,
+        mat.description,
+        mat.category,
+        ...(mat.keywords || []),
+        ...(mat.colorOptions?.map((c) => c.label) || [])
+      ]
+        .join(' ')
+        .toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    };
+
+    const next: Record<string, MaterialOption[]> = {};
+    Object.entries(materialsByPath).forEach(([path, list]) => {
+      next[path] = list.filter((item) => matchesSearch(item));
+    });
+    return next;
+  }, [normalizedSearch, materialsByPath]);
+
+  const hasSearch = normalizedSearch.length > 0;
+
+  useEffect(() => {
+    if (!hasSearch) return;
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      allGroups.forEach((group) => {
+        next[group.id] = (filteredMaterialsByPath[group.path] || []).length > 0;
+      });
+      return next;
+    });
+  }, [hasSearch, filteredMaterialsByPath, allGroups]);
+
+  useEffect(() => {
+    if (hasSearch) return;
+    setOpenGroups((prev) => {
+      const anyOpen = allGroups.some((group) => prev[group.id]);
+      if (!anyOpen) return prev;
+      const next = { ...prev };
+      allGroups.forEach((group) => {
+        next[group.id] = false;
+      });
+      return next;
+    });
+  }, [hasSearch, allGroups]);
 
   const handleAdd = (material: MaterialOption) => {
     onBoardChange([...board, material]);
@@ -50,7 +203,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                 Shop materials, then build the board.
               </h1>
               <p className="font-sans text-gray-700 max-w-3xl text-lg">
-                Add materials into your trolley first, then move into the Moodboard Lab to arrange, render, and edit.
+                Browse every category, add the finishes you need, then head to the Moodboard Lab to render and edit. Materials can only be
+                chosen here.
               </p>
               <button
                 onClick={() => onNavigate('moodboard')}
@@ -87,68 +241,109 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         </header>
 
         <section className="space-y-6">
-          <div className="flex flex-wrap gap-3 items-center">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-2 border text-sm uppercase font-mono tracking-widest transition-colors ${
-                  selectedCategory === cat.id ? 'bg-black text-white' : 'bg-white hover:border-black'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-            <div className="relative ml-auto w-full md:w-80">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="inline-flex items-center gap-2 border border-black px-3 py-1 uppercase font-mono text-[11px] tracking-widest">
+              <Sparkles className="w-4 h-4" />
+              Full material catalogue
+            </div>
+            <div className="relative ml-auto w-full md:w-96">
               <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
               <input
                 type="search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search materials"
+                placeholder="Search by material, finish, or keyword"
                 className="w-full border border-gray-200 pl-9 pr-3 py-2 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMaterials.map((mat) => (
-              <article key={mat.id} className="border border-gray-200 bg-white p-5 space-y-3 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <span
-                    className="w-12 h-12 rounded-full border border-gray-200 shadow-inner"
-                    style={{ backgroundColor: mat.tone }}
-                    aria-hidden
-                  />
-                  <div className="space-y-1">
-                    <div className="font-display uppercase tracking-wide text-lg">{mat.name}</div>
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">{mat.finish}</div>
-                    <p className="font-sans text-sm text-gray-700 leading-relaxed">{mat.description}</p>
-                  </div>
+          <div className="space-y-8">
+            {MATERIAL_TREE.map((section) => (
+              <div key={section.id} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <h2 className="font-display text-2xl uppercase tracking-tight">{section.label}</h2>
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">Catalogue</span>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 border border-gray-200 px-2 py-1 uppercase font-mono text-[10px] tracking-widest">
-                    <Sparkles className="w-3 h-3" /> Low-carbon ready
-                  </span>
-                  {mat.carbonIntensity === 'high' && (
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-amber-700">High embodied carbon</span>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {section.groups.map((group) => {
+                    const list = filteredMaterialsByPath[group.path] || [];
+                    const hasResults = list.length > 0;
+                    if (!hasResults && hasSearch) return null;
+
+                    return (
+                      <article key={group.id} className="border border-gray-200 bg-white shadow-sm">
+                        <button
+                          onClick={() =>
+                            setOpenGroups((prev) => ({
+                              ...prev,
+                              [group.id]: !prev[group.id]
+                            }))
+                          }
+                          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+                        >
+                          <div>
+                            <div className="font-display uppercase tracking-wide text-base">{group.label}</div>
+                            <p className="font-sans text-sm text-gray-600">
+                              {group.description || 'Browse and add finishes into your trolley.'}
+                            </p>
+                          </div>
+                          <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                            {list.length} option{list.length === 1 ? '' : 's'}
+                          </span>
+                        </button>
+
+                        {openGroups[group.id] && (
+                          <div className="border-t border-gray-200 p-4 space-y-4">
+                            {hasResults ? (
+                              list.map((mat) => (
+                                <div key={mat.id} className="space-y-3 border border-gray-100 p-3">
+                                  <div className="flex items-start gap-3">
+                                    <span
+                                      className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
+                                      style={{ backgroundColor: mat.tone }}
+                                      aria-hidden
+                                    />
+                                    <div className="space-y-1">
+                                      <div className="font-display uppercase tracking-wide text-sm">{mat.name}</div>
+                                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">{mat.finish}</div>
+                                      <p className="font-sans text-sm text-gray-700 leading-relaxed">{mat.description}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="inline-flex items-center gap-1 border border-gray-200 px-2 py-1 uppercase font-mono text-[10px] tracking-widest">
+                                      <Sparkles className="w-3 h-3" /> Low-carbon ready
+                                    </span>
+                                    {mat.carbonIntensity === 'high' && (
+                                      <span className="font-mono text-[10px] uppercase tracking-widest text-amber-700">High embodied carbon</span>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-3">
+                                    <button
+                                      onClick={() => handleAdd(mat)}
+                                      className="flex-1 bg-black text-white px-3 py-2 uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
+                                    >
+                                      Add to trolley
+                                    </button>
+                                    <button
+                                      onClick={() => onNavigate('moodboard')}
+                                      className="px-3 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+                                    >
+                                      My materials
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="font-sans text-sm text-gray-600">No materials found in this group.</p>
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleAdd(mat)}
-                    className="flex-1 bg-black text-white px-3 py-2 uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
-                  >
-                    Add to trolley
-                  </button>
-                  <button
-                    onClick={() => onNavigate('moodboard')}
-                    className="px-3 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
-                  >
-                    My materials
-                  </button>
-                </div>
-              </article>
+              </div>
             ))}
           </div>
         </section>
