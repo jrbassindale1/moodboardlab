@@ -1501,7 +1501,7 @@ IMPORTANT:
               Moodboard Lab
             </h1>
             <p className="font-sans text-gray-600 max-w-2xl mt-3">
-              Drag materials to the board and let AI assemble a material key plus UK-focused
+              Review the materials you've already selected, then let AI assemble a material key plus UK-focused
               sustainability analysis.
             </p>
             <div className="flex flex-wrap gap-3 mt-4">
@@ -1521,285 +1521,86 @@ IMPORTANT:
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:items-start">
-          <div className="lg:col-span-4 space-y-4 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto lg:pr-2">
-            <div className="border border-gray-200 bg-white p-4 space-y-3">
-              <div className="flex items-center gap-2 border border-gray-300 bg-gray-50 px-3 py-2">
-                <Search className="w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search materials by name, finish, or keyword"
-                  className="flex-1 bg-transparent focus:outline-none font-sans text-sm"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="font-mono text-[11px] uppercase tracking-widest text-gray-600 hover:text-black"
-                  >
-                    Clear
-                  </button>
-                )}
+        <div className="space-y-8">
+          <section className="border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="inline-flex items-center gap-2 border border-black px-3 py-1 uppercase font-mono text-[11px] tracking-widest">
+                <ShoppingCart className="w-4 h-4" />
+                Chosen Materials
               </div>
-              <p className="font-sans text-xs text-gray-600">
-                Filter the material list instantly without scrolling through every category.
-              </p>
-              {hasSearch && (
-                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                  {totalSearchResults
-                    ? `${totalSearchResults} match${totalSearchResults === 1 ? '' : 'es'} found`
-                    : 'No materials match that search.'}
-                </div>
-              )}
-            </div>
-            {MATERIAL_TREE.map((section) => (
-            <div key={section.id} className="space-y-2">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 px-4">
-                {section.label}
+              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                {board.length} item{board.length === 1 ? '' : 's'} selected
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={() => onNavigate?.('materials')}
+                  className="px-3 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+                >
+                  Edit materials
+                </button>
               </div>
-              {section.groups.map((group) => {
-                const items = filteredMaterialsByPath[group.path] || [];
-                if (hasSearch && items.length === 0) return null;
-                const primaryItems = items.filter((m) => m.carbonIntensity !== 'high');
-                const carbonHeavy = items.filter((m) => m.carbonIntensity === 'high');
-                const isCustom = section.id === 'custom';
-                return (
-                  <div key={group.id} className="border border-gray-200">
-                    <button
-                      onClick={() => setOpenSections((prev) => ({ ...prev, [group.id]: !prev[group.id] }))}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
-                    >
-                      <span className="font-mono text-xs uppercase tracking-widest text-gray-600">{group.label}</span>
-                      <span className="font-mono text-xs text-gray-500">{openSections[group.id] ? '−' : '+'}</span>
-                    </button>
-                    {openSections[group.id] && (
-                      <div className="space-y-4 p-4">
-                        {primaryItems.length > 0 ? (
-                          primaryItems.map((mat) => renderMaterialCard(mat))
-                        ) : !isCustom ? (
-                          <p className="font-sans text-sm text-gray-600">No materials in this group yet.</p>
-                        ) : (
-                          <div className="space-y-2 text-sm text-gray-700">
-                            <p>Upload product photos to automatically detect and extract architectural materials.</p>
-                            <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                              Or manually add custom materials using the form below.
-                            </p>
-                          </div>
-                        )}
-
-                        {carbonHeavy.length > 0 && (
-                          <div className="border border-amber-200 bg-amber-50 p-3">
-                            <button
-                              onClick={() =>
-                                setCarbonSectionsOpen((prev) => ({ ...prev, [group.id]: !prev[group.id] }))
-                              }
-                              className="w-full flex items-center justify-between text-left"
-                            >
-                              <span className="font-mono text-[11px] uppercase tracking-widest text-amber-900">
-                                Carbon-intensive options (click to view)
-                              </span>
-                              <span className="font-mono text-xs text-amber-900">
-                                {carbonSectionsOpen[group.id] ? '−' : '+'}
-                              </span>
-                            </button>
-                            {carbonSectionsOpen[group.id] && (
-                              <div className="space-y-3 mt-3">
-                                {carbonHeavy.map((mat) => renderMaterialCard(mat))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
             </div>
-          ))}
 
-            <div className="border border-gray-200 bg-blue-50">
-              <div className="p-4 space-y-3">
-                <div className="font-mono text-xs uppercase tracking-widest text-gray-700">
-                  AI Material Detection
-                </div>
-                <p className="font-sans text-sm text-gray-600">
-                  Upload a product photo and click analyze to automatically detect architectural materials.
-                </p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleMaterialDetectionUpload(e.target.files)}
-                    className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-                  />
-                </div>
-                {detectionImage && (
-                  <div className="space-y-3">
-                    <div className="border border-gray-200 bg-white p-2 max-w-xs">
-                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                        <img src={detectionImage.dataUrl} alt={detectionImage.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
-                        {detectionImage.name}
+            {board.length === 0 ? (
+              <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">
+                <p className="font-sans text-gray-700 text-sm">No materials have been added yet. Head to the Materials page to curate your selection before building the board.</p>
+                <button
+                  onClick={() => onNavigate?.('materials')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900"
+                >
+                  Go to Materials
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {board.map((item, idx) => (
+                  <div key={`${item.id}-${idx}`} className="border border-gray-200 bg-gray-50 p-4 relative">
+                    <div className="flex items-start gap-3">
+                      <span
+                        className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
+                        style={{ backgroundColor: item.tone }}
+                        aria-hidden
+                      />
+                      <div className="space-y-1">
+                        <div className="font-display uppercase tracking-wide text-sm">{item.name}</div>
+                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">{item.finish}</div>
+                        <p className="font-sans text-sm text-gray-700 leading-relaxed">{item.description}</p>
                       </div>
                     </div>
                     <button
-                      onClick={startMaterialDetection}
-                      disabled={status === 'detecting'}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      onClick={() => handleRemove(idx)}
+                      className="absolute top-3 right-3 text-gray-400 hover:text-black"
+                      aria-label="Remove"
                     >
-                      {status === 'detecting' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Analyzing...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4" />
-                          Analyze Photo
-                        </>
-                      )}
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
+            )}
 
-            <div className="border border-gray-200">
-              <button
-                onClick={() =>
-                  setOpenSections((prev) => ({ ...prev, custom: !prev.custom }))
-                }
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
-              >
-                <span className="font-mono text-xs uppercase tracking-widest text-gray-600">
-                  Add Custom Material Manually
-                </span>
-                <span className="font-mono text-xs text-gray-500">
-                  {openSections.custom ? '−' : '+'}
-                </span>
-              </button>
-              {openSections.custom && (
-                <div className="p-4 space-y-3 bg-white">
-                  <input
-                    type="text"
-                    value={manualLabel}
-                    onChange={(e) => setManualLabel(e.target.value)}
-                    placeholder="One-sentence material description"
-                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm"
-                  />
-                  <div className="flex items-center gap-2">
-                    <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                      Category
-                    </label>
-                    <select
-                      value={manualCategory}
-                      onChange={(e) => setManualCategory(e.target.value as any)}
-                      className="border border-gray-300 px-2 py-2 font-sans text-sm"
-                    >
-                      {manualCategoryOptions.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                      Colour
-                    </label>
-                    <input
-                      type="color"
-                      value={manualTone}
-                      onChange={(e) => setManualTone(e.target.value)}
-                      className="w-12 h-10 border border-gray-300"
-                    />
-                  </div>
-                  <button
-                    onClick={addManualMaterial}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900"
-                  >
-                    Add Custom
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-8 space-y-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto lg:self-start lg:pl-2">
-            <div className="space-y-4">
-              <button
-                onClick={() => setMaterialsAccordionOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 text-left"
-              >
-                <span className="font-mono text-xs uppercase tracking-widest text-gray-600">
-                  Your Materials
-                </span>
-                <span className="font-mono text-xs text-gray-500">
-                  {materialsAccordionOpen ? '−' : '+'}
-                </span>
-              </button>
-              {materialsAccordionOpen && (
-                <div className="space-y-4">
-                  <div
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleDrop}
-                    className="min-h-[320px] border-2 border-dashed border-gray-300 bg-gray-50 p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
-                  >
-                    {board.length === 0 && (
-                      <div className="col-span-full text-center text-gray-500 font-mono text-xs uppercase tracking-widest">
-                        Drag materials here
-                      </div>
-                    )}
-                    {board.map((item, idx) => (
-                      <div key={`${item.id}-${idx}`} className="border border-gray-200 bg-white p-3 relative">
-                        <div className="flex items-start gap-2">
-                          <span
-                            className="w-8 h-8 rounded-full border border-gray-200 shadow-inner"
-                            style={{ backgroundColor: item.tone }}
-                            aria-hidden
-                          />
-                          <div>
-                            <div className="font-display uppercase text-sm">{item.name}</div>
-                            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                              {item.finish}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleRemove(idx)}
-                          className="absolute top-2 right-2 text-gray-400 hover:text-black"
-                          aria-label="Remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={runMoodboardFlow}
-                      disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
-                      className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {isCreatingMoodboard ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Creating
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4" />
-                          Create Moodboard
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            {board.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={runMoodboardFlow}
+                  disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
+                  className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                >
+                  {isCreatingMoodboard ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4" />
+                      Create Moodboard
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </section>
 
             {error && (
               <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -2184,102 +1985,8 @@ IMPORTANT:
                 )}
               </div>
             )}
-            </div>
-          </div>
         </div>
-
-        {/* Material Detection Modal */}
-        {showDetectionModal && detectedMaterials && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-display text-2xl uppercase">Detected Materials</h2>
-                  <p className="font-sans text-sm text-gray-600 mt-1">
-                    Select which materials to add to your moodboard palette
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setShowDetectionModal(false);
-                    setDetectedMaterials(null);
-                    setDetectionImage(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {detectedMaterials.map((mat) => {
-                  const isAdded = addedDetectedIds.has(mat.id);
-                  return (
-                    <div key={mat.id} className="border border-gray-200 bg-white p-4">
-                      <div className="flex items-start gap-3">
-                        <span
-                          className="w-12 h-12 rounded-full border border-gray-200 shadow-inner flex-shrink-0"
-                          style={{ backgroundColor: mat.tone }}
-                          aria-hidden
-                        />
-                        <div className="flex-1 space-y-2">
-                          <div>
-                            <div className="font-display uppercase text-base">{mat.name}</div>
-                            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mt-1">
-                              {mat.finish}
-                            </div>
-                            <p className="font-sans text-sm text-gray-600 mt-2">
-                              {mat.description}
-                            </p>
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400 mt-2">
-                              Category: {mat.category}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => addSingleDetectedMaterial(mat)}
-                            disabled={isAdded}
-                            className={`inline-flex items-center gap-2 px-3 py-1 border font-mono text-[11px] uppercase tracking-widest ${
-                              isAdded
-                                ? 'border-green-500 bg-green-50 text-green-700 cursor-not-allowed'
-                                : 'border-black bg-black text-white hover:bg-gray-900'
-                            }`}
-                          >
-                            {isAdded ? 'Added to Board' : 'Add to Board'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
-                <button
-                  onClick={() => {
-                    setShowDetectionModal(false);
-                    setDetectedMaterials(null);
-                    setDetectionImage(null);
-                  }}
-                  className="px-4 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => addDetectedMaterialsToBoard(detectedMaterials)}
-                  className="px-4 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900"
-                >
-                  Add All Materials
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
