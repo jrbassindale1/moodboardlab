@@ -42,11 +42,11 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
             </p>
             <div className="flex flex-wrap gap-4">
               <button
-                onClick={() => onNavigate('moodboard')}
+                onClick={() => onNavigate('materials')}
                 className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
-                <span className="font-mono text-xs uppercase tracking-widest">Open Moodboard Lab</span>
+                <span className="font-mono text-xs uppercase tracking-widest">Start with materials</span>
               </button>
             </div>
             <div className="border border-gray-200 bg-white shadow-lg">

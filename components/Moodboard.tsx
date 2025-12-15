@@ -78,6 +78,8 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
 
 interface MoodboardProps {
   onNavigate?: (page: string) => void;
+  initialBoard?: BoardItem[];
+  onBoardChange?: (items: BoardItem[]) => void;
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
@@ -136,8 +138,8 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
-const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
-  const [board, setBoard] = useState<BoardItem[]>([]);
+const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoardChange }) => {
+  const [board, setBoard] = useState<BoardItem[]>(initialBoard || []);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [analysisStructured, setAnalysisStructured] = useState<
     { title: string; explanation: string }[] | null
@@ -191,6 +193,16 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate }) => {
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
   const [showDetectionModal, setShowDetectionModal] = useState(false);
   const [addedDetectedIds, setAddedDetectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (initialBoard) {
+      setBoard(initialBoard);
+    }
+  }, [initialBoard]);
+
+  useEffect(() => {
+    onBoardChange?.(board);
+  }, [board, onBoardChange]);
 
   const treePathFallbacks = useMemo(
     () => ({
@@ -1492,6 +1504,20 @@ IMPORTANT:
               Drag materials to the board and let AI assemble a material key plus UK-focused
               sustainability analysis.
             </p>
+            <div className="flex flex-wrap gap-3 mt-4">
+              <button
+                onClick={() => onNavigate?.('materials')}
+                className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+              >
+                Back to materials
+              </button>
+              <button
+                onClick={() => onNavigate?.('concept')}
+                className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+              >
+                Home
+              </button>
+            </div>
           </div>
         </div>
 

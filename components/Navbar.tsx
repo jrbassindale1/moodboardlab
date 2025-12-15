@@ -11,7 +11,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
 
   const navItems = [
     { id: 'concept', label: 'Home' },
-    { id: 'moodboard', label: 'Moodboard' }
+    { id: 'materials', label: 'Materials' },
+    { id: 'moodboard', label: 'Moodboard Lab' }
   ];
 
   const handleNavigate = (page: string) => {

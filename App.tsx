@@ -2,23 +2,40 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
+import MaterialSelection from './components/MaterialSelection';
 import AdRail from './components/AdRail';
 import Product from './components/Product';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
 import CookieBanner from './components/CookieBanner';
+import { MaterialOption } from './types';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('concept');
+  const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
 
   const renderPage = () => {
     switch(currentPage) {
       case 'concept':
         return <Concept onNavigate={setCurrentPage} />;
+      case 'materials':
+        return (
+          <MaterialSelection
+            onNavigate={setCurrentPage}
+            board={selectedMaterials}
+            onBoardChange={setSelectedMaterials}
+          />
+        );
       case 'moodboard':
-        return <Moodboard onNavigate={setCurrentPage} />;
+        return (
+          <Moodboard
+            onNavigate={setCurrentPage}
+            initialBoard={selectedMaterials}
+            onBoardChange={setSelectedMaterials}
+          />
+        );
       case 'product':
         return <Product onNavigate={setCurrentPage} />;
       case 'privacy':
