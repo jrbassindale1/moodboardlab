@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Search, ShoppingCart, Sparkles, X } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { MaterialOption } from '../types';
+import { MaterialOption, UploadedImage } from '../types';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -81,6 +81,7 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
 
   const treePathFallbacks = useMemo(
     () => ({
@@ -190,6 +191,47 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     setRecentlyAdded(material);
   };
 
+  const handleUploadFiles = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+
+    const uploads: UploadedImage[] = [];
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      uploads.push({
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        dataUrl,
+        mimeType: file.type,
+        sizeBytes: file.size
+      });
+    }
+
+    if (uploads.length) {
+      setUploadedImages((prev) => [...prev, ...uploads].slice(-12));
+    }
+  };
+
+  const addUploadToTrolley = (image: UploadedImage) => {
+    const materialFromUpload: MaterialOption = {
+      id: `upload-${image.id}`,
+      name: image.name,
+      tone: '#e5e7eb',
+      finish: 'Custom upload',
+      description: 'User-uploaded material sample ready to add to your trolley.',
+      keywords: ['upload', 'custom', 'image'],
+      category: 'finish'
+    };
+    handleAdd(materialFromUpload);
+  };
+
   return (
     <div className="pt-24 pb-16 bg-white animate-in fade-in duration-500">
       <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
@@ -268,8 +310,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {section.groups.map((group) => {
                     const list = filteredMaterialsByPath[group.path] || [];
-                    const hasResults = list.length > 0;
-                    if (!hasResults && hasSearch) return null;
+                    const isUpload = group.id === 'upload-image';
+                    const hasResults = isUpload ? true : list.length > 0;
+                    const optionCount = isUpload ? uploadedImages.length : list.length;
+                    if (!isUpload && !hasResults && hasSearch) return null;
 
                     return (
                       <article key={group.id} className="border border-gray-200 bg-white shadow-sm">
@@ -289,13 +333,72 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                             </p>
                           </div>
                           <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                            {list.length} option{list.length === 1 ? '' : 's'}
+                            {optionCount} option{optionCount === 1 ? '' : 's'}
                           </span>
                         </button>
 
                         {openGroups[group.id] && (
                           <div className="border-t border-gray-200 p-4 space-y-4">
-                            {hasResults ? (
+                            {isUpload ? (
+                              <div className="space-y-4">
+                                <div className="border border-dashed border-gray-300 p-4 bg-gray-50 flex flex-col gap-3">
+                                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                                    <div>
+                                      <div className="font-display uppercase tracking-wide text-base">Upload your own samples</div>
+                                      <p className="font-sans text-sm text-gray-600">
+                                        Add reference images to keep custom finishes with the rest of your materials.
+                                      </p>
+                                    </div>
+                                    <label className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 uppercase font-mono text-[11px] tracking-widest cursor-pointer hover:bg-gray-900">
+                                      Upload images
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        className="hidden"
+                                        onChange={(e) => handleUploadFiles(e.target.files)}
+                                      />
+                                    </label>
+                                  </div>
+                                  <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                                    JPEG, PNG, or HEIC. Add multiple samples at once.
+                                  </p>
+                                </div>
+
+                                {uploadedImages.length ? (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {uploadedImages.map((img) => (
+                                      <div
+                                        key={img.id}
+                                        className="border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col"
+                                      >
+                                        <div className="aspect-video bg-gray-100 overflow-hidden">
+                                          <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="p-3 space-y-2 flex-1 flex flex-col">
+                                          <div className="font-display uppercase tracking-wide text-sm line-clamp-1" title={img.name}>
+                                            {img.name}
+                                          </div>
+                                          <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                                            {(img.sizeBytes ? Math.round(img.sizeBytes / 1024) : 0).toLocaleString()} KB
+                                          </div>
+                                          <button
+                                            onClick={() => addUploadToTrolley(img)}
+                                            className="mt-auto bg-black text-white px-3 py-2 uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900"
+                                          >
+                                            Add to trolley
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="font-sans text-sm text-gray-600">
+                                    Upload samples to see them here with quick add-to-trolley actions.
+                                  </p>
+                                )}
+                              </div>
+                            ) : hasResults ? (
                               list.map((mat) => (
                                 <div key={mat.id} className="space-y-3 border border-gray-100 p-3">
                                   <div className="flex items-start gap-3">
