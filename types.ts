@@ -54,6 +54,10 @@ export interface MaterialOption {
   finishOptions?: string[];
   treePaths?: string[];
   carbonIntensity?: 'low' | 'high';
+  tags?: string[]; // Material attribute tags (e.g., 'paint', 'timber-panels', etc.)
+  isCustom?: boolean; // Whether this is a user-created custom material
+  customImage?: string; // Data URL for custom material images
+  customDescription?: string; // User-provided description for custom materials
 }
 
 export interface UploadedImage {
