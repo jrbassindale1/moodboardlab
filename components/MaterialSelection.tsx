@@ -234,10 +234,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     handleAdd(materialFromUpload);
   };
 
-  // Get all materials for the selected category or all if none selected
+  // Get materials for the selected category only (empty if no category selected)
   const displayedMaterials = useMemo(() => {
     if (!selectedCategory) {
-      return Object.values(filteredMaterialsByPath).flat();
+      return [];
     }
     return filteredMaterialsByPath[selectedCategory] || [];
   }, [selectedCategory, filteredMaterialsByPath]);
@@ -259,9 +259,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFEF2]">
+    <div className="min-h-screen bg-white">
       {/* Header with breadcrumb */}
-      <div className="border-b border-gray-200 bg-white">
+      <div className="border-b border-arch-line bg-white pt-24">
         <div className="max-w-screen-2xl mx-auto px-6 py-4">
           <div className="flex items-center gap-2 text-sm font-sans">
             <button onClick={() => onNavigate('moodboard')} className="hover:underline">
@@ -297,10 +297,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
             {/* Categories */}
             <div className="space-y-1">
-              <h3 className="font-sans text-sm font-medium mb-3">Category</h3>
+              <h3 className="font-display text-sm uppercase tracking-widest mb-3">Category</h3>
               {MATERIAL_TREE.map((section) => (
                 <div key={section.id} className="space-y-1">
-                  <h4 className="font-sans text-xs uppercase tracking-wider text-gray-500 mt-4 mb-2">{section.label}</h4>
+                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mt-4 mb-2">{section.label}</h4>
                   {section.groups.map((group) => {
                     const count = (filteredMaterialsByPath[group.path] || []).length;
                     if (count === 0 && hasSearch) return null;
@@ -320,32 +320,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
               ))}
             </div>
 
-            {/* Refine section (placeholder for future filters) */}
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="font-sans text-sm font-medium mb-3">Refine</h3>
-              <div className="space-y-2">
-                <details className="group">
-                  <summary className="flex items-center justify-between cursor-pointer text-sm font-sans py-1">
-                    <span>Price</span>
-                    <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
-                  </summary>
-                </details>
-                <details className="group">
-                  <summary className="flex items-center justify-between cursor-pointer text-sm font-sans py-1">
-                    <span>Form</span>
-                    <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
-                  </summary>
-                </details>
-                <details className="group">
-                  <summary className="flex items-center justify-between cursor-pointer text-sm font-sans py-1">
-                    <span>Aroma</span>
-                    <ChevronRight className="w-4 h-4 group-open:rotate-90 transition-transform" />
-                  </summary>
-                </details>
-              </div>
-            </div>
 
-            {/* Trolley summary */}
+            {/* Board summary */}
             <div className="border-t border-gray-200 pt-6">
               <button
                 onClick={() => onNavigate('moodboard')}
@@ -353,7 +329,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
               >
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
-                  <span className="text-sm font-sans">My cart</span>
+                  <span className="text-sm font-sans">My board</span>
                 </div>
                 <span className="text-xs font-sans text-gray-600">({board.length})</span>
               </button>
@@ -363,19 +339,19 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           {/* Right side - Product grid */}
           <main className="flex-1 space-y-6">
             {/* Page title and sort */}
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-gray-200">
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
               <div>
-                <h1 className="text-3xl font-serif mb-2">{getCategoryLabel()}</h1>
+                <h1 className="text-3xl font-display uppercase tracking-tight mb-2">{getCategoryLabel()}</h1>
                 <p className="text-sm text-gray-600 font-sans">
                   {sortedMaterials.length} product{sortedMaterials.length === 1 ? '' : 's'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-600 font-sans">Sort by</label>
+                <label className="text-sm text-gray-600 font-mono uppercase tracking-widest text-[11px]">Sort by</label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'featured' | 'name')}
-                  className="border border-gray-200 px-3 py-1.5 text-sm font-sans focus:outline-none focus:border-black"
+                  className="border border-gray-200 px-3 py-1.5 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   <option value="featured">Featured</option>
                   <option value="name">Name</option>
@@ -390,53 +366,62 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                 type="search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search..."
-                className="w-full border-0 border-b border-gray-200 pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
+                placeholder="Search materials..."
+                className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
               />
             </div>
 
-            {/* Product Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedMaterials.map((mat) => (
-                <article key={mat.id} className="group space-y-4">
-                  {/* Product image/swatch */}
-                  <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden">
-                    <div
-                      className="w-full h-full"
-                      style={{ backgroundColor: mat.tone }}
-                    />
-                    {/* Bookmark icon */}
-                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/80 hover:bg-white flex items-center justify-center">
-                      <span className="text-lg">🔖</span>
-                    </button>
-                  </div>
-
-                  {/* Product info */}
-                  <div className="space-y-2">
-                    <h3 className="font-serif text-base">{mat.name}</h3>
-                    <p className="text-sm text-gray-600 font-sans line-clamp-2">
-                      {mat.finish}
-                    </p>
-                    <p className="text-xs text-gray-500 font-sans">One size</p>
-                    <p className="text-sm font-sans">£19.00</p>
-                  </div>
-
-                  {/* Add to cart button */}
-                  <button
-                    onClick={() => handleAdd(mat)}
-                    className="w-full bg-[#252525] text-white py-3 text-sm font-sans hover:bg-black transition-colors"
-                  >
-                    Add to cart
-                  </button>
-                </article>
-              ))}
-            </div>
-
-            {/* Empty state */}
-            {sortedMaterials.length === 0 && (
+            {/* Empty state when no category selected */}
+            {!selectedCategory ? (
               <div className="text-center py-16">
-                <p className="text-gray-600 font-sans">No materials found.</p>
+                <h2 className="text-2xl font-display uppercase tracking-tight mb-4">Select a Category</h2>
+                <p className="text-gray-600 font-sans">Choose a category from the sidebar to browse materials.</p>
               </div>
+            ) : (
+              <>
+                {/* Product Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedMaterials.map((mat) => (
+                    <article key={mat.id} className="group space-y-3">
+                      {/* Product image/swatch */}
+                      <div className="aspect-[3/4] bg-arch-gray relative overflow-hidden border border-arch-line">
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: mat.tone }}
+                        />
+                      </div>
+
+                      {/* Product info */}
+                      <div className="space-y-2">
+                        <h3 className="font-display uppercase tracking-wide text-sm">{mat.name}</h3>
+                        <p className="text-xs text-gray-600 font-sans line-clamp-2">
+                          {mat.finish}
+                        </p>
+                        {mat.description && (
+                          <p className="text-xs text-gray-500 font-sans line-clamp-2">
+                            {mat.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Add to board button */}
+                      <button
+                        onClick={() => handleAdd(mat)}
+                        className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors"
+                      >
+                        Add to board
+                      </button>
+                    </article>
+                  ))}
+                </div>
+
+                {/* Empty state when no results */}
+                {sortedMaterials.length === 0 && (
+                  <div className="text-center py-16">
+                    <p className="text-gray-600 font-sans">No materials found in this category.</p>
+                  </div>
+                )}
+              </>
             )}
           </main>
         </div>
@@ -444,34 +429,68 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
       {recentlyAdded && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <div className="bg-white max-w-lg w-full p-6 space-y-4 shadow-2xl relative">
+          <div className="bg-white max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
             <button
               onClick={() => setRecentlyAdded(null)}
-              className="absolute top-3 right-3 p-1 border border-gray-200 rounded-full hover:bg-gray-50"
+              className="absolute top-3 right-3 p-1 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-3 border-b border-arch-line pb-4">
               <ShoppingCart className="w-5 h-5" />
-              <div className="font-display uppercase text-lg">Added to trolley</div>
+              <div className="font-display uppercase tracking-widest text-base">Added to board</div>
             </div>
-            <div className="flex items-start gap-3">
-              <span
-                className="w-12 h-12 rounded-full border border-gray-200 shadow-inner"
-                style={{ backgroundColor: recentlyAdded.tone }}
-                aria-hidden
-              />
-              <div>
-                <div className="font-display uppercase text-base">{recentlyAdded.name}</div>
-                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">{recentlyAdded.finish}</div>
-                <p className="font-sans text-sm text-gray-700 mt-1">{recentlyAdded.description}</p>
+
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div
+                  className="w-16 h-16 border border-arch-line flex-shrink-0"
+                  style={{ backgroundColor: recentlyAdded.tone }}
+                  aria-hidden
+                />
+                <div className="flex-1">
+                  <div className="font-display uppercase tracking-wide text-sm">{recentlyAdded.name}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1">{recentlyAdded.finish}</div>
+                  {recentlyAdded.description && (
+                    <p className="font-sans text-xs text-gray-600 mt-2">{recentlyAdded.description}</p>
+                  )}
+                </div>
               </div>
+
+              {/* Color options if available */}
+              {recentlyAdded.colorOptions && recentlyAdded.colorOptions.length > 0 && (
+                <div className="border-t border-arch-line pt-4">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
+                    Color Options
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {recentlyAdded.colorOptions.map((colorOption, idx) => (
+                      <button
+                        key={idx}
+                        className="flex items-center gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors"
+                        title={colorOption.label}
+                      >
+                        <span
+                          className="w-6 h-6 border border-gray-200"
+                          style={{ backgroundColor: colorOption.value }}
+                        />
+                        <span className="font-sans text-xs">{colorOption.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-sans text-xs text-gray-500 mt-2">
+                    Color attributes can be adjusted in the Moodboard Lab after adding to your board.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 onClick={() => setRecentlyAdded(null)}
-                className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+                className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
               >
                 Add more materials
               </button>
@@ -480,9 +499,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                   setRecentlyAdded(null);
                   onNavigate('moodboard');
                 }}
-                className="flex-1 px-4 py-3 bg-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900"
+                className="flex-1 px-4 py-3 bg-arch-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
               >
-                Go to my materials
+                Go to moodboard
               </button>
             </div>
           </div>
