@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, Search, ShoppingCart, X, Upload, FileText } from 'lucide-react';
+import { ChevronRight, Search, ShoppingCart, X, Upload, FileText, Camera } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { MaterialOption } from '../types';
+import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
+import { callGeminiText } from '../api';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -11,7 +12,7 @@ interface MaterialSelectionProps {
   onBoardChange: (items: MaterialOption[]) => void;
 }
 
-type CustomMaterialMode = 'upload' | 'describe' | null;
+type CustomMaterialMode = 'upload' | 'describe' | 'analyze' | null;
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +23,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
   const [customMaterialImage, setCustomMaterialImage] = useState<string | null>(null);
+  const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
+  const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [detectionError, setDetectionError] = useState<string | null>(null);
 
   // Migrate materials to new category structure
   const migratedMaterials = useMemo(() => migrateAllMaterials(MATERIAL_PALETTE), []);
@@ -159,6 +164,128 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     setCustomMaterialImage(null);
   };
 
+  const handlePhotoUpload = async (files: FileList | null) => {
+    if (!files || !files.length) return;
+    const file = files[0];
+    if (!file.type.startsWith('image/')) return;
+
+    setDetectionError(null);
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const uploadedImg: UploadedImage = {
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        dataUrl,
+        mimeType: file.type,
+        sizeBytes: file.size,
+      };
+
+      setDetectionImage(uploadedImg);
+    } catch (err) {
+      console.error('Could not process upload', err);
+      setDetectionError(`Could not process "${file.name}".`);
+    }
+  };
+
+  const startMaterialDetection = async () => {
+    if (!detectionImage) return;
+
+    setIsDetecting(true);
+    setDetectionError(null);
+
+    const prompt = `Analyze this image and identify all architectural materials visible. For each material, provide:
+1. name: The specific material name (e.g., "Oak Timber Flooring", "Polished Concrete")
+2. finish: The finish or surface treatment, INCLUDING the color in the description (e.g., "Oiled oak planks in warm honey tone", "Polished concrete slab in light grey")
+3. description: A detailed 1-2 sentence description of the material and its characteristics
+4. tone: A hex color code representing the EXACT dominant color of the material as seen in the photo (e.g., "#d8b185" for natural oak, "#c5c0b5" for light grey concrete). CRITICAL: Analyze the actual color in the image carefully.
+5. category: One of these categories: floor, structure, finish, wall-internal, external, soffit, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, exposed-structure, joinery, fixture, landscape, insulation, door, balustrade, external-ground
+6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
+7. carbonIntensity: Either "low" or "high" based on the material's embodied carbon (e.g., timber is "low", concrete is "high")
+
+Return ONLY a JSON array with this structure (no markdown, no explanation):
+{
+  "materials": [
+    {
+      "name": "material name",
+      "finish": "finish description with color mentioned",
+      "description": "detailed description",
+      "tone": "#hexcolor",
+      "category": "category-name",
+      "keywords": ["keyword1", "keyword2", "keyword3"],
+      "carbonIntensity": "low or high"
+    }
+  ]
+}
+
+IMPORTANT:
+- Analyze the ACTUAL colors in the image carefully and provide accurate hex codes
+- Include color descriptions in the finish field (e.g., "White painted steel", "Charcoal powder-coated aluminum")
+- Be specific and accurate. Only include materials you can clearly identify in the image.`;
+
+    const payload = {
+      model: 'gemini-2.0-flash-exp',
+      contents: [
+        {
+          parts: [
+            { text: prompt },
+            {
+              inline_data: {
+                mime_type: detectionImage.mimeType,
+                data: detectionImage.dataUrl.split(',')[1],
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 4096,
+      },
+    };
+
+    try {
+      const data = await callGeminiText(payload);
+      let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      // Clean up the response to extract JSON
+      textResult = textResult.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(textResult);
+      const materials = parsed.materials || [];
+
+      if (materials.length === 0) {
+        setDetectionError('No materials detected in the image. Try a different photo.');
+        return;
+      }
+
+      // Convert to MaterialOption format
+      const detectedMats: MaterialOption[] = materials.map((mat: any, idx: number) => ({
+        id: `detected-${Date.now()}-${idx}`,
+        name: mat.name || 'Unknown Material',
+        tone: mat.tone || '#cccccc',
+        finish: mat.finish || '',
+        description: mat.description || '',
+        keywords: mat.keywords || [],
+        category: (mat.category || 'finish') as any,
+        carbonIntensity: mat.carbonIntensity,
+        treePaths: ['Custom>Analyze Photo'],
+      }));
+
+      setDetectedMaterials(detectedMats);
+    } catch (err) {
+      console.error('Material detection error:', err);
+      setDetectionError('Failed to analyze materials. Please try again.');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
 
   return (
@@ -289,7 +416,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
             {isCustomCategory ? (
               <div className="space-y-6">
                 {!customMaterialMode ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Upload Image Option */}
                     <button
                       onClick={() => setCustomMaterialMode('upload')}
@@ -313,6 +440,142 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                         Create a material card with a description and optional image
                       </p>
                     </button>
+
+                    {/* Analyze Photo Option */}
+                    <button
+                      onClick={() => setCustomMaterialMode('analyze')}
+                      className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
+                    >
+                      <Camera className="w-12 h-12 mb-4 text-gray-400" />
+                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Analyze Photo</h3>
+                      <p className="text-sm text-gray-600 font-sans">
+                        AI will identify all materials in a photo and add them to your board
+                      </p>
+                    </button>
+                  </div>
+                ) : customMaterialMode === 'analyze' ? (
+                  /* AI Photo Analysis */
+                  <div className="max-w-2xl space-y-6 border border-arch-line p-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display uppercase tracking-widest text-lg">Analyze Photo</h3>
+                      <button
+                        onClick={() => {
+                          setCustomMaterialMode(null);
+                          setDetectionImage(null);
+                          setDetectedMaterials([]);
+                          setDetectionError(null);
+                        }}
+                        className="text-sm text-gray-600 hover:text-black"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <p className="text-sm font-sans text-gray-600">
+                      Upload a photo of an interior space and AI will identify all visible materials for you to add to your board.
+                    </p>
+
+                    {/* Photo Upload */}
+                    {!detectionImage ? (
+                      <label className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center">
+                        <Camera className="w-16 h-16 mb-4 text-gray-400" />
+                        <span className="text-base font-display uppercase tracking-wide mb-2">Upload Photo</span>
+                        <span className="text-sm text-gray-600 font-sans">Click to select an image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handlePhotoUpload(e.target.files)}
+                        />
+                      </label>
+                    ) : (
+                      <>
+                        {/* Uploaded Image Preview */}
+                        <div className="relative border border-arch-line">
+                          <img
+                            src={detectionImage.dataUrl}
+                            alt="Uploaded"
+                            className="w-full h-64 object-cover"
+                          />
+                          <button
+                            onClick={() => {
+                              setDetectionImage(null);
+                              setDetectedMaterials([]);
+                              setDetectionError(null);
+                            }}
+                            className="absolute top-2 right-2 bg-white p-2 border border-gray-200 hover:bg-gray-100"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Analyze Button */}
+                        {detectedMaterials.length === 0 && (
+                          <button
+                            onClick={startMaterialDetection}
+                            disabled={isDetecting}
+                            className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isDetecting ? 'Analyzing...' : 'Analyze Materials'}
+                          </button>
+                        )}
+
+                        {/* Error Message */}
+                        {detectionError && (
+                          <div className="bg-red-50 border border-red-200 p-4">
+                            <p className="text-sm font-sans text-red-800">{detectionError}</p>
+                          </div>
+                        )}
+
+                        {/* Detected Materials */}
+                        {detectedMaterials.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-display uppercase tracking-widest text-base">
+                                Detected Materials ({detectedMaterials.length})
+                              </h4>
+                              <button
+                                onClick={() => {
+                                  detectedMaterials.forEach((mat) => handleAdd(mat));
+                                  setCustomMaterialMode(null);
+                                  setDetectionImage(null);
+                                  setDetectedMaterials([]);
+                                }}
+                                className="text-xs font-mono uppercase tracking-widest px-4 py-2 bg-arch-black text-white hover:bg-gray-900"
+                              >
+                                Add All to Board
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4">
+                              {detectedMaterials.map((mat) => (
+                                <div key={mat.id} className="border border-arch-line p-4 space-y-3">
+                                  <div className="flex items-start gap-3">
+                                    <div
+                                      className="w-12 h-12 border border-arch-line flex-shrink-0"
+                                      style={{ backgroundColor: mat.tone }}
+                                    />
+                                    <div className="flex-1">
+                                      <h5 className="font-display uppercase tracking-wide text-sm">{mat.name}</h5>
+                                      <p className="text-xs text-gray-600 font-sans">{mat.finish}</p>
+                                      {mat.description && (
+                                        <p className="text-xs text-gray-500 font-sans mt-1">{mat.description}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleAdd(mat)}
+                                    className="w-full bg-arch-black text-white py-2 text-xs font-mono uppercase tracking-widest hover:bg-gray-900"
+                                  >
+                                    Add to Board
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
                   /* Custom Material Form */
