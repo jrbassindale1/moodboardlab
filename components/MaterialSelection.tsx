@@ -418,7 +418,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                   {sortedMaterials.map((mat) => (
                     <article key={mat.id} className="group space-y-3">
                       {/* Product image/swatch */}
-                      <div className="aspect-[3/4] bg-arch-gray relative overflow-hidden border border-arch-line">
+                      <div className="aspect-square bg-arch-gray relative overflow-hidden border border-arch-line">
                         {mat.customImage ? (
                           <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
                         ) : (

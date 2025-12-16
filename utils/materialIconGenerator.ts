@@ -44,12 +44,15 @@ Requirements:
 - No text, labels, or borders
 - Photorealistic material texture
 - Square composition, ${ICON_SIZE}x${ICON_SIZE}px
-- Suitable for use as a small thumbnail icon`;
+- Suitable for use as a small thumbnail icon
+- Consistent style with other material icons
+- for use a a material swatch icon in design software`;
 }
 
 /**
  * Generate a single material icon using Gemini Imagen
  */
+
 export async function generateMaterialIcon(
   material: MaterialIconRequest
 ): Promise<MaterialIcon> {
