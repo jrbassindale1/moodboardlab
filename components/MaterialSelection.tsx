@@ -685,20 +685,24 @@ IMPORTANT:
                         {mat.customImage ? (
                           <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
                         ) : (
-                          <img
-                            src={`/icons/${mat.id}.png`}
-                            alt={mat.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              // Fallback to color swatch if icon fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              if (target.nextElementSibling) {
-                                (target.nextElementSibling as HTMLElement).style.display = 'block';
-                              }
-                            }}
-                          />
+                          <picture>
+                            <source srcSet={`/icons/${mat.id}.webp`} type="image/webp" />
+                            <img
+                              src={`/icons/${mat.id}.png`}
+                              alt={mat.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                // Fallback to color swatch if icon fails to load
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.nextElementSibling as HTMLElement | null;
+                                if (fallback) {
+                                  fallback.style.display = 'block';
+                                }
+                              }}
+                            />
+                          </picture>
                         )}
                         <div
                           className="w-full h-full hidden"

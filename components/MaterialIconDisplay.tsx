@@ -23,10 +23,16 @@ export function MaterialIconDisplay({
   onClick,
   className = ''
 }: MaterialIconDisplayProps) {
-  // Use icon from /public/icons folder
-  const iconUrl = `/icons/${material.id}.png`;
+  const iconBase = `/icons/${material.id}`;
+  const webpUrl = `${iconBase}.webp`;
+  const pngUrl = `${iconBase}.png`;
   const [iconLoaded, setIconLoaded] = React.useState(false);
   const [iconError, setIconError] = React.useState(false);
+
+  React.useEffect(() => {
+    setIconLoaded(false);
+    setIconError(false);
+  }, [material.id]);
 
   return (
     <div
@@ -46,19 +52,22 @@ export function MaterialIconDisplay({
         }}
       >
         {!iconError && (
-          <img
-            src={iconUrl}
-            alt={material.name}
-            loading="lazy"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: iconLoaded ? 'block' : 'none'
-            }}
-            onLoad={() => setIconLoaded(true)}
-            onError={() => setIconError(true)}
-          />
+          <picture>
+            <source srcSet={webpUrl} type="image/webp" />
+            <img
+              src={pngUrl}
+              alt={material.name}
+              loading="lazy"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: iconLoaded ? 'block' : 'none'
+              }}
+              onLoad={() => setIconLoaded(true)}
+              onError={() => setIconError(true)}
+            />
+          </picture>
         )}
         {/* Fallback to color swatch while loading or on error */}
         {(!iconLoaded || iconError) && (

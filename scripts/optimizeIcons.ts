@@ -78,10 +78,26 @@ async function optimizeAllIcons() {
     getFilesWithExt('.webp').map((file) => fs.statSync(path.join(ICONS_DIR, file)).size)
   );
 
+  const pngCount = getFilesWithExt('.png').length;
   console.log('\nOptimization complete:');
-  console.log(`• PNG total:  ${formatMB(afterPngBytes)} MB`);
+  console.log(`• PNG total:  ${formatMB(afterPngBytes)} MB (${pngCount} files)`);
   console.log(`• WebP total: ${formatMB(afterWebpBytes)} MB`);
   console.log(`• Combined:   ${formatMB(afterPngBytes + afterWebpBytes)} MB`);
+
+  const manifestPath = path.join(ICONS_DIR, 'manifest.json');
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifestRaw = fs.readFileSync(manifestPath, 'utf-8');
+      const manifest = JSON.parse(manifestRaw);
+      manifest.generatedAt = new Date().toISOString();
+      manifest.totalIcons = pngCount;
+      manifest.totalSizeMB = parseFloat(formatMB(afterPngBytes + afterWebpBytes));
+      fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+      console.log('• Updated manifest.json with new totals');
+    } catch (error) {
+      console.warn('• Skipped manifest update (could not parse existing manifest.json)', error);
+    }
+  }
 }
 
 optimizeAllIcons().catch((error) => {
