@@ -685,8 +685,25 @@ IMPORTANT:
                         {mat.customImage ? (
                           <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full" style={{ backgroundColor: mat.tone }} />
+                          <img
+                            src={`/icons/${mat.id}.png`}
+                            alt={mat.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              // Fallback to color swatch if icon fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.nextElementSibling) {
+                                (target.nextElementSibling as HTMLElement).style.display = 'block';
+                              }
+                            }}
+                          />
                         )}
+                        <div
+                          className="w-full h-full hidden"
+                          style={{ backgroundColor: mat.tone }}
+                        />
                       </div>
 
                       {/* Product info */}
