@@ -39,7 +39,8 @@ export type MaterialCategory =
   | 'insulation'
   | 'door'
   | 'balustrade'
-  | 'external-ground';
+  | 'external-ground'
+  | 'furniture';
 
 export interface MaterialOption {
   id: string;

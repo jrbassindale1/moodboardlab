@@ -1608,5 +1608,262 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'decking', 'timber'],
     category: 'external-ground',
     carbonIntensity: 'low'
+  },
+  // === STRUCTURE > PRIMARY STRUCTURE ===
+  {
+    id: 'rc-columns-beams',
+    name: 'RC Columns & Beams',
+    tone: '#c5c0b5',
+    finish: 'Cast-in-situ reinforced concrete',
+    description: 'Reinforced concrete columns and beams forming primary structural frame; versatile and fire-resistant.',
+    keywords: ['structure', 'concrete', 'columns', 'beams', 'primary'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'steel-columns-beams',
+    name: 'Steel Columns & Beams',
+    tone: '#a8a8a8',
+    finish: 'Structural steel sections',
+    description: 'Structural steel I-sections and H-columns; efficient spans and fast construction.',
+    keywords: ['structure', 'steel', 'columns', 'beams', 'primary'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'glulam-columns-beams',
+    name: 'Glulam Columns & Beams',
+    tone: '#c49a6c',
+    finish: 'Laminated timber sections',
+    description: 'Glued laminated timber columns and beams; renewable, warm aesthetic, and good seismic performance.',
+    keywords: ['structure', 'timber', 'glulam', 'columns', 'beams', 'primary'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'clt-loadbearing-walls',
+    name: 'CLT Load-Bearing Walls',
+    tone: '#d4b896',
+    finish: 'Cross-laminated timber panels',
+    description: 'Cross-laminated timber panels acting as load-bearing walls; rapid installation and carbon-negative.',
+    keywords: ['structure', 'clt', 'timber', 'walls', 'primary'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'masonry-loadbearing',
+    name: 'Load-Bearing Masonry',
+    tone: '#b8957a',
+    finish: 'Brick or blockwork',
+    description: 'Traditional load-bearing brick or blockwork walls; durable and thermally massive.',
+    keywords: ['structure', 'masonry', 'brick', 'walls', 'primary'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'high'
+  },
+  // === ENVELOPE > FAÇADE ===
+  {
+    id: 'brick-facade',
+    name: 'Brick Façade',
+    tone: '#c07858',
+    finish: 'Traditional clay brick',
+    description: 'Traditional clay brick façade; durable, low maintenance, and timeless aesthetic.',
+    keywords: ['facade', 'brick', 'clay', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'render-facade',
+    name: 'Render Façade',
+    tone: '#f0ebe5',
+    finish: 'Acrylic or lime render',
+    description: 'Rendered façade finish over insulation or masonry; smooth or textured finish available.',
+    keywords: ['facade', 'render', 'plaster', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'metal-panel-facade',
+    name: 'Metal Panel Façade',
+    tone: '#8b8b8b',
+    finish: 'Standing seam or composite panels',
+    description: 'Metal panel cladding system; lightweight, durable, and wide range of finishes available.',
+    keywords: ['facade', 'metal', 'cladding', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-cladding-facade',
+    name: 'Timber Cladding Façade',
+    tone: '#9d7a5a',
+    finish: 'Vertical or horizontal timber boards',
+    description: 'Natural timber cladding; warm appearance, renewable, and ages gracefully.',
+    keywords: ['facade', 'timber', 'cladding', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'glass-facade',
+    name: 'Glass Façade System',
+    tone: '#c8d9e0',
+    finish: 'Structural glazing or curtain wall',
+    description: 'Continuous glass façade with minimal framing; maximizes daylight and views.',
+    keywords: ['facade', 'glass', 'curtain wall', 'glazing'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'stone-facade',
+    name: 'Stone Façade',
+    tone: '#b5a899',
+    finish: 'Natural stone cladding',
+    description: 'Natural stone façade panels; prestigious appearance and extremely durable.',
+    keywords: ['facade', 'stone', 'cladding', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  // === LANDSCAPE > LANDSCAPING ===
+  {
+    id: 'native-planting',
+    name: 'Native Planting',
+    tone: '#6b8e5f',
+    finish: 'Mixed native species',
+    description: 'Native tree and shrub planting; supports biodiversity, low maintenance, and climate-appropriate.',
+    keywords: ['landscape', 'planting', 'native', 'biodiversity'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'wildflower-meadow',
+    name: 'Wildflower Meadow',
+    tone: '#8fa877',
+    finish: 'Meadow grass and wildflowers',
+    description: 'Low-maintenance wildflower meadow; excellent for pollinators and biodiversity.',
+    keywords: ['landscape', 'wildflower', 'meadow', 'biodiversity'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'rain-garden',
+    name: 'Rain Garden',
+    tone: '#789c6d',
+    finish: 'Water-tolerant planting',
+    description: 'Planted depression for rainwater management; attractive and sustainable drainage solution.',
+    keywords: ['landscape', 'rain garden', 'suds', 'drainage'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'living-wall-external',
+    name: 'Living Wall (External)',
+    tone: '#5d7a52',
+    finish: 'Vertical planting system',
+    description: 'External living wall system with irrigation; provides insulation and urban greening.',
+    keywords: ['landscape', 'living wall', 'vertical', 'planting'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'ornamental-planting',
+    name: 'Ornamental Planting',
+    tone: '#7d9c6f',
+    finish: 'Mixed ornamental species',
+    description: 'Ornamental planting beds with seasonal interest; adds color and visual appeal.',
+    keywords: ['landscape', 'ornamental', 'planting', 'garden'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'tree-planting',
+    name: 'Tree Planting',
+    tone: '#5a7a4d',
+    finish: 'Semi-mature or standard trees',
+    description: 'Individual or group tree planting; provides shade, carbon capture, and habitat.',
+    keywords: ['landscape', 'trees', 'planting', 'carbon'],
+    category: 'landscape',
+    treePaths: ['Landscape>Landscaping'],
+    carbonIntensity: 'low'
+  },
+  // === ELEMENTS > FURNITURE ===
+  {
+    id: 'oak-dining-table',
+    name: 'Oak Dining Table',
+    tone: '#b89968',
+    finish: 'Solid oak with oil finish',
+    description: 'Solid oak dining table with natural oil finish; durable and timeless design.',
+    keywords: ['furniture', 'oak', 'table', 'dining'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'upholstered-seating',
+    name: 'Upholstered Seating',
+    tone: '#9b9080',
+    finish: 'Fabric or leather upholstery',
+    description: 'Comfortable upholstered chairs or sofas; specify sustainable fabrics where possible.',
+    keywords: ['furniture', 'seating', 'upholstered', 'chair'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'metal-chair',
+    name: 'Metal Chair',
+    tone: '#7a7a7a',
+    finish: 'Powder-coated steel',
+    description: 'Powder-coated steel or aluminum chair; durable and suitable for indoor/outdoor use.',
+    keywords: ['furniture', 'metal', 'chair', 'seating'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'plywood-furniture',
+    name: 'Plywood Furniture',
+    tone: '#d4b896',
+    finish: 'Birch plywood construction',
+    description: 'Furniture constructed from birch or FSC plywood; lightweight and economical.',
+    keywords: ['furniture', 'plywood', 'birch', 'sustainable'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'reclaimed-timber-furniture',
+    name: 'Reclaimed Timber Furniture',
+    tone: '#a67c52',
+    finish: 'Salvaged timber with character',
+    description: 'Furniture made from reclaimed timber; unique character and minimal embodied carbon.',
+    keywords: ['furniture', 'reclaimed', 'timber', 'salvaged'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'modular-shelving',
+    name: 'Modular Shelving',
+    tone: '#c5c0b5',
+    finish: 'Powder-coated or timber',
+    description: 'Modular shelving system; flexible, reusable, and easy to reconfigure.',
+    keywords: ['furniture', 'shelving', 'modular', 'storage'],
+    category: 'furniture',
+    treePaths: ['Elements>Furniture'],
+    carbonIntensity: 'high'
   }
 ]

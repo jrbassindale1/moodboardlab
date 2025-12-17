@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2025-12-17T09:14:20.523Z",
-  "totalIcons": 150,
-  "totalSizeMB": 193.28,
+  "generatedAt": "2025-12-17T09:44:17.783Z",
+  "totalIcons": 174,
+  "totalSizeMB": 225.57,
   "icons": [
     {
       "id": "steel-frame",
@@ -176,7 +176,7 @@
     {
       "id": "frameless-glazing",
       "name": "Frameless Glazing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "clay-plaster",
@@ -741,6 +741,121 @@
     {
       "id": "decking-external",
       "name": "Decking (Timber/Composite)",
+      "exists": true
+    },
+    {
+      "id": "rc-columns-beams",
+      "name": "RC Columns & Beams",
+      "exists": true
+    },
+    {
+      "id": "steel-columns-beams",
+      "name": "Steel Columns & Beams",
+      "exists": true
+    },
+    {
+      "id": "glulam-columns-beams",
+      "name": "Glulam Columns & Beams",
+      "exists": true
+    },
+    {
+      "id": "clt-loadbearing-walls",
+      "name": "CLT Load-Bearing Walls",
+      "exists": true
+    },
+    {
+      "id": "masonry-loadbearing",
+      "name": "Load-Bearing Masonry",
+      "exists": true
+    },
+    {
+      "id": "brick-facade",
+      "name": "Brick Façade",
+      "exists": true
+    },
+    {
+      "id": "render-facade",
+      "name": "Render Façade",
+      "exists": true
+    },
+    {
+      "id": "metal-panel-facade",
+      "name": "Metal Panel Façade",
+      "exists": true
+    },
+    {
+      "id": "timber-cladding-facade",
+      "name": "Timber Cladding Façade",
+      "exists": true
+    },
+    {
+      "id": "glass-facade",
+      "name": "Glass Façade System",
+      "exists": true
+    },
+    {
+      "id": "stone-facade",
+      "name": "Stone Façade",
+      "exists": true
+    },
+    {
+      "id": "native-planting",
+      "name": "Native Planting",
+      "exists": true
+    },
+    {
+      "id": "wildflower-meadow",
+      "name": "Wildflower Meadow",
+      "exists": true
+    },
+    {
+      "id": "rain-garden",
+      "name": "Rain Garden",
+      "exists": true
+    },
+    {
+      "id": "living-wall-external",
+      "name": "Living Wall (External)",
+      "exists": true
+    },
+    {
+      "id": "ornamental-planting",
+      "name": "Ornamental Planting",
+      "exists": true
+    },
+    {
+      "id": "tree-planting",
+      "name": "Tree Planting",
+      "exists": true
+    },
+    {
+      "id": "oak-dining-table",
+      "name": "Oak Dining Table",
+      "exists": true
+    },
+    {
+      "id": "upholstered-seating",
+      "name": "Upholstered Seating",
+      "exists": true
+    },
+    {
+      "id": "metal-chair",
+      "name": "Metal Chair",
+      "exists": true
+    },
+    {
+      "id": "plywood-furniture",
+      "name": "Plywood Furniture",
+      "exists": true
+    },
+    {
+      "id": "reclaimed-timber-furniture",
+      "name": "Reclaimed Timber Furniture",
+      "exists": true
+    },
+    {
+      "id": "modular-shelving",
+      "name": "Modular Shelving",
       "exists": true
     }
   ]
