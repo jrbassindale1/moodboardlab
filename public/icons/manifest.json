@@ -1,177 +1,177 @@
 {
-  "generatedAt": "2025-12-17T08:46:37.158Z",
-  "totalIcons": 3,
-  "totalSizeMB": 0.04,
+  "generatedAt": "2025-12-17T09:14:20.523Z",
+  "totalIcons": 150,
+  "totalSizeMB": 193.28,
   "icons": [
     {
       "id": "steel-frame",
       "name": "Steel Frame (Painted)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glulam-structure",
       "name": "Glulam Timber Structure",
-      "exists": false
+      "exists": true
     },
     {
       "id": "concrete-frame",
       "name": "Reinforced Concrete Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "hybrid-structure",
       "name": "Hybrid Timber-Steel",
-      "exists": false
+      "exists": true
     },
     {
       "id": "clt-structure",
       "name": "Cross-Laminated Timber",
-      "exists": false
+      "exists": true
     },
     {
       "id": "nlt-structure",
       "name": "DLT / NLT Timber",
-      "exists": false
+      "exists": true
     },
     {
       "id": "ggbs-concrete",
       "name": "Low-Carbon Concrete",
-      "exists": false
+      "exists": true
     },
     {
       "id": "rammed-earth-structure",
       "name": "Rammed Earth Walls",
-      "exists": false
+      "exists": true
     },
     {
       "id": "polished-concrete",
       "name": "Polished Concrete",
-      "exists": false
+      "exists": true
     },
     {
       "id": "lino-floor",
       "name": "Linoleum Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "recycled-terrazzo",
       "name": "Recycled Plastic Terrazzo",
-      "exists": false
+      "exists": true
     },
     {
       "id": "rubber-floor",
       "name": "Rubber Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-flooring",
       "name": "Timber Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "grey-carpet",
       "name": "Grey Carpet Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "bamboo-parquet",
       "name": "Bamboo Parquet",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cork-plank-floor",
       "name": "Cork Plank Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "reclaimed-timber-floor",
       "name": "Reclaimed Timber Floor",
-      "exists": false
+      "exists": true
     },
     {
       "id": "stone-paver",
       "name": "Stone Pavers",
-      "exists": false
+      "exists": true
     },
     {
       "id": "vinyl-planks",
       "name": "Vinyl Planks (Recycled)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "resin-flooring",
       "name": "Resin Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "microcement-floor",
       "name": "Microcement Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "ceramic-tiles",
       "name": "Ceramic Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "epoxy-flooring",
       "name": "Epoxy Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "travertine-tiles",
       "name": "Travertine Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "marble-floor",
       "name": "Marble Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "engineered-oak-floor",
       "name": "Engineered Oak Flooring",
-      "exists": false
+      "exists": true
     },
     {
       "id": "linoleum-tiles",
       "name": "Linoleum Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "aluminum-frame",
       "name": "Aluminum Window Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-frame",
       "name": "Timber Window Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "recycled-aluminum-frame",
       "name": "Recycled Aluminum Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "steel-window-frame",
       "name": "Steel Window Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "composite-window-frame",
       "name": "Composite Window Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "upvc-window-frame",
       "name": "uPVC Window Frame",
-      "exists": false
+      "exists": true
     },
     {
       "id": "curtain-wall-system",
       "name": "Curtain Wall System",
-      "exists": false
+      "exists": true
     },
     {
       "id": "frameless-glazing",
@@ -181,567 +181,567 @@
     {
       "id": "clay-plaster",
       "name": "Clay Plaster",
-      "exists": false
+      "exists": true
     },
     {
       "id": "gypsum-wall",
       "name": "Gypsum Board Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "plasterboard-wall",
       "name": "Plasterboard Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "plywood-panels-wall",
       "name": "Plywood Wall Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "acoustic-panels-wall",
       "name": "Acoustic Wall Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glass-partitions",
       "name": "Glass Partitions",
-      "exists": false
+      "exists": true
     },
     {
       "id": "brick-internal",
       "name": "Brick (Internal)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "concrete-block-wall",
       "name": "Concrete Block Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "mineral-microcement",
       "name": "Mineral Microcement",
-      "exists": false
+      "exists": true
     },
     {
       "id": "standard-wall-paint",
       "name": "Paint – Standard (Walls)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "custom-wall-paint",
       "name": "Paint – Custom Colour (Walls)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "standard-ceiling-paint",
       "name": "Paint – Standard (Ceilings)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "custom-ceiling-paint",
       "name": "Paint – Custom Colour (Ceilings)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "brick-veneer",
       "name": "Brick",
-      "exists": false
+      "exists": true
     },
     {
       "id": "hemp-lime-wall",
       "name": "Hemp-Lime Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "terracotta-wall",
       "name": "Terracotta Panels (Wall)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "green-wall",
       "name": "Living Green Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "stone-rainscreen",
       "name": "Stone Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "charred-timber-cladding",
       "name": "Charred Timber Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-rainscreen-larch",
       "name": "Timber Rainscreen (FSC Larch)",
-      "exists": false
+      "exists": true
     },
     {
       "id": "woodfibre-render",
       "name": "Wood-Fibre + Lime Render",
-      "exists": false
+      "exists": true
     },
     {
       "id": "zinc-cladding",
       "name": "Zinc Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "copper-cladding",
       "name": "Copper Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "fiber-cement-panels",
       "name": "Fiber Cement Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "metal-composite-panels",
       "name": "Metal Composite Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "gfrc-panels",
       "name": "GFRC Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "weathering-steel-panels",
       "name": "Weathering Steel Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "slate-cladding",
       "name": "Slate Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cork-rainscreen",
       "name": "Cork Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "recycled-plastic-cladding",
       "name": "Recycled Plastic Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "acoustic-ceiling-baffles",
       "name": "Acoustic Ceiling Baffles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "perforated-metal-ceiling",
       "name": "Perforated Metal Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-slat-ceiling",
       "name": "Timber Slat Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "gypsum-ceiling",
       "name": "Gypsum Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "open-grid-ceiling",
       "name": "Open Grid Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "stretch-fabric-ceiling",
       "name": "Stretch Fabric Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "coffered-ceiling",
       "name": "Coffered Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "plasterboard-ceiling",
       "name": "Plasterboard Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "exposed-clt-ceiling",
       "name": "Exposed CLT Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "metal-mesh-ceiling",
       "name": "Metal Mesh Ceiling",
-      "exists": false
+      "exists": true
     },
     {
       "id": "acoustic-tiles-ceiling",
       "name": "Acoustic Ceiling Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "exposed-concrete-soffit",
       "name": "Exposed Concrete Soffit",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-slat-soffit",
       "name": "Timber Slat Soffit",
-      "exists": false
+      "exists": true
     },
     {
       "id": "perforated-metal-soffit",
       "name": "Perforated Metal Soffit",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-linings",
       "name": "Timber Linings",
-      "exists": false
+      "exists": true
     },
     {
       "id": "terracotta-panels",
       "name": "Terracotta Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "bio-fibre-panels",
       "name": "Bio-Based Fibre Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-wall-panels",
       "name": "Timber Wall Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "porcelain-tiles",
       "name": "Large-Format Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "textured-wallpaper",
       "name": "Textured Wallpaper",
-      "exists": false
+      "exists": true
     },
     {
       "id": "fabric-acoustic-panels",
       "name": "Fabric Acoustic Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "oak-timber-slats",
       "name": "Oak Timber Slats",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cork-panels",
       "name": "Cork Wall Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "reclaimed-boarding",
       "name": "Reclaimed Timber Boarding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "mycelium-tiles",
       "name": "Mycelium Acoustic Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "wool-felt-panels",
       "name": "Wool Felt Wall Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "bamboo-slat-wall",
       "name": "Bamboo Acoustic Slats",
-      "exists": false
+      "exists": true
     },
     {
       "id": "plywood-panels-finish",
       "name": "Plywood Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "marble-panels",
       "name": "Marble Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "leather-panels",
       "name": "Leather Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "metal-mesh-panels",
       "name": "Metal Mesh Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glass-panels-finish",
       "name": "Glass Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "acoustic-plaster",
       "name": "Acoustic Plaster",
-      "exists": false
+      "exists": true
     },
     {
       "id": "lime-plaster",
       "name": "Lime Plaster",
-      "exists": false
+      "exists": true
     },
     {
       "id": "tadelakt-plaster",
       "name": "Tadelakt Plaster",
-      "exists": false
+      "exists": true
     },
     {
       "id": "secondary-steelwork",
       "name": "Secondary Steelwork",
-      "exists": false
+      "exists": true
     },
     {
       "id": "brick-loadbearing",
       "name": "Brick Load-Bearing Walls",
-      "exists": false
+      "exists": true
     },
     {
       "id": "hempcrete-structural",
       "name": "Hempcrete Structural",
-      "exists": false
+      "exists": true
     },
     {
       "id": "steel-concrete-composite",
       "name": "Steel-Concrete Composite",
-      "exists": false
+      "exists": true
     },
     {
       "id": "precast-concrete",
       "name": "Precast Concrete",
-      "exists": false
+      "exists": true
     },
     {
       "id": "mass-timber-columns",
       "name": "Mass Timber Columns",
-      "exists": false
+      "exists": true
     },
     {
       "id": "steel-trusses",
       "name": "Steel Trusses",
-      "exists": false
+      "exists": true
     },
     {
       "id": "prestressed-concrete",
       "name": "Prestressed Concrete",
-      "exists": false
+      "exists": true
     },
     {
       "id": "permeable-paving",
       "name": "Permeable Paving",
-      "exists": false
+      "exists": true
     },
     {
       "id": "joinery-built-in",
       "name": "Built-in Joinery",
-      "exists": false
+      "exists": true
     },
     {
       "id": "brass-fixtures",
       "name": "Brass Fixtures & Fittings",
-      "exists": false
+      "exists": true
     },
     {
       "id": "standing-seam-roof",
       "name": "Standing Seam Metal Roof",
-      "exists": false
+      "exists": true
     },
     {
       "id": "green-roof",
       "name": "Green Roof",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cool-roof",
       "name": "Cool Roof Membrane",
-      "exists": false
+      "exists": true
     },
     {
       "id": "pv-roof",
       "name": "Solar PV Roof",
-      "exists": false
+      "exists": true
     },
     {
       "id": "blue-roof",
       "name": "Blue Roof",
-      "exists": false
+      "exists": true
     },
     {
       "id": "clay-tiles-roof",
       "name": "Clay Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "slate-tiles-roof",
       "name": "Slate Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "metal-tiles-roof",
       "name": "Metal Tiles",
-      "exists": false
+      "exists": true
     },
     {
       "id": "epdm-membrane",
       "name": "EPDM Membrane",
-      "exists": false
+      "exists": true
     },
     {
       "id": "tpo-membrane",
       "name": "TPO Membrane",
-      "exists": false
+      "exists": true
     },
     {
       "id": "built-up-roofing",
       "name": "Built-Up Roofing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "polycarbonate-roof",
       "name": "Polycarbonate Roof Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "wood-fiber-insulation",
       "name": "Wood Fiber Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "hemp-insulation",
       "name": "Hemp Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "sheep-wool-insulation",
       "name": "Sheep's Wool Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cork-insulation",
       "name": "Cork Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cellulose-insulation",
       "name": "Cellulose Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "mineral-wool",
       "name": "Mineral Wool",
-      "exists": false
+      "exists": true
     },
     {
       "id": "pir-insulation",
       "name": "PIR/PUR Boards",
-      "exists": false
+      "exists": true
     },
     {
       "id": "aerogel-insulation",
       "name": "Aerogel Insulation",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-door",
       "name": "Timber Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "steel-door",
       "name": "Steel Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "aluminum-door",
       "name": "Aluminum Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glass-door",
       "name": "Glass Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "composite-door",
       "name": "Composite Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "fire-rated-door",
       "name": "Fire-Rated Doors",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glass-balustrade",
       "name": "Glass Balustrade",
-      "exists": false
+      "exists": true
     },
     {
       "id": "steel-railing",
       "name": "Steel Railing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-railing",
       "name": "Timber Railing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cable-railing",
       "name": "Cable Railing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "mesh-railing",
       "name": "Mesh Railing",
-      "exists": false
+      "exists": true
     },
     {
       "id": "gravel-paving",
       "name": "Gravel",
-      "exists": false
+      "exists": true
     },
     {
       "id": "resin-bound-gravel",
       "name": "Resin-Bound Gravel",
-      "exists": false
+      "exists": true
     },
     {
       "id": "concrete-paving",
       "name": "Concrete Paving",
-      "exists": false
+      "exists": true
     },
     {
       "id": "block-paving",
       "name": "Block Paving",
-      "exists": false
+      "exists": true
     },
     {
       "id": "grass-reinforcement",
       "name": "Grass Reinforcement",
-      "exists": false
+      "exists": true
     },
     {
       "id": "decking-external",
       "name": "Decking (Timber/Composite)",
-      "exists": false
+      "exists": true
     }
   ]
 }
