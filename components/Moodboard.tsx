@@ -1552,28 +1552,53 @@ IMPORTANT:
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-0 border border-gray-200">
                 {board.map((item, idx) => (
-                  <div key={`${item.id}-${idx}`} className="border border-gray-200 bg-gray-50 p-4 relative">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
-                        style={{ backgroundColor: item.tone }}
-                        aria-hidden
-                      />
-                      <div className="space-y-1">
-                        <div className="font-display uppercase tracking-wide text-sm">{item.name}</div>
-                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">{item.finish}</div>
-                        <p className="font-sans text-sm text-gray-700 leading-relaxed">{item.description}</p>
+                  <div
+                    key={`${item.id}-${idx}`}
+                    className="border-b border-gray-200 last:border-b-0 bg-white hover:bg-gray-50 transition-colors group"
+                  >
+                    <div className="flex items-center gap-4 p-4">
+                      {/* Material swatch/image */}
+                      <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden">
+                        {item.customImage ? (
+                          <img
+                            src={item.customImage}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full"
+                            style={{ backgroundColor: item.tone }}
+                          />
+                        )}
                       </div>
+
+                      {/* Material details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-display text-sm uppercase tracking-wide text-gray-900 mb-1">
+                          {item.name}
+                        </h4>
+                        <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-1">
+                          {item.finish}
+                        </p>
+                        {item.description && (
+                          <p className="font-sans text-xs text-gray-500 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Remove button */}
+                      <button
+                        onClick={() => handleRemove(idx)}
+                        className="flex-shrink-0 p-2 text-gray-400 hover:text-black opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleRemove(idx)}
-                      className="absolute top-3 right-3 text-gray-400 hover:text-black"
-                      aria-label="Remove"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 ))}
               </div>

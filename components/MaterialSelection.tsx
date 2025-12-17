@@ -115,9 +115,25 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return category?.label || 'Materials';
   };
 
-  const handleAdd = (material: MaterialOption) => {
-    onBoardChange([...board, material]);
-    setRecentlyAdded(material);
+  const handleAdd = (material: MaterialOption, customization?: { tone?: string; label?: string }) => {
+    let materialToAdd = material;
+
+    // If customization is provided, create a new material with custom finish/tone
+    if (customization) {
+      const labelSuffix = customization.label ? ` — ${customization.label}` : '';
+      const finishText = customization.tone
+        ? `${material.finish}${labelSuffix} (${customization.tone})`
+        : `${material.finish}${labelSuffix}`;
+
+      materialToAdd = {
+        ...material,
+        tone: customization.tone || material.tone,
+        finish: finishText,
+      };
+    }
+
+    onBoardChange([...board, materialToAdd]);
+    setRecentlyAdded(materialToAdd);
   };
 
   const handleCustomMaterialImageUpload = async (files: FileList | null) => {
@@ -793,14 +809,17 @@ IMPORTANT:
               {recentlyAdded.colorOptions && recentlyAdded.colorOptions.length > 0 && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Color Options
+                    Add More Color Variations
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {recentlyAdded.colorOptions.map((colorOption, idx) => (
                       <button
                         key={idx}
+                        onClick={() => {
+                          handleAdd(recentlyAdded, { tone: colorOption.tone, label: colorOption.label });
+                        }}
                         className="flex items-center gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors"
-                        title={colorOption.label}
+                        title={`Add ${colorOption.label}`}
                       >
                         <span className="w-6 h-6 border border-gray-200" style={{ backgroundColor: colorOption.tone }} />
                         <span className="font-sans text-xs">{colorOption.label}</span>
@@ -808,8 +827,61 @@ IMPORTANT:
                     ))}
                   </div>
                   <p className="font-sans text-xs text-gray-500 mt-2">
-                    Color attributes can be adjusted in the Moodboard Lab after adding to your board.
+                    Click a color to add that variation to your board.
                   </p>
+                </div>
+              )}
+
+              {/* Finish options if available */}
+              {recentlyAdded.finishOptions && recentlyAdded.finishOptions.length > 0 && (
+                <div className="border-t border-arch-line pt-4">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
+                    Finish Options
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {recentlyAdded.finishOptions.map((finish, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          handleAdd(recentlyAdded, { label: finish });
+                        }}
+                        className="border border-gray-200 px-3 py-2 hover:border-black transition-colors"
+                      >
+                        <span className="font-sans text-xs">{finish}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-sans text-xs text-gray-500 mt-2">
+                    Click a finish to add that variation to your board.
+                  </p>
+                </div>
+              )}
+
+              {/* Custom color picker if material supports it */}
+              {recentlyAdded.supportsColor && (
+                <div className="border-t border-arch-line pt-4">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
+                    Custom Color
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      id="customColorPicker"
+                      defaultValue={recentlyAdded.tone}
+                      className="w-12 h-12 border border-gray-200 cursor-pointer"
+                    />
+                    <button
+                      onClick={() => {
+                        const colorInput = document.getElementById('customColorPicker') as HTMLInputElement;
+                        if (colorInput) {
+                          handleAdd(recentlyAdded, { tone: colorInput.value, label: 'Custom' });
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-200 hover:border-black transition-colors text-xs font-sans"
+                    >
+                      Add custom color to board
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
