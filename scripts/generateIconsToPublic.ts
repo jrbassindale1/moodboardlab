@@ -12,7 +12,10 @@
  * Time: ~10 minutes (1.5s delay between each)
  */
 
-import { MATERIAL_PALETTE } from '../constants';
+// Force production API BEFORE any imports
+process.env.USE_PRODUCTION_API = 'true';
+
+import { MATERIAL_PALETTE } from './materials-only';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -23,6 +26,10 @@ async function generateAllIcons() {
   console.log('╔════════════════════════════════════════════════════════╗');
   console.log('║     Material Icon Generator                            ║');
   console.log('╚════════════════════════════════════════════════════════╝\n');
+
+  console.log('🌐 Using API:', process.env.USE_PRODUCTION_API === 'true'
+    ? 'Production (Azure Function)'
+    : 'Local (http://localhost:7071)');
 
   console.log(`📊 Materials to generate: ${MATERIAL_PALETTE.length}`);
   console.log(`💰 Estimated cost: ~$${(MATERIAL_PALETTE.length * 0.04).toFixed(2)}`);

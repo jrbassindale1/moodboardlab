@@ -1,13 +1,26 @@
 // Prod host is the deployed Function App; adjust if you rename the app.
-const API_BASE = import.meta.env.PROD
-  ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net"
-  : "http://localhost:7071";
+// Support both Vite (import.meta.env) and Node.js (process.env) environments
+function getIsProduction() {
+  return (
+    (typeof process !== 'undefined' && process.env?.USE_PRODUCTION_API === 'true') ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.PROD)
+  );
+}
 
-const SAVE_URL = import.meta.env.PROD
-  ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net/api/save-generation"
-  : "http://localhost:7071/api/save-generation";
+function getApiBase() {
+  return getIsProduction()
+    ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net"
+    : "http://localhost:7071";
+}
+
+function getSaveUrl() {
+  return getIsProduction()
+    ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net/api/save-generation"
+    : "http://localhost:7071/api/save-generation";
+}
 
 async function callGeminiBackend(payload: unknown, mode: "text" | "image" = "text") {
+  const API_BASE = getApiBase();
   const res = await fetch(`${API_BASE}/api/generate-moodboard`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -15,15 +28,15 @@ async function callGeminiBackend(payload: unknown, mode: "text" | "image" = "tex
   });
 
   if (!res.ok) {
-    let message: string | null = null;
+    let message: string;
     try {
       const body = await res.json();
-      message = body?.error?.message || body?.message || null;
+      message = body?.error?.message || body?.message || JSON.stringify(body);
     } catch {
-      // Fall back to plain text if JSON parsing fails
-      message = await res.text();
+      // If JSON parsing fails, try to get text (but we can't read body twice)
+      message = `Backend error (status ${res.status})`;
     }
-    throw new Error(message || "Backend error while calling Gemini.");
+    throw new Error(message);
   }
 
   return res.json();
@@ -38,6 +51,7 @@ export async function saveGeneration(payload: {
   materials?: any;
   userId?: string;
 }) {
+  const SAVE_URL = getSaveUrl();
   const res = await fetch(SAVE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
