@@ -7,13 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "generate-icons": "tsx scripts/generateIconsToPublic.ts"
+    "generate-icons": "tsx scripts/generateIconsToPublic.ts",
+    "optimize-icons": "tsx scripts/optimizeIcons.ts"
   },
   "dependencies": {
     "jspdf": "^2.5.2",
     "lucide-react": "^0.556.0",
     "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react-dom": "^19.2.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
