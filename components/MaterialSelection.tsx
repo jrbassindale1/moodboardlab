@@ -357,7 +357,7 @@ IMPORTANT:
       </div>
 
       {/* Main content area with sidebar + grid */}
-      <div className="max-w-screen-2xl mx-auto px-6 py-8">
+      <div className="max-w-screen-2xl mx-auto px-6 py-8 pt-24">
         <div className="flex gap-8">
           {/* Left Sidebar - Category filters */}
           <aside className="w-64 flex-shrink-0 space-y-6">
