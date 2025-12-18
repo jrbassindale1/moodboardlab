@@ -374,20 +374,9 @@ IMPORTANT:
         <div className="flex gap-8">
           {/* Left Sidebar - Category filters */}
           <aside className="w-64 flex-shrink-0 space-y-6">
-            {/* Back to category button */}
-            {selectedCategory && (
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="flex items-center gap-2 text-sm font-sans hover:underline mb-4"
-              >
-                <ChevronRight className="w-4 h-4 rotate-180" />
-                Category
-              </button>
-            )}
-
             {/* Categories */}
             <div className="space-y-1">
-              <h3 className="font-display text-sm uppercase tracking-widest mb-3">Category</h3>
+              <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
               {CATEGORIES.map((section) => (
                 <div key={section.id} className="space-y-1">
                   <button
