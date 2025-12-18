@@ -356,25 +356,6 @@ IMPORTANT:
         </div>
       </div>
 
-      {/* Header with breadcrumb */}
-      <div className="border-b border-arch-line bg-white pt-24">
-        <div className="max-w-screen-2xl mx-auto px-6 py-4">
-          <div className="flex items-center gap-2 text-sm font-sans">
-            <button onClick={() => onNavigate('moodboard')} className="hover:underline">
-              Home
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-600">Materials</span>
-            {selectedCategory && (
-              <>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-600">{getCategoryLabel()}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Main content area with sidebar + grid */}
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <div className="flex gap-8">
@@ -750,12 +731,7 @@ IMPORTANT:
               </div>
             ) : !selectedCategory ? (
               /* Empty state when no category selected - Video showcase */
-              <div className={`py-6 space-y-6 ${isFadingOut ? 'animate-fade-out' : ''}`}>
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-display uppercase tracking-tight">Select a Category</h2>
-                  <p className="text-gray-600 font-sans">Choose a category from the sidebar to browse materials.</p>
-                </div>
-
+              <div className={`${isFadingOut ? 'animate-fade-out' : ''}`}>
                 {/* Material video showcase */}
                 <div className="relative overflow-hidden rounded-lg bg-black aspect-square w-full max-w-2xl mx-auto">
                   <video
@@ -784,6 +760,13 @@ IMPORTANT:
                   >
                     <source src={videos[currentVideoIndex]} type="video/mp4" />
                   </video>
+
+                  {/* Overlay text */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <p className="text-white font-sans text-lg text-center px-6">
+                      Choose a category to browse materials
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
