@@ -35,8 +35,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
 
   // List of available videos
   const videos = useMemo(() => [
@@ -50,6 +48,11 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     '/videos/Cinematographic_Studies_of_Architectural_Materials.mp4',
     '/videos/Visual_Style_and_Materiality_Video.mp4',
   ], []);
+
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(() =>
+    Math.floor(Math.random() * videos.length)
+  );
+  const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
 
   // Migrate materials to new category structure
   const migratedMaterials = useMemo(() => migrateAllMaterials(MATERIAL_PALETTE), []);
