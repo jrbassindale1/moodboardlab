@@ -28,6 +28,21 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
+
+  // List of available videos
+  const videos = useMemo(() => [
+    '/videos/source.mp4',
+    '/videos/source-2.mp4',
+    '/videos/source-3.mp4',
+    '/videos/source-4.mp4',
+    '/videos/source-5.mp4',
+    '/videos/20251218_1111_New Video_simple_compose_01kcrjfnqsfazsdbqetst98mdm.mp4',
+    '/videos/Cinematic_Study_of_Architectural_Materials.mp4',
+    '/videos/Cinematographic_Studies_of_Architectural_Materials.mp4',
+    '/videos/Visual_Style_and_Materiality_Video.mp4',
+  ], []);
 
   // Migrate materials to new category structure
   const migratedMaterials = useMemo(() => migrateAllMaterials(MATERIAL_PALETTE), []);
@@ -734,61 +749,43 @@ IMPORTANT:
                 )}
               </div>
             ) : !selectedCategory ? (
-              /* Empty state when no category selected - Animated material showcase */
+              /* Empty state when no category selected - Video showcase */
               <div className={`py-6 space-y-6 ${isFadingOut ? 'animate-fade-out' : ''}`}>
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-display uppercase tracking-tight">Select a Category</h2>
                   <p className="text-gray-600 font-sans">Choose a category from the sidebar to browse materials.</p>
                 </div>
 
-                {/* Animated material icons grid */}
-                <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="grid grid-cols-4 md:grid-cols-6 auto-rows-fr gap-3 p-6" style={{ minHeight: '24rem' }}>
-                    {migratedMaterials
-                      .sort(() => Math.random() - 0.5)
-                      .slice(0, 24)
-                      .map((mat, idx) => (
-                        <div
-                          key={`${mat.id}-${idx}`}
-                          className="w-full aspect-square border border-gray-200 bg-white overflow-hidden animate-fade-in"
-                          style={{
-                            animationDelay: `${(idx * 0.2) % 4}s`,
-                            animationDuration: `${6 + (idx % 2)}s`,
-                          }}
-                        >
-                          {mat.customImage ? (
-                            <img
-                              src={mat.customImage}
-                              alt={mat.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <picture>
-                              <source srcSet={`/icons/${mat.id}.webp`} type="image/webp" />
-                              <img
-                                src={`/icons/${mat.id}.png`}
-                                alt={mat.name}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                                onError={(e) => {
-                                  const target = e.currentTarget;
-                                  target.style.display = 'none';
-                                  const parent = target.parentElement?.parentElement;
-                                  if (parent) {
-                                    parent.style.backgroundColor = mat.tone;
-                                  }
-                                }}
-                              />
-                            </picture>
-                          )}
-                        </div>
-                      ))}
+                {/* Material video showcase */}
+                <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-black">
+                  <div className="aspect-square w-full max-w-2xl mx-auto">
+                    <video
+                      key={currentVideoIndex}
+                      autoPlay
+                      muted
+                      playsInline
+                      className={`w-full h-full object-cover transition-opacity duration-1000 ${
+                        isVideoTransitioning ? 'opacity-0' : 'opacity-100'
+                      }`}
+                      style={{
+                        objectPosition: 'center center',
+                      }}
+                      onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+                        const video = e.currentTarget;
+                        video.playbackRate = 0.8;
+                      }}
+                      onEnded={() => {
+                        setIsVideoTransitioning(true);
+                        setTimeout(() => {
+                          const nextIndex = Math.floor(Math.random() * videos.length);
+                          setCurrentVideoIndex(nextIndex);
+                          setIsVideoTransitioning(false);
+                        }, 1000);
+                      }}
+                    >
+                      <source src={videos[currentVideoIndex]} type="video/mp4" />
+                    </video>
                   </div>
-
-                  {/* Gradient overlay to fade edges - reduced opacity */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/50 via-transparent to-gray-50/50" />
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/30 via-transparent to-gray-50/30" />
                 </div>
               </div>
             ) : (
