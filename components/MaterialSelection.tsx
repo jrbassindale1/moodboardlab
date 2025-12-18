@@ -404,13 +404,19 @@ IMPORTANT:
                             key={child.id}
                             onClick={() => {
                               if (!selectedCategory) {
+                                // From empty state to category
                                 setIsFadingOut(true);
                                 setTimeout(() => {
                                   setSelectedCategory(path);
                                   setIsFadingOut(false);
                                 }, 400);
-                              } else {
-                                setSelectedCategory(path);
+                              } else if (selectedCategory !== path) {
+                                // Switching between categories
+                                setIsFadingOut(true);
+                                setTimeout(() => {
+                                  setSelectedCategory(path);
+                                  setIsFadingOut(false);
+                                }, 400);
                               }
                             }}
                             className={`block w-full text-left px-2 py-1.5 text-sm font-sans hover:underline ${
@@ -788,7 +794,7 @@ IMPORTANT:
             ) : (
               <>
                 {/* Product Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
                   {sortedMaterials.map((mat) => (
                     <article key={mat.id} className="group space-y-3">
                       {/* Product image/swatch */}
