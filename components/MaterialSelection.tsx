@@ -499,26 +499,14 @@ IMPORTANT:
             {isCustomCategory ? (
               <div className="space-y-6">
                 {!customMaterialMode ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Upload Image Option */}
-                    <button
-                      onClick={() => setCustomMaterialMode('upload')}
-                      className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
-                    >
-                      <Upload className="w-12 h-12 mb-4 text-gray-400" />
-                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Upload Image</h3>
-                      <p className="text-sm text-gray-600 font-sans">
-                        Upload a material sample image with an optional description
-                      </p>
-                    </button>
-
-                    {/* Describe Material Option */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Add Custom Material Option */}
                     <button
                       onClick={() => setCustomMaterialMode('describe')}
                       className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
                     >
                       <FileText className="w-12 h-12 mb-4 text-gray-400" />
-                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Describe Material</h3>
+                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Add Custom Material</h3>
                       <p className="text-sm text-gray-600 font-sans">
                         Create a material card with a description and optional image
                       </p>
@@ -532,7 +520,7 @@ IMPORTANT:
                       <Camera className="w-12 h-12 mb-4 text-gray-400" />
                       <h3 className="font-display uppercase tracking-wide text-base mb-2">Analyze Photo</h3>
                       <p className="text-sm text-gray-600 font-sans">
-                        AI will identify all materials in a photo and add them to your board
+                        AI will identify all materials in a photo
                       </p>
                     </button>
                   </div>
@@ -554,110 +542,114 @@ IMPORTANT:
                       </button>
                     </div>
 
-                    <p className="text-sm font-sans text-gray-600">
-                      Upload a photo of an interior space and AI will identify all visible materials for you to add to your board.
-                    </p>
-
                     {/* Photo Upload */}
-                    {!detectionImage ? (
-                      <label className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center">
-                        <Camera className="w-16 h-16 mb-4 text-gray-400" />
-                        <span className="text-base font-display uppercase tracking-wide mb-2">Upload Photo</span>
-                        <span className="text-sm text-gray-600 font-sans">Click to select an image</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handlePhotoUpload(e.target.files)}
+                    <label className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center">
+                      <Camera className="w-16 h-16 mb-4 text-gray-400" />
+                      <span className="text-base font-display uppercase tracking-wide mb-2">Upload Photo</span>
+                      <span className="text-sm text-gray-600 font-sans">Click to select an image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handlePhotoUpload(e.target.files)}
+                      />
+                    </label>
+
+                    {/* Uploaded Image Preview */}
+                    {detectionImage && (
+                      <div className="relative border border-arch-line">
+                        <img
+                          src={detectionImage.dataUrl}
+                          alt="Uploaded"
+                          className="w-full h-64 object-cover"
                         />
-                      </label>
-                    ) : (
-                      <>
-                        {/* Uploaded Image Preview */}
-                        <div className="relative border border-arch-line">
-                          <img
-                            src={detectionImage.dataUrl}
-                            alt="Uploaded"
-                            className="w-full h-64 object-cover"
-                          />
+                        <button
+                          onClick={() => {
+                            setDetectionImage(null);
+                            setDetectedMaterials([]);
+                            setDetectionError(null);
+                          }}
+                          className="absolute top-2 right-2 bg-white p-2 border border-gray-200 hover:bg-gray-100"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Analyze Button */}
+                    {detectionImage && (
+                      <button
+                        onClick={startMaterialDetection}
+                        disabled={isDetecting}
+                        className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDetecting ? 'Analyzing...' : 'Analyze Photo'}
+                      </button>
+                    )}
+
+                    {/* Error Message */}
+                    {detectionError && (
+                      <div className="bg-red-50 border border-red-200 p-4">
+                        <p className="text-sm font-sans text-red-800">{detectionError}</p>
+                      </div>
+                    )}
+
+                    {/* Detected Materials - Ask user to add */}
+                    {detectedMaterials.length > 0 && (
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 p-4">
+                          <h4 className="font-display uppercase tracking-widest text-sm mb-2">
+                            Found {detectedMaterials.length} Material{detectedMaterials.length !== 1 ? 's' : ''}
+                          </h4>
+                          <p className="text-sm font-sans text-gray-700">
+                            Would you like to add these materials to your board?
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          {detectedMaterials.map((mat) => (
+                            <div key={mat.id} className="border border-arch-line p-4">
+                              <div className="flex items-start gap-3">
+                                <div
+                                  className="w-12 h-12 border border-arch-line flex-shrink-0"
+                                  style={{ backgroundColor: mat.tone }}
+                                />
+                                <div className="flex-1">
+                                  <h5 className="font-display uppercase tracking-wide text-sm">{mat.name}</h5>
+                                  <p className="text-xs text-gray-600 font-sans">{mat.finish}</p>
+                                  {mat.description && (
+                                    <p className="text-xs text-gray-500 font-sans mt-1">{mat.description}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="flex gap-3">
                           <button
                             onClick={() => {
                               setDetectionImage(null);
                               setDetectedMaterials([]);
                               setDetectionError(null);
                             }}
-                            className="absolute top-2 right-2 bg-white p-2 border border-gray-200 hover:bg-gray-100"
+                            className="flex-1 border border-gray-200 py-3 text-xs font-mono uppercase tracking-widest hover:border-black transition-colors"
                           >
-                            <X className="w-4 h-4" />
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              detectedMaterials.forEach((mat) => handleAdd(mat));
+                              setCustomMaterialMode(null);
+                              setDetectionImage(null);
+                              setDetectedMaterials([]);
+                            }}
+                            className="flex-1 bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900"
+                          >
+                            Add to Board
                           </button>
                         </div>
-
-                        {/* Analyze Button */}
-                        {detectedMaterials.length === 0 && (
-                          <button
-                            onClick={startMaterialDetection}
-                            disabled={isDetecting}
-                            className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isDetecting ? 'Analyzing...' : 'Analyze Materials'}
-                          </button>
-                        )}
-
-                        {/* Error Message */}
-                        {detectionError && (
-                          <div className="bg-red-50 border border-red-200 p-4">
-                            <p className="text-sm font-sans text-red-800">{detectionError}</p>
-                          </div>
-                        )}
-
-                        {/* Detected Materials */}
-                        {detectedMaterials.length > 0 && (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-display uppercase tracking-widest text-base">
-                                Detected Materials ({detectedMaterials.length})
-                              </h4>
-                              <button
-                                onClick={() => {
-                                  detectedMaterials.forEach((mat) => handleAdd(mat));
-                                  setCustomMaterialMode(null);
-                                  setDetectionImage(null);
-                                  setDetectedMaterials([]);
-                                }}
-                                className="text-xs font-mono uppercase tracking-widest px-4 py-2 bg-arch-black text-white hover:bg-gray-900"
-                              >
-                                Add All to Board
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4">
-                              {detectedMaterials.map((mat) => (
-                                <div key={mat.id} className="border border-arch-line p-4 space-y-3">
-                                  <div className="flex items-start gap-3">
-                                    <div
-                                      className="w-12 h-12 border border-arch-line flex-shrink-0"
-                                      style={{ backgroundColor: mat.tone }}
-                                    />
-                                    <div className="flex-1">
-                                      <h5 className="font-display uppercase tracking-wide text-sm">{mat.name}</h5>
-                                      <p className="text-xs text-gray-600 font-sans">{mat.finish}</p>
-                                      {mat.description && (
-                                        <p className="text-xs text-gray-500 font-sans mt-1">{mat.description}</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => handleAdd(mat)}
-                                    className="w-full bg-arch-black text-white py-2 text-xs font-mono uppercase tracking-widest hover:bg-gray-900"
-                                  >
-                                    Add to Board
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -665,7 +657,7 @@ IMPORTANT:
                   <div className="max-w-2xl space-y-6 border border-arch-line p-6">
                     <div className="flex items-center justify-between">
                       <h3 className="font-display uppercase tracking-widest text-lg">
-                        {customMaterialMode === 'upload' ? 'Upload Image' : 'Describe Material'}
+                        Add Custom Material
                       </h3>
                       <button
                         onClick={() => {
