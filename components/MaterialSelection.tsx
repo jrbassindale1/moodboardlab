@@ -421,45 +421,49 @@ IMPORTANT:
 
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
-            {/* Page title and sort */}
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
-              <div>
-                <h1 className="text-3xl font-display uppercase tracking-tight mb-2">{getCategoryLabel()}</h1>
-                {!isCustomCategory && (
-                  <p className="text-sm text-gray-600 font-sans">
-                    {sortedMaterials.length} product{sortedMaterials.length === 1 ? '' : 's'}
-                  </p>
-                )}
-              </div>
-              {!isCustomCategory && (
-                <div className="flex items-center gap-3">
-                  <label className="text-sm text-gray-600 font-mono uppercase tracking-widest text-[11px]">
-                    Sort by
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'featured' | 'name')}
-                    className="border border-gray-200 px-3 py-1.5 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black"
-                  >
-                    <option value="featured">Featured</option>
-                    <option value="name">Name</option>
-                  </select>
+            {/* Page title and sort - only show when category is selected */}
+            {selectedCategory && (
+              <>
+                <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
+                  <div>
+                    <h1 className="text-3xl font-display uppercase tracking-tight mb-2">{getCategoryLabel()}</h1>
+                    {!isCustomCategory && (
+                      <p className="text-sm text-gray-600 font-sans">
+                        {sortedMaterials.length} product{sortedMaterials.length === 1 ? '' : 's'}
+                      </p>
+                    )}
+                  </div>
+                  {!isCustomCategory && (
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm text-gray-600 font-mono uppercase tracking-widest text-[11px]">
+                        Sort by
+                      </label>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as 'featured' | 'name')}
+                        className="border border-gray-200 px-3 py-1.5 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        <option value="featured">Featured</option>
+                        <option value="name">Name</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Search bar */}
-            {!isCustomCategory && (
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search materials..."
-                  className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
-                />
-              </div>
+                {/* Search bar */}
+                {!isCustomCategory && (
+                  <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search materials..."
+                      className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {/* Custom Material Creation */}
@@ -720,15 +724,15 @@ IMPORTANT:
               </div>
             ) : !selectedCategory ? (
               /* Empty state when no category selected - Animated material showcase */
-              <div className="py-16 space-y-8">
-                <div className="text-center space-y-3">
+              <div className="py-6 space-y-6">
+                <div className="text-center space-y-2">
                   <h2 className="text-2xl font-display uppercase tracking-tight">Select a Category</h2>
                   <p className="text-gray-600 font-sans">Choose a category from the sidebar to browse materials.</p>
                 </div>
 
                 {/* Animated material icons grid */}
                 <div className="relative overflow-hidden h-96 rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="absolute inset-0 grid grid-cols-6 md:grid-cols-8 gap-2 p-4">
+                  <div className="grid grid-cols-6 md:grid-cols-8 gap-2 p-4 h-full">
                     {migratedMaterials
                       .sort(() => Math.random() - 0.5)
                       .slice(0, 48)
@@ -771,9 +775,9 @@ IMPORTANT:
                       ))}
                   </div>
 
-                  {/* Gradient overlay to fade edges */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/90 via-transparent to-gray-50/90" />
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/70 via-transparent to-gray-50/70" />
+                  {/* Gradient overlay to fade edges - reduced opacity */}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/60 via-transparent to-gray-50/60" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/40 via-transparent to-gray-50/40" />
                 </div>
               </div>
             ) : (
