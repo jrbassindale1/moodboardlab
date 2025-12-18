@@ -753,6 +753,7 @@ IMPORTANT:
                     autoPlay
                     muted
                     playsInline
+                    loop={false}
                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
                       isVideoTransitioning ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -762,6 +763,16 @@ IMPORTANT:
                     onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
                       const video = e.currentTarget;
                       video.playbackRate = 0.5;
+
+                      // Force move to next video after 7 seconds
+                      setTimeout(() => {
+                        setIsVideoTransitioning(true);
+                        setTimeout(() => {
+                          const nextIndex = Math.floor(Math.random() * videos.length);
+                          setCurrentVideoIndex(nextIndex);
+                          setIsVideoTransitioning(false);
+                        }, 1000);
+                      }, 7000);
                     }}
                     onEnded={() => {
                       setIsVideoTransitioning(true);
