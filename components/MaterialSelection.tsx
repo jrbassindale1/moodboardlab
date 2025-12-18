@@ -757,35 +757,33 @@ IMPORTANT:
                 </div>
 
                 {/* Material video showcase */}
-                <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-black">
-                  <div className="aspect-square w-full max-w-2xl mx-auto">
-                    <video
-                      key={currentVideoIndex}
-                      autoPlay
-                      muted
-                      playsInline
-                      className={`w-full h-full object-cover transition-opacity duration-1000 ${
-                        isVideoTransitioning ? 'opacity-0' : 'opacity-100'
-                      }`}
-                      style={{
-                        objectPosition: 'center center',
-                      }}
-                      onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
-                        const video = e.currentTarget;
-                        video.playbackRate = 0.8;
-                      }}
-                      onEnded={() => {
-                        setIsVideoTransitioning(true);
-                        setTimeout(() => {
-                          const nextIndex = Math.floor(Math.random() * videos.length);
-                          setCurrentVideoIndex(nextIndex);
-                          setIsVideoTransitioning(false);
-                        }, 1000);
-                      }}
-                    >
-                      <source src={videos[currentVideoIndex]} type="video/mp4" />
-                    </video>
-                  </div>
+                <div className="relative overflow-hidden rounded-lg bg-black aspect-square w-full max-w-2xl mx-auto">
+                  <video
+                    key={currentVideoIndex}
+                    autoPlay
+                    muted
+                    playsInline
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                      isVideoTransitioning ? 'opacity-0' : 'opacity-100'
+                    }`}
+                    style={{
+                      objectPosition: 'center center',
+                    }}
+                    onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+                      const video = e.currentTarget;
+                      video.playbackRate = 0.5;
+                    }}
+                    onEnded={() => {
+                      setIsVideoTransitioning(true);
+                      setTimeout(() => {
+                        const nextIndex = Math.floor(Math.random() * videos.length);
+                        setCurrentVideoIndex(nextIndex);
+                        setIsVideoTransitioning(false);
+                      }, 1000);
+                    }}
+                  >
+                    <source src={videos[currentVideoIndex]} type="video/mp4" />
+                  </video>
                 </div>
               </div>
             ) : (
