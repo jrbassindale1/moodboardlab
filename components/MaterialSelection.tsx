@@ -743,10 +743,10 @@ IMPORTANT:
 
                 {/* Animated material icons grid */}
                 <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="grid grid-cols-6 md:grid-cols-8 auto-rows-fr gap-2 p-4" style={{ minHeight: '24rem' }}>
+                  <div className="grid grid-cols-4 md:grid-cols-6 auto-rows-fr gap-3 p-6" style={{ minHeight: '24rem' }}>
                     {migratedMaterials
                       .sort(() => Math.random() - 0.5)
-                      .slice(0, 48)
+                      .slice(0, 24)
                       .map((mat, idx) => (
                         <div
                           key={`${mat.id}-${idx}`}
