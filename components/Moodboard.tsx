@@ -1560,18 +1560,45 @@ IMPORTANT:
                   >
                     <div className="flex items-center gap-4 p-4">
                       {/* Material swatch/image */}
-                      <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden">
+                      <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden bg-gray-50">
                         {item.customImage ? (
                           <img
                             src={item.customImage}
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />
-                        ) : (
+                        ) : item.colorOptions || item.supportsColor || item.finish.includes('(#') || item.finish.includes('—') ? (
+                          // Show color swatch for materials with custom color variations
                           <div
                             className="w-full h-full"
                             style={{ backgroundColor: item.tone }}
                           />
+                        ) : (
+                          // Show material icon for standard materials
+                          <>
+                            <picture>
+                              <source srcSet={`/icons/${item.id}.webp`} type="image/webp" />
+                              <img
+                                src={`/icons/${item.id}.png`}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  // Fallback to color swatch if icon fails to load
+                                  const target = e.currentTarget;
+                                  target.style.display = 'none';
+                                  const fallback = target.parentElement?.parentElement?.querySelector('.fallback-swatch') as HTMLElement | null;
+                                  if (fallback) {
+                                    fallback.style.display = 'block';
+                                  }
+                                }}
+                              />
+                            </picture>
+                            <div
+                              className="w-full h-full fallback-swatch hidden"
+                              style={{ backgroundColor: item.tone }}
+                            />
+                          </>
                         )}
                       </div>
 
