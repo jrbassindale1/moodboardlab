@@ -19,6 +19,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
   const [sortBy, setSortBy] = useState<'featured' | 'name'>('featured');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    CATEGORIES.forEach((section) => {
+      initial[section.id] = false;
+    });
+    return initial;
+  });
   const [customMaterialMode, setCustomMaterialMode] = useState<CustomMaterialMode>(null);
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
@@ -339,6 +346,9 @@ IMPORTANT:
   };
 
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
+  const toggleSection = (sectionId: string) => {
+    setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -377,36 +387,50 @@ IMPORTANT:
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Category</h3>
               {CATEGORIES.map((section) => (
                 <div key={section.id} className="space-y-1">
-                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mt-4 mb-2">
-                    {section.label}
-                  </h4>
-                  {(section.children || []).map((child) => {
-                    const path = `${section.label}>${child.label}`;
-                    const count = (filteredMaterialsByPath[path] || []).length;
-                    if (count === 0 && normalizedSearch) return null;
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(section.id)}
+                    aria-expanded={Boolean(openSections[section.id])}
+                    aria-controls={`category-section-${section.id}`}
+                    className="w-full flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500 mt-4 mb-2 hover:text-gray-700"
+                  >
+                    <span>{section.label}</span>
+                    <ChevronRight
+                      className={`w-4 h-4 transition-transform ${openSections[section.id] ? 'rotate-90' : ''}`}
+                      aria-hidden
+                    />
+                  </button>
+                  {openSections[section.id] && (
+                    <div id={`category-section-${section.id}`} className="space-y-0.5">
+                      {(section.children || []).map((child) => {
+                        const path = `${section.label}>${child.label}`;
+                        const count = (filteredMaterialsByPath[path] || []).length;
+                        if (count === 0 && normalizedSearch) return null;
 
-                    return (
-                      <button
-                        key={child.id}
-                        onClick={() => {
-                          if (!selectedCategory) {
-                            setIsFadingOut(true);
-                            setTimeout(() => {
-                              setSelectedCategory(path);
-                              setIsFadingOut(false);
-                            }, 400);
-                          } else {
-                            setSelectedCategory(path);
-                          }
-                        }}
-                        className={`block w-full text-left px-2 py-1.5 text-sm font-sans hover:underline ${
-                          selectedCategory === path ? 'font-medium' : ''
-                        }`}
-                      >
-                        {child.label}
-                      </button>
-                    );
-                  })}
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => {
+                              if (!selectedCategory) {
+                                setIsFadingOut(true);
+                                setTimeout(() => {
+                                  setSelectedCategory(path);
+                                  setIsFadingOut(false);
+                                }, 400);
+                              } else {
+                                setSelectedCategory(path);
+                              }
+                            }}
+                            className={`block w-full text-left px-2 py-1.5 text-sm font-sans hover:underline ${
+                              selectedCategory === path ? 'font-medium' : ''
+                            }`}
+                          >
+                            {child.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
