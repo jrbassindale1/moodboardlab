@@ -32,6 +32,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [customMaterialImage, setCustomMaterialImage] = useState<string | null>(null);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -256,6 +257,19 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = e.dataTransfer.files;
+    handlePhotoUpload(files);
+  };
+
   const startMaterialDetection = async () => {
     if (!detectionImage) return;
 
@@ -340,11 +354,33 @@ IMPORTANT:
       }));
 
       setDetectedMaterials(detectedMats);
+      // Select all materials by default
+      setSelectedMaterialIds(new Set(detectedMats.map(mat => mat.id)));
     } catch (err) {
       console.error('Material detection error:', err);
       setDetectionError('Failed to analyze materials. Please try again.');
     } finally {
       setIsDetecting(false);
+    }
+  };
+
+  const toggleMaterialSelection = (materialId: string) => {
+    setSelectedMaterialIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(materialId)) {
+        newSet.delete(materialId);
+      } else {
+        newSet.add(materialId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedMaterialIds.size === detectedMaterials.length) {
+      setSelectedMaterialIds(new Set());
+    } else {
+      setSelectedMaterialIds(new Set(detectedMaterials.map(mat => mat.id)));
     }
   };
 
@@ -543,10 +579,14 @@ IMPORTANT:
                     </div>
 
                     {/* Photo Upload */}
-                    <label className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center">
+                    <label
+                      className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center"
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
                       <Camera className="w-16 h-16 mb-4 text-gray-400" />
                       <span className="text-base font-display uppercase tracking-wide mb-2">Upload Photo</span>
-                      <span className="text-sm text-gray-600 font-sans">Click to select an image</span>
+                      <span className="text-sm text-gray-600 font-sans">Click to select or drag and drop an image</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -598,18 +638,41 @@ IMPORTANT:
                     {detectedMaterials.length > 0 && (
                       <div className="space-y-4">
                         <div className="bg-blue-50 border border-blue-200 p-4">
-                          <h4 className="font-display uppercase tracking-widest text-sm mb-2">
-                            Found {detectedMaterials.length} Material{detectedMaterials.length !== 1 ? 's' : ''}
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-display uppercase tracking-widest text-sm">
+                              Found {detectedMaterials.length} Material{detectedMaterials.length !== 1 ? 's' : ''}
+                            </h4>
+                            <button
+                              onClick={toggleSelectAll}
+                              className="text-xs font-sans text-blue-700 hover:underline"
+                            >
+                              {selectedMaterialIds.size === detectedMaterials.length ? 'Deselect All' : 'Select All'}
+                            </button>
+                          </div>
                           <p className="text-sm font-sans text-gray-700">
-                            Would you like to add these materials to your board?
+                            Select materials to add to your board ({selectedMaterialIds.size} selected)
                           </p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
                           {detectedMaterials.map((mat) => (
-                            <div key={mat.id} className="border border-arch-line p-4">
+                            <div
+                              key={mat.id}
+                              className={`border p-4 cursor-pointer transition-colors ${
+                                selectedMaterialIds.has(mat.id)
+                                  ? 'border-black bg-gray-50'
+                                  : 'border-arch-line hover:border-gray-400'
+                              }`}
+                              onClick={() => toggleMaterialSelection(mat.id)}
+                            >
                               <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedMaterialIds.has(mat.id)}
+                                  onChange={() => toggleMaterialSelection(mat.id)}
+                                  className="mt-1 w-4 h-4 cursor-pointer"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
                                 <div
                                   className="w-12 h-12 border border-arch-line flex-shrink-0"
                                   style={{ backgroundColor: mat.tone }}
@@ -631,6 +694,7 @@ IMPORTANT:
                             onClick={() => {
                               setDetectionImage(null);
                               setDetectedMaterials([]);
+                              setSelectedMaterialIds(new Set());
                               setDetectionError(null);
                             }}
                             className="flex-1 border border-gray-200 py-3 text-xs font-mono uppercase tracking-widest hover:border-black transition-colors"
@@ -639,14 +703,17 @@ IMPORTANT:
                           </button>
                           <button
                             onClick={() => {
-                              detectedMaterials.forEach((mat) => handleAdd(mat));
+                              const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
+                              selectedMaterials.forEach((mat) => handleAdd(mat));
                               setCustomMaterialMode(null);
                               setDetectionImage(null);
                               setDetectedMaterials([]);
+                              setSelectedMaterialIds(new Set());
                             }}
-                            className="flex-1 bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900"
+                            disabled={selectedMaterialIds.size === 0}
+                            className="flex-1 bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Add to Board
+                            Add Selected to Board
                           </button>
                         </div>
                       </div>
