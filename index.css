@@ -26,3 +26,23 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Animated fade-in for material showcase */
+@keyframes fade-in {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 3s ease-in-out infinite alternate;
+}

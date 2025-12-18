@@ -729,49 +729,51 @@ IMPORTANT:
                 {/* Animated material icons grid */}
                 <div className="relative overflow-hidden h-96 rounded-lg border border-gray-200 bg-gray-50">
                   <div className="absolute inset-0 grid grid-cols-6 md:grid-cols-8 gap-2 p-4">
-                    {migratedMaterials.slice(0, 48).map((mat, idx) => (
-                      <div
-                        key={mat.id}
-                        className="aspect-square border border-gray-200 bg-white overflow-hidden animate-fade-in"
-                        style={{
-                          animationDelay: `${idx * 0.1}s`,
-                          animationDuration: '2s',
-                          animationIterationCount: 'infinite',
-                          animationDirection: 'alternate',
-                        }}
-                      >
-                        {mat.customImage ? (
-                          <img
-                            src={mat.customImage}
-                            alt={mat.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <picture>
-                            <source srcSet={`/icons/${mat.id}.webp`} type="image/webp" />
+                    {migratedMaterials
+                      .sort(() => Math.random() - 0.5)
+                      .slice(0, 48)
+                      .map((mat, idx) => (
+                        <div
+                          key={`${mat.id}-${idx}`}
+                          className="aspect-square border border-gray-200 bg-white overflow-hidden animate-fade-in"
+                          style={{
+                            animationDelay: `${(idx * 0.15) % 3}s`,
+                            animationDuration: `${3 + (idx % 3)}s`,
+                          }}
+                        >
+                          {mat.customImage ? (
                             <img
-                              src={`/icons/${mat.id}.png`}
+                              src={mat.customImage}
                               alt={mat.name}
                               className="w-full h-full object-cover"
                               loading="lazy"
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                target.style.display = 'none';
-                                const parent = target.parentElement?.parentElement;
-                                if (parent) {
-                                  parent.style.backgroundColor = mat.tone;
-                                }
-                              }}
                             />
-                          </picture>
-                        )}
-                      </div>
-                    ))}
+                          ) : (
+                            <picture>
+                              <source srcSet={`/icons/${mat.id}.webp`} type="image/webp" />
+                              <img
+                                src={`/icons/${mat.id}.png`}
+                                alt={mat.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  target.style.display = 'none';
+                                  const parent = target.parentElement?.parentElement;
+                                  if (parent) {
+                                    parent.style.backgroundColor = mat.tone;
+                                  }
+                                }}
+                              />
+                            </picture>
+                          )}
+                        </div>
+                      ))}
                   </div>
 
                   {/* Gradient overlay to fade edges */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/80 via-transparent to-gray-50/80" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/90 via-transparent to-gray-50/90" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/70 via-transparent to-gray-50/70" />
                 </div>
               </div>
             ) : (
