@@ -27,6 +27,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   // Migrate materials to new category structure
   const migratedMaterials = useMemo(() => migrateAllMaterials(MATERIAL_PALETTE), []);
@@ -391,7 +392,17 @@ IMPORTANT:
                     return (
                       <button
                         key={child.id}
-                        onClick={() => setSelectedCategory(path)}
+                        onClick={() => {
+                          if (!selectedCategory) {
+                            setIsFadingOut(true);
+                            setTimeout(() => {
+                              setSelectedCategory(path);
+                              setIsFadingOut(false);
+                            }, 400);
+                          } else {
+                            setSelectedCategory(path);
+                          }
+                        }}
                         className={`block w-full text-left px-2 py-1.5 text-sm font-sans hover:underline ${
                           selectedCategory === path ? 'font-medium' : ''
                         }`}
@@ -724,25 +735,25 @@ IMPORTANT:
               </div>
             ) : !selectedCategory ? (
               /* Empty state when no category selected - Animated material showcase */
-              <div className="py-6 space-y-6">
+              <div className={`py-6 space-y-6 ${isFadingOut ? 'animate-fade-out' : ''}`}>
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-display uppercase tracking-tight">Select a Category</h2>
                   <p className="text-gray-600 font-sans">Choose a category from the sidebar to browse materials.</p>
                 </div>
 
                 {/* Animated material icons grid */}
-                <div className="relative overflow-hidden h-96 rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="grid grid-cols-6 md:grid-cols-8 gap-2 p-4 h-full">
+                <div className="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="grid grid-cols-6 md:grid-cols-8 auto-rows-fr gap-2 p-4" style={{ minHeight: '24rem' }}>
                     {migratedMaterials
                       .sort(() => Math.random() - 0.5)
                       .slice(0, 48)
                       .map((mat, idx) => (
                         <div
                           key={`${mat.id}-${idx}`}
-                          className="aspect-square border border-gray-200 bg-white overflow-hidden animate-fade-in"
+                          className="w-full aspect-square border border-gray-200 bg-white overflow-hidden animate-fade-in"
                           style={{
-                            animationDelay: `${(idx * 0.15) % 3}s`,
-                            animationDuration: `${3 + (idx % 3)}s`,
+                            animationDelay: `${(idx * 0.2) % 4}s`,
+                            animationDuration: `${6 + (idx % 2)}s`,
                           }}
                         >
                           {mat.customImage ? (
@@ -776,8 +787,8 @@ IMPORTANT:
                   </div>
 
                   {/* Gradient overlay to fade edges - reduced opacity */}
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/60 via-transparent to-gray-50/60" />
-                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/40 via-transparent to-gray-50/40" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-gray-50/50 via-transparent to-gray-50/50" />
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-gray-50/30 via-transparent to-gray-50/30" />
                 </div>
               </div>
             ) : (
