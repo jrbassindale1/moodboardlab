@@ -46,7 +46,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
                 className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
-                <span className="font-mono text-xs uppercase tracking-widest">Start with materials</span>
+                <span className="font-mono text-xs uppercase tracking-widest">Start Creating</span>
               </button>
             </div>
             <div className="border border-gray-200 bg-white shadow-lg">
