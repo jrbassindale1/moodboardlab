@@ -144,7 +144,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
   const handleAdd = (
     material: MaterialOption,
-    customization?: { tone?: string; label?: string }
+    customization?: { tone?: string; label?: string },
+    skipModal?: boolean
   ) => {
     // Check if material has customization options
     const hasOptions =
@@ -153,7 +154,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       material.supportsColor;
 
     // If material has options and no customization provided, just show modal
-    if (hasOptions && !customization) {
+    if (hasOptions && !customization && !skipModal) {
       setRecentlyAdded(material);
       return;
     }
@@ -177,8 +178,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
     onBoardChange([...board, materialToAdd]);
 
-    // Show modal after adding if no options (for simple confirmation)
-    if (!hasOptions) {
+    // Show modal after adding if no options (for simple confirmation) and not skipping modal
+    if (!hasOptions && !skipModal) {
       setRecentlyAdded(materialToAdd);
     }
   };
@@ -704,7 +705,7 @@ IMPORTANT:
                           <button
                             onClick={() => {
                               const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
-                              selectedMaterials.forEach((mat) => handleAdd(mat));
+                              selectedMaterials.forEach((mat) => handleAdd(mat, undefined, true));
                               setCustomMaterialMode(null);
                               setDetectionImage(null);
                               setDetectedMaterials([]);
