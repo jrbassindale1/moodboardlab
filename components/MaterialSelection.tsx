@@ -561,7 +561,7 @@ IMPORTANT:
                       </p>
                     </button>
                   </div>
-                ) : customMaterialMode === 'analyze' ? (
+                ) : customMaterialMode === 'analyse' ? (
                   /* AI Photo Analysis */
                   <div className="max-w-2xl space-y-6 border border-arch-line p-6">
                     <div className="flex items-center justify-between">
