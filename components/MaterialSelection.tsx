@@ -12,7 +12,7 @@ interface MaterialSelectionProps {
   onBoardChange: (items: MaterialOption[]) => void;
 }
 
-type CustomMaterialMode = 'upload' | 'describe' | 'analyze' | null;
+type CustomMaterialMode = 'upload' | 'describe' | 'analyse' | null;
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -350,7 +350,7 @@ IMPORTANT:
         keywords: mat.keywords || [],
         category: (mat.category || 'finish') as any,
         carbonIntensity: mat.carbonIntensity,
-        treePaths: ['Custom>Analyze Photo'],
+        treePaths: ['Custom>Analyse Photo'],
       }));
 
       setDetectedMaterials(detectedMats);
@@ -358,7 +358,7 @@ IMPORTANT:
       setSelectedMaterialIds(new Set(detectedMats.map(mat => mat.id)));
     } catch (err) {
       console.error('Material detection error:', err);
-      setDetectionError('Failed to analyze materials. Please try again.');
+      setDetectionError('Failed to analyse materials. Please try again.');
     } finally {
       setIsDetecting(false);
     }
@@ -550,7 +550,7 @@ IMPORTANT:
 
                     {/* Analyze Photo Option */}
                     <button
-                      onClick={() => setCustomMaterialMode('analyze')}
+                      onClick={() => setCustomMaterialMode('analyse')}
                       className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
                     >
                       <Camera className="w-12 h-12 mb-4 text-gray-400" />
@@ -616,14 +616,14 @@ IMPORTANT:
                       </div>
                     )}
 
-                    {/* Analyze Button */}
+                    {/* Analyse Button */}
                     {detectionImage && (
                       <button
                         onClick={startMaterialDetection}
                         disabled={isDetecting}
                         className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isDetecting ? 'Analyzing...' : 'Analyze Photo'}
+                        {isDetecting ? 'Analysing...' : 'Analyse Photo'}
                       </button>
                     )}
 

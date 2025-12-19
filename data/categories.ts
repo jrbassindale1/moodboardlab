@@ -62,9 +62,8 @@ export const CATEGORIES: Category[] = [
     id: 'custom',
     label: 'Custom',
     children: [
-      { id: 'upload-image', label: 'Upload Image' },
-      { id: 'describe-material', label: 'Describe Material' },
-      { id: 'analyze-photo', label: 'Analyze Photo' },
+      { id: 'describe-material', label: 'Custom Material' },
+      { id: 'analyse-photo', label: 'Analyse Photo' },
     ],
   },
 ];

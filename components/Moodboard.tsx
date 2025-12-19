@@ -1141,7 +1141,6 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       };
 
       setDetectionImage(uploadedImg);
-      // Don't auto-analyze anymore - wait for button press
     } catch (err) {
       console.error('Could not process upload', err);
       setError(`Could not process "${file.name}".`);
