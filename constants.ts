@@ -4,6 +4,7 @@ import moodboardAlt1 from './images/moodboard-4.webp';
 import moodboardAlt2 from './images/moodboard-5.webp';
 import moodboardAlt3 from './images/moodboard-6.webp';
 import moodboardAlt4 from './images/moodboard.webp';
+import { RAL_COLOR_OPTIONS as RAL_COLORS } from './data/ralColors';
 
 export const MATERIAL_BASE_IMAGE = moodboardMain;
 export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
@@ -79,6 +80,8 @@ export const PROJECT_IMAGES: ProjectImage[] = [
     category: 'Render'
   }
 ];
+
+export const RAL_COLOR_OPTIONS = RAL_COLORS;
 
 
 export const MATERIAL_PALETTE: MaterialOption[] = [
