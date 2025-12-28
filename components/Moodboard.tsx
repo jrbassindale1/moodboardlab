@@ -279,7 +279,16 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       tone,
       finish: finishText
     };
-    setBoard((prev) => [...prev, next]);
+    setBoard((prev) => {
+      const nextTone = next.tone?.toLowerCase().trim() || '';
+      const alreadyAdded = prev.some((item) => {
+        if (item.id !== next.id) return false;
+        const itemTone = item.tone?.toLowerCase().trim() || '';
+        return itemTone === nextTone;
+      });
+      if (alreadyAdded) return prev;
+      return [...prev, next];
+    });
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {

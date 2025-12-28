@@ -146,6 +146,14 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return category?.label || 'Materials';
   };
 
+  const isDuplicateColorSelection = (candidate: MaterialOption) =>
+    board.some((item) => {
+      if (item.id !== candidate.id) return false;
+      const itemTone = item.tone?.toLowerCase().trim() || '';
+      const candidateTone = candidate.tone?.toLowerCase().trim() || '';
+      return itemTone === candidateTone;
+    });
+
   const handleAdd = (
     material: MaterialOption,
     customization?: { tone?: string; label?: string },
@@ -178,6 +186,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         tone: customization.tone || material.tone,
         finish: finishText,
       };
+    }
+
+    if (isDuplicateColorSelection(materialToAdd)) {
+      return;
     }
 
     onBoardChange([...board, materialToAdd]);
