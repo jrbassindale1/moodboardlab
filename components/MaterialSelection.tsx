@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Search, ShoppingCart, X, Upload, FileText, Camera } from 'lucide-react';
-import { MATERIAL_PALETTE } from '../constants';
+import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
@@ -89,11 +89,14 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
   // Filter materials by search
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const ralColorLabels = useMemo(() => RAL_COLOR_OPTIONS.map((color) => color.label), []);
+
   const filteredMaterialsByPath: Record<string, MaterialOption[]> = useMemo(() => {
     const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
     if (!tokens.length) return materialsByPath;
 
     const matchesSearch = (mat: MaterialOption) => {
+      const hasRalChoices = Boolean(mat.colorOptions?.length || mat.supportsColor);
       const haystack = [
         mat.name,
         mat.finish,
@@ -102,6 +105,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         ...(mat.keywords || []),
         ...(mat.tags || []),
         ...(mat.colorOptions?.map((c) => c.label) || []),
+        ...(hasRalChoices ? ralColorLabels : []),
       ]
         .join(' ')
         .toLowerCase();
@@ -116,7 +120,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       }
     });
     return next;
-  }, [normalizedSearch, materialsByPath]);
+  }, [normalizedSearch, materialsByPath, ralColorLabels]);
 
   // Get materials for selected category only
   const displayedMaterials = useMemo(() => {
@@ -985,34 +989,38 @@ IMPORTANT:
               {(recentlyAdded.colorOptions?.length || recentlyAdded.finishOptions?.length || recentlyAdded.supportsColor) && (
                 <div className="bg-gray-50 border border-gray-200 p-3">
                   <p className="font-sans text-xs text-gray-700">
-                    Select a color or finish option below to add this material to your board.
+                    Select a RAL colour or finish option below to add this material to your board.
                   </p>
                 </div>
               )}
 
               {/* Color options if available */}
-              {recentlyAdded.colorOptions && recentlyAdded.colorOptions.length > 0 && (
+              {(recentlyAdded.colorOptions?.length || recentlyAdded.supportsColor) && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Add More Color Variations
+                    RAL Colour Options
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {recentlyAdded.colorOptions.map((colorOption, idx) => (
+                  <div className="grid max-h-80 grid-cols-2 gap-3 overflow-y-auto pr-2 sm:grid-cols-3">
+                    {RAL_COLOR_OPTIONS.map((colorOption, idx) => (
                       <button
                         key={idx}
                         onClick={() => {
                           handleAdd(recentlyAdded, { tone: colorOption.tone, label: colorOption.label });
                         }}
-                        className="flex items-center gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors"
+                        className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
                         title={`Add ${colorOption.label}`}
                       >
-                        <span className="w-6 h-6 border border-gray-200" style={{ backgroundColor: colorOption.tone }} />
+                        <span
+                          className="h-8 w-full border border-gray-200"
+                          style={{ backgroundColor: colorOption.tone }}
+                          aria-hidden
+                        />
                         <span className="font-sans text-xs">{colorOption.label}</span>
                       </button>
                     ))}
                   </div>
                   <p className="font-sans text-xs text-gray-500 mt-2">
-                    Click a color to add that variation to your board.
+                    Click a RAL colour to add that variation to your board.
                   </p>
                 </div>
               )}
@@ -1042,33 +1050,6 @@ IMPORTANT:
                 </div>
               )}
 
-              {/* Custom color picker if material supports it */}
-              {recentlyAdded.supportsColor && (
-                <div className="border-t border-arch-line pt-4">
-                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Custom Color
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      id="customColorPicker"
-                      defaultValue={recentlyAdded.tone}
-                      className="w-12 h-12 border border-gray-200 cursor-pointer"
-                    />
-                    <button
-                      onClick={() => {
-                        const colorInput = document.getElementById('customColorPicker') as HTMLInputElement;
-                        if (colorInput) {
-                          handleAdd(recentlyAdded, { tone: colorInput.value, label: 'Custom' });
-                        }
-                      }}
-                      className="flex-1 px-4 py-2 border border-gray-200 hover:border-black transition-colors text-xs font-sans"
-                    >
-                      Add custom color to board
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
