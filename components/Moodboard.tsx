@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
+import { MATERIAL_LIFECYCLE_PROFILES, LifecycleStageKey } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import LifecycleFingerprint from './LifecycleFingerprint';
@@ -708,13 +708,99 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       cursorY += gap;
     };
 
-    // Header
+    const renderLifecycleFingerprint = (materialId: string, materialName: string) => {
+      const profile = MATERIAL_LIFECYCLE_PROFILES[materialId];
+      if (!profile) return;
+
+      const stageLabels = ['RAW', 'MFG', 'TRN', 'INS', 'USE', 'MNT', 'EOL'];
+      const stageKeys: LifecycleStageKey[] = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'];
+
+      ensureSpace(60);
+
+      // Material name
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(materialName, margin, cursorY);
+      cursorY += 16;
+
+      // Draw fingerprint
+      const dotSize = 4;
+      const dotGap = 2;
+      const stageWidth = 50;
+      const startX = margin;
+
+      stageKeys.forEach((key, stageIndex) => {
+        const stageData = profile[key];
+        const xPos = startX + stageIndex * stageWidth;
+
+        // Stage label
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(stageLabels[stageIndex], xPos, cursorY);
+
+        // Draw dots as small squares
+        for (let i = 1; i <= 5; i++) {
+          const dotX = xPos + (i - 1) * (dotSize + dotGap);
+          const dotY = cursorY + 6 - dotSize / 2;
+          const isFilled = i <= stageData.impact;
+
+          if (isFilled) {
+            if (stageData.confidence === 'low') {
+              // Outline only
+              doc.setDrawColor(100);
+              doc.setFillColor(255, 255, 255);
+              doc.setLineWidth(0.5);
+              doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
+            } else if (stageData.confidence === 'medium') {
+              // Lighter fill
+              doc.setFillColor(150, 150, 150);
+              doc.rect(dotX, dotY, dotSize, dotSize, 'F');
+            } else {
+              // Solid
+              doc.setFillColor(0, 0, 0);
+              doc.rect(dotX, dotY, dotSize, dotSize, 'F');
+            }
+          } else {
+            // Empty dot
+            doc.setDrawColor(200, 200, 200);
+            doc.setFillColor(255, 255, 255);
+            doc.setLineWidth(0.5);
+            doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
+          }
+        }
+
+        // Confidence indicator
+        if (stageData.confidence === 'low' || stageData.confidence === 'medium') {
+          doc.setFontSize(7);
+          doc.text('?', xPos + 5 * (dotSize + dotGap) + 2, cursorY + 8);
+        }
+      });
+
+      cursorY += 20;
+    };
+
+    // Header - moved title down to avoid clash
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.text('Sustainability & Lifecycle Report', margin, cursorY);
+    doc.setFontSize(10);
     const brand = 'MOODBOARD-LAB.COM';
     doc.text(brand, pageWidth - margin, cursorY, { align: 'right' });
+    cursorY += 20;
+
+    doc.setFontSize(20);
+    doc.text('Sustainability & Lifecycle Report', margin, cursorY);
     cursorY += 24;
+
+    // Material Lifecycle Fingerprints
+    if (board.length > 0) {
+      addHeading('Material Lifecycle Fingerprints', 15);
+      addParagraph('Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.', 9, 10);
+
+      board.forEach((material) => {
+        renderLifecycleFingerprint(material.id, material.name);
+      });
+
+      cursorY += 10;
+    }
 
     // Sustainability Insights
     const insights = sustainabilityInsightsRef.current || [];
@@ -761,11 +847,24 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       });
     }
 
-    // Footer
-    ensureSpace(40);
+    // Footer with AI caveat
+    ensureSpace(60);
+    cursorY = pageHeight - margin - 30;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    const disclaimerText = 'Important: AI-generated content requires professional verification. All sustainability insights, lifecycle assessments, and recommendations should be validated by qualified professionals before use in design decisions or client communications.';
+    const disclaimerLines = doc.splitTextToSize(disclaimerText, pageWidth - margin * 2);
+    disclaimerLines.forEach((line: string) => {
+      doc.text(line, margin, cursorY);
+      cursorY += 11;
+    });
+
+    cursorY += 5;
     doc.setFont('helvetica', 'medium');
     doc.setFontSize(10);
-    doc.text('Generated with Moodboard-Lab', margin, pageHeight - margin);
+    doc.setTextColor(0);
+    doc.text('Generated with Moodboard-Lab', margin, cursorY);
 
     return doc;
   };
@@ -1285,10 +1384,34 @@ IMPORTANT:
     const perMaterialLines = Object.entries(materialsByCategory)
       .map(([category, items]) => {
         const categoryHeader = `\n[${category.toUpperCase()}]`;
-        const itemLines = items.map(
-          (item) =>
-            `- ${item.name} (${item.finish}) | color: ${item.tone} | description: ${item.description}`
-        ).join('\n');
+        const itemLines = items.map((item) => {
+          // Only include color if it's explicitly selected:
+          // - finish contains " — " (color label was added)
+          // - finish contains hex in parentheses like "(#ffffff)"
+          // - finish contains "colour" or "color" (paint materials)
+          // - finish contains "select" (materials that require color selection)
+          const finishHasColorInfo = item.finish.includes(' — ') ||
+                                      item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
+                                      item.finish.toLowerCase().includes('colour') ||
+                                      item.finish.toLowerCase().includes('color') ||
+                                      item.finish.toLowerCase().includes('select');
+
+          // For materials with explicit color selection, extract and include the color
+          let colorInfo = '';
+          if (finishHasColorInfo) {
+            // If finish has a color label (e.g., "— White"), extract it
+            const labelMatch = item.finish.match(/ — ([^(]+)/);
+            if (labelMatch) {
+              colorInfo = ` | color: ${labelMatch[1].trim()}`;
+            }
+            // Otherwise if it has a hex color in parentheses, use that
+            else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
+              colorInfo = ` | color: ${item.tone}`;
+            }
+          }
+
+          return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
+        }).join('\n');
         return `${categoryHeader}\n${itemLines}`;
       })
       .join('\n');
