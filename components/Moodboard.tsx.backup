@@ -161,7 +161,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
   const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [status, setStatus] = useState<'idle' | 'sustainability' | 'render' | 'all' | 'detecting'>('idle');
+  const [status, setStatus] = useState<'idle' | 'analysis' | 'render' | 'lifecycle' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -535,7 +535,8 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     return acc;
   });
   const [applyAccordionOpen, setApplyAccordionOpen] = useState(true);
-  const [sustainabilityAccordionOpen, setSustainabilityAccordionOpen] = useState(true);
+  const [analysisAccordionOpen, setAnalysisAccordionOpen] = useState(true);
+  const [lifecycleAccordionOpen, setLifecycleAccordionOpen] = useState(true);
 
   useEffect(() => {
     if (!hasSearch) return;
@@ -586,7 +587,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 
   const persistGeneration = async (imageDataUri: string, prompt: string, useUploads: boolean) => {
     const trimmedNote = renderNote.trim();
-    const includeSustainability = !useUploads;
+    const includeAnalysis = !useUploads;
     const metadata = {
       renderMode: useUploads ? 'apply-to-upload' : 'moodboard',
       materialKey: buildMaterialKey(),
@@ -594,9 +595,12 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       renderNote: trimmedNote || undefined,
       userNote: trimmedNote || undefined,
       generatedPrompt: prompt,
-      ...(includeSustainability
+      ...(includeAnalysis
         ? {
-            sustainabilityInsights: sustainabilityInsightsRef.current || undefined
+            analysisText: analysisRef.current || undefined,
+            analysisStructured: analysisStructuredRef.current || undefined,
+            lifecycleText: lifecycleAnalysisRef.current || undefined,
+            lifecycleStructured: lifecycleStructuredRef.current || undefined
           }
         : {}),
       board,
@@ -670,7 +674,12 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     });
 
   const hasTextContent = () =>
-    Boolean(sustainabilityInsightsRef.current && sustainabilityInsightsRef.current.length > 0);
+    Boolean(
+      analysisRef.current ||
+        lifecycleAnalysisRef.current ||
+        (analysisStructuredRef.current?.length || 0) > 0 ||
+        (lifecycleStructuredRef.current?.length || 0) > 0
+    );
 
   const generateReportPdf = () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
@@ -715,49 +724,55 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     doc.text(brand, pageWidth - margin, cursorY, { align: 'right' });
     cursorY += 24;
 
-    // Sustainability Insights
-    const insights = sustainabilityInsightsRef.current || [];
-    if (insights.length) {
-      addHeading('Sustainability Insights', 15);
-      insights.forEach((insight) => {
-        addHeading(insight.title, 13);
+    // Sustainability Analysis
+    const analysisItems = analysisStructuredRef.current || [];
+    if (analysisItems.length || analysisRef.current) {
+      addHeading('Sustainability Analysis', 15);
+      if (analysisItems.length) {
+        analysisItems.forEach((item) => {
+          addHeading(item.title, 13);
+          addParagraph(item.explanation, 12, 10);
+        });
+      } else if (analysisRef.current) {
+        addParagraph(analysisRef.current, 12, 12);
+      }
+    }
 
-        if (insight.headline) {
-          addParagraph(insight.headline, 12, 8);
-        }
-
-        if (insight.hotspots && insight.hotspots.length > 0) {
-          addParagraph(`Hotspots: ${insight.hotspots.join(', ')}`, 11, 8);
-        }
-
-        if (insight.whyItLooksLikeThis) {
-          addParagraph(insight.whyItLooksLikeThis, 12, 8);
-        }
-
-        if (insight.designLevers && insight.designLevers.length > 0) {
-          addParagraph('Design Levers:', 11, 4);
-          insight.designLevers.forEach(lever => {
-            addParagraph(`• ${lever}`, 11, 2);
-          });
-          cursorY += 4;
-        }
-
-        if (insight.ukChecks && insight.ukChecks.length > 0) {
-          addParagraph('UK Checks:', 11, 4);
-          insight.ukChecks.forEach(check => {
-            addParagraph(`• ${check}`, 11, 2);
-          });
-          cursorY += 4;
-        }
-
-        if (insight.whatCouldChange && insight.whatCouldChange.length > 0) {
-          addParagraph('What Could Change:', 10, 4);
-          insight.whatCouldChange.forEach(change => {
-            addParagraph(`• ${change}`, 10, 2);
-          });
-          cursorY += 8;
-        }
-      });
+    // Lifecycle Analysis
+    const lifecycleItems = lifecycleStructuredRef.current || [];
+    if (lifecycleItems.length || lifecycleAnalysisRef.current) {
+      addHeading('Lifecycle Analysis', 15);
+      if (lifecycleItems.length) {
+        lifecycleItems.forEach((item) => {
+          addHeading(item.material, 13);
+          const summary = [
+            `Sourcing: ${item.sourcing}`,
+            `Fabrication: ${item.fabrication}`,
+            `Transport: ${item.transport}`,
+            `In-use: ${item.inUse}`,
+            `Maintenance: ${item.maintenance}`,
+            `End-of-life: ${item.endOfLife}`,
+            `UK tip: ${item.ukTip}`
+          ].join('\n');
+          addParagraph(summary, 12, hasLifecycleSplit(item.emissionsSplit) ? 8 : 12);
+          if (hasLifecycleSplit(item.emissionsSplit) && item.emissionsSplit) {
+            const split = item.emissionsSplit;
+            const splitLine = `Embodied carbon split (est.): Raw ${split.raw}% | Manufacturing ${split.manufacturing}% | Transport ${split.transport}% | Use ${split.use}% | End-of-life ${split.endOfLife}%`;
+            addParagraph(splitLine, 11, 6);
+          }
+          const metaLine = [
+            item.assumptions ? `Assumptions: ${item.assumptions}` : null,
+            item.confidence ? `Confidence: ${item.confidence}/5` : null
+          ]
+            .filter(Boolean)
+            .join(' | ');
+          if (metaLine) {
+            addParagraph(metaLine, 11, 10);
+          }
+        });
+      } else if (lifecycleAnalysisRef.current) {
+        addParagraph(lifecycleAnalysisRef.current, 12, 12);
+      }
     }
 
     // Footer
@@ -771,7 +786,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 
   const handleDownloadReport = async () => {
     if (!hasTextContent()) {
-      setError('Generate sustainability insights first.');
+      setError('Generate sustainability and lifecycle analysis first.');
       return;
     }
     setExportingReport(true);
@@ -788,7 +803,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 
   const handleMobileSaveReport = async () => {
     if (!hasTextContent()) {
-      setError('Generate sustainability insights first.');
+      setError('Generate sustainability and lifecycle analysis first.');
       return;
     }
     setExportingReport(true);
@@ -983,11 +998,15 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     }
     setIsCreatingMoodboard(true);
     setMaterialKey(buildMaterialKey());
-    setSustainabilityInsights(null);
+    setAnalysis(null);
+    setAnalysisStructured(null);
+    setLifecycleAnalysis(null);
+    setLifecycleStructured(null);
     setStatus('all');
     setError(null);
     try {
-      await runGemini('sustainability');
+      await runGemini('analysis');
+      await runGemini('lifecycle');
       await runGemini('render', { useUploads: false, onRender: setMoodboardRenderUrl });
       setMaterialsAccordionOpen(false);
     } finally {
@@ -1255,8 +1274,138 @@ IMPORTANT:
     setDetectionImage(null);
   };
 
+  const parseAnalysisJson = (cleaned: string) => {
+    try {
+      const parsed = JSON.parse(cleaned);
+      const items = Array.isArray(parsed?.items) ? parsed.items : null;
+      if (!items) return null;
+      const normalized = items
+        .map((entry: any) => ({
+          title: String(entry.title || entry.material || '').trim(),
+          explanation: String(entry.explanation || entry.analysis || entry.detail || '').trim()
+        }))
+        .filter((entry) => entry.title && entry.explanation);
+      return normalized.length ? normalized : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const normalizeLifecycleSplit = (split: any): LifecycleSplit | null => {
+    if (!split) return null;
+    const toNumber = (value: any) => {
+      if (typeof value === 'string') {
+        const cleaned = value.replace('%', '').trim();
+        const num = Number(cleaned);
+        return Number.isFinite(num) ? num : null;
+      }
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    };
+
+    const rawVal = toNumber(
+      split.raw ??
+        split.rawMaterial ??
+        split.rawMaterials ??
+        split.raw_material ??
+        split['raw material'] ??
+        split.rawPreprocess
+    );
+    const manufacturingVal = toNumber(
+      split.manufacturing ?? split.fabrication ?? split.factory ?? split.processing
+    );
+    const transportVal = toNumber(split.transport ?? split.logistics);
+    const useVal = toNumber(split.use ?? split.inUse ?? split['in-use']);
+    const endOfLifeVal = toNumber(
+      split.endOfLife ?? split['end-of-life'] ?? split.eol ?? split.disposal
+    );
+
+    const base: LifecycleSplit = {
+      raw: rawVal ?? 0,
+      manufacturing: manufacturingVal ?? 0,
+      transport: transportVal ?? 0,
+      use: useVal ?? 0,
+      endOfLife: endOfLifeVal ?? 0
+    };
+
+    const total = Object.values(base).reduce((acc, val) => acc + (val > 0 ? val : 0), 0);
+    if (!total) return null;
+
+    const scaledEntries: LifecycleSplit = {
+      raw: Math.max(0, base.raw),
+      manufacturing: Math.max(0, base.manufacturing),
+      transport: Math.max(0, base.transport),
+      use: Math.max(0, base.use),
+      endOfLife: Math.max(0, base.endOfLife)
+    };
+
+    const scaledTotal = Object.values(scaledEntries).reduce((acc, val) => acc + val, 0);
+    const factor = scaledTotal ? 100 / scaledTotal : 1;
+
+    const normalized: LifecycleSplit = {
+      raw: Math.round(scaledEntries.raw * factor),
+      manufacturing: Math.round(scaledEntries.manufacturing * factor),
+      transport: Math.round(scaledEntries.transport * factor),
+      use: Math.round(scaledEntries.use * factor),
+      endOfLife: Math.round(scaledEntries.endOfLife * factor)
+    };
+
+    // Adjust rounding to ensure the total is exactly 100
+    const diff =
+      100 -
+      (normalized.raw +
+        normalized.manufacturing +
+        normalized.transport +
+        normalized.use +
+        normalized.endOfLife);
+    if (diff !== 0) {
+      normalized.endOfLife = Math.max(0, normalized.endOfLife + diff);
+    }
+
+    return normalized;
+  };
+
+  const hasLifecycleSplit = (split?: LifecycleSplit | null) =>
+    Boolean(split && Object.values(split).some((val) => typeof val === 'number' && val > 0));
+
+  const parseLifecycleJson = (cleaned: string) => {
+    try {
+      const parsed = JSON.parse(cleaned);
+      const items = Array.isArray(parsed?.items) ? parsed.items : null;
+      if (!items) return null;
+      const normalized = items
+        .map((entry: any) => ({
+          material: String(entry.material || '').trim(),
+          sourcing: String(entry.sourcing || '').trim(),
+          fabrication: String(entry.fabrication || '').trim(),
+          transport: String(entry.transport || '').trim(),
+          inUse: String(entry.inUse || entry['in-use'] || '').trim(),
+          maintenance: String(entry.maintenance || entry['maintenance/refurb'] || entry.refurb || '').trim(),
+          endOfLife: String(entry.endOfLife || entry['end-of-life'] || '').trim(),
+          ukTip: String(entry.ukTip || entry['uk tip'] || '').trim(),
+          emissionsSplit: normalizeLifecycleSplit(
+            entry.emissionsSplit ||
+              entry.emissions_split ||
+              entry.carbonSplit ||
+              entry.embodiedCarbonSplit ||
+              entry['embodied carbon split']
+          ),
+          confidence: (() => {
+            const num = Number(entry.confidence ?? entry.certainty);
+            if (!Number.isFinite(num)) return undefined;
+            return Math.min(5, Math.max(1, Math.round(num)));
+          })(),
+          assumptions: String(entry.assumptions || entry.notes || entry.drivers || '').trim()
+        }))
+        .filter((e) => e.material);
+      return normalized.length ? normalized : null;
+    } catch {
+      return null;
+    }
+  };
+
   const runGemini = async (
-    mode: 'sustainability' | 'render',
+    mode: 'analysis' | 'render' | 'lifecycle',
     options?: {
       useUploads?: boolean;
       onRender?: (url: string) => void;
@@ -1271,6 +1420,7 @@ IMPORTANT:
     }
     setStatus(mode);
     if (!options?.retryAttempt) setError(null);
+    if (mode === 'analysis') setAnalysisStructured(null);
 
     // Group materials by category for better AI understanding
     const materialsByCategory: Record<string, MaterialOption[]> = {};
@@ -1297,62 +1447,11 @@ IMPORTANT:
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
 
-    // Build sustainability prompt with lifecycle fingerprints
-    const buildSustainabilityPrompt = () => {
-      const materialsPayload = board.map(mat => {
-        const profile = MATERIAL_LIFECYCLE_PROFILES[mat.id];
-        return {
-          id: mat.id,
-          name: mat.name,
-          category: mat.category,
-          finish: mat.finish,
-          description: mat.description,
-          tone: mat.tone,
-          lifecycleFingerprint: profile || null
-        };
-      });
-
-      return `You are a UK architecture sustainability assistant for early-stage design (RIBA Stage 1–2).
-
-Return ONLY valid JSON. No markdown. No prose outside JSON.
-
-You are given selected materials. Each material includes a lifecycleFingerprint with impact (1–5) and confidence (high/medium/low) for stages:
-raw, manufacturing, transport, installation, inUse, maintenance, endOfLife.
-
-IMPORTANT RULES:
-- Do NOT change or recalculate any fingerprint scores.
-- Do NOT invent kgCO2e, EPD figures, or percentage splits.
-- Your role is to interpret the fingerprint for designers and give practical actions.
-
-Output schema:
-{
-  "items": [
-    {
-      "id": "string",
-      "title": "string",
-      "headline": "string (max 120 chars)",
-      "hotspots": ["string", "string"],
-      "whyItLooksLikeThis": "string (max 200 chars)",
-      "designLevers": ["string", "string"],
-      "whatCouldChange": ["string", "string"],
-      "ukChecks": ["string", "string"]
-    }
-  ]
-}
-
-Guidance:
-- Keep language concise and decision-useful.
-- If confidence is medium/low for transport or endOfLife, explicitly mention uncertainty in whatCouldChange.
-- Use UK-relevant checks only (e.g., FSC/PEFC, EPD to EN 15804, recycled content declarations, demountable fixings, take-back schemes).
-- If lifecycleFingerprint is null, return headline "Fingerprint not available" and leave other fields minimal.
-
-MATERIALS:
-${JSON.stringify(materialsPayload, null, 2)}`;
-    };
-
     const prompt =
-      mode === 'sustainability'
-        ? buildSustainabilityPrompt()
+      mode === 'analysis'
+        ? `Return ONLY a JSON object with a single key "items" mapping to an array. Each array item must be an object with keys\"title\" and "explanation". Use the material name (and finish if useful) as the title. The explanation should be one concise UK-focused sustainability assessment covering embodied carbon, circularity/reuse potential, relevant UK certifications/standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE), and a specific improvement or lower-impact alternative. No introductions, no Markdown, no bullet points—JSON only.\nFormat example:\n{\"items\":[{\"title\":\"Glulam Timber Structure\",\"explanation\":\"Low embodied carbon, renewable resource; ensure FSC/PEFC certification, design for disassembly/reuse, and prioritise locally sourced timber to cut transport emissions.\"}]}\n\nMaterials:\n${perMaterialLines}`
+        : mode === 'lifecycle'
+        ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip", "assumptions", "confidence", and "emissionsSplit". "emissionsSplit" must be an object with integer percentage values that sum to 100, using keys: raw, manufacturing, transport, use, endOfLife (share of cradle-to-grave embodied carbon). Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused. If data is uncertain, provide your best estimate, state the assumption, and still ensure the percentages total 100.\nFormat example:\n{\"items\":[{\"material\":\"Brick\",\"sourcing\":\"...\",\"fabrication\":\"...\",\"transport\":\"...\",\"inUse\":\"...\",\"maintenance\":\"...\",\"endOfLife\":\"...\",\"ukTip\":\"...\",\"assumptions\":\"High recycled content assumed; short road haulage.\",\"confidence\":3,\"emissionsSplit\":{\"raw\":45,\"manufacturing\":20,\"transport\":10,\"use\":5,\"endOfLife\":20}}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
         : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
         : options?.useUploads
@@ -1423,10 +1522,10 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
         }
       ],
       generationConfig: {
-        temperature: 0.45
+        temperature: mode === 'analysis' ? 0.5 : 0.45
       }
     };
-    console.log('[Gemini prompt]', { mode, promptType: 'sustainability', prompt });
+    console.log('[Gemini prompt]', { mode, promptType: 'analysis', prompt, uploadedImages: uploadedImages.length });
 
     try {
       const data = await callGeminiText(payload);
@@ -1435,32 +1534,43 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
       const cleaned = text.replace(/```json|```/g, '').trim();
       const retryAttempt = options?.retryAttempt || 0;
       const canRetry = retryAttempt < 1;
-
-      if (mode === 'sustainability') {
-        try {
-          const parsed = JSON.parse(cleaned);
-          const items = parsed?.items;
-          if (Array.isArray(items) && items.length > 0) {
-            const validated: SustainabilityInsight[] = items.map((item: any) => ({
-              id: String(item.id || ''),
-              title: String(item.title || ''),
-              headline: String(item.headline || ''),
-              hotspots: Array.isArray(item.hotspots) ? item.hotspots.map(String) : [],
-              whyItLooksLikeThis: String(item.whyItLooksLikeThis || ''),
-              designLevers: Array.isArray(item.designLevers) ? item.designLevers.map(String) : [],
-              whatCouldChange: Array.isArray(item.whatCouldChange) ? item.whatCouldChange.map(String) : [],
-              ukChecks: Array.isArray(item.ukChecks) ? item.ukChecks.map(String) : []
-            }));
-            setSustainabilityInsights(validated);
-            sustainabilityInsightsRef.current = validated;
-            if (retryAttempt) setError(null);
+      if (mode === 'analysis') {
+        const parsed = parseAnalysisJson(cleaned);
+        if (parsed) {
+          setAnalysis(cleaned);
+          setAnalysisStructured(parsed);
+          analysisRef.current = cleaned;
+          analysisStructuredRef.current = parsed;
+          if (retryAttempt) setError(null);
+        } else {
+          setAnalysis(null);
+          setAnalysisStructured(null);
+          analysisRef.current = null;
+          analysisStructuredRef.current = null;
+          const message = 'Gemini returned malformed analysis JSON.';
+          if (canRetry) {
+            setError(`${message} Retrying once...`);
+            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
           } else {
-            throw new Error('Invalid items array');
+            setError(`${message} Please try again.`);
           }
-        } catch (parseError) {
-          setSustainabilityInsights(null);
-          sustainabilityInsightsRef.current = null;
-          const message = 'Gemini returned malformed sustainability JSON.';
+          return;
+        }
+      }
+      if (mode === 'lifecycle') {
+        const parsed = parseLifecycleJson(cleaned);
+        if (parsed) {
+          setLifecycleAnalysis(cleaned);
+          setLifecycleStructured(parsed);
+          lifecycleAnalysisRef.current = cleaned;
+          lifecycleStructuredRef.current = parsed;
+          if (retryAttempt) setError(null);
+        } else {
+          setLifecycleAnalysis(null);
+          setLifecycleStructured(null);
+          lifecycleAnalysisRef.current = null;
+          lifecycleStructuredRef.current = null;
+          const message = 'Gemini returned malformed lifecycle JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
             await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
@@ -1646,119 +1756,168 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
               </div>
             )}
 
-            {sustainabilityInsights && sustainabilityInsights.length > 0 && (
+            {(analysisStructured || analysis) && (
               <div className="border border-gray-200">
                 <button
-                  onClick={() => setSustainabilityAccordionOpen((prev) => !prev)}
+                  onClick={() => setAnalysisAccordionOpen((prev) => !prev)}
                   className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
                 >
                   <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                    Sustainability Insights
+                    Material Sustainability Analysis
                   </span>
                   <span className="font-mono text-xs text-gray-500">
-                    {sustainabilityAccordionOpen ? '−' : '+'}
+                    {analysisAccordionOpen ? '−' : '+'}
                   </span>
                 </button>
-                {sustainabilityAccordionOpen && (
-                  <div className="p-4 bg-white border-t border-gray-200 space-y-6">
-                    {sustainabilityInsights.map((insight) => {
-                      const material = board.find(m => m.id === insight.id);
-                      return (
-                        <div key={insight.id} className="space-y-3">
-                          <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
-                            {insight.title}
-                          </div>
-
-                          {/* Lifecycle Fingerprint as hero */}
-                          {material && (
-                            <div>
-                              <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-                                Design-stage lifecycle fingerprint (relative)
-                              </p>
-                              <LifecycleFingerprint material={material} />
+                {analysisAccordionOpen && (
+                  <div className="p-4 bg-white border-t border-gray-200">
+                    {analysisStructured ? (
+                      <div className="space-y-4">
+                        {analysisStructured.map((item) => (
+                          <div key={item.title} className="space-y-1">
+                            <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
+                              {item.title}
                             </div>
-                          )}
-
-                          {/* Insights below fingerprint */}
-                          <div className="space-y-3">
-                            {insight.headline && (
-                              <p className="font-sans text-sm font-medium text-gray-900">
-                                {insight.headline}
-                              </p>
-                            )}
-
-                            {insight.hotspots && insight.hotspots.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  Hotspots
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {insight.hotspots.map((hotspot, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="inline-block px-2 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-sans"
-                                    >
-                                      {hotspot}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {insight.whyItLooksLikeThis && (
-                              <p className="font-sans text-sm text-gray-700 leading-relaxed">
-                                {insight.whyItLooksLikeThis}
-                              </p>
-                            )}
-
-                            {insight.designLevers && insight.designLevers.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  Design Levers
-                                </p>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {insight.designLevers.map((lever, idx) => (
-                                    <li key={idx} className="font-sans text-sm text-gray-800">
-                                      {lever}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {insight.ukChecks && insight.ukChecks.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  UK Checks
-                                </p>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {insight.ukChecks.map((check, idx) => (
-                                    <li key={idx} className="font-sans text-sm text-gray-800">
-                                      {check}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {insight.whatCouldChange && insight.whatCouldChange.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-1">
-                                  What Could Change
-                                </p>
-                                <div className="space-y-1">
-                                  {insight.whatCouldChange.map((change, idx) => (
-                                    <p key={idx} className="font-sans text-xs text-gray-600">
-                                      {change}
-                                    </p>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                            <p className="font-sans text-sm text-gray-800 leading-relaxed">
+                              {item.explanation}
+                            </p>
                           </div>
-                        </div>
-                      );
-                    })}
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="font-sans text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+                        {analysis}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {(lifecycleStructured || lifecycleAnalysis) && (
+              <div className="border border-gray-200">
+                <button
+                  onClick={() => setLifecycleAccordionOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
+                >
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                    Material Lifecycle Analysis
+                  </span>
+                  <span className="font-mono text-xs text-gray-500">
+                    {lifecycleAccordionOpen ? '−' : '+'}
+                  </span>
+                </button>
+                {lifecycleAccordionOpen && (
+                  <div className="p-4 bg-white border-t border-gray-200 space-y-3">
+                    {lifecycleStructured ? (
+                      <div className="space-y-4">
+                        {lifecycleStructured.map((item) => (
+                          <div key={item.material} className="space-y-2">
+                            <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
+                              {item.material}
+                            </div>
+                            <div className="font-sans text-sm text-gray-800 space-y-1 leading-relaxed">
+                              <div>
+                                <span className="font-semibold">Sourcing:</span> {item.sourcing}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Fabrication:</span> {item.fabrication}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Transport:</span> {item.transport}
+                              </div>
+                              <div>
+                                <span className="font-semibold">In-use:</span> {item.inUse}
+                              </div>
+                              <div>
+                                <span className="font-semibold">Maintenance/Refurb:</span> {item.maintenance}
+                              </div>
+                              <div>
+                                <span className="font-semibold">End-of-life:</span> {item.endOfLife}
+                              </div>
+                              <div>
+                                <span className="font-semibold">UK tip:</span> {item.ukTip}
+                              </div>
+                            </div>
+                            {hasLifecycleSplit(item.emissionsSplit) && (
+                              <div className="mt-3 space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-600">
+                                    Embodied carbon split (est.)
+                                  </span>
+                                  {item.confidence && (
+                                    <span className="text-[11px] text-gray-600 font-sans">
+                                      Confidence {item.confidence}/5
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex h-3 overflow-hidden rounded border border-gray-200 bg-gray-50">
+                                  {LIFECYCLE_PHASES.map((phase) => {
+                                    const value = item.emissionsSplit?.[phase.key];
+                                    if (value === undefined || value === null) return null;
+                                    return (
+                                      <div
+                                        key={phase.key}
+                                        className="relative h-full"
+                                        style={{ width: `${Math.max(0, value)}%`, backgroundColor: phase.color }}
+                                      >
+                                        {value >= 14 && (
+                                          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-white">
+                                            {value}%
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px] text-gray-700">
+                                  {LIFECYCLE_PHASES.map((phase) => {
+                                    const value = item.emissionsSplit?.[phase.key];
+                                    if (value === undefined || value === null) return null;
+                                    return (
+                                      <div key={phase.key} className="flex items-center gap-2">
+                                        <span
+                                          className="w-2.5 h-2.5 rounded-full border border-gray-200"
+                                          style={{ backgroundColor: phase.color }}
+                                        />
+                                        <span className="truncate">
+                                          {phase.label}
+                                          {typeof value === 'number' ? ` • ${value}%` : ''}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {(item.assumptions || item.confidence) && (
+                              <p className="text-xs text-gray-500 font-sans mt-2">
+                                {item.assumptions ? `Assumptions: ${item.assumptions}` : ''}
+                                {item.assumptions && item.confidence ? ' • ' : ''}
+                                {item.confidence ? `Confidence: ${item.confidence}/5` : ''}
+                              </p>
+                            )}
+
+                            {/* Lifecycle Fingerprint */}
+                            {(() => {
+                              const materialMatch = board.find(m =>
+                                m.name === item.material ||
+                                item.material.toLowerCase().includes(m.name.toLowerCase()) ||
+                                m.name.toLowerCase().includes(item.material.toLowerCase())
+                              );
+                              return materialMatch ? (
+                                <div className="mt-3">
+                                  <LifecycleFingerprint material={materialMatch} />
+                                </div>
+                              ) : null;
+                            })()}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="font-sans text-sm text-gray-800 whitespace-pre-line leading-relaxed">
+                        {lifecycleAnalysis}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
