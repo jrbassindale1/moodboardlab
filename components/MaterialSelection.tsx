@@ -417,16 +417,18 @@ IMPORTANT:
     <div className="min-h-screen bg-white">
       {/* Fixed board tracker */}
       <div className="fixed right-6 top-24 z-40">
-        <div
-          className="relative flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 shadow-sm backdrop-blur-sm"
+        <button
+          onClick={() => onNavigate('moodboard')}
+          className="relative flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 shadow-sm backdrop-blur-sm hover:border-black transition-colors cursor-pointer"
           aria-live="polite"
+          aria-label="Go to moodboard"
         >
           <ShoppingCart className="h-4 w-4 text-gray-800" aria-hidden />
           <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">Board</span>
           <span className="min-w-[28px] rounded-full bg-black px-2 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-widest text-white">
             {board.length}
           </span>
-        </div>
+        </button>
       </div>
 
       {/* Main content area with sidebar + grid */}
