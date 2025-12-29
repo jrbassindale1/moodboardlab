@@ -1,5 +1,5 @@
 import React from 'react';
-import { MATERIAL_LIFECYCLE_PROFILES, LifecycleProfile, LifecycleStageKey, Confidence } from '../constants';
+import { MATERIAL_LIFECYCLE_PROFILES, LifecycleProfile, LifecycleStageKey, Confidence } from '../lifecycleProfiles';
 import { MaterialOption } from '../types';
 
 interface LifecycleFingerprintProps {

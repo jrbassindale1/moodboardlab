@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
-import { MATERIAL_PALETTE, MATERIAL_LIFECYCLE_PROFILES } from '../constants';
+import { MATERIAL_PALETTE } from '../constants';
+import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import LifecycleFingerprint from './LifecycleFingerprint';
