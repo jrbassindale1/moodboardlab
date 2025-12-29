@@ -1504,6 +1504,10 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
             candidateCount: 1,
             // Newer Gemini endpoints reject image MIME hints here; request image-only output via response modalities instead.
             responseModalities: ['IMAGE']
+          },
+          imageConfig: {
+            aspectRatio: '1:1',
+            imageSize: '1K'
           }
         };
         console.log('[Gemini prompt]', {
