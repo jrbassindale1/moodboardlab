@@ -1348,7 +1348,7 @@ IMPORTANT:
     const trimmedNote = renderNote.trim();
     const isEditingRender = mode === 'render' && options?.editPrompt && options?.baseImageDataUrl;
     const noTextRule =
-      'ABSOLUTELY NO TEXT in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks. Avoid pseudo-text/scribbles that resemble writing.';
+      'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
 
     const prompt =
       mode === 'analysis'
@@ -1358,7 +1358,7 @@ IMPORTANT:
         : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
         : options?.useUploads
-        ? `Apply the following materials to the provided base image(s). Respect the existing composition and lighting. Do not invent new scenes.\n\nMaterials:\n${summaryText}\n\nInstructions:\n- Keep proportions, camera angle, and key features from the uploaded image(s).\n- Apply materials accurately; preserve scale cues like joints, brick coursing, and panel seams.\n- Do not add any text overlays, labels, logos, or watermarks.\n- White background not required; keep base context.\n${trimmedNote ? `- Custom instructions: ${trimmedNote}\n` : ''}`
+        ? `Apply the following materials to the provided base image(s). Respect the existing composition and lighting. Do not invent new scenes.\n\n${noTextRule}\n\nMaterials:\n${summaryText}\n\nInstructions:\n- Keep proportions, camera angle, and key features from the uploaded image(s).\n- Apply materials accurately; preserve scale cues like joints, brick coursing, and panel seams.\n- White background not required; keep base context.\n${trimmedNote ? `- Custom instructions: ${trimmedNote}\n` : ''}`
         : `Create one clean, standalone moodboard image showcasing these materials together. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials:\n${summaryText}\n`;
 
     if (mode === 'render') {
