@@ -36,6 +36,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const supportsFreeColor = (material?: MaterialOption | null) =>
+    Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
   // List of available videos
   const videos = useMemo(() => [
@@ -96,7 +98,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!tokens.length) return materialsByPath;
 
     const matchesSearch = (mat: MaterialOption) => {
-      const hasRalChoices = Boolean(mat.colorOptions?.length || mat.supportsColor);
+      const hasRalChoices = supportsFreeColor(mat);
       const haystack = [
         mat.name,
         mat.finish,
@@ -163,7 +165,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     const hasOptions =
       material.colorOptions?.length ||
       material.finishOptions?.length ||
-      material.supportsColor;
+      supportsFreeColor(material);
 
     // If material has options and no customization provided, just show modal
     if (hasOptions && !customization && !skipModal) {
@@ -405,6 +407,11 @@ IMPORTANT:
   const toggleSection = (sectionId: string) => {
     setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
+
+  const hasColorOptions = Boolean(recentlyAdded?.colorOptions?.length);
+  const hasFinishOptions = Boolean(recentlyAdded?.finishOptions?.length);
+  const hasFreeColor = supportsFreeColor(recentlyAdded);
+  const hasOptions = hasColorOptions || hasFinishOptions || hasFreeColor;
 
   return (
     <div className="min-h-screen bg-white">
@@ -973,9 +980,7 @@ IMPORTANT:
             <div className="flex items-center gap-3 border-b border-arch-line pb-4">
               <ShoppingCart className="w-5 h-5" />
               <div className="font-display uppercase tracking-widest text-base">
-                {recentlyAdded.colorOptions?.length || recentlyAdded.finishOptions?.length || recentlyAdded.supportsColor
-                  ? 'Select Options'
-                  : 'Added to board'}
+                {hasOptions ? 'Select Options' : 'Added to board'}
               </div>
             </div>
 
@@ -998,16 +1003,47 @@ IMPORTANT:
               </div>
 
               {/* Show instruction if material has options */}
-              {(recentlyAdded.colorOptions?.length || recentlyAdded.finishOptions?.length || recentlyAdded.supportsColor) && (
+              {hasOptions && (
                 <div className="bg-gray-50 border border-gray-200 p-3">
                   <p className="font-sans text-xs text-gray-700">
-                    Select a RAL colour or finish option below to add this material to your board.
+                    Select a colour or finish option below to add this material to your board.
                   </p>
                 </div>
               )}
 
-              {/* Color options if available */}
-              {(recentlyAdded.colorOptions?.length || recentlyAdded.supportsColor) && (
+              {/* Curated color options */}
+              {hasColorOptions && (
+                <div className="border-t border-arch-line pt-4">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
+                    Colour Options
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {recentlyAdded.colorOptions?.map((colorOption, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          handleAdd(recentlyAdded, { tone: colorOption.tone, label: colorOption.label });
+                        }}
+                        className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
+                        title={`Add ${colorOption.label}`}
+                      >
+                        <span
+                          className="h-8 w-full border border-gray-200"
+                          style={{ backgroundColor: colorOption.tone }}
+                          aria-hidden
+                        />
+                        <span className="font-sans text-xs">{colorOption.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-sans text-xs text-gray-500 mt-2">
+                    Click a colour to add that variation to your board.
+                  </p>
+                </div>
+              )}
+
+              {/* RAL palette for free color selection */}
+              {hasFreeColor && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     RAL Colour Options
@@ -1038,7 +1074,7 @@ IMPORTANT:
               )}
 
               {/* Finish options if available */}
-              {recentlyAdded.finishOptions && recentlyAdded.finishOptions.length > 0 && (
+              {hasFinishOptions && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     Finish Options
@@ -1066,7 +1102,7 @@ IMPORTANT:
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               {/* Show "Add as-is" button if material has options but user wants default */}
-              {(recentlyAdded.colorOptions?.length || recentlyAdded.finishOptions?.length || recentlyAdded.supportsColor) && (
+              {hasOptions && (
                 <button
                   onClick={() => {
                     // Add the base material without customization
@@ -1082,12 +1118,10 @@ IMPORTANT:
                 onClick={() => setRecentlyAdded(null)}
                 className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
               >
-                {recentlyAdded.colorOptions?.length || recentlyAdded.finishOptions?.length || recentlyAdded.supportsColor
-                  ? 'Cancel'
-                  : 'Add more materials'}
+                {hasOptions ? 'Cancel' : 'Add more materials'}
               </button>
               {/* Only show "Go to moodboard" if material was already added (no options) */}
-              {!recentlyAdded.colorOptions?.length && !recentlyAdded.finishOptions?.length && !recentlyAdded.supportsColor && (
+              {!hasOptions && (
                 <button
                   onClick={() => {
                     setRecentlyAdded(null);
