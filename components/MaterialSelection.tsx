@@ -424,9 +424,9 @@ IMPORTANT:
 
       {/* Main content area with sidebar + grid */}
       <div className="max-w-screen-2xl mx-auto px-6 py-8 pt-24">
-        <div className="flex gap-8">
+        <div className="flex flex-col gap-8 lg:flex-row">
           {/* Left Sidebar - Category filters */}
-          <aside className="w-64 flex-shrink-0 space-y-6">
+          <aside className="w-full space-y-6 lg:w-64 lg:flex-shrink-0">
             {/* Categories */}
             <div className="space-y-1">
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
@@ -831,7 +831,7 @@ IMPORTANT:
               /* Empty state when no category selected - Video showcase */
               <div className={`${isFadingOut ? 'animate-fade-out' : ''}`}>
                 {/* Material video showcase */}
-                <div className="relative overflow-hidden rounded-lg bg-black aspect-square w-full max-w-2xl mx-auto">
+                <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-lg bg-black aspect-video sm:aspect-square">
                   <video
                     key={currentVideoIndex}
                     autoPlay
@@ -960,8 +960,8 @@ IMPORTANT:
 
       {/* Added to board modal */}
       {recentlyAdded && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-          <div className="bg-white max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-6 sm:items-center">
+          <div className="relative w-full max-w-lg space-y-5 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setRecentlyAdded(null)}
               className="absolute top-3 right-3 p-1 hover:bg-gray-100 transition-colors"
