@@ -1603,7 +1603,7 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
-      <div className="max-w-screen-2xl mx-auto px-6 py-12 space-y-10">
+      <div className="max-w-screen-2xl mx-auto px-6 md:px-8 lg:px-12 py-12 space-y-10">
         <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
           <div>
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter">
