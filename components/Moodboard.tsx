@@ -71,9 +71,39 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
         label: 'Brand / Supplier Material',
         path: 'Custom>Brand / Supplier Material'
       },
-      { id: 'custom-finish', label: 'Custom Finish / Product Link', path: 'Custom>Custom Finish / Product Link' }
+  { id: 'custom-finish', label: 'Custom Finish / Product Link', path: 'Custom>Custom Finish / Product Link' }
     ]
   }
+];
+
+type LifecycleSplit = {
+  raw: number;
+  manufacturing: number;
+  transport: number;
+  use: number;
+  endOfLife: number;
+};
+
+type LifecycleEntry = {
+  material: string;
+  sourcing: string;
+  fabrication: string;
+  transport: string;
+  inUse: string;
+  maintenance: string;
+  endOfLife: string;
+  ukTip: string;
+  emissionsSplit?: LifecycleSplit;
+  confidence?: number;
+  assumptions?: string;
+};
+
+const LIFECYCLE_PHASES: Array<{ key: keyof LifecycleSplit; label: string; color: string }> = [
+  { key: 'raw', label: 'Raw / Pre-processing', color: '#111827' },
+  { key: 'manufacturing', label: 'Manufacturing', color: '#374151' },
+  { key: 'transport', label: 'Distribution', color: '#6B7280' },
+  { key: 'use', label: 'Use / Maintenance', color: '#9CA3AF' },
+  { key: 'endOfLife', label: 'End-of-life', color: '#D1D5DB' }
 ];
 
 interface MoodboardProps {
@@ -148,30 +178,12 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
   const analysisStructuredRef = useRef<{ title: string; explanation: string }[] | null>(null);
   const [lifecycleAnalysis, setLifecycleAnalysis] = useState<string | null>(null);
   const [lifecycleStructured, setLifecycleStructured] = useState<
-    | {
-        material: string;
-        sourcing: string;
-        fabrication: string;
-        transport: string;
-        inUse: string;
-        maintenance: string;
-        endOfLife: string;
-        ukTip: string;
-      }[]
+    LifecycleEntry[]
     | null
   >(null);
   const lifecycleAnalysisRef = useRef<string | null>(null);
   const lifecycleStructuredRef = useRef<
-    | {
-        material: string;
-        sourcing: string;
-        fabrication: string;
-        transport: string;
-        inUse: string;
-        maintenance: string;
-        endOfLife: string;
-        ukTip: string;
-      }[]
+    LifecycleEntry[]
     | null
   >(null);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
@@ -774,7 +786,21 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
             `End-of-life: ${item.endOfLife}`,
             `UK tip: ${item.ukTip}`
           ].join('\n');
-          addParagraph(summary, 12, 12);
+          addParagraph(summary, 12, hasLifecycleSplit(item.emissionsSplit) ? 8 : 12);
+          if (hasLifecycleSplit(item.emissionsSplit) && item.emissionsSplit) {
+            const split = item.emissionsSplit;
+            const splitLine = `Embodied carbon split (est.): Raw ${split.raw}% | Manufacturing ${split.manufacturing}% | Transport ${split.transport}% | Use ${split.use}% | End-of-life ${split.endOfLife}%`;
+            addParagraph(splitLine, 11, 6);
+          }
+          const metaLine = [
+            item.assumptions ? `Assumptions: ${item.assumptions}` : null,
+            item.confidence ? `Confidence: ${item.confidence}/5` : null
+          ]
+            .filter(Boolean)
+            .join(' | ');
+          if (metaLine) {
+            addParagraph(metaLine, 11, 10);
+          }
         });
       } else if (lifecycleAnalysisRef.current) {
         addParagraph(lifecycleAnalysisRef.current, 12, 12);
@@ -1297,6 +1323,83 @@ IMPORTANT:
     }
   };
 
+  const normalizeLifecycleSplit = (split: any): LifecycleSplit | null => {
+    if (!split) return null;
+    const toNumber = (value: any) => {
+      if (typeof value === 'string') {
+        const cleaned = value.replace('%', '').trim();
+        const num = Number(cleaned);
+        return Number.isFinite(num) ? num : null;
+      }
+      const num = Number(value);
+      return Number.isFinite(num) ? num : null;
+    };
+
+    const rawVal = toNumber(
+      split.raw ??
+        split.rawMaterial ??
+        split.rawMaterials ??
+        split.raw_material ??
+        split['raw material'] ??
+        split.rawPreprocess
+    );
+    const manufacturingVal = toNumber(
+      split.manufacturing ?? split.fabrication ?? split.factory ?? split.processing
+    );
+    const transportVal = toNumber(split.transport ?? split.logistics);
+    const useVal = toNumber(split.use ?? split.inUse ?? split['in-use']);
+    const endOfLifeVal = toNumber(
+      split.endOfLife ?? split['end-of-life'] ?? split.eol ?? split.disposal
+    );
+
+    const base: LifecycleSplit = {
+      raw: rawVal ?? 0,
+      manufacturing: manufacturingVal ?? 0,
+      transport: transportVal ?? 0,
+      use: useVal ?? 0,
+      endOfLife: endOfLifeVal ?? 0
+    };
+
+    const total = Object.values(base).reduce((acc, val) => acc + (val > 0 ? val : 0), 0);
+    if (!total) return null;
+
+    const scaledEntries: LifecycleSplit = {
+      raw: Math.max(0, base.raw),
+      manufacturing: Math.max(0, base.manufacturing),
+      transport: Math.max(0, base.transport),
+      use: Math.max(0, base.use),
+      endOfLife: Math.max(0, base.endOfLife)
+    };
+
+    const scaledTotal = Object.values(scaledEntries).reduce((acc, val) => acc + val, 0);
+    const factor = scaledTotal ? 100 / scaledTotal : 1;
+
+    const normalized: LifecycleSplit = {
+      raw: Math.round(scaledEntries.raw * factor),
+      manufacturing: Math.round(scaledEntries.manufacturing * factor),
+      transport: Math.round(scaledEntries.transport * factor),
+      use: Math.round(scaledEntries.use * factor),
+      endOfLife: Math.round(scaledEntries.endOfLife * factor)
+    };
+
+    // Adjust rounding to ensure the total is exactly 100
+    const diff =
+      100 -
+      (normalized.raw +
+        normalized.manufacturing +
+        normalized.transport +
+        normalized.use +
+        normalized.endOfLife);
+    if (diff !== 0) {
+      normalized.endOfLife = Math.max(0, normalized.endOfLife + diff);
+    }
+
+    return normalized;
+  };
+
+  const hasLifecycleSplit = (split?: LifecycleSplit | null) =>
+    Boolean(split && Object.values(split).some((val) => typeof val === 'number' && val > 0));
+
   const parseLifecycleJson = (cleaned: string) => {
     try {
       const parsed = JSON.parse(cleaned);
@@ -1311,7 +1414,20 @@ IMPORTANT:
           inUse: String(entry.inUse || entry['in-use'] || '').trim(),
           maintenance: String(entry.maintenance || entry['maintenance/refurb'] || entry.refurb || '').trim(),
           endOfLife: String(entry.endOfLife || entry['end-of-life'] || '').trim(),
-          ukTip: String(entry.ukTip || entry['uk tip'] || '').trim()
+          ukTip: String(entry.ukTip || entry['uk tip'] || '').trim(),
+          emissionsSplit: normalizeLifecycleSplit(
+            entry.emissionsSplit ||
+              entry.emissions_split ||
+              entry.carbonSplit ||
+              entry.embodiedCarbonSplit ||
+              entry['embodied carbon split']
+          ),
+          confidence: (() => {
+            const num = Number(entry.confidence ?? entry.certainty);
+            if (!Number.isFinite(num)) return undefined;
+            return Math.min(5, Math.max(1, Math.round(num)));
+          })(),
+          assumptions: String(entry.assumptions || entry.notes || entry.drivers || '').trim()
         }))
         .filter((e) => e.material);
       return normalized.length ? normalized : null;
@@ -1338,11 +1454,24 @@ IMPORTANT:
     if (!options?.retryAttempt) setError(null);
     if (mode === 'analysis') setAnalysisStructured(null);
 
-    const perMaterialLines = board
-      .map(
-        (item) =>
-          `- ${item.name} (${item.finish}) | color: ${item.tone} | category: ${item.category} | description: ${item.description}`
-      )
+    // Group materials by category for better AI understanding
+    const materialsByCategory: Record<string, MaterialOption[]> = {};
+    board.forEach((item) => {
+      if (!materialsByCategory[item.category]) {
+        materialsByCategory[item.category] = [];
+      }
+      materialsByCategory[item.category].push(item);
+    });
+
+    const perMaterialLines = Object.entries(materialsByCategory)
+      .map(([category, items]) => {
+        const categoryHeader = `\n[${category.toUpperCase()}]`;
+        const itemLines = items.map(
+          (item) =>
+            `- ${item.name} (${item.finish}) | color: ${item.tone} | description: ${item.description}`
+        ).join('\n');
+        return `${categoryHeader}\n${itemLines}`;
+      })
       .join('\n');
 
     const trimmedNote = renderNote.trim();
@@ -1354,12 +1483,12 @@ IMPORTANT:
       mode === 'analysis'
         ? `Return ONLY a JSON object with a single key "items" mapping to an array. Each array item must be an object with keys\"title\" and "explanation". Use the material name (and finish if useful) as the title. The explanation should be one concise UK-focused sustainability assessment covering embodied carbon, circularity/reuse potential, relevant UK certifications/standards (e.g., BREEAM credits, BES 6001, FSC/PEFC, UKCA/CE), and a specific improvement or lower-impact alternative. No introductions, no Markdown, no bullet points—JSON only.\nFormat example:\n{\"items\":[{\"title\":\"Glulam Timber Structure\",\"explanation\":\"Low embodied carbon, renewable resource; ensure FSC/PEFC certification, design for disassembly/reuse, and prioritise locally sourced timber to cut transport emissions.\"}]}\n\nMaterials:\n${perMaterialLines}`
         : mode === 'lifecycle'
-        ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip". Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused.\nFormat example:\n{\"items\":[{\"material\":\"Brick\",\"sourcing\":\"...\",\"fabrication\":\"...\",\"transport\":\"...\",\"inUse\":\"...\",\"maintenance\":\"...\",\"endOfLife\":\"...\",\"ukTip\":\"...\"}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
+        ? `For each material below, return ONLY a JSON object with a single key "items" mapping to an array of lifecycle entries. Each entry must be an object with keys: "material", "sourcing", "fabrication", "transport", "inUse", "maintenance", "endOfLife", "ukTip", "assumptions", "confidence", and "emissionsSplit". "emissionsSplit" must be an object with integer percentage values that sum to 100, using keys: raw, manufacturing, transport, use, endOfLife (share of cradle-to-grave embodied carbon). Keep text concise (one short clause per key), UK practice oriented, and strictly lifecycle-focused. If data is uncertain, provide your best estimate, state the assumption, and still ensure the percentages total 100.\nFormat example:\n{\"items\":[{\"material\":\"Brick\",\"sourcing\":\"...\",\"fabrication\":\"...\",\"transport\":\"...\",\"inUse\":\"...\",\"maintenance\":\"...\",\"endOfLife\":\"...\",\"ukTip\":\"...\",\"assumptions\":\"High recycled content assumed; short road haulage.\",\"confidence\":3,\"emissionsSplit\":{\"raw\":45,\"manufacturing\":20,\"transport\":10,\"use\":5,\"endOfLife\":20}}]}\nNo prose, no markdown, no bullet points—only JSON.\n\nMaterials:\n${perMaterialLines}`
         : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
         : options?.useUploads
-        ? `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply:\n${summaryText}\n\nCRITICAL INSTRUCTIONS:\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`
-        : `Create one clean, standalone moodboard image showcasing these materials together. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials:\n${summaryText}\n`;
+        ? `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`
+        : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
     if (mode === 'render') {
       // Image render call
@@ -1741,6 +1870,64 @@ IMPORTANT:
                                 <span className="font-semibold">UK tip:</span> {item.ukTip}
                               </div>
                             </div>
+                            {hasLifecycleSplit(item.emissionsSplit) && (
+                              <div className="mt-3 space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-600">
+                                    Embodied carbon split (est.)
+                                  </span>
+                                  {item.confidence && (
+                                    <span className="text-[11px] text-gray-600 font-sans">
+                                      Confidence {item.confidence}/5
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex h-3 overflow-hidden rounded border border-gray-200 bg-gray-50">
+                                  {LIFECYCLE_PHASES.map((phase) => {
+                                    const value = item.emissionsSplit?.[phase.key];
+                                    if (value === undefined || value === null) return null;
+                                    return (
+                                      <div
+                                        key={phase.key}
+                                        className="relative h-full"
+                                        style={{ width: `${Math.max(0, value)}%`, backgroundColor: phase.color }}
+                                      >
+                                        {value >= 14 && (
+                                          <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-white">
+                                            {value}%
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px] text-gray-700">
+                                  {LIFECYCLE_PHASES.map((phase) => {
+                                    const value = item.emissionsSplit?.[phase.key];
+                                    if (value === undefined || value === null) return null;
+                                    return (
+                                      <div key={phase.key} className="flex items-center gap-2">
+                                        <span
+                                          className="w-2.5 h-2.5 rounded-full border border-gray-200"
+                                          style={{ backgroundColor: phase.color }}
+                                        />
+                                        <span className="truncate">
+                                          {phase.label}
+                                          {typeof value === 'number' ? ` • ${value}%` : ''}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            {(item.assumptions || item.confidence) && (
+                              <p className="text-xs text-gray-500 font-sans mt-2">
+                                {item.assumptions ? `Assumptions: ${item.assumptions}` : ''}
+                                {item.assumptions && item.confidence ? ' • ' : ''}
+                                {item.confidence ? `Confidence: ${item.confidence}/5` : ''}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>

@@ -39,6 +39,100 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
+  // Helper to get user-friendly category display names
+  const getCategoryDisplayName = (category: MaterialOption['category']): string => {
+    const categoryMap: Record<MaterialOption['category'], string> = {
+      'floor': 'Floors',
+      'structure': 'Structure',
+      'finish': 'Finishes',
+      'wall-internal': 'Internal Walls',
+      'external': 'External',
+      'soffit': 'Soffits',
+      'ceiling': 'Ceilings',
+      'window': 'Windows',
+      'roof': 'Roofing',
+      'paint-wall': 'Paint - Walls',
+      'paint-ceiling': 'Paint - Ceilings',
+      'plaster': 'Plaster',
+      'microcement': 'Microcement',
+      'timber-panel': 'Timber Panels',
+      'tile': 'Tiles',
+      'wallpaper': 'Wallpaper',
+      'acoustic-panel': 'Acoustic Panels',
+      'timber-slat': 'Timber Slats',
+      'exposed-structure': 'Exposed Structure',
+      'joinery': 'Joinery & Furniture',
+      'fixture': 'Fixtures & Fittings',
+      'landscape': 'Landscaping',
+      'insulation': 'Insulation',
+      'door': 'Doors',
+      'balustrade': 'Balustrade & Railings',
+      'external-ground': 'External Ground',
+      'furniture': 'Furniture'
+    };
+    return categoryMap[category] || category;
+  };
+
+  // Drag and drop state for basket materials
+  const [draggedMaterial, setDraggedMaterial] = useState<{ material: MaterialOption; boardIndex: number } | null>(null);
+
+  const handleBasketDragStart = (e: React.DragEvent, material: MaterialOption, boardIndex: number) => {
+    setDraggedMaterial({ material, boardIndex });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleBasketDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleBasketDrop = (e: React.DragEvent, targetCategory: string) => {
+    e.preventDefault();
+    if (!draggedMaterial) return;
+
+    const { material, boardIndex } = draggedMaterial;
+
+    // Find the category key from the display name
+    const categoryKey = Object.entries({
+      'floor': 'Floors',
+      'structure': 'Structure',
+      'finish': 'Finishes',
+      'wall-internal': 'Internal Walls',
+      'external': 'External',
+      'soffit': 'Soffits',
+      'ceiling': 'Ceilings',
+      'window': 'Windows',
+      'roof': 'Roofing',
+      'paint-wall': 'Paint - Walls',
+      'paint-ceiling': 'Paint - Ceilings',
+      'plaster': 'Plaster',
+      'microcement': 'Microcement',
+      'timber-panel': 'Timber Panels',
+      'tile': 'Tiles',
+      'wallpaper': 'Wallpaper',
+      'acoustic-panel': 'Acoustic Panels',
+      'timber-slat': 'Timber Slats',
+      'exposed-structure': 'Exposed Structure',
+      'joinery': 'Joinery & Furniture',
+      'fixture': 'Fixtures & Fittings',
+      'landscape': 'Landscaping',
+      'insulation': 'Insulation',
+      'door': 'Doors',
+      'balustrade': 'Balustrade & Railings',
+      'external-ground': 'External Ground',
+      'furniture': 'Furniture'
+    } as const).find(([_, display]) => display === targetCategory)?.[0] as MaterialOption['category'];
+
+    if (categoryKey && material.category !== categoryKey) {
+      // Update the material's category
+      const updatedBoard = [...board];
+      updatedBoard[boardIndex] = { ...material, category: categoryKey };
+      onBoardChange(updatedBoard);
+    }
+
+    setDraggedMaterial(null);
+  };
+
   // List of available videos
   const videos = useMemo(() => [
     '/videos/source.mp4',
@@ -161,14 +255,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     customization?: { tone?: string; label?: string },
     skipModal?: boolean
   ) => {
-    // Check if material has customization options
-    const hasOptions =
-      material.colorOptions?.length ||
-      material.finishOptions?.length ||
-      supportsFreeColor(material);
-
-    // If material has options and no customization provided, just show modal (don't add to board yet)
-    if (hasOptions && !customization && !skipModal) {
+    // If no customization provided and not skipping modal, just show modal (don't add to board yet)
+    if (!customization && !skipModal) {
       setRecentlyAdded(material);
       return;
     }
@@ -482,7 +570,7 @@ IMPORTANT:
             <div className="border-t border-gray-200 pt-6">
               <button
                 onClick={() => onNavigate('moodboard')}
-                className="w-full flex items-center justify-between p-3 border border-gray-200 hover:border-black transition-colors"
+                className="w-full flex items-center justify-between p-3 border border-gray-200 hover:border-black transition-colors mb-4"
               >
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
@@ -490,6 +578,59 @@ IMPORTANT:
                 </div>
                 <span className="text-xs font-sans text-gray-600">({board.length})</span>
               </button>
+
+              {/* Materials basket grouped by category */}
+              {board.length > 0 && (
+                <div className="space-y-4">
+                  {(() => {
+                    const grouped = board.reduce((acc, material, boardIndex) => {
+                      const categoryLabel = getCategoryDisplayName(material.category);
+                      if (!acc[categoryLabel]) {
+                        acc[categoryLabel] = [];
+                      }
+                      acc[categoryLabel].push({ material, boardIndex });
+                      return acc;
+                    }, {} as Record<string, Array<{ material: MaterialOption; boardIndex: number }>>);
+
+                    return Object.entries(grouped).map(([categoryName, items]) => (
+                    <div key={categoryName} className="space-y-2">
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 px-2">
+                        {categoryName}
+                      </h4>
+                      <div
+                        className="space-y-1"
+                        onDragOver={(e) => handleBasketDragOver(e)}
+                        onDrop={(e) => handleBasketDrop(e, categoryName)}
+                      >
+                        {items.map(({ material, boardIndex }) => (
+                          <div
+                            key={`${material.id}-${boardIndex}`}
+                            draggable
+                            onDragStart={(e) => handleBasketDragStart(e, material, boardIndex)}
+                            className="flex items-center gap-2 p-2 bg-white border border-gray-100 hover:border-gray-300 cursor-move group"
+                          >
+                            <div
+                              className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0"
+                              style={{ backgroundColor: material.tone }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-sans truncate">{material.name}</p>
+                              <p className="text-[10px] font-mono text-gray-500 truncate">{material.finish}</p>
+                            </div>
+                            <button
+                              onClick={() => onBoardChange(board.filter((_, i) => i !== boardIndex))}
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    ));
+                  })()}
+                </div>
+              )}
             </div>
           </aside>
 
