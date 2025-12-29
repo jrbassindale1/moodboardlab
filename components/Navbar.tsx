@@ -4,9 +4,10 @@ import { Menu, ShoppingCart, X } from 'lucide-react';
 interface NavbarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
+  boardCount?: number;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, boardCount = 0 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -52,12 +53,18 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               </button>
             ))}
           </div>
+          {/* Shopping basket - visible on all screens */}
           <button
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
-            onClick={() => handleNavigate('product')}
-            aria-label="Go to product page"
+            className="relative p-2 rounded-md hover:bg-gray-100 transition-colors"
+            onClick={() => handleNavigate('moodboard')}
+            aria-label={`Go to moodboard (${boardCount} items)`}
           >
-            <ShoppingCart className="w-6 h-6" />
+            <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+            {boardCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-black px-1.5 text-[10px] font-mono font-semibold text-white">
+                {boardCount}
+              </span>
+            )}
           </button>
           <button
             className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"

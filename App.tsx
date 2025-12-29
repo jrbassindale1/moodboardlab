@@ -54,7 +54,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Navbar currentPage={currentPage} onNavigate={setCurrentPage} boardCount={selectedMaterials.length} />
 
       <main className={`flex-grow relative ${adRailPadding}`}>
         {showAds && (

@@ -414,22 +414,6 @@ IMPORTANT:
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Fixed board tracker */}
-      <div className="fixed right-6 top-24 z-40">
-        <button
-          onClick={() => onNavigate('moodboard')}
-          className="relative flex items-center gap-2 rounded-full border border-gray-200 bg-white/90 px-3 py-2 shadow-sm backdrop-blur-sm hover:border-black transition-colors cursor-pointer"
-          aria-live="polite"
-          aria-label="Go to moodboard"
-        >
-          <ShoppingCart className="h-4 w-4 text-gray-800" aria-hidden />
-          <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">Board</span>
-          <span className="min-w-[28px] rounded-full bg-black px-2 py-1 text-center font-mono text-[10px] font-semibold uppercase tracking-widest text-white">
-            {board.length}
-          </span>
-        </button>
-      </div>
-
       {/* Main content area with sidebar + grid */}
       <div className="max-w-screen-2xl mx-auto px-6 py-8 pt-24">
         <div className="flex flex-col gap-6 lg:gap-8 lg:flex-row">
