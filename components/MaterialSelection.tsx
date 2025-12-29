@@ -167,13 +167,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       material.finishOptions?.length ||
       supportsFreeColor(material);
 
-    // If material has options and no customization provided, just show modal
+    // If material has options and no customization provided, just show modal (don't add to board yet)
     if (hasOptions && !customization && !skipModal) {
       setRecentlyAdded(material);
       return;
     }
 
-    // Otherwise, add to board
+    // Build the material to add
     let materialToAdd = material;
 
     // If customization is provided, create a new material with custom finish/tone
@@ -194,12 +194,11 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       return;
     }
 
+    // Add to board
     onBoardChange([...board, materialToAdd]);
 
-    // Show modal after adding if no options (for simple confirmation) and not skipping modal
-    if (!hasOptions && !skipModal) {
-      setRecentlyAdded(materialToAdd);
-    }
+    // Close the modal after adding
+    setRecentlyAdded(null);
   };
 
   const handleCustomMaterialImageUpload = async (files: FileList | null) => {
@@ -433,9 +432,9 @@ IMPORTANT:
 
       {/* Main content area with sidebar + grid */}
       <div className="max-w-screen-2xl mx-auto px-6 py-8 pt-24">
-        <div className="flex flex-col gap-8 lg:flex-row">
+        <div className="flex flex-col gap-6 lg:gap-8 lg:flex-row">
           {/* Left Sidebar - Category filters */}
-          <aside className="w-full space-y-6 lg:w-64 lg:flex-shrink-0">
+          <aside className="w-full space-y-4 lg:space-y-6 lg:w-64 lg:flex-shrink-0">
             {/* Categories */}
             <div className="space-y-1">
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
@@ -840,7 +839,7 @@ IMPORTANT:
               /* Empty state when no category selected - Video showcase */
               <div className={`${isFadingOut ? 'animate-fade-out' : ''}`}>
                 {/* Material video showcase */}
-                <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-lg bg-black aspect-video sm:aspect-square">
+                <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-black aspect-square max-w-full lg:max-w-2xl">
                   <video
                     key={currentVideoIndex}
                     autoPlay
@@ -969,8 +968,9 @@ IMPORTANT:
 
       {/* Added to board modal */}
       {recentlyAdded && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-6 sm:items-center">
-          <div className="relative w-full max-w-lg space-y-5 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 px-4 py-4 sm:py-6 overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white shadow-2xl my-auto">
+            <div className="max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
             <button
               onClick={() => setRecentlyAdded(null)}
               className="absolute top-3 right-3 p-1 hover:bg-gray-100 transition-colors"
@@ -982,7 +982,7 @@ IMPORTANT:
             <div className="flex items-center gap-3 border-b border-arch-line pb-4">
               <ShoppingCart className="w-5 h-5" />
               <div className="font-display uppercase tracking-widest text-base">
-                {hasOptions ? 'Select Options' : 'Added to board'}
+                Select Options
               </div>
             </div>
 
@@ -1004,14 +1004,14 @@ IMPORTANT:
                 </div>
               </div>
 
-              {/* Show instruction if material has options */}
-              {hasOptions && (
-                <div className="bg-gray-50 border border-gray-200 p-3">
-                  <p className="font-sans text-xs text-gray-700">
-                    Select a colour or finish option below to add this material to your board.
-                  </p>
-                </div>
-              )}
+              {/* Show instruction */}
+              <div className="bg-gray-50 border border-gray-200 p-3">
+                <p className="font-sans text-xs text-gray-700">
+                  {hasOptions
+                    ? 'Select a colour or finish option below to add this material to your board.'
+                    : 'Click "Add to Board" below to add this material.'}
+                </p>
+              </div>
 
               {/* Curated color options */}
               {hasColorOptions && (
@@ -1103,37 +1103,26 @@ IMPORTANT:
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              {/* Show "Add as-is" button if material has options but user wants default */}
-              {hasOptions && (
+              {/* For materials without options, show Add to Board button */}
+              {!hasOptions && (
                 <button
                   onClick={() => {
                     // Add the base material without customization
                     onBoardChange([...board, recentlyAdded]);
                     setRecentlyAdded(null);
                   }}
-                  className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
+                  className="flex-1 px-4 py-3 bg-arch-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
                 >
-                  Add as-is (no options)
+                  Add to Board
                 </button>
               )}
               <button
                 onClick={() => setRecentlyAdded(null)}
                 className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
               >
-                {hasOptions ? 'Cancel' : 'Add more materials'}
+                Cancel
               </button>
-              {/* Only show "Go to moodboard" if material was already added (no options) */}
-              {!hasOptions && (
-                <button
-                  onClick={() => {
-                    setRecentlyAdded(null);
-                    onNavigate('moodboard');
-                  }}
-                  className="flex-1 px-4 py-3 bg-arch-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
-                >
-                  Go to moodboard
-                </button>
-              )}
+            </div>
             </div>
           </div>
         </div>
