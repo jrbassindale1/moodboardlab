@@ -1,0 +1,1789 @@
+// === GENERATED PROFILES ===
+// Copy these into MATERIAL_LIFECYCLE_PROFILES in constants.ts
+
+  // 
+  'avoid': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'reuse': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'renewable': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'lowcarbon': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'offset': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'concept-board': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'contrast-study': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'facade-tone': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'texture-stack': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // 
+  'palette-overview': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Hybrid Timber-Steel
+  'hybrid-structure': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // DLT / NLT Timber
+  'nlt-structure': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Low-Carbon Concrete
+  'ggbs-concrete': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Linoleum Flooring
+  'lino-floor': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Recycled Plastic Terrazzo
+  'recycled-terrazzo': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Rubber Flooring
+  'rubber-floor': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Grey Carpet Tiles
+  'grey-carpet': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Bamboo Parquet
+  'bamboo-parquet': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Cork Plank Flooring
+  'cork-plank-floor': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Reclaimed Timber Floor
+  'reclaimed-timber-floor': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Stone Pavers
+  'stone-paver': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Vinyl Planks (Recycled)
+  'vinyl-planks': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Resin Flooring
+  'resin-flooring': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Microcement Flooring
+  'microcement-floor': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Ceramic Tiles
+  'ceramic-tiles': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Epoxy Flooring
+  'epoxy-flooring': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Travertine Tiles
+  'travertine-tiles': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Marble Flooring
+  'marble-floor': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Engineered Oak Flooring
+  'engineered-oak-floor': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Linoleum Tiles
+  'linoleum-tiles': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Aluminum Window Frame
+  'aluminum-frame': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Window Frame
+  'timber-frame': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Recycled Aluminum Frame
+  'recycled-aluminum-frame': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Steel Window Frame
+  'steel-window-frame': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Composite Window Frame
+  'composite-window-frame': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // uPVC Window Frame
+  'upvc-window-frame': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Curtain Wall System
+  'curtain-wall-system': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Frameless Glazing
+  'frameless-glazing': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Clay Plaster
+  'clay-plaster': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Gypsum Board Wall
+  'gypsum-wall': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Plasterboard Wall
+  'plasterboard-wall': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Plywood Wall Panels
+  'plywood-panels-wall': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Acoustic Wall Panels
+  'acoustic-panels-wall': { // textile
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Glass Partitions
+  'glass-partitions': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Brick (Internal)
+  'brick-internal': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Concrete Block Wall
+  'concrete-block-wall': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Mineral Microcement
+  'mineral-microcement': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Paint – Standard (Walls)
+  'standard-wall-paint': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Paint – Custom Colour (Walls)
+  'custom-wall-paint': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Paint – Standard (Ceilings)
+  'standard-ceiling-paint': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Paint – Custom Colour (Ceilings)
+  'custom-ceiling-paint': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Living Green Wall
+  'green-wall': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Stone Rainscreen
+  'stone-rainscreen': { // stone
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
+    transport: { impact: 4, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Wood-Fibre + Lime Render
+  'woodfibre-render': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Zinc Cladding
+  'zinc-cladding': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Copper Cladding
+  'copper-cladding': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Fiber Cement Panels
+  'fiber-cement-panels': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Metal Composite Panels
+  'metal-composite-panels': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Weathering Steel Panels
+  'weathering-steel-panels': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Slate Cladding
+  'slate-cladding': { // stone
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
+    transport: { impact: 4, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Cork Rainscreen
+  'cork-rainscreen': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Recycled Plastic Cladding
+  'recycled-plastic-cladding': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Perforated Metal Ceiling
+  'perforated-metal-ceiling': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Slat Ceiling
+  'timber-slat-ceiling': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Gypsum Ceiling
+  'gypsum-ceiling': { // paint
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Open Grid Ceiling
+  'open-grid-ceiling': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Stretch Fabric Ceiling
+  'stretch-fabric-ceiling': { // textile
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Coffered Ceiling
+  'coffered-ceiling': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Plasterboard Ceiling
+  'plasterboard-ceiling': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Exposed CLT Ceiling
+  'exposed-clt-ceiling': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Metal Mesh Ceiling
+  'metal-mesh-ceiling': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Acoustic Ceiling Tiles
+  'acoustic-tiles-ceiling': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Exposed Concrete Soffit
+  'exposed-concrete-soffit': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Timber Slat Soffit
+  'timber-slat-soffit': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Perforated Metal Soffit
+  'perforated-metal-soffit': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Linings
+  'timber-linings': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Bio-Based Fibre Panels
+  'bio-fibre-panels': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Wall Panels
+  'timber-wall-panels': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Large-Format Tiles
+  'porcelain-tiles': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Textured Wallpaper
+  'textured-wallpaper': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Fabric Acoustic Panels
+  'fabric-acoustic-panels': { // textile
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Oak Timber Slats
+  'oak-timber-slats': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Cork Wall Panels
+  'cork-panels': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Reclaimed Timber Boarding
+  'reclaimed-boarding': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Mycelium Acoustic Tiles
+  'mycelium-tiles': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Wool Felt Wall Panels
+  'wool-felt-panels': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Bamboo Acoustic Slats
+  'bamboo-slat-wall': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Plywood Panels
+  'plywood-panels-finish': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Marble Panels
+  'marble-panels': { // stone
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
+    transport: { impact: 4, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Leather Panels
+  'leather-panels': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Metal Mesh Panels
+  'metal-mesh-panels': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Glass Panels
+  'glass-panels-finish': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Acoustic Plaster
+  'acoustic-plaster': { // earth
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 1, confidence: 'high' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Lime Plaster
+  'lime-plaster': { // earth
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 1, confidence: 'high' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Tadelakt Plaster
+  'tadelakt-plaster': { // earth
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 1, confidence: 'high' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Secondary Steelwork
+  'secondary-steelwork': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Brick Load-Bearing Walls
+  'brick-loadbearing': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Hempcrete Structural
+  'hempcrete-structural': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Steel-Concrete Composite
+  'steel-concrete-composite': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Precast Concrete
+  'precast-concrete': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Mass Timber Columns
+  'mass-timber-columns': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Steel Trusses
+  'steel-trusses': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Prestressed Concrete
+  'prestressed-concrete': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Permeable Paving
+  'permeable-paving': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Built-in Joinery
+  'joinery-built-in': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Brass Fixtures & Fittings
+  'brass-fixtures': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Standing Seam Metal Roof
+  'standing-seam-roof': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Green Roof
+  'green-roof': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Cool Roof Membrane
+  'cool-roof': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Solar PV Roof
+  'pv-roof': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Blue Roof
+  'blue-roof': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Clay Tiles
+  'clay-tiles-roof': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Slate Tiles
+  'slate-tiles-roof': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Metal Tiles
+  'metal-tiles-roof': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // EPDM Membrane
+  'epdm-membrane': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // TPO Membrane
+  'tpo-membrane': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Built-Up Roofing
+  'built-up-roofing': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Polycarbonate Roof Panels
+  'polycarbonate-roof': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Wood Fiber Insulation
+  'wood-fiber-insulation': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Hemp Insulation
+  'hemp-insulation': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // 
+  'sheep-wool-insulation': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Cork Insulation
+  'cork-insulation': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Cellulose Insulation
+  'cellulose-insulation': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Mineral Wool
+  'mineral-wool': { // biobased
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // PIR/PUR Boards
+  'pir-insulation': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Aerogel Insulation
+  'aerogel-insulation': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Timber Doors
+  'timber-door': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Steel Doors
+  'steel-door': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Aluminum Doors
+  'aluminum-door': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Composite Doors
+  'composite-door': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Fire-Rated Doors
+  'fire-rated-door': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Glass Balustrade
+  'glass-balustrade': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Steel Railing
+  'steel-railing': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Railing
+  'timber-railing': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Cable Railing
+  'cable-railing': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Mesh Railing
+  'mesh-railing': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Gravel
+  'gravel-paving': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Resin-Bound Gravel
+  'resin-bound-gravel': { // plastic
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 4, confidence: 'low' }
+  },
+
+  // Concrete Paving
+  'concrete-paving': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Block Paving
+  'block-paving': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Grass Reinforcement
+  'grass-reinforcement': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Decking (Timber/Composite)
+  'decking-external': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // CLT Load-Bearing Walls
+  'clt-loadbearing-walls': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Load-Bearing Masonry
+  'masonry-loadbearing': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Brick Façade
+  'brick-facade': { // ceramic
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Render Façade
+  'render-facade': { // earth
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 1, confidence: 'high' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Metal Panel Façade
+  'metal-panel-facade': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Timber Cladding Façade
+  'timber-cladding-facade': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Glass Façade System
+  'glass-facade': { // glass
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Stone Façade
+  'stone-facade': { // stone
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
+    transport: { impact: 4, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // Native Planting
+  'native-planting': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Wildflower Meadow
+  'wildflower-meadow': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Rain Garden
+  'rain-garden': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Living Wall (External)
+  'living-wall-external': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Ornamental Planting
+  'ornamental-planting': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Tree Planting
+  'tree-planting': { // concrete
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  // Oak Dining Table
+  'oak-dining-table': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Upholstered Seating
+  'upholstered-seating': { // textile
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 1, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
+  },
+
+  // Metal Chair
+  'metal-chair': { // metal
+    raw: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Plywood Furniture
+  'plywood-furniture': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Reclaimed Timber Furniture
+  'reclaimed-timber-furniture': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  // Modular Shelving
+  'modular-shelving': { // timber
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+
+// Generated 162 new profiles
+// Existing profiles: 19
+// Total will be: 181

@@ -4,6 +4,7 @@ import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } 
 import { MATERIAL_PALETTE } from '../constants';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
+import LifecycleFingerprint from './LifecycleFingerprint';
 
 type BoardItem = MaterialOption;
 
@@ -1928,6 +1929,20 @@ IMPORTANT:
                                 {item.confidence ? `Confidence: ${item.confidence}/5` : ''}
                               </p>
                             )}
+
+                            {/* Lifecycle Fingerprint */}
+                            {(() => {
+                              const materialMatch = board.find(m =>
+                                m.name === item.material ||
+                                item.material.toLowerCase().includes(m.name.toLowerCase()) ||
+                                m.name.toLowerCase().includes(item.material.toLowerCase())
+                              );
+                              return materialMatch ? (
+                                <div className="mt-3">
+                                  <LifecycleFingerprint material={materialMatch} />
+                                </div>
+                              ) : null;
+                            })()}
                           </div>
                         ))}
                       </div>

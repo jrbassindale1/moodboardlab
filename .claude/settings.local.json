@@ -5,7 +5,11 @@
       "Bash(func azure functionapp publish moodboardlab-api)",
       "Bash(npm run generate-icons:*)",
       "Bash(tee:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node -e:*)",
+      "Bash(cat:*)",
+      "Bash(python3:*)"
     ]
   }
 }
