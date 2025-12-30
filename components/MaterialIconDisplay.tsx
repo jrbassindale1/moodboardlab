@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { MaterialOption } from '../types';
+import { getCachedColoredIcon } from '../hooks/useColoredIconGenerator';
 
 interface MaterialIconDisplayProps {
   material: MaterialOption;
@@ -23,7 +24,20 @@ export function MaterialIconDisplay({
   onClick,
   className = ''
 }: MaterialIconDisplayProps) {
-  const iconBase = `/icons/${material.id}`;
+  // Priority order for icon sources:
+  // 1. Azure Blob Storage URL (server-side colored icon)
+  // 2. Cached colored icon from localStorage
+  // 3. Static icon from /public/icons/
+  // 4. Color swatch fallback
+
+  const blobUrl = material.coloredIconBlobUrl;
+  const cachedColoredIcon = !blobUrl && material.colorVariantId
+    ? getCachedColoredIcon(material.colorVariantId)
+    : null;
+
+  // Use colorVariantId if available (and not in blob/cache), otherwise use base material id
+  const iconId = material.colorVariantId || material.id;
+  const iconBase = `/icons/${iconId}`;
   const webpUrl = `${iconBase}.webp`;
   const pngUrl = `${iconBase}.png`;
   const [iconLoaded, setIconLoaded] = React.useState(false);
@@ -32,7 +46,7 @@ export function MaterialIconDisplay({
   React.useEffect(() => {
     setIconLoaded(false);
     setIconError(false);
-  }, [material.id]);
+  }, [iconId, cachedColoredIcon, blobUrl]);
 
   return (
     <div
@@ -51,7 +65,34 @@ export function MaterialIconDisplay({
           position: 'relative'
         }}
       >
-        {!iconError && (
+        {/* Priority 1: Show blob storage icon if available */}
+        {blobUrl && (
+          <img
+            src={blobUrl}
+            alt={material.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        )}
+
+        {/* Priority 2: Show cached colored icon */}
+        {!blobUrl && cachedColoredIcon && (
+          <img
+            src={cachedColoredIcon}
+            alt={material.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover'
+            }}
+          />
+        )}
+
+        {/* Priority 3: Try to load from /icons/ folder */}
+        {!blobUrl && !cachedColoredIcon && !iconError && (
           <picture>
             <source srcSet={webpUrl} type="image/webp" />
             <img
@@ -69,8 +110,9 @@ export function MaterialIconDisplay({
             />
           </picture>
         )}
-        {/* Fallback to color swatch while loading or on error */}
-        {(!iconLoaded || iconError) && (
+
+        {/* Priority 4: Fallback to color swatch while loading or on error */}
+        {!blobUrl && !cachedColoredIcon && (!iconLoaded || iconError) && (
           <div
             style={{
               width: '100%',

@@ -14,6 +14,7 @@ export interface MaterialIconRequest {
   tone?: string;
   finish?: string;
   keywords?: string[];
+  colorVariant?: string; // Optional color variant (e.g., 'Yellow', 'RAL 1003')
 }
 
 export interface MaterialIcon {
@@ -30,15 +31,18 @@ const ICON_SIZE = 512; // 512x512 for quality, can be resized in UI
  */
 function createIconPrompt(material: MaterialIconRequest): string {
   const keywordHints = material.keywords?.join(', ') || '';
+  const colorInfo = material.colorVariant
+    ? `\nColor: ${material.colorVariant} (IMPORTANT: The material MUST be rendered in ${material.colorVariant} color)`
+    : '';
 
   return `Create a simple, minimalist material swatch icon of ${material.name}.
 Style: Clean, professional architectural material sample, square format, centered.
 Material: ${material.description}
-Finish: ${material.finish || 'standard'}
+Finish: ${material.finish || 'standard'}${colorInfo}
 Keywords: ${keywordHints}
 
 Requirements:
-- Show the material texture/pattern clearly
+- Show the material texture/pattern clearly${material.colorVariant ? ` in ${material.colorVariant} color` : ''}
 - White or neutral background
 - Professional architectural representation
 - No text, labels, or borders

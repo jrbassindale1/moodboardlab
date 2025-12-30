@@ -67,3 +67,31 @@ export async function saveGeneration(payload: {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function saveColoredIcon(payload: {
+  colorVariantId: string;
+  imageDataUri: string;
+}): Promise<{
+  colorVariantId: string;
+  blobUrl: string;
+  cached: boolean;
+  createdAt?: string;
+}> {
+  const API_BASE = getApiBase();
+  const res = await fetch(`${API_BASE}/api/save-colored-icon`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      colorVariantId: payload.colorVariantId,
+      imageBase64: payload.imageDataUri,
+      mimeType: payload.imageDataUri.split(";")[0].replace("data:", "") || "image/png"
+    })
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to save colored icon: ${errorText}`);
+  }
+
+  return res.json();
+}

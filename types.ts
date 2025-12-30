@@ -59,6 +59,9 @@ export interface MaterialOption {
   isCustom?: boolean; // Whether this is a user-created custom material
   customImage?: string; // Data URL for custom material images
   customDescription?: string; // User-provided description for custom materials
+  colorVariantId?: string; // ID for colored variant (e.g., 'steel-yellow') used to load colored icons
+  colorLabel?: string; // Label for the color variant (e.g., 'Yellow')
+  coloredIconBlobUrl?: string; // Azure Blob Storage URL for colored icon (server-side storage)
 }
 
 export interface UploadedImage {

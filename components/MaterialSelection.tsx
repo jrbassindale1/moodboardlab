@@ -5,6 +5,7 @@ import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText } from '../api';
+import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -13,6 +14,51 @@ interface MaterialSelectionProps {
 }
 
 type CustomMaterialMode = 'upload' | 'describe' | 'analyse' | null;
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
+const MAX_UPLOAD_DIMENSION = 1000;
+const RESIZE_QUALITY = 0.82;
+const RESIZE_MIME = 'image/webp';
+
+const dataUrlSizeBytes = (dataUrl: string) => {
+  const base64 = dataUrl.split(',')[1] || '';
+  const padding = (base64.match(/=+$/)?.[0].length ?? 0);
+  return Math.floor((base64.length * 3) / 4) - padding;
+};
+
+const downscaleImage = (
+  dataUrl: string,
+  targetMime = RESIZE_MIME,
+  quality = RESIZE_QUALITY
+): Promise<{ dataUrl: string; width: number; height: number; mimeType: string; sizeBytes: number }> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported in this browser.'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const mime = targetMime || 'image/jpeg';
+      const resizedUrl = canvas.toDataURL(mime, quality);
+      resolve({
+        dataUrl: resizedUrl,
+        width,
+        height,
+        mimeType: mime,
+        sizeBytes: dataUrlSizeBytes(resizedUrl)
+      });
+    };
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -271,11 +317,44 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         ? `${material.finish}${labelSuffix} (${customization.tone})`
         : `${material.finish}${labelSuffix}`;
 
+      // Create a colorVariantId for icon loading (e.g., 'steel-yellow')
+      const colorVariantId = customization.label
+        ? `${material.id}-${customization.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+        : undefined;
+
       materialToAdd = {
         ...material,
         tone: customization.tone || material.tone,
         finish: finishText,
+        colorVariantId,
+        colorLabel: customization.label,
       };
+
+      // Trigger colored icon generation in the background and save blob URL
+      if (colorVariantId && customization.label) {
+        // Add material to board immediately
+        const newBoard = [...board, materialToAdd];
+        onBoardChange(newBoard);
+
+        // Generate and save icon in background
+        generateColoredIcon(materialToAdd).then(result => {
+          if (result?.blobUrl) {
+            // Update the material with the blob URL
+            const updatedBoard = newBoard.map(item =>
+              item.colorVariantId === colorVariantId
+                ? { ...item, coloredIconBlobUrl: result.blobUrl }
+                : item
+            );
+            onBoardChange(updatedBoard);
+          }
+        }).catch(err => {
+          console.error('Failed to generate colored icon:', err);
+        });
+
+        // Close modal and return early
+        setRecentlyAdded(null);
+        return;
+      }
     }
 
     if (isDuplicateColorSelection(materialToAdd)) {
@@ -337,6 +416,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!files || !files.length) return;
     const file = files[0];
     if (!file.type.startsWith('image/')) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setDetectionError('File exceeds 5 MB limit.');
+      return;
+    }
 
     setDetectionError(null);
 
@@ -348,12 +431,17 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         reader.readAsDataURL(file);
       });
 
+      const resized = await downscaleImage(dataUrl);
+
       const uploadedImg: UploadedImage = {
         id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         name: file.name,
-        dataUrl,
-        mimeType: file.type,
-        sizeBytes: file.size,
+        dataUrl: resized.dataUrl,
+        mimeType: resized.mimeType,
+        sizeBytes: resized.sizeBytes,
+        originalSizeBytes: file.size,
+        width: resized.width,
+        height: resized.height,
       };
 
       setDetectionImage(uploadedImg);
@@ -412,14 +500,13 @@ IMPORTANT:
 - Be specific and accurate. Only include materials you can clearly identify in the image.`;
 
     const payload = {
-      model: 'gemini-2.0-flash-exp',
       contents: [
         {
           parts: [
             { text: prompt },
             {
-              inline_data: {
-                mime_type: detectionImage.mimeType,
+              inlineData: {
+                mimeType: detectionImage.mimeType,
                 data: detectionImage.dataUrl.split(',')[1],
               },
             },
@@ -427,8 +514,9 @@ IMPORTANT:
         },
       ],
       generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 4096,
+        temperature: 0.3,
+        topP: 0.95,
+        topK: 40,
       },
     };
 
