@@ -54,14 +54,14 @@ const WorkflowStrip: React.FC = () => {
           <p className="font-mono text-xs uppercase tracking-widest text-gray-600">How it works</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="flex flex-col md:flex-row gap-6 items-start">
           {/* Column 1: Choose materials - portrait */}
           <div className="space-y-4 flex-shrink-0 w-full md:w-auto">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[400px] md:h-[500px] max-h-[60vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh]">
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
@@ -76,7 +76,7 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[400px] md:h-[500px] max-h-[60vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh]">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
@@ -86,14 +86,14 @@ const WorkflowStrip: React.FC = () => {
           </div>
 
           {/* Column 3: Apply to design (interactive slider) - landscape */}
-          <div className="space-y-4 flex-1 w-full md:w-auto">
+          <div className="space-y-4 flex-1 w-full md:w-auto md:min-w-0">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
               ref={imageContainerRef}
-              className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[400px] md:h-[500px] max-h-[60vh] cursor-ew-resize select-none"
+              className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh] cursor-ew-resize select-none"
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
