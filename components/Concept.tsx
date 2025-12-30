@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Wand2 } from 'lucide-react';
 import { SUSTAINABILITY_PYRAMID } from '../constants';
+import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
 import carouselA from '../images/moodboard-4.webp';
 import carouselB from '../images/moodboard-5.webp';
@@ -66,6 +67,9 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
           </div>
         </div>
       </header>
+
+      {/* Workflow Strip */}
+      <WorkflowStrip />
 
       {/* Recent Moodboards */}
       <section className="bg-white py-12 border-b border-gray-100">
