@@ -146,7 +146,7 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start max-h-[360px]">
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
@@ -161,7 +161,7 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start max-h-[360px]">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
