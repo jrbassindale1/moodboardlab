@@ -76,7 +76,7 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md w-[350px] h-[350px] md:w-[420px] md:h-[420px] max-w-full max-h-[50vh]">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
