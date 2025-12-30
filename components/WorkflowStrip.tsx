@@ -61,11 +61,11 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md max-h-[50vh]">
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
               />
             </div>
           </div>
