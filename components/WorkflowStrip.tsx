@@ -54,14 +54,15 @@ const WorkflowStrip: React.FC = () => {
           <p className="font-mono text-xs uppercase tracking-widest text-gray-600">How it works</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 items-start">
-          {/* Column 1: Choose materials - portrait */}
-          <div className="space-y-4 flex-shrink-0 w-full md:w-auto">
+        {/* Mobile: stack vertically */}
+        <div className="flex flex-col gap-6 md:hidden">
+          {/* Column 1: Choose materials */}
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md max-h-[50vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
@@ -70,30 +71,30 @@ const WorkflowStrip: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 2: Generate moodboard - square */}
-          <div className="space-y-4 flex-shrink-0 w-full md:w-auto">
+          {/* Column 2: Generate moodboard */}
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md w-[350px] h-[350px] md:w-[420px] md:h-[420px] max-w-full max-h-[50vh]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
               />
             </div>
           </div>
 
-          {/* Column 3: Apply to design (interactive slider) - landscape */}
-          <div className="space-y-4 flex-1 w-full md:w-auto md:min-w-0">
+          {/* Column 3: Apply to design */}
+          <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
               ref={imageContainerRef}
-              className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-[350px] md:h-[420px] max-h-[50vh] cursor-ew-resize select-none"
+              className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-64 cursor-ew-resize select-none"
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
@@ -101,14 +102,11 @@ const WorkflowStrip: React.FC = () => {
               onTouchEnd={handleMouseUp}
               onTouchMove={handleTouchMove}
             >
-              {/* After image (full) */}
               <img
                 src={afterImage}
                 alt="Rendered architectural design with materials applied"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-
-              {/* Before image (clipped) */}
               <div
                 className="absolute inset-0 overflow-hidden"
                 style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
@@ -119,8 +117,6 @@ const WorkflowStrip: React.FC = () => {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
-
-              {/* Slider line and handle */}
               <div
                 className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
                 style={{ left: `${sliderPosition}%` }}
@@ -132,8 +128,90 @@ const WorkflowStrip: React.FC = () => {
                   </div>
                 </div>
               </div>
+              <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
+                Before
+              </div>
+              <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
+                After
+              </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Labels */}
+        {/* Desktop: 3-column grid layout */}
+        <div className="hidden md:grid grid-cols-[auto_auto_1fr] gap-6">
+          {/* Column 1: Choose materials */}
+          <div className="space-y-4 flex flex-col">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-gray-400">01</span>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
+            </div>
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
+              <img
+                src={materialKey}
+                alt="Material selection palette showing various architectural materials"
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+
+          {/* Column 2: Generate moodboard */}
+          <div className="space-y-4 flex flex-col">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-gray-400">02</span>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
+            </div>
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
+              <img
+                src={moodboardSheet}
+                alt="Flat-lay moodboard arrangement of selected materials"
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
+
+          {/* Column 3: Apply to design */}
+          <div className="space-y-4 flex flex-col">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-gray-400">03</span>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
+            </div>
+            <div
+              ref={imageContainerRef}
+              className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 cursor-ew-resize select-none"
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              onTouchStart={handleMouseDown}
+              onTouchEnd={handleMouseUp}
+              onTouchMove={handleTouchMove}
+            >
+              <img
+                src={afterImage}
+                alt="Rendered architectural design with materials applied"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0 overflow-hidden"
+                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+              >
+                <img
+                  src={beforeImage}
+                  alt="Base architectural sketch or clay render"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+              <div
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
+                style={{ left: `${sliderPosition}%` }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white border-2 border-gray-300 rounded-full shadow-lg pointer-events-auto cursor-ew-resize flex items-center justify-center">
+                  <div className="flex gap-0.5">
+                    <div className="w-0.5 h-3 bg-gray-400"></div>
+                    <div className="w-0.5 h-3 bg-gray-400"></div>
+                  </div>
+                </div>
+              </div>
               <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
                 Before
               </div>
