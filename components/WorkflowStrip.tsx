@@ -150,7 +150,7 @@ const WorkflowStrip: React.FC = () => {
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
-                className="w-auto h-auto max-h-[360px] max-w-full"
+                className="w-auto h-auto max-h-[300px] max-w-full"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ const WorkflowStrip: React.FC = () => {
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
-                className="w-auto h-auto max-h-[360px] max-w-full"
+                className="w-auto h-auto max-h-[300px] max-w-full"
               />
             </div>
           </div>
