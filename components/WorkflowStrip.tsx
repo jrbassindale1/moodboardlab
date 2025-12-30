@@ -54,9 +54,9 @@ const WorkflowStrip: React.FC = () => {
           <p className="font-mono text-xs uppercase tracking-widest text-gray-600">How it works</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-10 gap-8 items-start">
           {/* Column 1: Choose materials */}
-          <div className="space-y-4 md:col-span-1 lg:col-span-3">
+          <div className="space-y-4 md:col-span-2 lg:col-span-2">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
@@ -71,12 +71,12 @@ const WorkflowStrip: React.FC = () => {
           </div>
 
           {/* Column 2: Generate moodboard */}
-          <div className="space-y-4 md:col-span-1 lg:col-span-3">
+          <div className="space-y-4 md:col-span-2 lg:col-span-2">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-square">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[3/4]">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
@@ -86,14 +86,14 @@ const WorkflowStrip: React.FC = () => {
           </div>
 
           {/* Column 3: Apply to design (interactive slider) */}
-          <div className="space-y-4 md:col-span-2 lg:col-span-6">
+          <div className="space-y-4 md:col-span-5 lg:col-span-6">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
               ref={imageContainerRef}
-              className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[4/3] cursor-ew-resize select-none"
+              className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[3/4] cursor-ew-resize select-none"
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
