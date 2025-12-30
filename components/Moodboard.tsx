@@ -140,6 +140,41 @@ const downscaleImage = (
     img.src = dataUrl;
   });
 
+/**
+ * Calculate the closest matching aspect ratio from Gemini's supported list
+ * Valid ratios: "1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"
+ */
+const calculateAspectRatio = (width: number, height: number): string => {
+  const ratio = width / height;
+
+  const validRatios: { label: string; value: number }[] = [
+    { label: '1:1', value: 1 },
+    { label: '3:2', value: 3 / 2 },
+    { label: '2:3', value: 2 / 3 },
+    { label: '3:4', value: 3 / 4 },
+    { label: '4:3', value: 4 / 3 },
+    { label: '4:5', value: 4 / 5 },
+    { label: '5:4', value: 5 / 4 },
+    { label: '9:16', value: 9 / 16 },
+    { label: '16:9', value: 16 / 9 },
+    { label: '21:9', value: 21 / 9 }
+  ];
+
+  // Find the closest matching ratio
+  let closest = validRatios[0];
+  let minDiff = Math.abs(ratio - closest.value);
+
+  for (const validRatio of validRatios) {
+    const diff = Math.abs(ratio - validRatio.value);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = validRatio;
+    }
+  }
+
+  return closest.label;
+};
+
 const dataUrlToInlineData = (dataUrl: string) => {
   const [meta, content] = dataUrl.split(',');
   const mimeMatch = meta?.match(/data:(.*);base64/);
@@ -1486,6 +1521,25 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
     if (mode === 'render') {
       // Image render call
       try {
+        // Determine aspect ratio based on context
+        let aspectRatio = '1:1'; // Default for moodboard generation
+
+        if (options?.useUploads && uploadedImages.length > 0) {
+          // For "Apply your materials" - calculate aspect ratio from first uploaded image
+          const firstImage = uploadedImages[0];
+          if (firstImage.width && firstImage.height) {
+            aspectRatio = calculateAspectRatio(firstImage.width, firstImage.height);
+            console.log('[Aspect Ratio]', {
+              source: 'uploaded image',
+              dimensions: `${firstImage.width}x${firstImage.height}`,
+              calculated: aspectRatio
+            });
+          }
+        } else {
+          // For moodboard generation or editing - always use 1:1
+          console.log('[Aspect Ratio]', { source: 'moodboard generation', fixed: '1:1' });
+        }
+
         const payload = {
           contents: [
             {
@@ -1506,7 +1560,7 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
             responseModalities: ['IMAGE']
           },
           imageConfig: {
-            aspectRatio: '1:1',
+            aspectRatio,
             imageSize: '1K'
           }
         };
