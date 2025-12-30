@@ -5,45 +5,46 @@ import beforeImage from '../images/frontpage/moodboard-sheet-before.webp';
 import afterImage from '../images/frontpage/moodboard-sheet-after.webp';
 
 const WorkflowStrip: React.FC = () => {
-  const [isAnimated, setIsAnimated] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
+  const handleMove = (clientX: number) => {
+    if (!imageContainerRef.current) return;
+
+    const rect = imageContainerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPosition(percentage);
+  };
+
+  const handleMouseDown = () => setIsDragging(true);
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) handleMove(e.clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      handleMove(e.touches[0].clientX);
+    }
+  };
+
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const handleGlobalMouseUp = () => setIsDragging(false);
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile || !imageContainerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !isAnimated) {
-            setIsAnimated(true);
-          }
-        });
-      },
-      {
-        threshold: 0.45,
-        rootMargin: '0px',
-      }
-    );
-
-    observer.observe(imageContainerRef.current);
+    if (isDragging) {
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+      document.addEventListener('mouseleave', handleGlobalMouseUp);
+    }
 
     return () => {
-      if (imageContainerRef.current) {
-        observer.unobserve(imageContainerRef.current);
-      }
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('mouseleave', handleGlobalMouseUp);
     };
-  }, [isAnimated, isMobile]);
+  }, [isDragging]);
 
   return (
     <section className="bg-white py-16 border-b border-gray-100">
@@ -53,14 +54,14 @@ const WorkflowStrip: React.FC = () => {
           <p className="font-mono text-xs uppercase tracking-widest text-gray-600">How it works</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-8">
           {/* Column 1: Choose materials */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-1 lg:col-span-3">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[4/3]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[3/4]">
               <img
                 src={materialKey}
                 alt="Material selection palette showing various architectural materials"
@@ -70,12 +71,12 @@ const WorkflowStrip: React.FC = () => {
           </div>
 
           {/* Column 2: Generate moodboard */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-1 lg:col-span-3">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[4/3]">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-square">
               <img
                 src={moodboardSheet}
                 alt="Flat-lay moodboard arrangement of selected materials"
@@ -84,38 +85,61 @@ const WorkflowStrip: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 3: Apply to design (animated) */}
-          <div className="space-y-4 md:col-span-2 lg:col-span-1">
+          {/* Column 3: Apply to design (interactive slider) */}
+          <div className="space-y-4 md:col-span-2 lg:col-span-6">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
               ref={imageContainerRef}
-              className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[4/3]"
+              className="relative overflow-hidden border border-gray-200 bg-white shadow-md aspect-[4/3] cursor-ew-resize select-none"
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              onTouchStart={handleMouseDown}
+              onTouchEnd={handleMouseUp}
+              onTouchMove={handleTouchMove}
             >
-              {isMobile ? (
+              {/* After image (full) */}
+              <img
+                src={afterImage}
+                alt="Rendered architectural design with materials applied"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+
+              {/* Before image (clipped) */}
+              <div
+                className="absolute inset-0 overflow-hidden"
+                style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+              >
                 <img
-                  src={afterImage}
-                  alt="Rendered architectural design with materials applied"
-                  className="w-full h-full object-cover"
+                  src={beforeImage}
+                  alt="Base architectural sketch or clay render"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
-              ) : (
-                <>
-                  <img
-                    src={beforeImage}
-                    alt="Base architectural sketch or clay render"
-                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-                    style={{ opacity: isAnimated ? 0 : 1 }}
-                  />
-                  <img
-                    src={afterImage}
-                    alt="Rendered architectural design with materials applied"
-                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out"
-                    style={{ opacity: isAnimated ? 1 : 0 }}
-                  />
-                </>
-              )}
+              </div>
+
+              {/* Slider line and handle */}
+              <div
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none"
+                style={{ left: `${sliderPosition}%` }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white border-2 border-gray-300 rounded-full shadow-lg pointer-events-auto cursor-ew-resize flex items-center justify-center">
+                  <div className="flex gap-0.5">
+                    <div className="w-0.5 h-3 bg-gray-400"></div>
+                    <div className="w-0.5 h-3 bg-gray-400"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Labels */}
+              <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
+                Before
+              </div>
+              <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
+                After
+              </div>
             </div>
           </div>
         </div>
