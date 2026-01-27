@@ -23,6 +23,41 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
     groups: [
       { id: 'primary-structure', label: 'Primary Structure', path: 'Structure>Primary Structure' },
       { id: 'secondary-structure', label: 'Secondary Structure', path: 'Structure>Secondary Structure' },
+      {
+        id: 'secondary-floors',
+        label: 'Secondary Structure — Floors and Horizontal Elements',
+        path: 'Structure>Secondary Structure — Floors and Horizontal Elements'
+      },
+      {
+        id: 'secondary-roof',
+        label: 'Secondary Structure — Roof Structure',
+        path: 'Structure>Secondary Structure — Roof Structure'
+      },
+      {
+        id: 'secondary-wall-edge',
+        label: 'Secondary Structure — Wall and Edge Support',
+        path: 'Structure>Secondary Structure — Wall and Edge Support'
+      },
+      {
+        id: 'secondary-bracing',
+        label: 'Secondary Structure — Bracing and Stability',
+        path: 'Structure>Secondary Structure — Bracing and Stability'
+      },
+      {
+        id: 'secondary-stairs',
+        label: 'Secondary Structure — Stairs and Circulation Structure',
+        path: 'Structure>Secondary Structure — Stairs and Circulation Structure'
+      },
+      {
+        id: 'secondary-facade',
+        label: 'Secondary Structure — Façade and Envelope Support',
+        path: 'Structure>Secondary Structure — Façade and Envelope Support'
+      },
+      {
+        id: 'secondary-canopies',
+        label: 'Secondary Structure — Canopies and Lightweight Structures',
+        path: 'Structure>Secondary Structure — Canopies and Lightweight Structures'
+      },
       { id: 'envelope-substructure', label: 'Envelope Substructure', path: 'Structure>Envelope Substructure' }
     ]
   },
