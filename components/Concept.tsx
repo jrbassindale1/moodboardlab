@@ -203,29 +203,6 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Sustainability Pyramid */}
-      <section className="bg-white py-16">
-        <div className="max-w-screen-2xl mx-auto px-6 space-y-8">
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Sustainability Pyramid</p>
-          </div>
-          <p className="font-sans text-gray-700 max-w-3xl">
-            Moodboard Lab helps you work top-down: avoid and reduce first, reuse where you can, prioritise bio-based
-            options, choose low-carbon conventional materials, and only then consider offsets.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-            {SUSTAINABILITY_PYRAMID.map((tier, idx) => (
-              <div key={tier.id} className="border border-gray-200 p-4 bg-gray-50">
-                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">{idx + 1}</div>
-                <div className="font-display uppercase text-sm mt-1">{tier.title}</div>
-                <p className="font-sans text-xs text-gray-700 mt-2 leading-relaxed">{tier.guidance}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="bg-black text-white py-16">
         <div className="max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">

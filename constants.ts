@@ -15,34 +15,6 @@ export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
 };
 const contextImage = moodboardMain;
 
-export const SUSTAINABILITY_PYRAMID = [
-  {
-    id: 'avoid',
-    title: 'Avoid and Reduce',
-    guidance: 'Eliminate unnecessary materials, reduce quantities, and prioritize passive design moves before adding new products.'
-  },
-  {
-    id: 'reuse',
-    title: 'Re-use & Circular',
-    guidance: 'Prefer reclaimed, remanufactured, or recycled materials and design for disassembly and future reuse.'
-  },
-  {
-    id: 'renewable',
-    title: 'Renewable & Bio-based',
-    guidance: 'Choose rapidly renewable, bio-based materials (timber, cork, hemp) with transparent sourcing and responsible forestry.'
-  },
-  {
-    id: 'lowcarbon',
-    title: 'Low-Carbon Conventional',
-    guidance: 'When conventional materials are needed, pick low-carbon mixes, recycled content, and verified EPD-backed products.'
-  },
-  {
-    id: 'offset',
-    title: 'Offset & Compensate',
-    guidance: 'As a last step, account for residual impacts with credible offsets; focus first on reduction and substitution.'
-  }
-];
-
 export const PROJECT_IMAGES: ProjectImage[] = [
   {
     id: 'concept-board',
@@ -1217,6 +1189,391 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['secondary', 'structure', 'steel'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'composite-metal-deck-slabs',
+    name: 'Composite Metal Deck Slabs',
+    tone: '#c7cdd3',
+    finish: 'Steel deck + concrete topping',
+    description: 'Profiled steel deck with concrete topping for efficient secondary floor spanning.',
+    keywords: ['floor', 'composite', 'steel', 'deck'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'precast-concrete-floor-planks',
+    name: 'Precast Concrete Floor Planks',
+    tone: '#bdb8b0',
+    finish: 'Precast hollow-core planks',
+    description: 'Factory-cast hollow-core or solid planks for fast floor installation and clean soffits.',
+    keywords: ['precast', 'concrete', 'floor', 'planks'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-joists-floor-cassettes',
+    name: 'Timber Joists and Floor Cassettes',
+    tone: '#caa27a',
+    finish: 'Engineered timber joists',
+    description: 'Engineered timber joists or prefabricated floor cassettes for lightweight floors.',
+    keywords: ['timber', 'joists', 'floor', 'cassettes'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'clt-floor-panels',
+    name: 'CLT Floor Panels',
+    tone: '#c6a173',
+    finish: 'CLT floor plates',
+    description: 'Cross-laminated timber floor panels providing stiffness with warm exposed underside.',
+    keywords: ['clt', 'timber', 'floor', 'panels'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'secondary-steel-infill-beams',
+    name: 'Secondary Steel Beams (Infill)',
+    tone: '#c2c8ce',
+    finish: 'Painted infill beams',
+    description: 'Infill steel beams spanning between primaries to support decking and service zones.',
+    keywords: ['steel', 'infill', 'beams', 'secondary'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'raised-access-floor-systems',
+    name: 'Raised Access Floor Systems',
+    tone: '#d0d3d6',
+    finish: 'Pedestal access floor',
+    description: 'Modular access flooring on pedestals for flexible services distribution.',
+    keywords: ['raised floor', 'access', 'services', 'modular'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-rafters-purlins',
+    name: 'Timber Rafters and Purlins',
+    tone: '#c79c6c',
+    finish: 'Sawn or engineered timber',
+    description: 'Timber rafters and purlins forming secondary roof structure with warm exposed grain.',
+    keywords: ['timber', 'rafters', 'purlins', 'roof'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'steel-purlins',
+    name: 'Steel Purlins (Z or C)',
+    tone: '#c5cacf',
+    finish: 'Galvanized Z/C sections',
+    description: 'Cold-formed steel purlins for lightweight roof build-ups and quick erection.',
+    keywords: ['steel', 'purlins', 'roof', 'cold-formed'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'glulam-roof-beams',
+    name: 'Glulam Roof Beams',
+    tone: '#c19a6f',
+    finish: 'Glulam roof members',
+    description: 'Glulam roof beams for long-span secondary roof structure with warm timber expression.',
+    keywords: ['glulam', 'timber', 'roof', 'beams'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'secondary-trusses',
+    name: 'Secondary Trusses',
+    tone: '#c3c8cd',
+    finish: 'Steel or timber trusses',
+    description: 'Secondary trusses distributing roof loads and supporting plant or skylight zones.',
+    keywords: ['trusses', 'secondary', 'roof', 'structure'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'clt-roof-panels',
+    name: 'CLT Roof Panels',
+    tone: '#c7a274',
+    finish: 'CLT roof plates',
+    description: 'Cross-laminated timber roof panels for rapid installation and exposed timber soffits.',
+    keywords: ['clt', 'timber', 'roof', 'panels'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'lightweight-space-frame-infill',
+    name: 'Lightweight Space Frame Infill Members',
+    tone: '#c9ced3',
+    finish: 'Lightweight steel space frame',
+    description: 'Lightweight space frame infill members for long spans with minimal depth.',
+    keywords: ['space frame', 'lightweight', 'steel', 'roof'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'edge-beams',
+    name: 'Edge Beams',
+    tone: '#c2c7cc',
+    finish: 'Steel or concrete edge beams',
+    description: 'Edge beams stabilizing slab edges and supporting façade or balustrade loads.',
+    keywords: ['edge beam', 'support', 'structure'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'spandrel-beams',
+    name: 'Spandrel Beams',
+    tone: '#c4c9ce',
+    finish: 'Perimeter spandrel beams',
+    description: 'Perimeter spandrel beams supporting façade lines and distributing edge loads.',
+    keywords: ['spandrel', 'perimeter', 'beam'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'ring-beams',
+    name: 'Ring Beams',
+    tone: '#c3c7cb',
+    finish: 'Continuous ring beam',
+    description: 'Continuous ring beams tying floor plates and stabilizing façade edges.',
+    keywords: ['ring beam', 'tie', 'structure'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'secondary-lintels',
+    name: 'Secondary Lintels',
+    tone: '#c6cacf',
+    finish: 'Steel or precast lintels',
+    description: 'Secondary lintels spanning openings to support masonry or cladding.',
+    keywords: ['lintel', 'openings', 'support'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'masonry-shelf-angles',
+    name: 'Shelf Angles for Masonry Support',
+    tone: '#c1c6cb',
+    finish: 'Galvanized shelf angles',
+    description: 'Shelf angles providing intermittent masonry support at floor edges.',
+    keywords: ['shelf angle', 'masonry', 'support'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'cross-bracing-steel',
+    name: 'Cross Bracing (Steel Rods/Flats)',
+    tone: '#c2c8cd',
+    finish: 'Steel rods or flats',
+    description: 'Cross-bracing in rods or flats for lateral stability and sway control.',
+    keywords: ['bracing', 'cross', 'steel', 'lateral'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-wind-bracing',
+    name: 'Timber Wind Bracing',
+    tone: '#caa27a',
+    finish: 'Timber bracing',
+    description: 'Timber wind bracing elements for lightweight lateral stability.',
+    keywords: ['timber', 'bracing', 'wind', 'lateral'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'k-x-bracing-secondary',
+    name: 'K-Bracing / X-Bracing (Secondary Bays)',
+    tone: '#c4c9ce',
+    finish: 'Secondary bay bracing',
+    description: 'K- or X-bracing in secondary bays to supplement primary stability systems.',
+    keywords: ['k-bracing', 'x-bracing', 'secondary', 'stability'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'diaphragm-bracing-elements',
+    name: 'Diaphragm Bracing Elements',
+    tone: '#c6cad0',
+    finish: 'Deck or panel diaphragms',
+    description: 'Diaphragm bracing elements using decks or panels to distribute lateral loads.',
+    keywords: ['diaphragm', 'bracing', 'lateral'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'secondary-shear-panels',
+    name: 'Secondary Shear Panels',
+    tone: '#c3c8cc',
+    finish: 'Shear panels or walls',
+    description: 'Secondary shear panels providing localized stiffness and load transfer.',
+    keywords: ['shear', 'panel', 'stiffness', 'lateral'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'steel-stair-stringers',
+    name: 'Steel Stair Stringers',
+    tone: '#c3c8cd',
+    finish: 'Painted steel stringers',
+    description: 'Steel stair stringers supporting treads and landings in open stair configurations.',
+    keywords: ['stairs', 'stringer', 'steel', 'circulation'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-stair-carriages',
+    name: 'Timber Stair Carriages',
+    tone: '#caa279',
+    finish: 'Timber stair carriages',
+    description: 'Timber stair carriages providing warm, tactile secondary stair support.',
+    keywords: ['stairs', 'timber', 'carriage', 'circulation'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'stair-landings-trimmers',
+    name: 'Landings and Stair Trimmers',
+    tone: '#c4c9ce',
+    finish: 'Steel or timber trimmers',
+    description: 'Landing and trimmer members framing stair openings and supporting platforms.',
+    keywords: ['stairs', 'landing', 'trimmer', 'support'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'cantilevered-stair-treads',
+    name: 'Cantilevered Stair Treads',
+    tone: '#c7a275',
+    finish: 'Timber or steel treads',
+    description: 'Cantilevered stair treads fixed to concealed carriers for a floating appearance.',
+    keywords: ['stairs', 'cantilever', 'treads', 'circulation'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'facade-support-rails',
+    name: 'Façade Support Rails',
+    tone: '#c4c9ce',
+    finish: 'Aluminum or galvanized rails',
+    description: 'Façade support rails for cladding alignment and load transfer.',
+    keywords: ['facade', 'rails', 'support', 'cladding'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'rainscreen-carrier-systems',
+    name: 'Rainscreen Carrier Systems',
+    tone: '#c6cbd0',
+    finish: 'Carrier rails and brackets',
+    description: 'Carrier systems supporting rainscreen panels with ventilated cavity.',
+    keywords: ['rainscreen', 'carrier', 'support', 'envelope'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'curtain-wall-mullions-transoms',
+    name: 'Curtain Wall Mullions and Transoms',
+    tone: '#c5cacf',
+    finish: 'Aluminum curtain wall grid',
+    description: 'Mullion and transom framing supporting glazing units and façade loads.',
+    keywords: ['curtain wall', 'mullions', 'transoms', 'glazing'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'secondary-facade-brackets',
+    name: 'Secondary Façade Brackets',
+    tone: '#c2c7cc',
+    finish: 'Adjustable bracketry',
+    description: 'Adjustable brackets fixing façade systems back to structure.',
+    keywords: ['facade', 'brackets', 'support', 'adjustable'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'balcony-support-beams',
+    name: 'Balcony Support Beams',
+    tone: '#c3c8cd',
+    finish: 'Steel balcony beams',
+    description: 'Secondary beams supporting balcony structures and edge loading.',
+    keywords: ['balcony', 'beams', 'support', 'edge'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'steel-canopy-frames',
+    name: 'Steel Canopy Frames',
+    tone: '#c4c9ce',
+    finish: 'Painted steel canopy',
+    description: 'Lightweight steel canopy frames for entrances and sheltered edges.',
+    keywords: ['canopy', 'steel', 'frame', 'lightweight'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'timber-pergola-structures',
+    name: 'Timber Pergola Structures',
+    tone: '#caa079',
+    finish: 'Timber pergola members',
+    description: 'Timber pergola structures providing shade, rhythm, and biophilic detail.',
+    keywords: ['pergola', 'timber', 'shade', 'structure'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'tension-rods-tie-members',
+    name: 'Tension Rods and Tie Members',
+    tone: '#c3c8cc',
+    finish: 'Stainless or galvanized rods',
+    description: 'Tension rods and tie members stabilizing lightweight structures and canopies.',
+    keywords: ['tension', 'tie', 'rods', 'stability'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'secondary-cantilever-arms',
+    name: 'Secondary Cantilever Arms',
+    tone: '#c4c9ce',
+    finish: 'Cantilever support arms',
+    description: 'Secondary cantilever arms projecting from primary frame to support canopies and edges.',
+    keywords: ['cantilever', 'arms', 'support', 'secondary'],
+    category: 'structure',
+    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
     carbonIntensity: 'high'
   },
   {
