@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Search, ShoppingCart, X, Upload, FileText, Camera } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
@@ -61,6 +61,7 @@ const downscaleImage = (
   });
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
+  const boardRef = useRef<MaterialOption[]>(board);
   const [searchTerm, setSearchTerm] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
   const [sortBy, setSortBy] = useState<'featured' | 'name'>('featured');
@@ -84,6 +85,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isFadingOut, setIsFadingOut] = useState(false);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
+
+  useEffect(() => {
+    boardRef.current = board;
+  }, [board]);
 
   // Helper to get user-friendly category display names
   const getCategoryDisplayName = (category: MaterialOption['category']): string => {
@@ -288,8 +293,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return category?.label || 'Materials';
   };
 
-  const isDuplicateColorSelection = (candidate: MaterialOption) =>
-    board.some((item) => {
+  const isDuplicateColorSelection = (candidate: MaterialOption, boardSnapshot = boardRef.current) =>
+    boardSnapshot.some((item) => {
       if (item.id !== candidate.id) return false;
       const itemTone = item.tone?.toLowerCase().trim() || '';
       const candidateTone = candidate.tone?.toLowerCase().trim() || '';
@@ -311,6 +316,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     let materialToAdd = material;
 
     // If customization is provided, create a new material with custom finish/tone
+    const baseBoard = boardRef.current;
+
     if (customization) {
       const labelSuffix = customization.label ? ` — ${customization.label}` : '';
       const finishText = customization.tone
@@ -333,8 +340,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       // Trigger colored icon generation in the background and save blob URL
       if (colorVariantId && customization.label) {
         // Add material to board immediately
-        const newBoard = [...board, materialToAdd];
+        const newBoard = [...baseBoard, materialToAdd];
         onBoardChange(newBoard);
+        boardRef.current = newBoard;
 
         // Generate and save icon in background
         generateColoredIcon(materialToAdd).then(result => {
@@ -346,6 +354,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
                 : item
             );
             onBoardChange(updatedBoard);
+            boardRef.current = updatedBoard;
           }
         }).catch(err => {
           console.error('Failed to generate colored icon:', err);
@@ -357,12 +366,14 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       }
     }
 
-    if (isDuplicateColorSelection(materialToAdd)) {
+    if (isDuplicateColorSelection(materialToAdd, baseBoard)) {
       return;
     }
 
     // Add to board
-    onBoardChange([...board, materialToAdd]);
+    const nextBoard = [...baseBoard, materialToAdd];
+    onBoardChange(nextBoard);
+    boardRef.current = nextBoard;
 
     // Close the modal after adding
     setRecentlyAdded(null);
