@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2025-12-17T10:07:56.630Z",
-  "totalIcons": 173,
-  "totalSizeMB": 127.27,
+  "generatedAt": "2026-01-27T17:52:11.954Z",
+  "totalIcons": 392,
+  "totalSizeMB": 151.85,
   "icons": [
     {
       "id": "steel-frame",
@@ -429,6 +429,181 @@
       "exists": true
     },
     {
+      "id": "composite-metal-deck-slabs",
+      "name": "Composite Metal Deck Slabs",
+      "exists": true
+    },
+    {
+      "id": "precast-concrete-floor-planks",
+      "name": "Precast Concrete Floor Planks",
+      "exists": true
+    },
+    {
+      "id": "timber-joists-floor-cassettes",
+      "name": "Timber Joists and Floor Cassettes",
+      "exists": true
+    },
+    {
+      "id": "clt-floor-panels",
+      "name": "CLT Floor Panels",
+      "exists": true
+    },
+    {
+      "id": "secondary-steel-infill-beams",
+      "name": "Secondary Steel Beams (Infill)",
+      "exists": true
+    },
+    {
+      "id": "raised-access-floor-systems",
+      "name": "Raised Access Floor Systems",
+      "exists": true
+    },
+    {
+      "id": "timber-rafters-purlins",
+      "name": "Timber Rafters and Purlins",
+      "exists": true
+    },
+    {
+      "id": "steel-purlins",
+      "name": "Steel Purlins (Z or C)",
+      "exists": true
+    },
+    {
+      "id": "glulam-roof-beams",
+      "name": "Glulam Roof Beams",
+      "exists": true
+    },
+    {
+      "id": "secondary-trusses",
+      "name": "Secondary Trusses",
+      "exists": true
+    },
+    {
+      "id": "clt-roof-panels",
+      "name": "CLT Roof Panels",
+      "exists": true
+    },
+    {
+      "id": "lightweight-space-frame-infill",
+      "name": "Lightweight Space Frame Infill Members",
+      "exists": true
+    },
+    {
+      "id": "edge-beams",
+      "name": "Edge Beams",
+      "exists": true
+    },
+    {
+      "id": "spandrel-beams",
+      "name": "Spandrel Beams",
+      "exists": true
+    },
+    {
+      "id": "ring-beams",
+      "name": "Ring Beams",
+      "exists": true
+    },
+    {
+      "id": "secondary-lintels",
+      "name": "Secondary Lintels",
+      "exists": true
+    },
+    {
+      "id": "masonry-shelf-angles",
+      "name": "Shelf Angles for Masonry Support",
+      "exists": true
+    },
+    {
+      "id": "cross-bracing-steel",
+      "name": "Cross Bracing (Steel Rods/Flats)",
+      "exists": true
+    },
+    {
+      "id": "timber-wind-bracing",
+      "name": "Timber Wind Bracing",
+      "exists": true
+    },
+    {
+      "id": "k-x-bracing-secondary",
+      "name": "K-Bracing / X-Bracing (Secondary Bays)",
+      "exists": true
+    },
+    {
+      "id": "diaphragm-bracing-elements",
+      "name": "Diaphragm Bracing Elements",
+      "exists": true
+    },
+    {
+      "id": "secondary-shear-panels",
+      "name": "Secondary Shear Panels",
+      "exists": true
+    },
+    {
+      "id": "steel-stair-stringers",
+      "name": "Steel Stair Stringers",
+      "exists": true
+    },
+    {
+      "id": "timber-stair-carriages",
+      "name": "Timber Stair Carriages",
+      "exists": true
+    },
+    {
+      "id": "stair-landings-trimmers",
+      "name": "Landings and Stair Trimmers",
+      "exists": true
+    },
+    {
+      "id": "cantilevered-stair-treads",
+      "name": "Cantilevered Stair Treads",
+      "exists": true
+    },
+    {
+      "id": "facade-support-rails",
+      "name": "Façade Support Rails",
+      "exists": true
+    },
+    {
+      "id": "rainscreen-carrier-systems",
+      "name": "Rainscreen Carrier Systems",
+      "exists": true
+    },
+    {
+      "id": "curtain-wall-mullions-transoms",
+      "name": "Curtain Wall Mullions and Transoms",
+      "exists": true
+    },
+    {
+      "id": "secondary-facade-brackets",
+      "name": "Secondary Façade Brackets",
+      "exists": true
+    },
+    {
+      "id": "balcony-support-beams",
+      "name": "Balcony Support Beams",
+      "exists": true
+    },
+    {
+      "id": "steel-canopy-frames",
+      "name": "Steel Canopy Frames",
+      "exists": true
+    },
+    {
+      "id": "timber-pergola-structures",
+      "name": "Timber Pergola Structures",
+      "exists": true
+    },
+    {
+      "id": "tension-rods-tie-members",
+      "name": "Tension Rods and Tie Members",
+      "exists": true
+    },
+    {
+      "id": "secondary-cantilever-arms",
+      "name": "Secondary Cantilever Arms",
+      "exists": true
+    },
+    {
       "id": "brick-loadbearing",
       "name": "Brick Load-Bearing Walls",
       "exists": true
@@ -696,7 +871,7 @@
     {
       "id": "brick-slip-rainscreen",
       "name": "Brick Slip Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "stone-facade",
@@ -706,82 +881,82 @@
     {
       "id": "stone-rainscreen",
       "name": "Stone Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "precast-concrete-panels",
       "name": "Precast Concrete Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "gfrc-grc-panels",
       "name": "GFRC / GRC Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "slate-cladding",
       "name": "Slate Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "hemp-lime-wall",
       "name": "Hemp-Lime Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "timber-rainscreen",
       "name": "Timber Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "charred-timber-cladding",
       "name": "Charred Timber Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "cork-rainscreen",
       "name": "Cork Rainscreen",
-      "exists": false
+      "exists": true
     },
     {
       "id": "wood-fibre-lime-render",
       "name": "Wood-Fibre + Lime Render",
-      "exists": false
+      "exists": true
     },
     {
       "id": "living-green-wall",
       "name": "Living Green Wall",
-      "exists": false
+      "exists": true
     },
     {
       "id": "zinc-cladding",
       "name": "Zinc Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "copper-cladding",
       "name": "Copper Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "weathering-steel-cladding",
       "name": "Weathering Steel Cladding",
-      "exists": false
+      "exists": true
     },
     {
       "id": "insulated-metal-panels",
       "name": "Insulated Metal Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "fibre-cement-panels",
       "name": "Fibre Cement Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "metal-composite-panels",
       "name": "Metal Composite Panels",
-      "exists": false
+      "exists": true
     },
     {
       "id": "glass-facade",
@@ -791,7 +966,7 @@
     {
       "id": "etfe-tensile-facade",
       "name": "ETFE / Tensile Façade System",
-      "exists": false
+      "exists": true
     },
     {
       "id": "native-planting",
