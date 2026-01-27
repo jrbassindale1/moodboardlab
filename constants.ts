@@ -936,7 +936,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description:
       'Exposed concrete soffit with a light sandblast and clear sealer to celebrate structure and thermal mass.',
     keywords: ['soffit', 'concrete', 'thermal mass'],
-    category: 'soffit',
+    category: 'ceiling',
     carbonIntensity: 'high'
   },
   {
@@ -947,7 +947,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description:
       'Linear timber slats on a dark acoustic backing to soften reverberation while keeping services accessible.',
     keywords: ['soffit', 'timber', 'acoustic'],
-    category: 'soffit',
+    category: 'ceiling',
     carbonIntensity: 'low'
   },
   {
@@ -958,7 +958,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description:
       'Micro-perforated metal soffit panels with acoustic fleece and crisp shadow gaps for a technical expression.',
     keywords: ['soffit', 'metal', 'perforated'],
-    category: 'soffit',
+    category: 'ceiling',
     carbonIntensity: 'high'
   },
   {
@@ -1216,7 +1216,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary steel framing, balustrades, and mezzanine members supporting the primary grid.',
     keywords: ['secondary', 'structure', 'steel'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure', 'Internal>Exposed Structure'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {

@@ -16,7 +16,6 @@ export const CATEGORIES: Category[] = [
     children: [
       { id: 'primary-structure', label: 'Primary Structure' },
       { id: 'secondary-structure', label: 'Secondary Structure' },
-      { id: 'exposed-structure', label: 'Exposed Structure' },
     ],
   },
   {
@@ -47,7 +46,6 @@ export const CATEGORIES: Category[] = [
     children: [
       { id: 'external-ground', label: 'External Ground' },
       { id: 'landscaping', label: 'Landscaping' },
-      { id: 'hardscape-paving', label: 'Hardscape / Paving' },
     ],
   },
   {

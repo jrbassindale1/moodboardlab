@@ -8,7 +8,7 @@ const CATEGORY_TO_TREE_PATH: Record<MaterialCategory, string[]> = {
   'wall-internal': ['Interiors>Walls'],
   external: ['Envelope>Façade'],
   ceiling: ['Interiors>Ceilings'],
-  soffit: ['Structure>Exposed Structure'],
+  soffit: ['Interiors>Ceilings'],
   window: ['Envelope>Glazing'],
   roof: ['Envelope>Roofing'],
   'paint-wall': ['Interiors>Walls'],
@@ -20,7 +20,7 @@ const CATEGORY_TO_TREE_PATH: Record<MaterialCategory, string[]> = {
   wallpaper: ['Interiors>Walls'],
   'acoustic-panel': ['Interiors>Walls', 'Interiors>Ceilings'],
   'timber-slat': ['Interiors>Walls', 'Interiors>Ceilings'],
-  'exposed-structure': ['Structure>Exposed Structure'],
+  'exposed-structure': ['Structure>Secondary Structure'],
   joinery: ['Interiors>Joinery'],
   fixture: ['Interiors>Fixtures & Fittings'],
   landscape: ['Landscape>Landscaping'],
@@ -124,7 +124,7 @@ function updatePathFormat(oldPath: string): string | null {
     'Structure>Primary Structure': 'Structure>Primary Structure',
     'Structure>Secondary Structure': 'Structure>Secondary Structure',
     'Structure>Envelope Substructure': 'Structure>Secondary Structure',
-    'Internal>Exposed Structure': 'Structure>Exposed Structure',
+    'Internal>Exposed Structure': 'Structure>Secondary Structure',
     'Internal>Balustrade & Railings': 'Elements>Balustrades & Railings',
   };
 
