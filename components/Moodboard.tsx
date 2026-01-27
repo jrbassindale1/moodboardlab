@@ -1286,7 +1286,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 4. tone: A hex color code representing the EXACT dominant color of the material as seen in the photo (e.g., "#d8b185" for natural oak, "#c5c0b5" for light grey concrete). CRITICAL: Analyze the actual color in the image carefully.
 5. category: One of these categories: floor, structure, finish, wall-internal, external, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, joinery, fixture, landscape, insulation, door, balustrade, external-ground
 6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
-7. carbonIntensity: Either "low" or "high" based on the material's embodied carbon (e.g., timber is "low", concrete is "high")
+7. carbonIntensity: Either "low", "medium", or "high" based on the material's embodied carbon (e.g., timber is "low", zinc cladding is "medium", concrete is "high")
 
 Return ONLY a valid JSON object in this exact format:
 {
@@ -1353,7 +1353,7 @@ IMPORTANT:
             description: mat.description || '',
             keywords: Array.isArray(mat.keywords) ? mat.keywords : ['detected', 'custom'],
             category: category,
-            carbonIntensity: (mat.carbonIntensity === 'low' || mat.carbonIntensity === 'high')
+            carbonIntensity: (mat.carbonIntensity === 'low' || mat.carbonIntensity === 'medium' || mat.carbonIntensity === 'high')
               ? mat.carbonIntensity
               : undefined,
             treePaths: treePaths

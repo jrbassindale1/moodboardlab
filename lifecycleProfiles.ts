@@ -1552,6 +1552,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 2, confidence: 'medium' }
   },
 
+  // === FAÇADE — Masonry and Mineral-Based ===
   'brick-facade': {
     raw: { impact: 2, confidence: 'high' },
     manufacturing: { impact: 5, confidence: 'high' },
@@ -1562,44 +1563,14 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 2, confidence: 'medium' }
   },
 
-  'render-facade': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
-    transport: { impact: 1, confidence: 'high' },
-    installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'metal-panel-facade': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'timber-cladding-facade': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 2, confidence: 'high' },
+  'brick-slip-rainscreen': {
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 2, confidence: 'medium' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'glass-facade': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 4, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
     maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'stone-facade': {
@@ -1610,6 +1581,115 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     inUse: { impact: 1, confidence: 'high' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // stone-rainscreen, slate-cladding — profiles defined earlier in file
+
+  'precast-concrete-panels': {
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 4, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  'gfrc-grc-panels': {
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // === FAÇADE — Bio-Based and Low-Carbon ===
+  // hemp-lime-wall, charred-timber-cladding, cork-rainscreen — profiles defined earlier in file
+
+  'timber-rainscreen': {
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  'wood-fibre-lime-render': {
+    raw: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 1, confidence: 'high' },
+    transport: { impact: 1, confidence: 'high' },
+    installation: { impact: 2, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'high' }
+  },
+
+  'living-green-wall': {
+    raw: { impact: 1, confidence: 'medium' },
+    manufacturing: { impact: 2, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 3, confidence: 'medium' },
+    endOfLife: { impact: 1, confidence: 'medium' }
+  },
+
+  // === FAÇADE — Metal and Industrial Systems ===
+  // zinc-cladding, copper-cladding, metal-composite-panels — profiles defined earlier in file
+
+  'weathering-steel-cladding': {
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  'insulated-metal-panels': {
+    raw: { impact: 4, confidence: 'high' },
+    manufacturing: { impact: 5, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  'fibre-cement-panels': {
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'high' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 2, confidence: 'medium' }
+  },
+
+  // === FAÇADE — Lightweight and Transparent ===
+  'glass-facade': {
+    raw: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
+    transport: { impact: 3, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'high' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 1, confidence: 'high' },
+    endOfLife: { impact: 3, confidence: 'medium' }
+  },
+
+  'etfe-tensile-facade': {
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 1, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 1, confidence: 'high' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'low' }
   },
 
   'native-planting': {

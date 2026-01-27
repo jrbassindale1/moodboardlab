@@ -54,7 +54,7 @@ export interface MaterialOption {
   supportsColor?: boolean;
   finishOptions?: string[];
   treePaths?: string[];
-  carbonIntensity?: 'low' | 'high';
+  carbonIntensity?: 'low' | 'medium' | 'high';
   tags?: string[]; // Material attribute tags (e.g., 'paint', 'timber-panels', etc.)
   isCustom?: boolean; // Whether this is a user-created custom material
   customImage?: string; // Data URL for custom material images

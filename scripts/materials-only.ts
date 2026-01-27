@@ -1665,72 +1665,240 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     treePaths: ['Structure>Primary Structure'],
     carbonIntensity: 'high'
   },
-  // === ENVELOPE > FAÇADE ===
+  // === ENVELOPE > FAÇADE — Masonry and Mineral-Based ===
   {
     id: 'brick-facade',
     name: 'Brick Façade',
     tone: '#c07858',
-    finish: 'Traditional clay brick',
-    description: 'Traditional clay brick façade; durable, low maintenance, and timeless aesthetic.',
-    keywords: ['facade', 'brick', 'clay', 'external'],
+    finish: 'Traditional clay brickwork',
+    description: 'Traditional clay brickwork, including facing brick and contextual blends.',
+    keywords: ['facade', 'brick', 'clay', 'masonry', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'high'
   },
   {
-    id: 'render-facade',
-    name: 'Render Façade',
-    tone: '#f0ebe5',
-    finish: 'Acrylic or lime render',
-    description: 'Rendered façade finish over insulation or masonry; smooth or textured finish available.',
-    keywords: ['facade', 'render', 'plaster', 'external'],
+    id: 'brick-slip-rainscreen',
+    name: 'Brick Slip Rainscreen',
+    tone: '#b86b4f',
+    finish: 'Brick-slip on carrier rails',
+    description: 'Lightweight brick-slip systems on carrier rails, offering masonry appearance with reduced material use.',
+    keywords: ['facade', 'brick', 'slip', 'rainscreen', 'lightweight', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
-  },
-  {
-    id: 'metal-panel-facade',
-    name: 'Metal Panel Façade',
-    tone: '#8b8b8b',
-    finish: 'Standing seam or composite panels',
-    description: 'Metal panel cladding system; lightweight, durable, and wide range of finishes available.',
-    keywords: ['facade', 'metal', 'cladding', 'external'],
-    category: 'external',
-    treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
-  },
-  {
-    id: 'timber-cladding-facade',
-    name: 'Timber Cladding Façade',
-    tone: '#9d7a5a',
-    finish: 'Vertical or horizontal timber boards',
-    description: 'Natural timber cladding; warm appearance, renewable, and ages gracefully.',
-    keywords: ['facade', 'timber', 'cladding', 'external'],
-    category: 'external',
-    treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
-  },
-  {
-    id: 'glass-facade',
-    name: 'Glass Façade System',
-    tone: '#c8d9e0',
-    finish: 'Structural glazing or curtain wall',
-    description: 'Continuous glass façade with minimal framing; maximizes daylight and views.',
-    keywords: ['facade', 'glass', 'curtain wall', 'glazing'],
-    category: 'external',
-    treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'medium'
   },
   {
     id: 'stone-facade',
     name: 'Stone Façade',
     tone: '#b5a899',
     finish: 'Natural stone cladding',
-    description: 'Natural stone façade panels; prestigious appearance and extremely durable.',
-    keywords: ['facade', 'stone', 'cladding', 'external'],
+    description: 'Natural stone cladding or rainscreen systems; highly durable with long service life.',
+    keywords: ['facade', 'stone', 'cladding', 'natural', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'high'
+  },
+  {
+    id: 'stone-rainscreen',
+    name: 'Stone Rainscreen',
+    tone: '#a89e90',
+    finish: 'Ventilated stone panels on rails',
+    description: 'Ventilated stone panels on rails; demountable and suitable for contemporary construction.',
+    keywords: ['facade', 'stone', 'rainscreen', 'ventilated', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
+  },
+  {
+    id: 'precast-concrete-panels',
+    name: 'Precast Concrete Panels',
+    tone: '#b0aaa2',
+    finish: 'Factory-made concrete panels',
+    description: 'Factory-made concrete façade panels providing durability, thermal mass, and robust performance.',
+    keywords: ['facade', 'concrete', 'precast', 'panels', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'gfrc-grc-panels',
+    name: 'GFRC / GRC Panels',
+    tone: '#c2bdb5',
+    finish: 'Glass-fibre reinforced concrete',
+    description: 'Glass-fibre reinforced concrete panels enabling thinner, lighter façade elements with sculptural potential.',
+    keywords: ['facade', 'gfrc', 'grc', 'concrete', 'lightweight', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
+  },
+  {
+    id: 'slate-cladding',
+    name: 'Slate Cladding',
+    tone: '#5a6068',
+    finish: 'Split or sawn slate panels',
+    description: 'Natural slate panels with split or sawn finish; extremely durable and weather resistant.',
+    keywords: ['facade', 'slate', 'cladding', 'natural', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
+  },
+  // === ENVELOPE > FAÇADE — Bio-Based and Low-Carbon ===
+  {
+    id: 'hemp-lime-wall',
+    name: 'Hemp-Lime Wall',
+    tone: '#d8cfb8',
+    finish: 'Cast-in-place hemp-lime',
+    description: 'Cast-in-place hemp-lime wall build-ups offering carbon storage and vapour-open performance.',
+    keywords: ['facade', 'hemp', 'lime', 'bio-based', 'carbon-storage', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'timber-rainscreen',
+    name: 'Timber Rainscreen',
+    tone: '#9d7a5a',
+    finish: 'FSC timber boards or battens',
+    description: 'FSC timber boards or battens used as ventilated cladding; renewable and visually warm.',
+    keywords: ['facade', 'timber', 'rainscreen', 'fsc', 'renewable', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'charred-timber-cladding',
+    name: 'Charred Timber Cladding',
+    tone: '#3a3530',
+    finish: 'Charred FSC timber boards',
+    description: 'Charred FSC timber boards for enhanced durability without chemical treatments.',
+    keywords: ['facade', 'timber', 'charred', 'shou-sugi-ban', 'cladding', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'cork-rainscreen',
+    name: 'Cork Rainscreen',
+    tone: '#b89870',
+    finish: 'Expanded cork panels',
+    description: 'Expanded cork panels providing bio-based, insulating, and naturally fire-resistant cladding.',
+    keywords: ['facade', 'cork', 'rainscreen', 'bio-based', 'insulating', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'wood-fibre-lime-render',
+    name: 'Wood-Fibre + Lime Render',
+    tone: '#e8e0d0',
+    finish: 'Wood-fibre insulation with lime render',
+    description: 'Bio-based wood-fibre insulation with vapour-open mineral or lime render finish.',
+    keywords: ['facade', 'wood-fibre', 'lime', 'render', 'bio-based', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  {
+    id: 'living-green-wall',
+    name: 'Living Green Wall',
+    tone: '#5c8a50',
+    finish: 'Modular planted façade',
+    description: 'Modular planted façade systems supporting biodiversity, cooling, and visual softening.',
+    keywords: ['facade', 'green-wall', 'living', 'biodiversity', 'planted', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'low'
+  },
+  // === ENVELOPE > FAÇADE — Metal and Industrial Systems ===
+  {
+    id: 'zinc-cladding',
+    name: 'Zinc Cladding',
+    tone: '#7a8a8f',
+    finish: 'Standing seam or flat-lock zinc',
+    description: 'Standing seam or flat-lock zinc; self-patinating and long-life.',
+    keywords: ['facade', 'zinc', 'cladding', 'metal', 'standing-seam', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
+  },
+  {
+    id: 'copper-cladding',
+    name: 'Copper Cladding',
+    tone: '#b87333',
+    finish: 'Copper sheets or shingles',
+    description: 'Copper sheets or shingles developing natural verdigris patina over time.',
+    keywords: ['facade', 'copper', 'cladding', 'metal', 'patina', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'weathering-steel-cladding',
+    name: 'Weathering Steel Cladding',
+    tone: '#8b4513',
+    finish: 'Corten steel panels',
+    description: 'Corten steel panels forming protective oxide layer without coatings.',
+    keywords: ['facade', 'corten', 'steel', 'weathering', 'cladding', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'insulated-metal-panels',
+    name: 'Insulated Metal Panels',
+    tone: '#929292',
+    finish: 'Factory-assembled insulated metal panels',
+    description: 'Factory-assembled metal panels with integrated insulation; performance-led façade solution.',
+    keywords: ['facade', 'metal', 'insulated', 'panels', 'composite', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'fibre-cement-panels',
+    name: 'Fibre Cement Panels',
+    tone: '#a0a0a0',
+    finish: 'Fibre cement rainscreen panels',
+    description: 'Durable, low-maintenance rainscreen panels with a wide range of finishes.',
+    keywords: ['facade', 'fibre-cement', 'rainscreen', 'panels', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
+  },
+  {
+    id: 'metal-composite-panels',
+    name: 'Metal Composite Panels',
+    tone: '#8b8b8b',
+    finish: 'Aluminium composite panels',
+    description: 'Lightweight aluminium composite panels for economical and versatile façade design.',
+    keywords: ['facade', 'aluminium', 'composite', 'panels', 'metal', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  // === ENVELOPE > FAÇADE — Lightweight and Transparent ===
+  {
+    id: 'glass-facade',
+    name: 'Glass Façade System',
+    tone: '#c8d9e0',
+    finish: 'Curtain walling or structural glazing',
+    description: 'Curtain walling or structural glazing systems maximising daylight and visual connection.',
+    keywords: ['facade', 'glass', 'curtain-wall', 'glazing', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'etfe-tensile-facade',
+    name: 'ETFE / Tensile Façade System',
+    tone: '#d8e8ef',
+    finish: 'ETFE cushions or tensile membrane',
+    description: 'Lightweight membrane or cushion systems offering high daylight with minimal material use.',
+    keywords: ['facade', 'etfe', 'tensile', 'membrane', 'lightweight', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'medium'
   },
   // === LANDSCAPE > LANDSCAPING ===
   {

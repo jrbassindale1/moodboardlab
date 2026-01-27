@@ -774,19 +774,94 @@
       "exists": true
     },
     {
-      "id": "render-facade",
-      "name": "Render Façade",
+      "id": "brick-slip-rainscreen",
+      "name": "Brick Slip Rainscreen",
+      "exists": false
+    },
+    {
+      "id": "stone-facade",
+      "name": "Stone Façade",
       "exists": true
     },
     {
-      "id": "metal-panel-facade",
-      "name": "Metal Panel Façade",
-      "exists": true
+      "id": "stone-rainscreen",
+      "name": "Stone Rainscreen",
+      "exists": false
     },
     {
-      "id": "timber-cladding-facade",
-      "name": "Timber Cladding Façade",
-      "exists": true
+      "id": "precast-concrete-panels",
+      "name": "Precast Concrete Panels",
+      "exists": false
+    },
+    {
+      "id": "gfrc-grc-panels",
+      "name": "GFRC / GRC Panels",
+      "exists": false
+    },
+    {
+      "id": "slate-cladding",
+      "name": "Slate Cladding",
+      "exists": false
+    },
+    {
+      "id": "hemp-lime-wall",
+      "name": "Hemp-Lime Wall",
+      "exists": false
+    },
+    {
+      "id": "timber-rainscreen",
+      "name": "Timber Rainscreen",
+      "exists": false
+    },
+    {
+      "id": "charred-timber-cladding",
+      "name": "Charred Timber Cladding",
+      "exists": false
+    },
+    {
+      "id": "cork-rainscreen",
+      "name": "Cork Rainscreen",
+      "exists": false
+    },
+    {
+      "id": "wood-fibre-lime-render",
+      "name": "Wood-Fibre + Lime Render",
+      "exists": false
+    },
+    {
+      "id": "living-green-wall",
+      "name": "Living Green Wall",
+      "exists": false
+    },
+    {
+      "id": "zinc-cladding",
+      "name": "Zinc Cladding",
+      "exists": false
+    },
+    {
+      "id": "copper-cladding",
+      "name": "Copper Cladding",
+      "exists": false
+    },
+    {
+      "id": "weathering-steel-cladding",
+      "name": "Weathering Steel Cladding",
+      "exists": false
+    },
+    {
+      "id": "insulated-metal-panels",
+      "name": "Insulated Metal Panels",
+      "exists": false
+    },
+    {
+      "id": "fibre-cement-panels",
+      "name": "Fibre Cement Panels",
+      "exists": false
+    },
+    {
+      "id": "metal-composite-panels",
+      "name": "Metal Composite Panels",
+      "exists": false
     },
     {
       "id": "glass-facade",
@@ -794,9 +869,9 @@
       "exists": true
     },
     {
-      "id": "stone-facade",
-      "name": "Stone Façade",
-      "exists": true
+      "id": "etfe-tensile-facade",
+      "name": "ETFE / Tensile Façade System",
+      "exists": false
     },
     {
       "id": "native-planting",
