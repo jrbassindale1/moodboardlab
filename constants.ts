@@ -1188,7 +1188,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary steel framing, balustrades, and mezzanine members supporting the primary grid.',
     keywords: ['secondary', 'structure', 'steel'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1199,7 +1199,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Profiled steel deck with concrete topping for efficient secondary floor spanning.',
     keywords: ['floor', 'composite', 'steel', 'deck'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1210,7 +1210,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Factory-cast hollow-core or solid planks for fast floor installation and clean soffits.',
     keywords: ['precast', 'concrete', 'floor', 'planks'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1221,7 +1221,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Engineered timber joists or prefabricated floor cassettes for lightweight floors.',
     keywords: ['timber', 'joists', 'floor', 'cassettes'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'low'
   },
   {
@@ -1232,7 +1232,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Cross-laminated timber floor panels providing stiffness with warm exposed underside.',
     keywords: ['clt', 'timber', 'floor', 'panels'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'low'
   },
   {
@@ -1243,7 +1243,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Infill steel beams spanning between primaries to support decking and service zones.',
     keywords: ['steel', 'infill', 'beams', 'secondary'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1254,7 +1254,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Modular access flooring on pedestals for flexible services distribution.',
     keywords: ['raised floor', 'access', 'services', 'modular'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Floors and Horizontal Elements'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1265,7 +1265,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Timber rafters and purlins forming secondary roof structure with warm exposed grain.',
     keywords: ['timber', 'rafters', 'purlins', 'roof'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'low'
   },
   {
@@ -1276,7 +1276,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Cold-formed steel purlins for lightweight roof build-ups and quick erection.',
     keywords: ['steel', 'purlins', 'roof', 'cold-formed'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1287,7 +1287,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Glulam roof beams for long-span secondary roof structure with warm timber expression.',
     keywords: ['glulam', 'timber', 'roof', 'beams'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'low'
   },
   {
@@ -1298,7 +1298,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary trusses distributing roof loads and supporting plant or skylight zones.',
     keywords: ['trusses', 'secondary', 'roof', 'structure'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1309,7 +1309,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Cross-laminated timber roof panels for rapid installation and exposed timber soffits.',
     keywords: ['clt', 'timber', 'roof', 'panels'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'low'
   },
   {
@@ -1320,7 +1320,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight space frame infill members for long spans with minimal depth.',
     keywords: ['space frame', 'lightweight', 'steel', 'roof'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Roof Structure'],
+    treePaths: ['Structure>Floors and Roofs'],
     carbonIntensity: 'high'
   },
   {
@@ -1331,7 +1331,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Edge beams stabilizing slab edges and supporting façade or balustrade loads.',
     keywords: ['edge beam', 'support', 'structure'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1342,7 +1342,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Perimeter spandrel beams supporting façade lines and distributing edge loads.',
     keywords: ['spandrel', 'perimeter', 'beam'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1353,7 +1353,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Continuous ring beams tying floor plates and stabilizing façade edges.',
     keywords: ['ring beam', 'tie', 'structure'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1364,7 +1364,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary lintels spanning openings to support masonry or cladding.',
     keywords: ['lintel', 'openings', 'support'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1375,7 +1375,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Shelf angles providing intermittent masonry support at floor edges.',
     keywords: ['shelf angle', 'masonry', 'support'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Wall and Edge Support'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1386,7 +1386,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Cross-bracing in rods or flats for lateral stability and sway control.',
     keywords: ['bracing', 'cross', 'steel', 'lateral'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    treePaths: ['Structure>Stability and Bracing'],
     carbonIntensity: 'high'
   },
   {
@@ -1397,7 +1397,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Timber wind bracing elements for lightweight lateral stability.',
     keywords: ['timber', 'bracing', 'wind', 'lateral'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    treePaths: ['Structure>Stability and Bracing'],
     carbonIntensity: 'low'
   },
   {
@@ -1408,7 +1408,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'K- or X-bracing in secondary bays to supplement primary stability systems.',
     keywords: ['k-bracing', 'x-bracing', 'secondary', 'stability'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    treePaths: ['Structure>Stability and Bracing'],
     carbonIntensity: 'high'
   },
   {
@@ -1419,7 +1419,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Diaphragm bracing elements using decks or panels to distribute lateral loads.',
     keywords: ['diaphragm', 'bracing', 'lateral'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    treePaths: ['Structure>Stability and Bracing'],
     carbonIntensity: 'high'
   },
   {
@@ -1430,7 +1430,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary shear panels providing localized stiffness and load transfer.',
     keywords: ['shear', 'panel', 'stiffness', 'lateral'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Bracing and Stability'],
+    treePaths: ['Structure>Stability and Bracing'],
     carbonIntensity: 'high'
   },
   {
@@ -1441,7 +1441,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Steel stair stringers supporting treads and landings in open stair configurations.',
     keywords: ['stairs', 'stringer', 'steel', 'circulation'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1452,7 +1452,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Timber stair carriages providing warm, tactile secondary stair support.',
     keywords: ['stairs', 'timber', 'carriage', 'circulation'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'low'
   },
   {
@@ -1463,7 +1463,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Landing and trimmer members framing stair openings and supporting platforms.',
     keywords: ['stairs', 'landing', 'trimmer', 'support'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1474,7 +1474,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Cantilevered stair treads fixed to concealed carriers for a floating appearance.',
     keywords: ['stairs', 'cantilever', 'treads', 'circulation'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Stairs and Circulation Structure'],
+    treePaths: ['Structure>Secondary Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1485,7 +1485,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Façade support rails for cladding alignment and load transfer.',
     keywords: ['facade', 'rails', 'support', 'cladding'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1496,7 +1496,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Carrier systems supporting rainscreen panels with ventilated cavity.',
     keywords: ['rainscreen', 'carrier', 'support', 'envelope'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1507,7 +1507,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Mullion and transom framing supporting glazing units and façade loads.',
     keywords: ['curtain wall', 'mullions', 'transoms', 'glazing'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1518,7 +1518,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Adjustable brackets fixing façade systems back to structure.',
     keywords: ['facade', 'brackets', 'support', 'adjustable'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1529,7 +1529,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary beams supporting balcony structures and edge loading.',
     keywords: ['balcony', 'beams', 'support', 'edge'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Façade and Envelope Support'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1540,7 +1540,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight steel canopy frames for entrances and sheltered edges.',
     keywords: ['canopy', 'steel', 'frame', 'lightweight'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1551,7 +1551,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Timber pergola structures providing shade, rhythm, and biophilic detail.',
     keywords: ['pergola', 'timber', 'shade', 'structure'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'low'
   },
   {
@@ -1562,7 +1562,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Tension rods and tie members stabilizing lightweight structures and canopies.',
     keywords: ['tension', 'tie', 'rods', 'stability'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {
@@ -1573,7 +1573,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Secondary cantilever arms projecting from primary frame to support canopies and edges.',
     keywords: ['cantilever', 'arms', 'support', 'secondary'],
     category: 'structure',
-    treePaths: ['Structure>Secondary Structure — Canopies and Lightweight Structures'],
+    treePaths: ['Structure>Envelope and Lightweight Structure'],
     carbonIntensity: 'high'
   },
   {

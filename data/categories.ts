@@ -16,13 +16,9 @@ export const CATEGORIES: Category[] = [
     children: [
       { id: 'primary-structure', label: 'Primary Structure' },
       { id: 'secondary-structure', label: 'Secondary Structure' },
-      { id: 'secondary-floors', label: 'Secondary Structure — Floors and Horizontal Elements' },
-      { id: 'secondary-roof', label: 'Secondary Structure — Roof Structure' },
-      { id: 'secondary-wall-edge', label: 'Secondary Structure — Wall and Edge Support' },
-      { id: 'secondary-bracing', label: 'Secondary Structure — Bracing and Stability' },
-      { id: 'secondary-stairs', label: 'Secondary Structure — Stairs and Circulation' },
-      { id: 'secondary-facade', label: 'Secondary Structure — Façade and Envelope Support' },
-      { id: 'secondary-canopies', label: 'Secondary Structure — Canopies and Lightweight Structures' },
+      { id: 'floors-roofs', label: 'Floors and Roofs' },
+      { id: 'stability-bracing', label: 'Stability and Bracing' },
+      { id: 'envelope-lightweight', label: 'Envelope and Lightweight Structure' },
     ],
   },
   {
