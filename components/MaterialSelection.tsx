@@ -6,6 +6,7 @@ import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
+import { generateMaterialIcon } from '../utils/materialIconGenerator';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -423,7 +424,29 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       customDescription: customMaterialDescription || undefined,
     };
 
-    handleAdd(customMaterial);
+    handleAdd(customMaterial, undefined, true);
+
+    // If no custom image was uploaded, generate an AI thumbnail in the background
+    if (!customMaterialImage) {
+      generateMaterialIcon({
+        id: customMaterial.id,
+        name: customMaterial.name,
+        description: customMaterial.description,
+        tone: customMaterial.tone,
+        finish: customMaterial.finish,
+        keywords: customMaterial.keywords,
+      }).then(icon => {
+        const updated = boardRef.current.map(item =>
+          item.id === customMaterial.id
+            ? { ...item, customImage: icon.dataUri }
+            : item
+        );
+        onBoardChange(updated);
+        boardRef.current = updated;
+      }).catch(err => {
+        console.error('Failed to generate custom material thumbnail:', err);
+      });
+    }
 
     // Reset form
     setCustomMaterialMode(null);
@@ -937,6 +960,29 @@ IMPORTANT:
                             onClick={() => {
                               const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
                               selectedMaterials.forEach((mat) => handleAdd(mat, undefined, true));
+
+                              // Generate AI thumbnails for detected materials in the background
+                              selectedMaterials.forEach((mat) => {
+                                generateMaterialIcon({
+                                  id: mat.id,
+                                  name: mat.name,
+                                  description: mat.description,
+                                  tone: mat.tone,
+                                  finish: mat.finish,
+                                  keywords: mat.keywords,
+                                }).then(icon => {
+                                  const updated = boardRef.current.map(item =>
+                                    item.id === mat.id
+                                      ? { ...item, customImage: icon.dataUri }
+                                      : item
+                                  );
+                                  onBoardChange(updated);
+                                  boardRef.current = updated;
+                                }).catch(err => {
+                                  console.error(`Failed to generate thumbnail for ${mat.name}:`, err);
+                                });
+                              });
+
                               setCustomMaterialMode('analyse');
                               setDetectionImage(null);
                               setDetectedMaterials([]);

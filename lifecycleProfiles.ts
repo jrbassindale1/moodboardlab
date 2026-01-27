@@ -52,47 +52,6 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 1, confidence: 'high' } // Return to earth
   },
 
-  // TERRACOTTA
-  'terracotta-wall': {
-    raw: { impact: 2, confidence: 'high' }, // Clay extraction
-    manufacturing: { impact: 5, confidence: 'high' }, // Kiln firing very energy-intensive
-    transport: { impact: 4, confidence: 'medium' }, // Often imported, heavy
-    installation: { impact: 2, confidence: 'high' }, // Rainscreen fixing
-    inUse: { impact: 1, confidence: 'high' }, // Inert
-    maintenance: { impact: 1, confidence: 'high' }, // Very low
-    endOfLife: { impact: 2, confidence: 'medium' } // Can be crushed/reused
-  },
-  'terracotta-panels': {
-    raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 4, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
-
-  // CHARRED TIMBER
-  'charred-timber-cladding': {
-    raw: { impact: 1, confidence: 'high' }, // FSC timber
-    manufacturing: { impact: 2, confidence: 'medium' }, // Charring process
-    transport: { impact: 2, confidence: 'medium' }, // Varies by source
-    installation: { impact: 2, confidence: 'high' }, // Standard cladding
-    inUse: { impact: 1, confidence: 'high' }, // Carbon storage
-    maintenance: { impact: 1, confidence: 'high' }, // No coating needed
-    endOfLife: { impact: 1, confidence: 'high' } // Biodegradable
-  },
-
-  // GFRC
-  'gfrc-panels': {
-    raw: { impact: 3, confidence: 'high' }, // Cement + glass fiber
-    manufacturing: { impact: 4, confidence: 'high' }, // Energy-intensive molding
-    transport: { impact: 3, confidence: 'medium' }, // Moderate weight
-    installation: { impact: 2, confidence: 'high' }, // Mechanical fixing
-    inUse: { impact: 1, confidence: 'high' }, // Inert
-    maintenance: { impact: 1, confidence: 'high' }, // Low
-    endOfLife: { impact: 3, confidence: 'medium' } // Difficult to recycle
-  },
 
   // TIMBER FLOORING
   'timber-flooring': {
@@ -187,16 +146,6 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 2, confidence: 'medium' }
   },
 
-  // HEMP/BIO-BASED
-  'hemp-lime-wall': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' }, // Carbon negative
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
 
   // Add defaults for other common materials
   'polished-concrete': {
@@ -209,16 +158,6 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 3, confidence: 'medium' }
   },
 
-  'timber-rainscreen-larch': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 2, confidence: 'medium' }, // May need treatment
-    endOfLife: { impact: 1, confidence: 'high' }
-  }
-,
 
   // === AUTO-GENERATED PROFILES ===
 
@@ -632,115 +571,6 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 2, confidence: 'low' }
   },
 
-  'green-wall': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
-  },
-
-  'stone-rainscreen': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 3, confidence: 'high' },
-    transport: { impact: 4, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
-
-  'woodfibre-render': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 2, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 2, confidence: 'medium' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'zinc-cladding': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'copper-cladding': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'fiber-cement-panels': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
-  },
-
-  'metal-composite-panels': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'weathering-steel-panels': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'slate-cladding': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 3, confidence: 'high' },
-    transport: { impact: 4, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
-
-  'cork-rainscreen': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-
-  'recycled-plastic-cladding': {
-    raw: { impact: 4, confidence: 'high' },
-    manufacturing: { impact: 4, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 1, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 4, confidence: 'low' }
-  },
 
   'perforated-metal-ceiling': {
     raw: { impact: 5, confidence: 'high' },
