@@ -90,6 +90,15 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     boardRef.current = board;
   }, [board]);
 
+  useEffect(() => {
+    if (!selectedCategory || !selectedCategory.startsWith('Custom>')) return;
+    if (selectedCategory.endsWith('Analyse Photo')) {
+      setCustomMaterialMode('analyse');
+    } else {
+      setCustomMaterialMode('describe');
+    }
+  }, [selectedCategory]);
+
   // Helper to get user-friendly category display names
   const getCategoryDisplayName = (category: MaterialOption['category']): string => {
     const categoryMap: Record<MaterialOption['category'], string> = {
@@ -783,40 +792,14 @@ IMPORTANT:
             {/* Custom Material Creation */}
             {isCustomCategory ? (
               <div className="space-y-6">
-                {!customMaterialMode ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Add Custom Material Option */}
-                    <button
-                      onClick={() => setCustomMaterialMode('describe')}
-                      className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
-                    >
-                      <FileText className="w-12 h-12 mb-4 text-gray-400" />
-                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Add Custom Material</h3>
-                      <p className="text-sm text-gray-600 font-sans">
-                        Create a material card with a description and optional image
-                      </p>
-                    </button>
-
-                    {/* Analyze Photo Option */}
-                    <button
-                      onClick={() => setCustomMaterialMode('analyse')}
-                      className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors text-left"
-                    >
-                      <Camera className="w-12 h-12 mb-4 text-gray-400" />
-                      <h3 className="font-display uppercase tracking-wide text-base mb-2">Analyze Photo</h3>
-                      <p className="text-sm text-gray-600 font-sans">
-                        AI will identify all materials in a photo
-                      </p>
-                    </button>
-                  </div>
-                ) : customMaterialMode === 'analyse' ? (
+                {customMaterialMode === 'analyse' ? (
                   /* AI Photo Analysis */
                   <div className="max-w-2xl space-y-6 border border-arch-line p-6">
                     <div className="flex items-center justify-between">
                       <h3 className="font-display uppercase tracking-widest text-lg">Analyze Photo</h3>
                       <button
                         onClick={() => {
-                          setCustomMaterialMode(null);
+                          setCustomMaterialMode('analyse');
                           setDetectionImage(null);
                           setDetectedMaterials([]);
                           setDetectionError(null);
@@ -954,7 +937,7 @@ IMPORTANT:
                             onClick={() => {
                               const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
                               selectedMaterials.forEach((mat) => handleAdd(mat, undefined, true));
-                              setCustomMaterialMode(null);
+                              setCustomMaterialMode('analyse');
                               setDetectionImage(null);
                               setDetectedMaterials([]);
                               setSelectedMaterialIds(new Set());
