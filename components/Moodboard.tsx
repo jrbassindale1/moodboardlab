@@ -1986,35 +1986,8 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
             {moodboardRenderUrl && (
               <div className="space-y-4">
                 <div className="border border-gray-200 p-4 bg-white space-y-3">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                      Moodboard Render
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
-                        disabled={downloadingId === 'moodboard'}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                      >
-                        {downloadingId === 'moodboard' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Preparing...
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                          Download
-                        </>
-                      )}
-                    </button>
-                    <button
-                        onClick={handleMobileSaveReport}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
-                      >
-                        Save report (PDF)
-                      </button>
-                    </div>
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                    Moodboard Render
                   </div>
                   <div className="w-full border border-gray-200 bg-gray-50 relative overflow-hidden">
                     <img
@@ -2033,6 +2006,31 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                       </div>
                     )}
                   </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
+                    disabled={downloadingId === 'moodboard'}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {downloadingId === 'moodboard' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <ImageDown className="w-4 h-4" />
+                        Download
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleMobileSaveReport}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
+                  >
+                    Save report (PDF)
+                  </button>
                 </div>
                 <div className="border border-gray-200 p-4 bg-white space-y-2">
                   <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
