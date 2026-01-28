@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import materialKey from '../images/frontpage/moodboard_key.webp';
 import moodboardSheet from '../images/frontpage/moodboard_sheet1.webp';
 import beforeImage from '../images/frontpage/moodboard-sheet-before.webp';
@@ -7,44 +7,33 @@ import afterImage from '../images/frontpage/moodboard-sheet-after.webp';
 const WorkflowStrip: React.FC = () => {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
-  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const activeContainerRef = useRef<HTMLDivElement | null>(null);
 
   const handleMove = (clientX: number) => {
-    if (!imageContainerRef.current) return;
+    const container = activeContainerRef.current;
+    if (!container) return;
 
-    const rect = imageContainerRef.current.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderPosition(percentage);
   };
 
-  const handleMouseDown = () => setIsDragging(true);
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    activeContainerRef.current = e.currentTarget;
+    setIsDragging(true);
+  };
 
-  const handleMouseUp = () => setIsDragging(false);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isDragging) handleMove(e.clientX);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches.length > 0) {
-      handleMove(e.touches[0].clientX);
-    }
+  const handlePointerUp = () => {
+    setIsDragging(false);
+    activeContainerRef.current = null;
   };
-
-  useEffect(() => {
-    const handleGlobalMouseUp = () => setIsDragging(false);
-
-    if (isDragging) {
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-      document.addEventListener('mouseleave', handleGlobalMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
-      document.removeEventListener('mouseleave', handleGlobalMouseUp);
-    };
-  }, [isDragging]);
 
   return (
     <section className="bg-white py-16 border-b border-gray-100">
@@ -93,14 +82,12 @@ const WorkflowStrip: React.FC = () => {
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
-              ref={imageContainerRef}
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-64 cursor-ew-resize select-none"
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
-              onTouchMove={handleTouchMove}
+              style={{ touchAction: 'none' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             >
               <img
                 src={afterImage}
@@ -177,14 +164,12 @@ const WorkflowStrip: React.FC = () => {
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
             <div
-              ref={imageContainerRef}
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 cursor-ew-resize select-none"
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
-              onTouchMove={handleTouchMove}
+              style={{ touchAction: 'none' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             >
               <img
                 src={afterImage}
