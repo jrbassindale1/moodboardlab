@@ -12,7 +12,8 @@
       "Bash(python3:*)",
       "Bash(npx tsc:*)",
       "Bash(comm -23:*)",
-      "Bash(node /private/tmp/claude/-Users-jr-bassindale-moodboard-lab/74b18fa0-76b6-4d05-bf63-5230a2c662b0/scratchpad/check-missing.js:*)"
+      "Bash(node /private/tmp/claude/-Users-jr-bassindale-moodboard-lab/74b18fa0-76b6-4d05-bf63-5230a2c662b0/scratchpad/check-missing.js:*)",
+      "Bash(npm run optimize-icons:*)"
     ]
   }
 }
