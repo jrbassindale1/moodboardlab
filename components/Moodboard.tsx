@@ -2,11 +2,37 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { MATERIAL_LIFECYCLE_PROFILES, LifecycleStageKey } from '../lifecycleProfiles';
+import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import LifecycleFingerprint from './LifecycleFingerprint';
+
+// Sustainability report utilities
+import type {
+  EnhancedSustainabilityInsight,
+  MaterialMetrics,
+  SystemLevelSummary,
+  ClientSummary,
+  Hotspot,
+  UKCheck,
+  Benefit,
+  Risk,
+} from '../types/sustainability';
+import { calculateMaterialMetrics } from '../utils/sustainabilityScoring';
+import { generateDesignRisk, generateDesignResponse } from '../utils/designConsequences';
+import { detectSynergies, detectConflicts, generateNetStatement } from '../utils/synergyConflictRules';
+import { validateInsights } from '../utils/qaValidation';
+import { generateClientSummary } from '../utils/clientSummary';
+import {
+  createPDFContext,
+  renderClientSummaryPage,
+  renderComparativeDashboard,
+  renderSystemSummaryPage,
+  renderUKComplianceDashboard,
+  renderEnhancedMaterialSection,
+  addDisclaimer,
+} from '../utils/pdfSections';
 
 type BoardItem = MaterialOption;
 
@@ -84,16 +110,8 @@ const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[
   }
 ];
 
-type SustainabilityInsight = {
-  id: string;
-  title: string;
-  headline: string;
-  hotspots: string[];
-  whyItLooksLikeThis: string;
-  designLevers: string[];
-  whatCouldChange: string[];
-  ukChecks: string[];
-};
+// Use enhanced sustainability insight type from types/sustainability.ts
+type SustainabilityInsight = EnhancedSustainabilityInsight;
 
 interface MoodboardProps {
   onNavigate?: (page: string) => void;
@@ -753,196 +771,124 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 
   const generateReportPdf = () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 48;
-    let cursorY = margin;
-
-    const ensureSpace = (needed = 0) => {
-      if (cursorY + needed > pageHeight - margin) {
-        doc.addPage();
-        cursorY = margin;
-      }
-    };
-
-    const addHeading = (text: string, size = 16) => {
-      ensureSpace(size * 1.6);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(size);
-      doc.text(text, margin, cursorY);
-      cursorY += size + 10;
-    };
-
-    const addParagraph = (text: string, size = 12, gap = 8) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(size);
-      const maxWidth = pageWidth - margin * 2;
-      const lines = doc.splitTextToSize(text, maxWidth);
-      lines.forEach((line) => {
-        ensureSpace(size * 1.2);
-        doc.text(line, margin, cursorY);
-        cursorY += size + 4;
-      });
-      cursorY += gap;
-    };
-
-    const renderLifecycleFingerprint = (materialId: string, materialName: string) => {
-      const profile = MATERIAL_LIFECYCLE_PROFILES[materialId];
-      if (!profile) return;
-
-      const stageLabels = ['RAW', 'MFG', 'TRN', 'INS', 'USE', 'MNT', 'EOL'];
-      const stageKeys: LifecycleStageKey[] = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'];
-
-      ensureSpace(60);
-
-      // Material name
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text(materialName, margin, cursorY);
-      cursorY += 16;
-
-      // Draw fingerprint
-      const dotSize = 4;
-      const dotGap = 2;
-      const stageWidth = 50;
-      const startX = margin;
-
-      stageKeys.forEach((key, stageIndex) => {
-        const stageData = profile[key];
-        const xPos = startX + stageIndex * stageWidth;
-
-        // Stage label
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        doc.text(stageLabels[stageIndex], xPos, cursorY);
-
-        // Draw dots as small squares
-        for (let i = 1; i <= 5; i++) {
-          const dotX = xPos + (i - 1) * (dotSize + dotGap);
-          const dotY = cursorY + 6 - dotSize / 2;
-          const isFilled = i <= stageData.impact;
-
-          if (isFilled) {
-            if (stageData.confidence === 'low') {
-              // Outline only
-              doc.setDrawColor(100);
-              doc.setFillColor(255, 255, 255);
-              doc.setLineWidth(0.5);
-              doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
-            } else if (stageData.confidence === 'medium') {
-              // Lighter fill
-              doc.setFillColor(150, 150, 150);
-              doc.rect(dotX, dotY, dotSize, dotSize, 'F');
-            } else {
-              // Solid
-              doc.setFillColor(0, 0, 0);
-              doc.rect(dotX, dotY, dotSize, dotSize, 'F');
-            }
-          } else {
-            // Empty dot
-            doc.setDrawColor(200, 200, 200);
-            doc.setFillColor(255, 255, 255);
-            doc.setLineWidth(0.5);
-            doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
-          }
-        }
-
-        // Confidence indicator
-        if (stageData.confidence === 'low' || stageData.confidence === 'medium') {
-          doc.setFontSize(7);
-          doc.text('?', xPos + 5 * (dotSize + dotGap) + 2, cursorY + 8);
-        }
-      });
-
-      cursorY += 20;
-    };
-
-    // Header - moved title down to avoid clash
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    const brand = 'MOODBOARD-LAB.COM';
-    doc.text(brand, pageWidth - margin, cursorY, { align: 'right' });
-    cursorY += 20;
-
-    doc.setFontSize(20);
-    doc.text('Sustainability & Lifecycle Report', margin, cursorY);
-    cursorY += 24;
-
-    // Material Lifecycle Fingerprints
-    if (board.length > 0) {
-      addHeading('Material Lifecycle Fingerprints', 15);
-      addParagraph('Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.', 9, 10);
-
-      board.forEach((material) => {
-        renderLifecycleFingerprint(material.id, material.name);
-      });
-
-      cursorY += 10;
-    }
-
-    // Sustainability Insights
+    const ctx = createPDFContext(doc);
     const insights = sustainabilityInsightsRef.current || [];
-    if (insights.length) {
-      addHeading('Sustainability Insights', 15);
-      insights.forEach((insight) => {
-        addHeading(insight.title, 13);
 
-        if (insight.headline) {
-          addParagraph(insight.headline, 12, 8);
-        }
-
-        if (insight.hotspots && insight.hotspots.length > 0) {
-          addParagraph(`Hotspots: ${insight.hotspots.join(', ')}`, 11, 8);
-        }
-
-        if (insight.whyItLooksLikeThis) {
-          addParagraph(insight.whyItLooksLikeThis, 12, 8);
-        }
-
-        if (insight.designLevers && insight.designLevers.length > 0) {
-          addParagraph('Design Levers:', 11, 4);
-          insight.designLevers.forEach(lever => {
-            addParagraph(`• ${lever}`, 11, 2);
-          });
-          cursorY += 4;
-        }
-
-        if (insight.ukChecks && insight.ukChecks.length > 0) {
-          addParagraph('UK Checks:', 11, 4);
-          insight.ukChecks.forEach(check => {
-            addParagraph(`• ${check}`, 11, 2);
-          });
-          cursorY += 4;
-        }
-
-        if (insight.whatCouldChange && insight.whatCouldChange.length > 0) {
-          addParagraph('What Could Change:', 10, 4);
-          insight.whatCouldChange.forEach(change => {
-            addParagraph(`• ${change}`, 10, 2);
-          });
-          cursorY += 8;
-        }
-      });
-    }
-
-    // Footer with AI caveat
-    ensureSpace(60);
-    cursorY = pageHeight - margin - 30;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    const disclaimerText = 'Important: AI-generated content requires professional verification. All sustainability insights, lifecycle assessments, and recommendations should be validated by qualified professionals before use in design decisions or client communications.';
-    const disclaimerLines = doc.splitTextToSize(disclaimerText, pageWidth - margin * 2);
-    disclaimerLines.forEach((line: string) => {
-      doc.text(line, margin, cursorY);
-      cursorY += 11;
+    // Calculate metrics for all materials
+    const metrics = new Map<string, MaterialMetrics>();
+    board.forEach((material) => {
+      const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+      if (profile) {
+        const insight = insights.find((i) => i.id === material.id);
+        const benefits = insight?.benefits || [];
+        metrics.set(material.id, calculateMaterialMetrics(profile, benefits));
+      }
     });
 
-    cursorY += 5;
-    doc.setFont('helvetica', 'medium');
-    doc.setFontSize(10);
-    doc.setTextColor(0);
-    doc.text('Generated with Moodboard-Lab', margin, cursorY);
+    // Detect synergies and conflicts
+    const synergies = detectSynergies(board);
+    const conflicts = detectConflicts(board);
+
+    // Sort materials by metrics for top lists
+    const sortedByEmbodied = [...board]
+      .filter((m) => metrics.has(m.id))
+      .sort(
+        (a, b) =>
+          (metrics.get(b.id)?.embodied_proxy || 0) -
+          (metrics.get(a.id)?.embodied_proxy || 0)
+      )
+      .slice(0, 3)
+      .map((m) => m.id);
+
+    const sortedByBenefit = [...board]
+      .filter((m) => metrics.has(m.id))
+      .sort(
+        (a, b) =>
+          (metrics.get(b.id)?.benefit_score || 0) -
+          (metrics.get(a.id)?.benefit_score || 0)
+      )
+      .slice(0, 3)
+      .filter((m) => (metrics.get(m.id)?.benefit_score || 0) > 0)
+      .map((m) => m.id);
+
+    // Generate system-level summary
+    const systemSummary: SystemLevelSummary = {
+      top_embodied_items: sortedByEmbodied,
+      top_benefit_items: sortedByBenefit,
+      net_statement: generateNetStatement(sortedByEmbodied, sortedByBenefit, synergies, board),
+      synergies,
+      conflicts,
+    };
+
+    // Generate client summary
+    const clientSummary = generateClientSummary(
+      board,
+      insights,
+      metrics,
+      synergies,
+      conflicts
+    );
+
+    // QA validation (log warnings but don't block)
+    const qaResult = validateInsights(insights, board, metrics);
+    if (!qaResult.valid) {
+      console.warn('[PDF QA] Validation issues:', qaResult.errors);
+    }
+    if (qaResult.warnings.length > 0) {
+      console.warn('[PDF QA] Warnings:', qaResult.warnings);
+    }
+
+    // ========== PAGE 1: Client Summary ==========
+    renderClientSummaryPage(ctx, clientSummary);
+
+    // ========== PAGE 2: Comparative Dashboard ==========
+    if (board.length > 0 && metrics.size > 0) {
+      renderComparativeDashboard(ctx, board, metrics);
+    }
+
+    // ========== PAGE 3: System-Level Summary ==========
+    renderSystemSummaryPage(ctx, systemSummary, board);
+
+    // ========== PAGE 4: UK Compliance Dashboard ==========
+    if (insights.length > 0) {
+      renderUKComplianceDashboard(ctx, insights, board);
+    }
+
+    // ========== PAGES 5+: Material Details ==========
+    if (board.length > 0) {
+      doc.addPage();
+      ctx.cursorY = ctx.margin;
+
+      // Section header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(0);
+      doc.text('Material Detail Pages', ctx.margin, ctx.cursorY);
+      ctx.cursorY += 25;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      doc.text(
+        'Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.',
+        ctx.margin,
+        ctx.cursorY
+      );
+      doc.setTextColor(0);
+      ctx.cursorY += 20;
+
+      // Render each material
+      board.forEach((material) => {
+        const insight = insights.find((i) => i.id === material.id);
+        const metric = metrics.get(material.id);
+        const profile = MATERIAL_LIFECYCLE_PROFILES[material.id] || null;
+
+        renderEnhancedMaterialSection(ctx, material, insight, metric, profile);
+      });
+    }
+
+    // ========== FINAL PAGE: Disclaimer ==========
+    addDisclaimer(ctx);
 
     return doc;
   };
@@ -1499,7 +1445,7 @@ IMPORTANT:
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
 
-    // Build sustainability prompt with lifecycle fingerprints
+    // Build sustainability prompt with lifecycle fingerprints (enhanced schema)
     const buildSustainabilityPrompt = () => {
       const materialsPayload = board.map(mat => {
         const profile = MATERIAL_LIFECYCLE_PROFILES[mat.id];
@@ -1525,6 +1471,8 @@ IMPORTANT RULES:
 - Do NOT change or recalculate any fingerprint scores.
 - Do NOT invent kgCO2e, EPD figures, or percentage splits.
 - Your role is to interpret the fingerprint for designers and give practical actions.
+- ALWAYS include specific lifecycle stage names (raw/manufacturing/transport/installation/inUse/maintenance/endOfLife) when discussing impacts.
+- NEVER use vague language without referencing a specific stage, score, and reason.
 
 Output schema:
 {
@@ -1533,20 +1481,49 @@ Output schema:
       "id": "string",
       "title": "string",
       "headline": "string (max 120 chars)",
-      "hotspots": ["string", "string"],
+      "hotspots": [
+        {
+          "stage": "raw|manufacturing|transport|installation|inUse|maintenance|endOfLife",
+          "score": 1-5,
+          "reason": "string (max 80 chars explaining why this stage is a hotspot)"
+        }
+      ],
       "whyItLooksLikeThis": "string (max 200 chars)",
       "designLevers": ["string", "string"],
       "whatCouldChange": ["string", "string"],
-      "ukChecks": ["string", "string"]
+      "ukChecks": [
+        {
+          "label": "string",
+          "standard_code": "string (e.g., 'EN 15804', 'FSC COC', 'ISO 14025')"
+        }
+      ],
+      "benefits": [
+        {
+          "type": "biodiversity|circularity|durability|operational_carbon|health_voc",
+          "score_1to5": 1-5,
+          "note": "string (max 60 chars)"
+        }
+      ],
+      "risks": [
+        {
+          "type": "supply_chain|durability|maintenance|disposal|regulatory|cost",
+          "severity_1to5": 1-5,
+          "note": "string (max 60 chars)"
+        }
+      ]
     }
   ]
 }
 
 Guidance:
-- Keep language concise and decision-useful.
-- If confidence is medium/low for transport or endOfLife, explicitly mention uncertainty in whatCouldChange.
-- Use UK-relevant checks only (e.g., FSC/PEFC, EPD to EN 15804, recycled content declarations, demountable fixings, take-back schemes).
-- If lifecycleFingerprint is null, return headline "Fingerprint not available" and leave other fields minimal.
+- Include 1-3 hotspots per material, focusing on stages with impact >= 3.
+- Include at least 1 design lever per material.
+- For benefits: score biodiversity/circularity/durability based on material properties.
+- For landscape materials: always include a biodiversity benefit.
+- For risks: identify supply chain, durability, or regulatory concerns where relevant.
+- If confidence is medium/low for any stage, note this in risks with type "supply_chain" or relevant type.
+- Use UK-relevant checks only (FSC/PEFC, EPD to EN 15804, recycled content declarations, demountable fixings, take-back schemes).
+- If lifecycleFingerprint is null, return headline "Fingerprint not available" and minimal fields with empty arrays.
 
 MATERIALS:
 ${JSON.stringify(materialsPayload, null, 2)}`;
@@ -1666,16 +1643,78 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
           const parsed = JSON.parse(cleaned);
           const items = parsed?.items;
           if (Array.isArray(items) && items.length > 0) {
-            const validated: SustainabilityInsight[] = items.map((item: any) => ({
-              id: String(item.id || ''),
-              title: String(item.title || ''),
-              headline: String(item.headline || ''),
-              hotspots: Array.isArray(item.hotspots) ? item.hotspots.map(String) : [],
-              whyItLooksLikeThis: String(item.whyItLooksLikeThis || ''),
-              designLevers: Array.isArray(item.designLevers) ? item.designLevers.map(String) : [],
-              whatCouldChange: Array.isArray(item.whatCouldChange) ? item.whatCouldChange.map(String) : [],
-              ukChecks: Array.isArray(item.ukChecks) ? item.ukChecks.map(String) : []
-            }));
+            // Parse enhanced sustainability insights with new schema
+            const validated: SustainabilityInsight[] = items.map((item: any) => {
+              // Parse hotspots - handle both old string[] and new object[] format
+              const hotspots: Hotspot[] = Array.isArray(item.hotspots)
+                ? item.hotspots.map((h: any) => {
+                    if (typeof h === 'string') {
+                      // Legacy format - convert string to hotspot object
+                      return {
+                        stage: 'manufacturing' as const,
+                        score: 3 as const,
+                        reason: h,
+                      };
+                    }
+                    return {
+                      stage: h.stage || 'manufacturing',
+                      score: Number(h.score) || 3,
+                      reason: String(h.reason || ''),
+                    };
+                  })
+                : [];
+
+              // Parse UK checks - handle both old string[] and new object[] format
+              const ukChecks: UKCheck[] = Array.isArray(item.ukChecks)
+                ? item.ukChecks.map((c: any) => {
+                    if (typeof c === 'string') {
+                      return { label: c };
+                    }
+                    return {
+                      label: String(c.label || ''),
+                      standard_code: c.standard_code ? String(c.standard_code) : undefined,
+                      url: c.url ? String(c.url) : undefined,
+                    };
+                  })
+                : [];
+
+              // Parse benefits
+              const benefits: Benefit[] = Array.isArray(item.benefits)
+                ? item.benefits.map((b: any) => ({
+                    type: b.type || 'durability',
+                    score_1to5: Number(b.score_1to5) || 1,
+                    note: b.note ? String(b.note) : undefined,
+                  }))
+                : [];
+
+              // Parse risks
+              const risks: Risk[] = Array.isArray(item.risks)
+                ? item.risks.map((r: any) => ({
+                    type: r.type || 'supply_chain',
+                    severity_1to5: Number(r.severity_1to5) || 1,
+                    note: r.note ? String(r.note) : undefined,
+                  }))
+                : [];
+
+              // Generate design consequences from hotspots
+              const design_risk = generateDesignRisk(hotspots);
+              const design_response = generateDesignResponse(hotspots);
+
+              return {
+                id: String(item.id || ''),
+                title: String(item.title || ''),
+                headline: String(item.headline || ''),
+                hotspots,
+                whyItLooksLikeThis: String(item.whyItLooksLikeThis || ''),
+                designLevers: Array.isArray(item.designLevers) ? item.designLevers.map(String) : [],
+                whatCouldChange: Array.isArray(item.whatCouldChange) ? item.whatCouldChange.map(String) : [],
+                ukChecks,
+                benefits,
+                risks,
+                design_risk,
+                design_response,
+              };
+            });
             setSustainabilityInsights(validated);
             sustainabilityInsightsRef.current = validated;
             if (retryAttempt) setError(null);

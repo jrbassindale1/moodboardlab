@@ -1632,3 +1632,26 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 3, confidence: 'medium' }
   }
 };
+
+// Helper functions for lifecycle profiles
+
+/**
+ * Check if a material has a lifecycle profile
+ */
+export function hasLifecycleProfile(materialId: string): boolean {
+  return materialId in MATERIAL_LIFECYCLE_PROFILES;
+}
+
+/**
+ * Get lifecycle profile for a material, returns null if not found
+ */
+export function getLifecycleProfile(materialId: string): LifecycleProfile | null {
+  return MATERIAL_LIFECYCLE_PROFILES[materialId] || null;
+}
+
+/**
+ * Get all material IDs that have lifecycle profiles
+ */
+export function getProfileIds(): Set<string> {
+  return new Set(Object.keys(MATERIAL_LIFECYCLE_PROFILES));
+}
