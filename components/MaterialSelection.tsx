@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Search, ShoppingCart, X, Upload, FileText, Camera } from 'lucide-react';
+import { ChevronRight, Search, ShoppingCart, X, FileText, Camera } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
@@ -77,7 +77,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [customMaterialMode, setCustomMaterialMode] = useState<CustomMaterialMode>(null);
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
-  const [customMaterialImage, setCustomMaterialImage] = useState<string | null>(null);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
@@ -389,20 +388,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     setRecentlyAdded(null);
   };
 
-  const handleCustomMaterialImageUpload = async (files: FileList | null) => {
-    if (!files || !files.length) return;
-    const file = files[0];
-    if (!file.type.startsWith('image/')) return;
-
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    setCustomMaterialImage(dataUrl);
-  };
 
   const handleCreateCustomMaterial = () => {
     if (!customMaterialName.trim()) {
@@ -418,41 +403,37 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       description: customMaterialDescription || 'Custom user-created material',
       keywords: ['custom'],
       category: 'finish',
-      treePaths: ['Custom>Upload Image'],
+      treePaths: ['Custom>Custom Material'],
       isCustom: true,
-      customImage: customMaterialImage || undefined,
       customDescription: customMaterialDescription || undefined,
     };
 
     handleAdd(customMaterial, undefined, true);
 
-    // If no custom image was uploaded, generate an AI thumbnail in the background
-    if (!customMaterialImage) {
-      generateMaterialIcon({
-        id: customMaterial.id,
-        name: customMaterial.name,
-        description: customMaterial.description,
-        tone: customMaterial.tone,
-        finish: customMaterial.finish,
-        keywords: customMaterial.keywords,
-      }).then(icon => {
-        const updated = boardRef.current.map(item =>
-          item.id === customMaterial.id
-            ? { ...item, customImage: icon.dataUri }
-            : item
-        );
-        onBoardChange(updated);
-        boardRef.current = updated;
-      }).catch(err => {
-        console.error('Failed to generate custom material thumbnail:', err);
-      });
-    }
+    // Generate an AI thumbnail in the background based on the description
+    generateMaterialIcon({
+      id: customMaterial.id,
+      name: customMaterial.name,
+      description: customMaterial.description,
+      tone: customMaterial.tone,
+      finish: customMaterial.finish,
+      keywords: customMaterial.keywords,
+    }).then(icon => {
+      const updated = boardRef.current.map(item =>
+        item.id === customMaterial.id
+          ? { ...item, customImage: icon.dataUri }
+          : item
+      );
+      onBoardChange(updated);
+      boardRef.current = updated;
+    }).catch(err => {
+      console.error('Failed to generate custom material thumbnail:', err);
+    });
 
     // Reset form
     setCustomMaterialMode(null);
     setCustomMaterialName('');
     setCustomMaterialDescription('');
-    setCustomMaterialImage(null);
   };
 
   const handlePhotoUpload = async (files: FileList | null) => {
@@ -1009,7 +990,6 @@ IMPORTANT:
                           setCustomMaterialMode(null);
                           setCustomMaterialName('');
                           setCustomMaterialDescription('');
-                          setCustomMaterialImage(null);
                         }}
                         className="text-sm text-gray-600 hover:text-black"
                       >
@@ -1029,39 +1009,6 @@ IMPORTANT:
                         placeholder="e.g., Reclaimed Oak Flooring"
                         className="w-full border border-gray-200 px-3 py-2 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black"
                       />
-                    </div>
-
-                    {/* Image Upload */}
-                    <div>
-                      <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                        Image {customMaterialMode === 'upload' ? '*' : '(Optional)'}
-                      </label>
-                      {customMaterialImage ? (
-                        <div className="relative">
-                          <img
-                            src={customMaterialImage}
-                            alt="Custom material"
-                            className="w-full h-48 object-cover border border-gray-200"
-                          />
-                          <button
-                            onClick={() => setCustomMaterialImage(null)}
-                            className="absolute top-2 right-2 bg-white p-1 border border-gray-200 hover:bg-gray-100"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="border-2 border-dashed border-gray-300 p-8 hover:border-black transition-colors cursor-pointer flex flex-col items-center">
-                          <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                          <span className="text-sm text-gray-600 font-sans">Click to upload image</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleCustomMaterialImageUpload(e.target.files)}
-                          />
-                        </label>
-                      )}
                     </div>
 
                     {/* Description */}
