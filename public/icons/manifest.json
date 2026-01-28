@@ -864,11 +864,6 @@
       "exists": true
     },
     {
-      "id": "brick-facade",
-      "name": "Brick Façade",
-      "exists": true
-    },
-    {
       "id": "brick-slip-rainscreen",
       "name": "Brick Slip Rainscreen",
       "exists": true

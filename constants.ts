@@ -1919,17 +1919,6 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   },
   // === ENVELOPE > FAÇADE — Masonry and Mineral-Based ===
   {
-    id: 'brick-facade',
-    name: 'Brick Façade',
-    tone: '#c07858',
-    finish: 'Traditional clay brickwork',
-    description: 'Traditional clay brickwork, including facing brick and contextual blends.',
-    keywords: ['facade', 'brick', 'clay', 'masonry', 'external'],
-    category: 'external',
-    treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
-  },
-  {
     id: 'brick-slip-rainscreen',
     name: 'Brick Slip Rainscreen',
     tone: '#b86b4f',

@@ -1383,16 +1383,6 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   // === FAÇADE — Masonry and Mineral-Based ===
-  'brick-facade': {
-    raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
-
   'brick-slip-rainscreen': {
     raw: { impact: 2, confidence: 'high' },
     manufacturing: { impact: 3, confidence: 'high' },
