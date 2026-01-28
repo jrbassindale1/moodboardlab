@@ -5,6 +5,7 @@ import { MATERIAL_PALETTE } from '../constants';
 import { MATERIAL_LIFECYCLE_PROFILES, LifecycleStageKey } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
+import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import LifecycleFingerprint from './LifecycleFingerprint';
 
 type BoardItem = MaterialOption;
@@ -224,6 +225,44 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
   useEffect(() => {
     onBoardChange?.(board);
   }, [board, onBoardChange]);
+
+  // Generate AI thumbnails for custom/detected materials that are missing them
+  const generatingIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const materialsNeedingThumbnails = board.filter(
+      item =>
+        !item.customImage &&
+        (item.id.startsWith('custom-') || item.id.startsWith('detected-'))
+    );
+
+    if (materialsNeedingThumbnails.length === 0) return;
+
+    materialsNeedingThumbnails.forEach(mat => {
+      if (generatingIdsRef.current.has(mat.id)) return;
+      generatingIdsRef.current.add(mat.id);
+
+      generateMaterialIcon({
+        id: mat.id,
+        name: mat.name,
+        description: mat.description,
+        tone: mat.tone,
+        finish: mat.finish,
+        keywords: mat.keywords,
+      }).then(icon => {
+        setBoard(prev =>
+          prev.map(item =>
+            item.id === mat.id
+              ? { ...item, customImage: icon.dataUri }
+              : item
+          )
+        );
+      }).catch(err => {
+        console.error(`Failed to generate thumbnail for ${mat.name}:`, err);
+      }).finally(() => {
+        generatingIdsRef.current.delete(mat.id);
+      });
+    });
+  }, [board]);
 
   const treePathFallbacks = useMemo(
     () => ({
