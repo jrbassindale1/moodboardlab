@@ -436,7 +436,7 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Rating: Green = low impact | Amber = moderate | Red = high impact. Circularity: ● High | ◐ Medium | ○ Low',
+    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied ≥4.0 or high impact. Circularity: ● High | ◐ Medium | ○ Low',
     ctx.margin,
     ctx.cursorY
   );
@@ -491,9 +491,9 @@ export function renderSystemSummaryPage(
 
   ctx.cursorY += 8;
 
-  // Top benefit materials
+  // Top environmental benefit materials (biodiversity, sequestration, operational savings)
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.text('Highest benefit contribution:', ctx.margin, ctx.cursorY);
+  ctx.doc.text('Highest environmental benefit:', ctx.margin, ctx.cursorY);
   ctx.cursorY += 14;
 
   ctx.doc.setFont('helvetica', 'normal');
@@ -507,7 +507,7 @@ export function renderSystemSummaryPage(
 
   if (summary.top_benefit_items.length === 0) {
     ctx.doc.setTextColor(100);
-    ctx.doc.text('  No high-benefit materials identified', ctx.margin + 10, ctx.cursorY);
+    ctx.doc.text('  No materials with significant environmental benefits', ctx.margin + 10, ctx.cursorY);
     ctx.doc.setTextColor(0);
     ctx.cursorY += 12;
   }
@@ -670,25 +670,26 @@ export function generateDesignRecommendations(
     }
   });
 
-  // Check for glazing without disassembly
+  // Check for glazing without disassembly - consolidate into single recommendation
   const glazingMaterials = materials.filter(
     (m) => m.category === 'window' || m.name.toLowerCase().includes('glass')
   );
-  glazingMaterials.forEach((mat) => {
+  const glazingWithoutDisassembly = glazingMaterials.filter((mat) => {
     const insight = insights.find((i) => i.id === mat.id);
     const hasDisassembly = insight?.ukChecks?.some(
       (c) => c.label.toLowerCase().includes('mechanical') || c.label.toLowerCase().includes('demount')
     );
-    if (!hasDisassembly) {
-      recommendations.push({
-        priority: 'medium',
-        category: 'specify',
-        action: 'Replace frameless glazing with modular demountable system',
-        rationale: 'Enables future reuse and reduces lifetime impact',
-        materialIds: [mat.id],
-      });
-    }
+    return !hasDisassembly;
   });
+  if (glazingWithoutDisassembly.length > 0) {
+    recommendations.push({
+      priority: 'medium',
+      category: 'specify',
+      action: 'Replace frameless glazing with modular demountable system',
+      rationale: `Enables future reuse and reduces lifetime impact (${glazingWithoutDisassembly.length} glazing element${glazingWithoutDisassembly.length > 1 ? 's' : ''})`,
+      materialIds: glazingWithoutDisassembly.map((m) => m.id),
+    });
+  }
 
   // Check for multiple high-maintenance materials
   const highMaintenance = materials.filter((m) => {
@@ -1541,16 +1542,18 @@ export function renderEnhancedMaterialSection(
     ctx.doc.setTextColor(0);
     ctx.cursorY += 14;
 
-    // Traffic light indicator with label
+    // Traffic light indicator with dynamic reason
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(8);
-    const ratingLabel =
+    drawTrafficLight(ctx, ctx.margin, ctx.cursorY - 3, metrics.traffic_light, 4);
+    // Use the specific reason from scoring, or fall back to generic
+    const ratingLabel = metrics.traffic_light_reason || (
       metrics.traffic_light === 'green'
         ? 'Low impact'
         : metrics.traffic_light === 'amber'
         ? 'Moderate impact — review design levers'
-        : 'High impact — consider alternatives';
-    drawTrafficLight(ctx, ctx.margin, ctx.cursorY - 3, metrics.traffic_light, 4);
+        : 'High impact — consider alternatives'
+    );
     ctx.doc.text(ratingLabel, ctx.margin + 15, ctx.cursorY);
     ctx.cursorY += 12;
   }

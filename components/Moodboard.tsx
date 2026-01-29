@@ -803,15 +803,18 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       .slice(0, 3)
       .map((m) => m.id);
 
+    // Use ENVIRONMENTAL benefit score for top benefit contributors
+    // Only environmental benefits (biodiversity, sequestration, operational savings)
+    // can offset embodied carbon - practical benefits (durability, circularity) cannot
     const sortedByBenefit = [...board]
       .filter((m) => metrics.has(m.id))
       .sort(
         (a, b) =>
-          (metrics.get(b.id)?.benefit_score || 0) -
-          (metrics.get(a.id)?.benefit_score || 0)
+          (metrics.get(b.id)?.environmental_benefit_score || 0) -
+          (metrics.get(a.id)?.environmental_benefit_score || 0)
       )
       .slice(0, 3)
-      .filter((m) => (metrics.get(m.id)?.benefit_score || 0) > 0)
+      .filter((m) => (metrics.get(m.id)?.environmental_benefit_score || 0) > 0)
       .map((m) => m.id);
 
     // Generate system-level summary

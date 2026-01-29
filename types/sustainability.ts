@@ -16,7 +16,26 @@ export type BenefitType =
   | 'circularity'
   | 'durability'
   | 'operational_carbon'
-  | 'health_voc';
+  | 'health_voc'
+  | 'sequestration';
+
+// Benefit category - determines whether benefit can offset embodied carbon
+export type BenefitCategory = 'environmental' | 'practical';
+
+// Classification of benefits by category
+// ENVIRONMENTAL: Can offset embodied carbon in traffic light rating
+// PRACTICAL: Shown for info but cannot improve rating for high-carbon materials
+export const BENEFIT_CATEGORIES: Record<BenefitType, BenefitCategory> = {
+  // Environmental benefits - CAN offset embodied carbon
+  biodiversity: 'environmental',
+  sequestration: 'environmental',
+  operational_carbon: 'environmental',
+
+  // Practical benefits - CANNOT offset embodied carbon
+  durability: 'practical',
+  circularity: 'practical',
+  health_voc: 'practical',
+};
 
 // Risk types for potential concerns
 export type RiskType =
@@ -69,9 +88,12 @@ export interface MaterialMetrics {
   in_use_proxy: number; // Weighted USE + MNT
   end_of_life_proxy: number; // EOL
   overall_impact_proxy: number; // Weighted sum of all
-  benefit_score: number; // Average of benefits
+  benefit_score: number; // Average of ALL benefits (for display)
+  environmental_benefit_score: number; // Environmental benefits only (biodiversity, sequestration, operational) - used for traffic light
+  practical_benefit_score: number; // Practical benefits only (durability, circularity, health) - shown but doesn't affect rating
   confidence_score: number; // 0-1 scale
   traffic_light: TrafficLight;
+  traffic_light_reason: string; // Human-readable explanation for the rating
   low_confidence_flag: boolean;
   // Lifecycle duration metrics (NEW)
   service_life: number; // Expected lifespan in years
