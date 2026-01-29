@@ -28,11 +28,13 @@ import {
   createPDFContext,
   renderClientSummaryPage,
   renderComparativeDashboard,
+  renderDesignDirectionPage,
   renderSystemSummaryPage,
   renderUKComplianceDashboard,
   renderEnhancedMaterialSection,
   addDisclaimer,
   MaterialPaletteContext,
+  prefetchMaterialIcons,
 } from '../utils/pdfSections';
 
 type BoardItem = MaterialOption;
@@ -770,7 +772,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
   const hasTextContent = () =>
     Boolean(sustainabilityInsightsRef.current && sustainabilityInsightsRef.current.length > 0);
 
-  const generateReportPdf = () => {
+  const generateReportPdf = async () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const ctx = createPDFContext(doc);
     const insights = sustainabilityInsightsRef.current || [];
@@ -850,12 +852,17 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     // ========== PAGE 3: System-Level Summary ==========
     renderSystemSummaryPage(ctx, systemSummary, board);
 
-    // ========== PAGE 4: UK Compliance Dashboard ==========
+    // ========== PAGE 4: Design Direction ==========
+    if (board.length > 0 && metrics.size > 0 && insights.length > 0) {
+      renderDesignDirectionPage(ctx, board, metrics, insights);
+    }
+
+    // ========== PAGE 5: UK Compliance Dashboard ==========
     if (insights.length > 0) {
       renderUKComplianceDashboard(ctx, insights, board);
     }
 
-    // ========== PAGES 5+: Material Details ==========
+    // ========== PAGES 6+: Material Details ==========
     if (board.length > 0) {
       doc.addPage();
       ctx.cursorY = ctx.margin;
@@ -895,8 +902,11 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
         rankMap.set(m.id, idx + 1);
       });
 
-      // Load material icons for thumbnails
-      const materialIcons = loadMaterialIcons();
+      // Prefetch static icons for thumbnails (async)
+      const materialIconUris = await prefetchMaterialIcons(board.map((m) => m.id));
+
+      // Also check localStorage for AI-generated icons as fallback
+      const storedIcons = loadMaterialIcons();
 
       // Render each material with palette context and thumbnail
       board.forEach((material) => {
@@ -904,27 +914,29 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
         const metric = metrics.get(material.id);
         const profile = MATERIAL_LIFECYCLE_PROFILES[material.id] || null;
 
-        // Get thumbnail - check custom image first, then generated icon
+        // Get thumbnail - priority: custom image > static icon > stored icon
         let thumbnailDataUri: string | undefined;
         if (material.customImage) {
           thumbnailDataUri = material.customImage;
+        } else if (materialIconUris.has(material.id)) {
+          thumbnailDataUri = materialIconUris.get(material.id);
         } else {
-          const icon = materialIcons.get(material.id);
+          const icon = storedIcons.get(material.id);
           if (icon?.dataUri) {
             thumbnailDataUri = icon.dataUri;
           }
         }
 
         // Build palette context with thumbnail
+        const contributionPercent =
+          totalEmbodied > 0 ? (metric?.embodied_proxy || 0) / totalEmbodied * 100 : 0;
         const paletteContext: MaterialPaletteContext | undefined = metric
           ? {
               rank: rankMap.get(material.id) || 1,
               totalMaterials: board.length,
-              contributionPercent:
-                totalEmbodied > 0
-                  ? (metric.embodied_proxy / totalEmbodied) * 100
-                  : 0,
+              contributionPercent,
               thumbnailDataUri,
+              isCarbonDominant: contributionPercent >= 15, // Flag materials contributing >=15%
             }
           : undefined;
 
@@ -952,7 +964,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     }
     setExportingReport(true);
     try {
-      const doc = generateReportPdf();
+      const doc = await generateReportPdf();
       doc.save('moodboard-report.pdf');
     } catch (err) {
       console.error('Could not create report PDF', err);
@@ -969,7 +981,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     }
     setExportingReport(true);
     try {
-      const doc = generateReportPdf();
+      const doc = await generateReportPdf();
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
       const win = window.open(url, '_blank');

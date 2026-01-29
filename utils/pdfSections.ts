@@ -25,6 +25,52 @@ const TRAFFIC_LIGHT_COLORS: Record<TrafficLight, [number, number, number]> = {
 };
 
 /**
+ * Fetch a static icon and convert to data URI for PDF embedding
+ * Tries webp first, then falls back to png
+ */
+export async function fetchIconAsDataUri(materialId: string): Promise<string | null> {
+  const formats = ['webp', 'png'];
+
+  for (const format of formats) {
+    try {
+      const response = await fetch(`/icons/${materialId}.${format}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = () => resolve(null);
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch {
+      // Try next format
+    }
+  }
+  return null;
+}
+
+/**
+ * Pre-fetch icons for multiple materials (for PDF generation)
+ */
+export async function prefetchMaterialIcons(
+  materialIds: string[]
+): Promise<Map<string, string>> {
+  const iconMap = new Map<string, string>();
+
+  await Promise.all(
+    materialIds.map(async (id) => {
+      const dataUri = await fetchIconAsDataUri(id);
+      if (dataUri) {
+        iconMap.set(id, dataUri);
+      }
+    })
+  );
+
+  return iconMap;
+}
+
+/**
  * Create a new PDF context
  */
 export function createPDFContext(doc: jsPDF): PDFContext {
@@ -186,6 +232,48 @@ export function renderComparativeDashboard(
   // Header
   addHeading(ctx, 'Material Comparison Dashboard', 16);
   ctx.cursorY += 5;
+
+  // ===== CARBON DOMINANT COMPONENTS CALLOUT =====
+  // Identify materials contributing >15% of total embodied carbon
+  const totalEmbodied = Array.from(metrics.values()).reduce(
+    (sum, m) => sum + m.embodied_proxy,
+    0
+  );
+  const carbonDominants: { material: MaterialOption; percent: number }[] = [];
+  materials.forEach((mat) => {
+    const metric = metrics.get(mat.id);
+    if (metric && totalEmbodied > 0) {
+      const percent = (metric.embodied_proxy / totalEmbodied) * 100;
+      if (percent >= 15) {
+        carbonDominants.push({ material: mat, percent });
+      }
+    }
+  });
+
+  if (carbonDominants.length > 0) {
+    // Draw attention box
+    ctx.doc.setFillColor(255, 245, 238); // Light orange background
+    ctx.doc.setDrawColor(220, 53, 69);
+    ctx.doc.setLineWidth(1);
+    const boxHeight = 15 + carbonDominants.length * 12;
+    ctx.doc.roundedRect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, boxHeight, 3, 3, 'FD');
+
+    ctx.cursorY += 12;
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(10);
+    ctx.doc.setTextColor(220, 53, 69);
+    ctx.doc.text('CARBON DOMINANT COMPONENTS — act here first:', ctx.margin + 8, ctx.cursorY);
+    ctx.cursorY += 12;
+
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(9);
+    ctx.doc.setTextColor(0);
+    carbonDominants.forEach(({ material, percent }) => {
+      ctx.doc.text(`• ${material.name} (${percent.toFixed(0)}% of palette embodied carbon)`, ctx.margin + 15, ctx.cursorY);
+      ctx.cursorY += 12;
+    });
+    ctx.cursorY += 8;
+  }
 
   // ===== TABLE 1: Impact & Rating =====
   addHeading(ctx, 'Impact Assessment', 12);
@@ -352,6 +440,13 @@ export function renderComparativeDashboard(
     ctx.margin,
     ctx.cursorY
   );
+  ctx.cursorY += 10;
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.text(
+    'Note: Landscape materials include ecosystem benefit multipliers (carbon sequestration, biodiversity, stormwater) not captured in embodied carbon metrics.',
+    ctx.margin,
+    ctx.cursorY
+  );
   ctx.doc.setTextColor(0);
 }
 
@@ -505,6 +600,263 @@ export function renderSystemSummaryPage(
       ctx.cursorY += 5;
     });
   }
+}
+
+/**
+ * Design recommendation for the Design Direction page
+ */
+export interface DesignRecommendation {
+  priority: 'high' | 'medium' | 'low';
+  category: 'reduce' | 'replace' | 'rethink' | 'specify';
+  action: string;
+  rationale: string;
+  materialIds?: string[]; // Related materials
+}
+
+/**
+ * Generate design recommendations from palette analysis
+ */
+export function generateDesignRecommendations(
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>,
+  insights: EnhancedSustainabilityInsight[]
+): DesignRecommendation[] {
+  const recommendations: DesignRecommendation[] = [];
+  const totalEmbodied = Array.from(metrics.values()).reduce(
+    (sum, m) => sum + m.embodied_proxy,
+    0
+  );
+
+  // Sort materials by embodied impact
+  const sortedByEmbodied = [...materials].sort((a, b) => {
+    const metricA = metrics.get(a.id);
+    const metricB = metrics.get(b.id);
+    return (metricB?.embodied_proxy || 0) - (metricA?.embodied_proxy || 0);
+  });
+
+  // Check for carbon dominant components (>15%)
+  sortedByEmbodied.forEach((mat) => {
+    const metric = metrics.get(mat.id);
+    if (!metric || totalEmbodied === 0) return;
+    const percent = (metric.embodied_proxy / totalEmbodied) * 100;
+
+    if (percent >= 20) {
+      // Major contributor - suggest reduction or replacement
+      if (mat.category === 'floor') {
+        recommendations.push({
+          priority: 'high',
+          category: 'reduce',
+          action: `Limit ${mat.name.toLowerCase()} to high-traffic zones only`,
+          rationale: `Currently ${percent.toFixed(0)}% of palette embodied carbon`,
+          materialIds: [mat.id],
+        });
+      } else if (mat.category === 'external' || mat.category === 'wall-internal') {
+        recommendations.push({
+          priority: 'high',
+          category: 'replace',
+          action: `Consider bio-based alternatives to ${mat.name.toLowerCase()}`,
+          rationale: `High embodied carbon (${percent.toFixed(0)}% of total)`,
+          materialIds: [mat.id],
+        });
+      } else if (mat.category === 'external-ground') {
+        recommendations.push({
+          priority: 'high',
+          category: 'reduce',
+          action: 'Reduce hard landscape area by 20-30%',
+          rationale: `Hard landscape contributing ${percent.toFixed(0)}% of palette carbon`,
+          materialIds: [mat.id],
+        });
+      }
+    }
+  });
+
+  // Check for glazing without disassembly
+  const glazingMaterials = materials.filter(
+    (m) => m.category === 'window' || m.name.toLowerCase().includes('glass')
+  );
+  glazingMaterials.forEach((mat) => {
+    const insight = insights.find((i) => i.id === mat.id);
+    const hasDisassembly = insight?.ukChecks?.some(
+      (c) => c.label.toLowerCase().includes('mechanical') || c.label.toLowerCase().includes('demount')
+    );
+    if (!hasDisassembly) {
+      recommendations.push({
+        priority: 'medium',
+        category: 'specify',
+        action: 'Replace frameless glazing with modular demountable system',
+        rationale: 'Enables future reuse and reduces lifetime impact',
+        materialIds: [mat.id],
+      });
+    }
+  });
+
+  // Check for multiple high-maintenance materials
+  const highMaintenance = materials.filter((m) => {
+    const metric = metrics.get(m.id);
+    return metric && metric.in_use_proxy >= 3;
+  });
+  if (highMaintenance.length >= 3) {
+    recommendations.push({
+      priority: 'medium',
+      category: 'rethink',
+      action: 'Consolidate finishes to reduce maintenance complexity',
+      rationale: `${highMaintenance.length} materials require significant maintenance`,
+      materialIds: highMaintenance.map((m) => m.id),
+    });
+  }
+
+  // Check for low-circularity materials
+  const lowCircularity = materials.filter((m) => {
+    const metric = metrics.get(m.id);
+    return metric && metric.end_of_life_proxy >= 4;
+  });
+  lowCircularity.forEach((mat) => {
+    recommendations.push({
+      priority: 'medium',
+      category: 'specify',
+      action: `Specify mechanical fixings for ${mat.name}`,
+      rationale: 'Enables disassembly and material recovery',
+      materialIds: [mat.id],
+    });
+  });
+
+  // Bio-based alternatives for high-embodied structure
+  const structuralMaterials = materials.filter(
+    (m) => m.category === 'wall-internal' || m.category === 'roof' || m.category === 'structure' || m.category === 'external'
+  );
+  const highEmbodiedStructure = structuralMaterials.filter((m) => {
+    const metric = metrics.get(m.id);
+    return metric && metric.embodied_proxy >= 3;
+  });
+  if (highEmbodiedStructure.length > 0) {
+    recommendations.push({
+      priority: 'high',
+      category: 'replace',
+      action: 'Prioritise hempcrete, rammed earth, or mass timber in envelope',
+      rationale: 'Bio-based materials store carbon rather than emit it',
+      materialIds: highEmbodiedStructure.map((m) => m.id),
+    });
+  }
+
+  // Sort by priority
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+  return recommendations.slice(0, 6); // Max 6 recommendations
+}
+
+/**
+ * Render Design Direction Page
+ */
+export function renderDesignDirectionPage(
+  ctx: PDFContext,
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>,
+  insights: EnhancedSustainabilityInsight[]
+): void {
+  ctx.doc.addPage();
+  ctx.cursorY = ctx.margin;
+
+  addHeading(ctx, 'Design Direction', 16);
+  ctx.cursorY += 5;
+
+  // Introductory text
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(80);
+  ctx.doc.text(
+    'Recommended adjustments based on palette analysis. Address high-priority items first.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.cursorY += 18;
+  ctx.doc.setTextColor(0);
+
+  // Generate recommendations
+  const recommendations = generateDesignRecommendations(materials, metrics, insights);
+
+  if (recommendations.length === 0) {
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(10);
+    ctx.doc.setTextColor(100);
+    ctx.doc.text('No specific design adjustments recommended for this palette.', ctx.margin, ctx.cursorY);
+    ctx.cursorY += 15;
+    ctx.doc.text('Continue with evidence collection and specification refinement.', ctx.margin, ctx.cursorY);
+    ctx.doc.setTextColor(0);
+    return;
+  }
+
+  // Category icons
+  const categoryLabels: Record<string, string> = {
+    reduce: 'REDUCE',
+    replace: 'REPLACE',
+    rethink: 'RETHINK',
+    specify: 'SPECIFY',
+  };
+
+  // Render recommendations
+  recommendations.forEach((rec) => {
+    ensureSpace(ctx, 50);
+
+    // Priority indicator
+    const priorityColors: Record<string, [number, number, number]> = {
+      high: [220, 53, 69],
+      medium: [255, 191, 0],
+      low: [34, 139, 34],
+    };
+    const [r, g, b] = priorityColors[rec.priority];
+
+    // Draw priority badge
+    ctx.doc.setFillColor(r, g, b);
+    ctx.doc.circle(ctx.margin + 8, ctx.cursorY, 4, 'F');
+
+    // Category tag
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(100);
+    ctx.doc.text(categoryLabels[rec.category], ctx.margin + 18, ctx.cursorY + 2);
+
+    ctx.cursorY += 12;
+
+    // Action text
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(10);
+    ctx.doc.setTextColor(0);
+    const actionLines = ctx.doc.splitTextToSize(rec.action, ctx.pageWidth - ctx.margin * 2 - 20);
+    actionLines.forEach((line: string) => {
+      ctx.doc.text(line, ctx.margin + 5, ctx.cursorY);
+      ctx.cursorY += 12;
+    });
+
+    // Rationale
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(9);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(rec.rationale, ctx.margin + 5, ctx.cursorY);
+    ctx.cursorY += 18;
+
+    ctx.doc.setTextColor(0);
+  });
+
+  // Legend
+  ctx.cursorY += 10;
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(80);
+
+  const legendY = ctx.cursorY;
+  ctx.doc.setFillColor(220, 53, 69);
+  ctx.doc.circle(ctx.margin + 5, legendY - 2, 3, 'F');
+  ctx.doc.text('High priority', ctx.margin + 12, legendY);
+
+  ctx.doc.setFillColor(255, 191, 0);
+  ctx.doc.circle(ctx.margin + 80, legendY - 2, 3, 'F');
+  ctx.doc.text('Medium priority', ctx.margin + 87, legendY);
+
+  ctx.doc.setFillColor(34, 139, 34);
+  ctx.doc.circle(ctx.margin + 175, legendY - 2, 3, 'F');
+  ctx.doc.text('Low priority', ctx.margin + 182, legendY);
+
+  ctx.doc.setTextColor(0);
 }
 
 /**
@@ -834,9 +1186,10 @@ export function renderUKComplianceDashboard(
  */
 export function renderLifecycleFingerprint(
   ctx: PDFContext,
-  materialId: string,
+  _materialId: string,
   materialName: string,
-  profile: LifecycleProfile | null
+  profile: LifecycleProfile | null,
+  lowConfidence?: boolean
 ): void {
   if (!profile) {
     ctx.doc.setFont('helvetica', 'normal');
@@ -883,14 +1236,18 @@ export function renderLifecycleFingerprint(
     ctx.doc.text(label, xPos, ctx.cursorY);
     ctx.doc.setTextColor(0);
 
-    // Draw dots
+    // Draw dots (greyed out if overall low confidence)
     for (let i = 1; i <= 5; i++) {
       const dotX = xPos + (i - 1) * (dotSize + dotGap);
       const dotY = ctx.cursorY + 6 - dotSize / 2;
       const isFilled = i <= stageData.impact;
 
       if (isFilled) {
-        if (stageData.confidence === 'low') {
+        if (lowConfidence) {
+          // Overall low confidence - grey out all filled dots
+          ctx.doc.setFillColor(180, 180, 180);
+          ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
+        } else if (stageData.confidence === 'low') {
           ctx.doc.setDrawColor(100);
           ctx.doc.setFillColor(255, 255, 255);
           ctx.doc.setLineWidth(0.5);
@@ -928,6 +1285,139 @@ export interface MaterialPaletteContext {
   totalMaterials: number;
   contributionPercent: number; // Percentage of total embodied impact
   thumbnailDataUri?: string; // Optional material thumbnail
+  isCarbonDominant?: boolean; // True if in top 3 contributors (>15% each)
+}
+
+/**
+ * Cost/feasibility bands for practical implementation
+ */
+export interface PracticalityBands {
+  costBand: '£' | '££' | '£££'; // Low / Medium / High relative cost
+  buildComplexity: 'Low' | 'Medium' | 'Specialist';
+  procurementRisk: 'Low' | 'Medium' | 'High';
+}
+
+/**
+ * Estimate practicality bands based on material category and properties
+ * This is a heuristic approach - actual costs vary by project
+ */
+export function estimatePracticalityBands(material: MaterialOption): PracticalityBands {
+  // Cost bands by category (rough estimates)
+  const costByCategory: Record<string, '£' | '££' | '£££'> = {
+    'paint-wall': '£',
+    'paint-ceiling': '£',
+    'plaster': '£',
+    'floor': '££',
+    'tile': '££',
+    'wallpaper': '£',
+    'ceiling': '££',
+    'acoustic-panel': '£££',
+    'timber-slat': '££',
+    'timber-panel': '££',
+    'microcement': '£££',
+    'window': '£££',
+    'door': '££',
+    'joinery': '£££',
+    'structure': '£££',
+    'external': '££',
+    'external-ground': '££',
+    'landscape': '£',
+    'roof': '£££',
+    'insulation': '££',
+    'finish': '££',
+    'wall-internal': '££',
+    'soffit': '££',
+    'balustrade': '£££',
+    'exposed-structure': '££',
+    'fixture': '££',
+    'furniture': '££',
+  };
+
+  // Complexity by category
+  const complexityByCategory: Record<string, 'Low' | 'Medium' | 'Specialist'> = {
+    'paint-wall': 'Low',
+    'paint-ceiling': 'Low',
+    'plaster': 'Medium',
+    'floor': 'Medium',
+    'tile': 'Medium',
+    'wallpaper': 'Low',
+    'ceiling': 'Medium',
+    'acoustic-panel': 'Medium',
+    'timber-slat': 'Specialist',
+    'timber-panel': 'Medium',
+    'microcement': 'Specialist',
+    'window': 'Specialist',
+    'door': 'Low',
+    'joinery': 'Specialist',
+    'structure': 'Specialist',
+    'external': 'Medium',
+    'external-ground': 'Medium',
+    'landscape': 'Low',
+    'roof': 'Specialist',
+    'insulation': 'Medium',
+    'finish': 'Medium',
+    'wall-internal': 'Medium',
+    'soffit': 'Medium',
+    'balustrade': 'Specialist',
+    'exposed-structure': 'Specialist',
+    'fixture': 'Low',
+    'furniture': 'Low',
+  };
+
+  // Procurement risk by category
+  const riskByCategory: Record<string, 'Low' | 'Medium' | 'High'> = {
+    'paint-wall': 'Low',
+    'paint-ceiling': 'Low',
+    'plaster': 'Low',
+    'floor': 'Medium',
+    'tile': 'Medium',
+    'wallpaper': 'Low',
+    'ceiling': 'Low',
+    'acoustic-panel': 'Medium',
+    'timber-slat': 'Medium',
+    'timber-panel': 'Medium',
+    'microcement': 'High',
+    'window': 'High',
+    'door': 'Low',
+    'joinery': 'High',
+    'structure': 'High',
+    'external': 'Medium',
+    'external-ground': 'Low',
+    'landscape': 'Low',
+    'roof': 'High',
+    'insulation': 'Low',
+    'finish': 'Medium',
+    'wall-internal': 'Medium',
+    'soffit': 'Medium',
+    'balustrade': 'High',
+    'exposed-structure': 'High',
+    'fixture': 'Low',
+    'furniture': 'Medium',
+  };
+
+  // Check for custom material (higher risk)
+  const isCustom = material.isCustom === true;
+
+  return {
+    costBand: costByCategory[material.category] || '££',
+    buildComplexity: complexityByCategory[material.category] || 'Medium',
+    procurementRisk: isCustom ? 'High' : (riskByCategory[material.category] || 'Medium'),
+  };
+}
+
+/**
+ * Render low confidence watermark/indicator
+ */
+function renderLowConfidenceIndicator(ctx: PDFContext, metrics: MaterialMetrics): void {
+  if (!metrics.low_confidence_flag) return;
+
+  // Draw "INDICATIVE ONLY" watermark
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(180, 130, 0);
+  ctx.doc.text('⚠ INDICATIVE ONLY — low data confidence', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 12;
+  ctx.doc.setTextColor(0);
 }
 
 /**
@@ -943,9 +1433,10 @@ export function renderEnhancedMaterialSection(
 ): void {
   ensureSpace(ctx, 140);
 
-  // Material thumbnail (if available)
+  // Material thumbnail (if available) or color swatch fallback
   const thumbnailSize = 50;
   let contentStartX = ctx.margin;
+  let thumbnailRendered = false;
 
   if (paletteContext?.thumbnailDataUri) {
     try {
@@ -957,10 +1448,31 @@ export function renderEnhancedMaterialSection(
         thumbnailSize,
         thumbnailSize
       );
-      contentStartX = ctx.margin + thumbnailSize + 10; // Offset content to right of thumbnail
+      contentStartX = ctx.margin + thumbnailSize + 10;
+      thumbnailRendered = true;
     } catch (e) {
-      // Thumbnail failed to load, continue without it
       console.warn('Failed to add material thumbnail to PDF:', e);
+    }
+  }
+
+  // Fallback: Draw colored swatch using material.tone
+  if (!thumbnailRendered && material.tone) {
+    try {
+      // Parse hex color to RGB
+      const hex = material.tone.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+
+      // Draw color swatch with border
+      ctx.doc.setFillColor(r, g, b);
+      ctx.doc.setDrawColor(200, 200, 200);
+      ctx.doc.setLineWidth(0.5);
+      ctx.doc.roundedRect(ctx.margin, ctx.cursorY, thumbnailSize, thumbnailSize, 2, 2, 'FD');
+      contentStartX = ctx.margin + thumbnailSize + 10;
+      thumbnailRendered = true;
+    } catch (e) {
+      console.warn('Failed to draw color swatch:', e);
     }
   }
 
@@ -977,17 +1489,35 @@ export function renderEnhancedMaterialSection(
   ctx.doc.setTextColor(0);
 
   // Move cursor past thumbnail area
-  if (paletteContext?.thumbnailDataUri) {
+  if (thumbnailRendered) {
     ctx.cursorY += thumbnailSize + 10;
   } else {
     ctx.cursorY += 25;
   }
 
+  // Low confidence indicator (if applicable)
+  if (metrics?.low_confidence_flag) {
+    renderLowConfidenceIndicator(ctx, metrics);
+  }
+
   // Lifecycle fingerprint (moved below header)
-  renderLifecycleFingerprint(ctx, material.id, '', profile); // Empty name since we already rendered it
+  renderLifecycleFingerprint(ctx, material.id, '', profile, metrics?.low_confidence_flag); // Empty name since we already rendered it
 
   // Palette context box (NEW) - shows ranking and contribution
   if (paletteContext && metrics) {
+    // CARBON DOMINANT badge if applicable
+    if (paletteContext.isCarbonDominant) {
+      ctx.doc.setFillColor(255, 245, 238);
+      ctx.doc.setDrawColor(220, 53, 69);
+      ctx.doc.setLineWidth(1);
+      ctx.doc.roundedRect(ctx.margin, ctx.cursorY - 4, 180, 14, 2, 2, 'FD');
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(9);
+      ctx.doc.setTextColor(220, 53, 69);
+      ctx.doc.text('CARBON DOMINANT COMPONENT — act here first', ctx.margin + 4, ctx.cursorY + 5);
+      ctx.cursorY += 18;
+    }
+
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(9);
 
@@ -1075,6 +1605,29 @@ export function renderEnhancedMaterialSection(
     ctx.doc.setTextColor(0);
     ctx.cursorY += 14;
   }
+
+  // Practicality bands (cost, complexity, procurement risk)
+  const bands = estimatePracticalityBands(material);
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(100);
+
+  // Cost band
+  const costLabel = bands.costBand === '£' ? '£ Low cost' : bands.costBand === '££' ? '££ Medium cost' : '£££ High cost';
+  ctx.doc.text(costLabel, ctx.margin, ctx.cursorY);
+
+  // Build complexity
+  const complexityLabel = `Build: ${bands.buildComplexity}`;
+  ctx.doc.text(complexityLabel, ctx.margin + 80, ctx.cursorY);
+
+  // Procurement risk
+  const riskColor: [number, number, number] =
+    bands.procurementRisk === 'Low' ? [34, 139, 34] :
+    bands.procurementRisk === 'Medium' ? [180, 130, 0] : [220, 53, 69];
+  ctx.doc.setTextColor(...riskColor);
+  ctx.doc.text(`Procurement: ${bands.procurementRisk}`, ctx.margin + 160, ctx.cursorY);
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 14;
 
   // Hotspots with reasons
   if (insight.hotspots && insight.hotspots.length > 0) {
