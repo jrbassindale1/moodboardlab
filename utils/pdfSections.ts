@@ -138,7 +138,7 @@ function addBullet(ctx: PDFContext, text: string, size = 10): void {
   ctx.doc.setTextColor(0);
   const maxWidth = ctx.pageWidth - ctx.margin * 2 - 15;
   const lines = ctx.doc.splitTextToSize(text, maxWidth);
-  ctx.doc.text('•', ctx.margin, ctx.cursorY);
+  ctx.doc.text('-', ctx.margin, ctx.cursorY);
   lines.forEach((line: string, i: number) => {
     ctx.doc.text(line, ctx.margin + 12, ctx.cursorY + i * (size + 3));
   });
@@ -275,7 +275,7 @@ export function renderComparativeDashboard(
     ctx.doc.setFontSize(9);
     ctx.doc.setTextColor(0);
     carbonDominants.forEach(({ material, percent }) => {
-      ctx.doc.text(`• ${material.name} (${percent.toFixed(0)}% of palette embodied carbon)`, ctx.margin + 15, ctx.cursorY);
+      ctx.doc.text(`- ${material.name} (${percent.toFixed(0)}% of palette embodied carbon)`, ctx.margin + 15, ctx.cursorY);
       ctx.cursorY += 12;
     });
     ctx.cursorY += 8;
@@ -389,7 +389,7 @@ export function renderComparativeDashboard(
     xPos += lifecycleColWidths[1];
 
     // Replacement cycles (over 60-year building life)
-    const replText = metric.lifecycle_multiplier === 1 ? '1× (full life)' : `${metric.lifecycle_multiplier}×`;
+    const replText = metric.lifecycle_multiplier === 1 ? '1x (full life)' : `${metric.lifecycle_multiplier}x`;
     ctx.doc.text(replText, xPos, ctx.cursorY);
     xPos += lifecycleColWidths[2];
 
@@ -478,7 +478,7 @@ export function renderSystemSummaryPage(
   summary.top_embodied_items.slice(0, 3).forEach((id) => {
     const mat = materials.find((m) => m.id === id);
     if (mat) {
-      ctx.doc.text(`  • ${mat.name}`, ctx.margin + 10, ctx.cursorY);
+      ctx.doc.text(`  - ${mat.name}`, ctx.margin + 10, ctx.cursorY);
       ctx.cursorY += 12;
     }
   });
@@ -501,7 +501,7 @@ export function renderSystemSummaryPage(
   summary.top_benefit_items.slice(0, 3).forEach((id) => {
     const mat = materials.find((m) => m.id === id);
     if (mat) {
-      ctx.doc.text(`  • ${mat.name}`, ctx.margin + 10, ctx.cursorY);
+      ctx.doc.text(`  - ${mat.name}`, ctx.margin + 10, ctx.cursorY);
       ctx.cursorY += 12;
     }
   });
@@ -543,7 +543,7 @@ export function renderSystemSummaryPage(
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(10);
       ctx.doc.setTextColor(34, 139, 34); // Green
-      ctx.doc.text(`✓ ${synergy.type.toUpperCase()}:`, ctx.margin, ctx.cursorY);
+      ctx.doc.text(`SYNERGY: ${synergy.type.toUpperCase()}`, ctx.margin, ctx.cursorY);
       ctx.doc.setTextColor(0);
       ctx.cursorY += 12;
 
@@ -577,7 +577,7 @@ export function renderSystemSummaryPage(
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(10);
       ctx.doc.setTextColor(220, 53, 69); // Red
-      ctx.doc.text(`⚠ ${conflict.type.toUpperCase()}:`, ctx.margin, ctx.cursorY);
+      ctx.doc.text(`WATCH-OUT: ${conflict.type.toUpperCase()}`, ctx.margin, ctx.cursorY);
       ctx.doc.setTextColor(0);
       ctx.cursorY += 12;
 
@@ -1301,7 +1301,7 @@ export function renderLifecycleFingerprint(
       endOfLife: { impact: isTimber ? 2 : 3, confidence: 'low' },
     };
 
-    const proxyLine = `Proxy lifecycle scores (very low confidence): RAW ${proxyProfile.raw.impact} • MFG ${proxyProfile.manufacturing.impact} • TRN ${proxyProfile.transport.impact} • INS ${proxyProfile.installation.impact} • USE ${proxyProfile.inUse.impact} • MNT ${proxyProfile.maintenance.impact} • EOL ${proxyProfile.endOfLife.impact}`;
+    const proxyLine = `Proxy lifecycle scores (very low confidence): RAW ${proxyProfile.raw.impact} | MFG ${proxyProfile.manufacturing.impact} | TRN ${proxyProfile.transport.impact} | INS ${proxyProfile.installation.impact} | USE ${proxyProfile.inUse.impact} | MNT ${proxyProfile.maintenance.impact} | EOL ${proxyProfile.endOfLife.impact}`;
     const cardWidth = ctx.pageWidth - ctx.margin * 2;
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(8);
@@ -1366,7 +1366,7 @@ export function renderLifecycleFingerprint(
     ctx.doc.setFontSize(8);
     ctx.doc.setTextColor(80);
     requestItems.forEach((item) => {
-      ctx.doc.text(`• ${item}`, ctx.margin + 14, y);
+      ctx.doc.text(`- ${item}`, ctx.margin + 14, y);
       y += 9;
     });
 
@@ -1589,7 +1589,7 @@ function renderLowConfidenceIndicator(ctx: PDFContext, metrics: MaterialMetrics)
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(180, 130, 0);
-  ctx.doc.text('⚠ INDICATIVE ONLY — low data confidence', ctx.margin, ctx.cursorY);
+  ctx.doc.text('NOTE: INDICATIVE ONLY - low data confidence', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
   ctx.doc.setTextColor(0);
 }
@@ -1756,7 +1756,7 @@ export function renderEnhancedMaterialSection(
 
     // Service life and replacements
     const lifeText = metrics.service_life >= 100 ? '100+' : String(metrics.service_life);
-    const replText = metrics.lifecycle_multiplier === 1 ? 'full building life' : `${metrics.lifecycle_multiplier}× over 60 years`;
+    const replText = metrics.lifecycle_multiplier === 1 ? 'full building life' : `${metrics.lifecycle_multiplier}x over 60 years`;
     ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
 
     // Carbon payback / claim
