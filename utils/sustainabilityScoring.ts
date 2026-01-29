@@ -7,7 +7,14 @@ import type {
   Benefit,
   MaterialMetrics,
   TrafficLight,
+  CarbonPayback,
 } from '../types/sustainability';
+import type { MaterialOption } from '../types';
+import {
+  getLifecycleDuration,
+  getLifecycleMultiplier,
+  getCarbonPayback as getPaybackData,
+} from './lifecycleDurations';
 
 // Configurable weights for aggregate calculations
 export const SCORING_WEIGHTS = {
@@ -119,10 +126,10 @@ export function calculateConfidenceScore(profile: LifecycleProfile): number {
 /**
  * Determine traffic light rating based on impact and benefit scores
  *
- * Rules:
- * - Green: overall impact <= 2.2 OR (moderate impact AND high benefit)
- * - Amber: moderate impact with moderate benefit
- * - Red: high impact OR low benefit
+ * STRICT Rules (credibility-focused):
+ * - Green: Genuinely low impact (≤ 1.8) AND some benefit (≥ 2.0) - should be RARE
+ * - Amber: Moderate impact OR low-impact but no benefits - the DEFAULT for most materials
+ * - Red: High impact (> 3.2) OR high impact stages without offsetting benefits
  * - Cap at Amber if confidence < threshold
  */
 export function determineTrafficLight(
@@ -134,21 +141,25 @@ export function determineTrafficLight(
 
   let light: TrafficLight;
 
-  // Low impact is always good
-  if (overallImpact <= 2.2) {
-    light = 'green';
-  }
-  // Moderate impact (2.2 - 3.5) with high benefit (>= 3.5)
-  else if (overallImpact <= 3.5 && benefitScore >= 3.5) {
-    light = 'green';
-  }
-  // Moderate impact with moderate benefit (>= 2.0)
-  else if (overallImpact <= 3.5 && benefitScore >= 2.0) {
-    light = 'amber';
-  }
-  // High impact (> 3.5) or low benefit (< 2.0)
-  else {
+  // HIGH IMPACT = RED (regardless of benefits - you can't offset 4-5 impact scores)
+  if (overallImpact > 3.2) {
     light = 'red';
+  }
+  // GENUINELY LOW IMPACT with meaningful benefits = GREEN (should be rare)
+  else if (overallImpact <= 1.8 && benefitScore >= 2.0) {
+    light = 'green';
+  }
+  // MODERATE-HIGH IMPACT (2.5-3.2) = RED unless strong benefits
+  else if (overallImpact > 2.5 && benefitScore < 3.0) {
+    light = 'red';
+  }
+  // MODERATE IMPACT (1.8-2.5) with strong benefits = GREEN
+  else if (overallImpact <= 2.5 && benefitScore >= 3.5) {
+    light = 'green';
+  }
+  // Everything else = AMBER (the honest default)
+  else {
+    light = 'amber';
   }
 
   // Cap at amber if low confidence
@@ -161,10 +172,12 @@ export function determineTrafficLight(
 
 /**
  * Calculate all material metrics from lifecycle profile and benefits
+ * Optionally accepts material for lifecycle duration data
  */
 export function calculateMaterialMetrics(
   profile: LifecycleProfile,
-  benefits: Benefit[] = []
+  benefits: Benefit[] = [],
+  material?: MaterialOption
 ): MaterialMetrics {
   const embodied_proxy = calculateEmbodiedProxy(profile);
   const in_use_proxy = calculateInUseProxy(profile);
@@ -179,6 +192,29 @@ export function calculateMaterialMetrics(
     confidence_score
   );
 
+  // Get lifecycle duration data if material provided
+  let service_life = 25; // Default
+  let replacement_cycle = 25;
+  let lifecycle_multiplier = 2;
+  let carbon_payback: CarbonPayback | undefined;
+
+  if (material) {
+    const duration = getLifecycleDuration(material);
+    service_life = duration.serviceLife;
+    replacement_cycle = duration.replacementCycle;
+    lifecycle_multiplier = getLifecycleMultiplier(material);
+
+    // Get carbon payback if applicable
+    const payback = getPaybackData(material);
+    if (payback) {
+      carbon_payback = {
+        years: payback.years,
+        mechanism: payback.mechanism,
+        assumption: payback.assumption,
+      };
+    }
+  }
+
   return {
     embodied_proxy,
     in_use_proxy,
@@ -188,6 +224,10 @@ export function calculateMaterialMetrics(
     confidence_score,
     traffic_light: light,
     low_confidence_flag: lowConfidenceFlag,
+    service_life,
+    replacement_cycle,
+    lifecycle_multiplier,
+    carbon_payback,
   };
 }
 

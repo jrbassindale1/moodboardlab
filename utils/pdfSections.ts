@@ -187,18 +187,11 @@ export function renderComparativeDashboard(
   addHeading(ctx, 'Material Comparison Dashboard', 16);
   ctx.cursorY += 5;
 
-  // Table layout
-  const colWidths = [130, 50, 50, 45, 45, 40, 45, 45];
-  const headers = [
-    'Material',
-    'Embodied',
-    'In-use',
-    'EOL',
-    'Benefit',
-    'Circ.',
-    'Conf.',
-    'Rating',
-  ];
+  // ===== TABLE 1: Impact & Rating =====
+  addHeading(ctx, 'Impact Assessment', 12);
+
+  const impactColWidths = [120, 55, 50, 45, 45, 45, 45];
+  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Benefit', 'Conf.', 'Rating'];
   const tableStartX = ctx.margin;
 
   // Table header
@@ -206,89 +199,156 @@ export function renderComparativeDashboard(
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(60);
   let xPos = tableStartX;
-  headers.forEach((header, i) => {
+  impactHeaders.forEach((header, i) => {
     ctx.doc.text(header, xPos, ctx.cursorY);
-    xPos += colWidths[i];
+    xPos += impactColWidths[i];
   });
   ctx.cursorY += 12;
 
   // Header line
   ctx.doc.setDrawColor(180);
   ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(
-    ctx.margin,
-    ctx.cursorY - 5,
-    ctx.pageWidth - ctx.margin,
-    ctx.cursorY - 5
-  );
+  ctx.doc.line(ctx.margin, ctx.cursorY - 5, ctx.pageWidth - ctx.margin, ctx.cursorY - 5);
 
   // Table rows
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(0);
 
   materials.forEach((material) => {
-    ensureSpace(ctx, 18);
+    ensureSpace(ctx, 14);
     const metric = metrics.get(material.id);
     if (!metric) return;
 
     xPos = tableStartX;
 
     // Material name (truncated)
-    const truncatedName =
-      material.name.length > 20
-        ? material.name.substring(0, 18) + '...'
-        : material.name;
+    const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
     ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-    xPos += colWidths[0];
+    xPos += impactColWidths[0];
 
-    // Numeric scores
+    // Scores
     ctx.doc.text(formatScore(metric.embodied_proxy), xPos, ctx.cursorY);
-    xPos += colWidths[1];
+    xPos += impactColWidths[1];
 
     ctx.doc.text(formatScore(metric.in_use_proxy), xPos, ctx.cursorY);
-    xPos += colWidths[2];
+    xPos += impactColWidths[2];
 
     ctx.doc.text(formatScore(metric.end_of_life_proxy), xPos, ctx.cursorY);
-    xPos += colWidths[3];
+    xPos += impactColWidths[3];
 
     ctx.doc.text(formatScore(metric.benefit_score), xPos, ctx.cursorY);
-    xPos += colWidths[4];
-
-    // Circularity indicator
-    const circ = getCircularityIndicator(metric.end_of_life_proxy);
-    const circSymbol = circ === 'high' ? '●' : circ === 'medium' ? '◐' : '○';
-    ctx.doc.text(circSymbol, xPos + 8, ctx.cursorY);
-    xPos += colWidths[5];
+    xPos += impactColWidths[4];
 
     // Confidence
     const confPercent = Math.round(metric.confidence_score * 100);
     ctx.doc.text(`${confPercent}%`, xPos, ctx.cursorY);
-    if (metric.low_confidence_flag) {
-      ctx.doc.setFontSize(7);
-      ctx.doc.text('?', xPos + 22, ctx.cursorY);
-      ctx.doc.setFontSize(9);
-    }
-    xPos += colWidths[6];
+    xPos += impactColWidths[5];
 
     // Traffic light
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, metric.traffic_light);
+    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, metric.traffic_light, 4);
 
-    ctx.cursorY += 16;
+    ctx.cursorY += 13;
+  });
+
+  // ===== TABLE 2: Lifecycle & Durability =====
+  ctx.cursorY += 15;
+  addHeading(ctx, 'Lifecycle & Durability', 12);
+
+  const lifecycleColWidths = [120, 65, 70, 65, 100];
+  const lifecycleHeaders = ['Material', 'Service Life', 'Replacements*', 'Circularity', 'Carbon Payback'];
+
+  // Table header
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(60);
+  xPos = tableStartX;
+  lifecycleHeaders.forEach((header, i) => {
+    ctx.doc.text(header, xPos, ctx.cursorY);
+    xPos += lifecycleColWidths[i];
+  });
+  ctx.cursorY += 12;
+
+  // Header line
+  ctx.doc.line(ctx.margin, ctx.cursorY - 5, ctx.pageWidth - ctx.margin, ctx.cursorY - 5);
+
+  // Table rows
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(0);
+
+  materials.forEach((material) => {
+    ensureSpace(ctx, 14);
+    const metric = metrics.get(material.id);
+    if (!metric) return;
+
+    xPos = tableStartX;
+
+    // Material name
+    const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
+    ctx.doc.text(truncatedName, xPos, ctx.cursorY);
+    xPos += lifecycleColWidths[0];
+
+    // Service life
+    const lifeText = metric.service_life >= 100 ? '100+ years' : `${metric.service_life} years`;
+    ctx.doc.text(lifeText, xPos, ctx.cursorY);
+    xPos += lifecycleColWidths[1];
+
+    // Replacement cycles (over 60-year building life)
+    const replText = metric.lifecycle_multiplier === 1 ? '1× (full life)' : `${metric.lifecycle_multiplier}×`;
+    ctx.doc.text(replText, xPos, ctx.cursorY);
+    xPos += lifecycleColWidths[2];
+
+    // Circularity indicator
+    const circ = getCircularityIndicator(metric.end_of_life_proxy);
+    const circText = circ === 'high' ? '● High' : circ === 'medium' ? '◐ Medium' : '○ Low';
+    ctx.doc.text(circText, xPos, ctx.cursorY);
+    xPos += lifecycleColWidths[3];
+
+    // Carbon payback
+    if (metric.carbon_payback) {
+      const payback = metric.carbon_payback;
+      let paybackText: string;
+      if (payback.years === 0) {
+        paybackText = payback.mechanism === 'sequestration' ? 'Carbon -ve' : 'Immediate';
+      } else {
+        paybackText = `~${payback.years} years`;
+      }
+      // Color code based on payback
+      if (payback.years === 0) {
+        ctx.doc.setTextColor(34, 139, 34); // Green
+      } else if (payback.years <= 5) {
+        ctx.doc.setTextColor(0, 128, 0);
+      }
+      ctx.doc.text(paybackText, xPos, ctx.cursorY);
+      ctx.doc.setTextColor(0);
+    } else {
+      ctx.doc.setTextColor(150);
+      ctx.doc.text('—', xPos, ctx.cursorY);
+      ctx.doc.setTextColor(0);
+    }
+
+    ctx.cursorY += 13;
   });
 
   // Legend
-  ctx.cursorY += 15;
-  ctx.doc.setFontSize(8);
+  ctx.cursorY += 12;
+  ctx.doc.setFontSize(7);
   ctx.doc.setTextColor(80);
   ctx.doc.text(
-    'Rating: Green = low impact or high benefit offset | Amber = moderate, review design levers | Red = high impact, consider alternatives',
+    '* Replacements = how many times installed over 60-year building life. Higher = more lifetime embodied carbon.',
     ctx.margin,
     ctx.cursorY
   );
-  ctx.cursorY += 11;
+  ctx.cursorY += 10;
   ctx.doc.text(
-    'Circularity: ● High | ◐ Medium | ○ Low | ? = Low confidence data',
+    'Carbon Payback: years until embodied carbon is offset by sequestration, energy generation, or avoided emissions. Carbon -ve = net negative.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.cursorY += 10;
+  ctx.doc.text(
+    'Rating: Green = low impact | Amber = moderate | Red = high impact. Circularity: ● High | ◐ Medium | ○ Low',
     ctx.margin,
     ctx.cursorY
   );
@@ -450,6 +510,121 @@ export function renderSystemSummaryPage(
 /**
  * Render Page 4: UK Compliance Dashboard
  */
+/**
+ * Determine compliance status for a category
+ * Returns: green (evidence available), amber (evidence required), red (risk/non-compliant)
+ */
+function getComplianceStatus(
+  insight: EnhancedSustainabilityInsight,
+  material: MaterialOption,
+  category: 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification'
+): TrafficLight {
+  const ukChecks = insight.ukChecks || [];
+  const benefits = insight.benefits || [];
+  const risks = insight.risks || [];
+
+  // Check for explicit status in ukChecks
+  const relevantCheck = ukChecks.find((c) => {
+    const label = c.label.toLowerCase();
+    switch (category) {
+      case 'epd':
+        return (
+          c.standard_code?.includes('EN 15804') ||
+          c.standard_code?.includes('ISO 14025') ||
+          label.includes('epd') ||
+          label.includes('environmental product declaration')
+        );
+      case 'recycled':
+        return (
+          label.includes('recycled') ||
+          label.includes('reclaimed') ||
+          label.includes('secondary')
+        );
+      case 'fixings':
+        return (
+          label.includes('mechanical') ||
+          label.includes('demountable') ||
+          label.includes('disassembly') ||
+          label.includes('reversible')
+        );
+      case 'biodiversity':
+        return (
+          label.includes('biodiversity') ||
+          label.includes('habitat') ||
+          label.includes('native')
+        );
+      case 'certification':
+        return (
+          c.standard_code?.includes('FSC') ||
+          c.standard_code?.includes('PEFC') ||
+          label.includes('certified') ||
+          label.includes('chain of custody')
+        );
+      default:
+        return false;
+    }
+  });
+
+  // If ukCheck has explicit status, use it
+  if (relevantCheck?.status) {
+    return relevantCheck.status;
+  }
+
+  // Check for risks that would flag red
+  const hasRisk = risks.some((r) => {
+    const note = r.note?.toLowerCase() || '';
+    switch (category) {
+      case 'epd':
+        return note.includes('no epd') || note.includes('unverified');
+      case 'recycled':
+        return note.includes('virgin') || note.includes('non-recycled');
+      case 'fixings':
+        return (
+          note.includes('adhesive') ||
+          note.includes('bonded') ||
+          note.includes('composite')
+        );
+      case 'certification':
+        return note.includes('uncertified') || note.includes('illegal');
+      default:
+        return false;
+    }
+  });
+
+  if (hasRisk) return 'red';
+
+  // Biodiversity special handling
+  if (category === 'biodiversity') {
+    if (material.category !== 'landscape' && material.category !== 'external-ground') {
+      return 'amber'; // Not applicable shown as amber for non-landscape
+    }
+    const hasBioBenefit = benefits.some((b) => b.type === 'biodiversity' && b.score_1to5 >= 3);
+    if (hasBioBenefit) return 'green';
+    const hasAnyBio = benefits.some((b) => b.type === 'biodiversity');
+    if (hasAnyBio) return 'amber';
+    return 'red'; // Landscape without biodiversity consideration is a gap
+  }
+
+  // If we found a relevant check (without explicit status), it's at least being tracked
+  if (relevantCheck) {
+    // Check if the label suggests it's verified/available
+    const label = relevantCheck.label.toLowerCase();
+    if (
+      label.includes('verified') ||
+      label.includes('confirmed') ||
+      label.includes('available') ||
+      label.includes('compliant')
+    ) {
+      return 'green';
+    }
+    // Check being tracked but not yet verified
+    return 'amber';
+  }
+
+  // Nothing found - evidence required
+  return 'amber';
+}
+
 export function renderUKComplianceDashboard(
   ctx: PDFContext,
   insights: EnhancedSustainabilityInsight[],
@@ -458,17 +633,110 @@ export function renderUKComplianceDashboard(
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
 
-  addHeading(ctx, 'UK Compliance Checks', 16);
+  addHeading(ctx, 'UK Compliance & Evidence', 16);
   ctx.cursorY += 5;
 
+  // Build evidence lists by priority (red first, then amber)
+  const redFlags: string[] = [];
+  const amberRequired: string[] = [];
+
+  insights.forEach((insight) => {
+    const material = materials.find((m) => m.id === insight.id);
+    if (!material) return;
+
+    // Check each category and collect issues
+    const categories: Array<{ key: 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification'; label: string }> = [
+      { key: 'epd', label: 'EPD (EN 15804)' },
+      { key: 'recycled', label: 'recycled content verification' },
+      { key: 'fixings', label: 'mechanical fixings / disassembly' },
+      { key: 'certification', label: 'chain of custody certification' },
+    ];
+
+    // Add biodiversity for landscape materials
+    if (material.category === 'landscape' || material.category === 'external-ground') {
+      categories.push({ key: 'biodiversity', label: 'biodiversity assessment' });
+    }
+
+    categories.forEach(({ key, label }) => {
+      const status = getComplianceStatus(insight, material, key);
+      if (status === 'red') {
+        redFlags.push(`${material.name}: ${label} — risk or non-compliant`);
+      } else if (status === 'amber') {
+        amberRequired.push(`${material.name}: ${label}`);
+      }
+    });
+  });
+
+  // SECTION 1: Evidence Required (at TOP)
+  const hasIssues = redFlags.length > 0 || amberRequired.length > 0;
+
+  if (hasIssues) {
+    addHeading(ctx, 'Evidence Required', 13);
+
+    // Red flags first (risks)
+    if (redFlags.length > 0) {
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(9);
+      ctx.doc.setTextColor(220, 53, 69);
+      ctx.doc.text('Non-compliant / Risk:', ctx.margin, ctx.cursorY);
+      ctx.cursorY += 12;
+
+      ctx.doc.setFont('helvetica', 'normal');
+      ctx.doc.setTextColor(0);
+      const maxRed = Math.min(redFlags.length, 5);
+      for (let i = 0; i < maxRed; i++) {
+        ensureSpace(ctx, 12);
+        drawTrafficLight(ctx, ctx.margin + 5, ctx.cursorY - 3, 'red', 3);
+        ctx.doc.text(redFlags[i], ctx.margin + 15, ctx.cursorY);
+        ctx.cursorY += 12;
+      }
+      ctx.cursorY += 5;
+    }
+
+    // Amber items (evidence required)
+    if (amberRequired.length > 0) {
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(9);
+      ctx.doc.setTextColor(180, 130, 0);
+      ctx.doc.text('Evidence to obtain:', ctx.margin, ctx.cursorY);
+      ctx.cursorY += 12;
+
+      ctx.doc.setFont('helvetica', 'normal');
+      ctx.doc.setTextColor(0);
+      const maxAmber = Math.min(amberRequired.length, 8);
+      for (let i = 0; i < maxAmber; i++) {
+        ensureSpace(ctx, 12);
+        drawTrafficLight(ctx, ctx.margin + 5, ctx.cursorY - 3, 'amber', 3);
+        ctx.doc.text(amberRequired[i], ctx.margin + 15, ctx.cursorY);
+        ctx.cursorY += 12;
+      }
+
+      if (amberRequired.length > 8) {
+        ctx.doc.setTextColor(100);
+        ctx.doc.text(
+          `... and ${amberRequired.length - 8} more items`,
+          ctx.margin + 15,
+          ctx.cursorY
+        );
+        ctx.doc.setTextColor(0);
+        ctx.cursorY += 12;
+      }
+    }
+
+    ctx.cursorY += 15;
+  }
+
+  // SECTION 2: Compliance Matrix
+  addHeading(ctx, 'Compliance Matrix', 13);
+
   // Table layout
-  const colWidths = [140, 55, 60, 55, 55];
-  const headers = ['Material', 'EPD', 'Recycled', 'Fixings', 'Bio.'];
+  const colWidths = [130, 50, 50, 50, 50, 50];
+  const headers = ['Material', 'EPD', 'Recycled', 'Fixings', 'Cert.', 'Bio.'];
   const tableStartX = ctx.margin;
 
   // Table header
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(60);
   let xPos = tableStartX;
   headers.forEach((header, i) => {
@@ -487,16 +755,13 @@ export function renderUKComplianceDashboard(
     ctx.cursorY - 5
   );
 
-  // Track missing evidence
-  const missingEvidence: string[] = [];
-
   // Table rows
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(0);
 
   insights.forEach((insight) => {
-    ensureSpace(ctx, 18);
+    ensureSpace(ctx, 16);
     const material = materials.find((m) => m.id === insight.id);
     if (!material) return;
 
@@ -504,115 +769,63 @@ export function renderUKComplianceDashboard(
 
     // Material name
     const truncatedName =
-      material.name.length > 22
-        ? material.name.substring(0, 20) + '...'
+      material.name.length > 20
+        ? material.name.substring(0, 18) + '...'
         : material.name;
     ctx.doc.text(truncatedName, xPos, ctx.cursorY);
     xPos += colWidths[0];
 
-    // EPD check
-    const hasEPD = insight.ukChecks?.some(
-      (c) =>
-        c.standard_code?.includes('EN 15804') ||
-        c.label.toLowerCase().includes('epd')
-    );
-    drawTrafficLight(
-      ctx,
-      xPos + 15,
-      ctx.cursorY - 3,
-      hasEPD ? 'green' : 'amber',
-      4
-    );
-    if (!hasEPD) missingEvidence.push(`${material.name}: Request EPD (EN 15804)`);
+    // EPD
+    const epdStatus = getComplianceStatus(insight, material, 'epd');
+    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, epdStatus, 3);
     xPos += colWidths[1];
 
-    // Recycled content check
-    const hasRecycled = insight.ukChecks?.some((c) =>
-      c.label.toLowerCase().includes('recycled')
-    );
-    drawTrafficLight(
-      ctx,
-      xPos + 15,
-      ctx.cursorY - 3,
-      hasRecycled ? 'green' : 'amber',
-      4
-    );
-    if (!hasRecycled)
-      missingEvidence.push(`${material.name}: Verify recycled content`);
+    // Recycled
+    const recycledStatus = getComplianceStatus(insight, material, 'recycled');
+    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, recycledStatus, 3);
     xPos += colWidths[2];
 
-    // Mechanical fixings check
-    const hasMechanical =
-      material.description?.toLowerCase().includes('mechanical') ||
-      material.description?.toLowerCase().includes('demountable') ||
-      insight.ukChecks?.some(
-        (c) =>
-          c.label.toLowerCase().includes('demountable') ||
-          c.label.toLowerCase().includes('mechanical')
-      );
-    drawTrafficLight(
-      ctx,
-      xPos + 15,
-      ctx.cursorY - 3,
-      hasMechanical ? 'green' : 'amber',
-      4
-    );
+    // Fixings
+    const fixingsStatus = getComplianceStatus(insight, material, 'fixings');
+    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, fixingsStatus, 3);
     xPos += colWidths[3];
 
-    // Biodiversity (landscape only)
-    if (material.category === 'landscape') {
-      const hasBio = insight.benefits?.some((b) => b.type === 'biodiversity');
-      drawTrafficLight(
-        ctx,
-        xPos + 15,
-        ctx.cursorY - 3,
-        hasBio ? 'green' : 'amber',
-        4
-      );
+    // Certification
+    const certStatus = getComplianceStatus(insight, material, 'certification');
+    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, certStatus, 3);
+    xPos += colWidths[4];
+
+    // Biodiversity (landscape only, otherwise show n/a)
+    if (material.category === 'landscape' || material.category === 'external-ground') {
+      const bioStatus = getComplianceStatus(insight, material, 'biodiversity');
+      drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, bioStatus, 3);
     } else {
       ctx.doc.setTextColor(150);
-      ctx.doc.text('—', xPos + 15, ctx.cursorY);
+      ctx.doc.setFontSize(7);
+      ctx.doc.text('n/a', xPos + 8, ctx.cursorY);
+      ctx.doc.setFontSize(8);
       ctx.doc.setTextColor(0);
     }
 
-    ctx.cursorY += 16;
+    ctx.cursorY += 14;
   });
 
-  // Missing evidence summary
-  if (missingEvidence.length > 0) {
-    ctx.cursorY += 20;
-    ensureSpace(ctx, 80);
-    addHeading(ctx, 'Missing Evidence', 12);
-
-    ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(9);
-    const maxItems = Math.min(missingEvidence.length, 10);
-    for (let i = 0; i < maxItems; i++) {
-      ensureSpace(ctx, 12);
-      ctx.doc.text(`• ${missingEvidence[i]}`, ctx.margin + 10, ctx.cursorY);
-      ctx.cursorY += 12;
-    }
-
-    if (missingEvidence.length > 10) {
-      ctx.doc.setTextColor(100);
-      ctx.doc.text(
-        `... and ${missingEvidence.length - 10} more items`,
-        ctx.margin + 10,
-        ctx.cursorY
-      );
-      ctx.doc.setTextColor(0);
-    }
-  }
-
   // Legend
-  ctx.cursorY += 15;
+  ctx.cursorY += 12;
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(80);
-  ctx.doc.text(
-    'Green = Evidence available | Amber = Evidence required | — = Not applicable',
-    ctx.margin,
-    ctx.cursorY
-  );
+
+  // Draw legend with actual traffic lights
+  const legendY = ctx.cursorY;
+  drawTrafficLight(ctx, ctx.margin + 5, legendY - 3, 'green', 3);
+  ctx.doc.text('Evidence available', ctx.margin + 15, legendY);
+
+  drawTrafficLight(ctx, ctx.margin + 100, legendY - 3, 'amber', 3);
+  ctx.doc.text('Evidence required', ctx.margin + 110, legendY);
+
+  drawTrafficLight(ctx, ctx.margin + 205, legendY - 3, 'red', 3);
+  ctx.doc.text('Risk / Non-compliant', ctx.margin + 215, legendY);
+
   ctx.doc.setTextColor(0);
 }
 
@@ -708,6 +921,16 @@ export function renderLifecycleFingerprint(
 }
 
 /**
+ * Palette context for material ranking
+ */
+export interface MaterialPaletteContext {
+  rank: number; // 1 = highest embodied impact
+  totalMaterials: number;
+  contributionPercent: number; // Percentage of total embodied impact
+  thumbnailDataUri?: string; // Optional material thumbnail
+}
+
+/**
  * Render enhanced material section with design consequences
  */
 export function renderEnhancedMaterialSection(
@@ -715,12 +938,92 @@ export function renderEnhancedMaterialSection(
   material: MaterialOption,
   insight: EnhancedSustainabilityInsight | undefined,
   metrics: MaterialMetrics | undefined,
-  profile: LifecycleProfile | null
+  profile: LifecycleProfile | null,
+  paletteContext?: MaterialPaletteContext
 ): void {
-  ensureSpace(ctx, 120);
+  ensureSpace(ctx, 140);
 
-  // Lifecycle fingerprint
-  renderLifecycleFingerprint(ctx, material.id, material.name, profile);
+  // Material thumbnail (if available)
+  const thumbnailSize = 50;
+  let contentStartX = ctx.margin;
+
+  if (paletteContext?.thumbnailDataUri) {
+    try {
+      ctx.doc.addImage(
+        paletteContext.thumbnailDataUri,
+        'PNG',
+        ctx.margin,
+        ctx.cursorY,
+        thumbnailSize,
+        thumbnailSize
+      );
+      contentStartX = ctx.margin + thumbnailSize + 10; // Offset content to right of thumbnail
+    } catch (e) {
+      // Thumbnail failed to load, continue without it
+      console.warn('Failed to add material thumbnail to PDF:', e);
+    }
+  }
+
+  // Material name header (next to thumbnail if present)
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(12);
+  ctx.doc.text(material.name, contentStartX, ctx.cursorY + 8);
+
+  // Category tag
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(100);
+  ctx.doc.text(`[${material.category}]`, contentStartX, ctx.cursorY + 18);
+  ctx.doc.setTextColor(0);
+
+  // Move cursor past thumbnail area
+  if (paletteContext?.thumbnailDataUri) {
+    ctx.cursorY += thumbnailSize + 10;
+  } else {
+    ctx.cursorY += 25;
+  }
+
+  // Lifecycle fingerprint (moved below header)
+  renderLifecycleFingerprint(ctx, material.id, '', profile); // Empty name since we already rendered it
+
+  // Palette context box (NEW) - shows ranking and contribution
+  if (paletteContext && metrics) {
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(9);
+
+    // Color code based on ranking
+    if (paletteContext.rank <= 2) {
+      ctx.doc.setTextColor(220, 53, 69); // Red for top 2
+    } else if (paletteContext.rank <= Math.ceil(paletteContext.totalMaterials / 2)) {
+      ctx.doc.setTextColor(180, 130, 0); // Amber for upper half
+    } else {
+      ctx.doc.setTextColor(34, 139, 34); // Green for lower half
+    }
+
+    // Ranking text
+    const rankText = `#${paletteContext.rank} of ${paletteContext.totalMaterials} by embodied carbon`;
+    ctx.doc.text(rankText, ctx.margin, ctx.cursorY);
+
+    // Contribution percentage
+    const contribText = `(${paletteContext.contributionPercent.toFixed(0)}% of palette total)`;
+    ctx.doc.text(contribText, ctx.margin + 150, ctx.cursorY);
+
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 14;
+
+    // Traffic light indicator with label
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    const ratingLabel =
+      metrics.traffic_light === 'green'
+        ? 'Low impact'
+        : metrics.traffic_light === 'amber'
+        ? 'Moderate impact — review design levers'
+        : 'High impact — consider alternatives';
+    drawTrafficLight(ctx, ctx.margin, ctx.cursorY - 3, metrics.traffic_light, 4);
+    ctx.doc.text(ratingLabel, ctx.margin + 15, ctx.cursorY);
+    ctx.cursorY += 12;
+  }
 
   if (!insight) {
     ctx.doc.setFont('helvetica', 'normal');
@@ -737,6 +1040,40 @@ export function renderEnhancedMaterialSection(
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(10);
     addParagraph(ctx, insight.headline, 10, 6);
+  }
+
+  // Lifecycle metrics box (NEW)
+  if (metrics) {
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(80);
+
+    // Service life and replacements
+    const lifeText = metrics.service_life >= 100 ? '100+' : String(metrics.service_life);
+    const replText = metrics.lifecycle_multiplier === 1 ? 'full building life' : `${metrics.lifecycle_multiplier}× over 60 years`;
+    ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
+
+    // Carbon payback if applicable
+    if (metrics.carbon_payback) {
+      const payback = metrics.carbon_payback;
+      let paybackText: string;
+      if (payback.years === 0) {
+        paybackText = payback.mechanism === 'sequestration'
+          ? 'Carbon payback: Negative from day 1 (carbon stored)'
+          : 'Carbon payback: Immediate benefit';
+      } else {
+        const mechText = payback.mechanism === 'generation' ? 'energy generated'
+          : payback.mechanism === 'sequestration' ? 'carbon stored'
+          : 'emissions avoided';
+        paybackText = `Carbon payback: ~${payback.years} years (${mechText})`;
+      }
+      ctx.cursorY += 10;
+      ctx.doc.setTextColor(34, 100, 34);
+      ctx.doc.text(paybackText, ctx.margin, ctx.cursorY);
+    }
+
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 14;
   }
 
   // Hotspots with reasons

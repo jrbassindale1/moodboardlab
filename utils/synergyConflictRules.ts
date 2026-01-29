@@ -1,330 +1,320 @@
 // Synergy and conflict detection rules engine
-// Hard-coded rules for detecting material interactions
+// Ensures at least 1 synergy and 1 watch-out are always generated
 
-import type { Synergy, Conflict } from '../types/sustainability';
-import type { MaterialOption } from '../types';
+import type { Synergy, Conflict, MaterialMetrics } from '../types/sustainability';
+import type { MaterialOption, MaterialCategory } from '../types';
 
-// Rule interface for synergy detection
+// Category groupings
+const THERMAL_MASS_MATERIALS = ['rammed-earth', 'hempcrete', 'concrete', 'brick', 'stone', 'cob', 'adobe'];
+const INSULATION_MATERIALS = ['hempcrete', 'cork', 'wool', 'cellulose', 'woodfibre', 'straw'];
+const TIMBER_STRUCTURAL = ['clt', 'glulam', 'timber', 'mass-timber', 'nlt', 'dlt'];
+const HIGH_EMBODIED = ['steel', 'aluminium', 'concrete', 'glass'];
+const HARD_LANDSCAPE = ['gravel', 'paving', 'block', 'sett', 'concrete', 'asphalt', 'resin'];
+const SOFT_LANDSCAPE = ['meadow', 'wildflower', 'native', 'planting', 'lawn', 'sedum', 'green-roof'];
+const ACOUSTIC = ['acoustic', 'felt', 'baffle', 'absorber'];
+const GLAZING = ['glass', 'glazing', 'curtain-wall', 'window', 'partition'];
+
+// Helper functions
+function materialMatches(material: MaterialOption, patterns: string[]): boolean {
+  const id = material.id.toLowerCase();
+  const name = material.name.toLowerCase();
+  const keywords = (material.keywords || []).map(k => k.toLowerCase());
+
+  return patterns.some(p =>
+    id.includes(p) ||
+    name.includes(p) ||
+    keywords.some(k => k.includes(p))
+  );
+}
+
+function getMaterialsMatching(materials: MaterialOption[], patterns: string[]): MaterialOption[] {
+  return materials.filter(m => materialMatches(m, patterns));
+}
+
+function hasCategory(materials: MaterialOption[], categories: MaterialCategory[]): boolean {
+  return materials.some(m => categories.includes(m.category));
+}
+
+function getMaterialsByCategory(materials: MaterialOption[], categories: MaterialCategory[]): MaterialOption[] {
+  return materials.filter(m => categories.includes(m.category));
+}
+
+// ============== SYNERGY RULES ==============
+
 interface SynergyRule {
   id: string;
   condition: (materials: MaterialOption[]) => boolean;
   generate: (materials: MaterialOption[]) => Synergy;
 }
 
-// Rule interface for conflict detection
-interface ConflictRule {
-  id: string;
-  condition: (materials: MaterialOption[]) => boolean;
-  generate: (materials: MaterialOption[]) => Conflict;
-}
-
-// Helper to check if any material matches criteria
-function hasMatchingMaterial(
-  materials: MaterialOption[],
-  matcher: (m: MaterialOption) => boolean
-): boolean {
-  return materials.some(matcher);
-}
-
-// Helper to find materials matching criteria
-function findMatchingMaterials(
-  materials: MaterialOption[],
-  matcher: (m: MaterialOption) => boolean
-): MaterialOption[] {
-  return materials.filter(matcher);
-}
-
-// Check if material ID contains any of the given terms
-function idContains(material: MaterialOption, terms: string[]): boolean {
-  const id = material.id.toLowerCase();
-  return terms.some((term) => id.includes(term.toLowerCase()));
-}
-
-// Check if keywords contain any of the given terms
-function keywordsContain(material: MaterialOption, terms: string[]): boolean {
-  if (!material.keywords) return false;
-  const keywords = material.keywords.map((k) => k.toLowerCase());
-  return terms.some((term) =>
-    keywords.some((k) => k.includes(term.toLowerCase()))
-  );
-}
-
-// Check if description contains any of the given terms
-function descriptionContains(
-  material: MaterialOption,
-  terms: string[]
-): boolean {
-  if (!material.description) return false;
-  const desc = material.description.toLowerCase();
-  return terms.some((term) => desc.includes(term.toLowerCase()));
-}
-
-// ============== SYNERGY RULES ==============
-
 const SYNERGY_RULES: SynergyRule[] = [
-  // PV + durable roof = renewable energy synergy
+  // Thermal mass + insulation synergy
   {
-    id: 'pv-durable-roof',
+    id: 'thermal-mass-insulation',
     condition: (materials) => {
-      const hasPV = hasMatchingMaterial(
-        materials,
-        (m) =>
-          idContains(m, ['pv', 'solar', 'photovoltaic']) ||
-          keywordsContain(m, ['solar', 'pv', 'photovoltaic'])
-      );
-      const hasDurableRoof = hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.category === 'roof' &&
-          (idContains(m, ['metal', 'slate', 'standing-seam', 'zinc', 'copper']) ||
-            keywordsContain(m, ['durable', 'long-life']))
-      );
-      return hasPV && hasDurableRoof;
+      const hasThermalMass = getMaterialsMatching(materials, THERMAL_MASS_MATERIALS).length > 0;
+      const hasInsulation = getMaterialsMatching(materials, INSULATION_MATERIALS).length > 0 ||
+        hasCategory(materials, ['insulation']);
+      return hasThermalMass && hasInsulation;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          idContains(m, ['pv', 'solar']) ||
-          (m.category === 'roof' &&
-            idContains(m, ['metal', 'slate', 'standing-seam', 'zinc', 'copper']))
-      ).map((m) => m.id),
-      type: 'carbon',
-      description:
-        'Solar PV combined with durable roofing maximizes renewable generation lifespan',
+      materials: [
+        ...getMaterialsMatching(materials, THERMAL_MASS_MATERIALS),
+        ...getMaterialsMatching(materials, INSULATION_MATERIALS),
+      ].map(m => m.id),
+      type: 'performance',
+      description: 'Thermal mass materials combined with natural insulation support passive temperature regulation',
     }),
   },
 
-  // Brick + lime mortar = circularity synergy
-  {
-    id: 'brick-lime',
-    condition: (materials) => {
-      const hasBrick = hasMatchingMaterial(materials, (m) =>
-        idContains(m, ['brick'])
-      );
-      const hasLime = hasMatchingMaterial(
-        materials,
-        (m) =>
-          idContains(m, ['lime']) ||
-          keywordsContain(m, ['lime mortar', 'lime-based'])
-      );
-      return hasBrick && hasLime;
-    },
-    generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) => idContains(m, ['brick']) || idContains(m, ['lime'])
-      ).map((m) => m.id),
-      type: 'circularity',
-      description:
-        'Lime mortar enables future brick reuse and creates a vapour-open assembly',
-    }),
-  },
-
-  // Meadow/native planting = biodiversity synergy
-  {
-    id: 'biodiversity-planting',
-    condition: (materials) => {
-      return hasMatchingMaterial(
-        materials,
-        (m) =>
-          idContains(m, [
-            'meadow',
-            'native-planting',
-            'wildflower',
-            'rain-garden',
-            'biodiverse',
-          ]) || keywordsContain(m, ['native', 'wildflower', 'meadow', 'pollinator'])
-      );
-    },
-    generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) => m.category === 'landscape'
-      ).map((m) => m.id),
-      type: 'biodiversity',
-      description:
-        'Native and meadow planting supports local pollinators and ecological networks',
-    }),
-  },
-
-  // Multiple timber elements = carbon storage synergy
+  // Multiple timber elements = carbon storage
   {
     id: 'timber-carbon-storage',
     condition: (materials) => {
-      const timberStructural = findMatchingMaterials(
-        materials,
-        (m) =>
-          (m.category === 'structure' || m.category === 'exposed-structure') &&
-          (idContains(m, ['clt', 'glulam', 'timber', 'mass-timber', 'nlt', 'dlt']) ||
-            keywordsContain(m, ['timber', 'wood', 'biogenic']))
-      );
-      return timberStructural.length >= 2;
+      const timberCount = getMaterialsMatching(materials, TIMBER_STRUCTURAL).length +
+        materials.filter(m => m.category === 'structure' && materialMatches(m, ['timber', 'wood'])).length;
+      return timberCount >= 2;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          (m.category === 'structure' || m.category === 'exposed-structure') &&
-          (idContains(m, ['timber', 'clt', 'glulam']) ||
-            keywordsContain(m, ['timber', 'wood']))
-      ).map((m) => m.id),
+      materials: getMaterialsMatching(materials, [...TIMBER_STRUCTURAL, 'timber', 'wood']).map(m => m.id),
       type: 'carbon',
-      description:
-        'Multiple timber elements maximize carbon storage and create coherent biogenic palette',
+      description: 'Multiple timber elements maximize biogenic carbon storage and reduce embodied carbon',
     }),
   },
 
-  // Mechanical fixings / demountable = circularity synergy
+  // Natural/bio-based palette
   {
-    id: 'mechanical-fixings',
+    id: 'bio-based-palette',
     condition: (materials) => {
-      return hasMatchingMaterial(
-        materials,
-        (m) =>
-          descriptionContains(m, ['demountable', 'mechanical', 'bolted', 'screwed']) ||
-          idContains(m, ['dlt', 'nlt']) ||
-          keywordsContain(m, ['demountable', 'mechanical fixings', 'reversible'])
+      const bioBased = materials.filter(m =>
+        materialMatches(m, ['timber', 'wood', 'cork', 'hemp', 'straw', 'wool', 'cellulose', 'bamboo', 'rattan', 'linen', 'jute'])
+      );
+      return bioBased.length >= 3;
+    },
+    generate: (materials) => ({
+      materials: materials.filter(m =>
+        materialMatches(m, ['timber', 'wood', 'cork', 'hemp', 'straw', 'wool', 'cellulose', 'bamboo'])
+      ).map(m => m.id),
+      type: 'carbon',
+      description: 'Bio-based material palette stores carbon and reduces reliance on high-embodied alternatives',
+    }),
+  },
+
+  // Soft landscape biodiversity
+  {
+    id: 'biodiversity-landscape',
+    condition: (materials) => {
+      return getMaterialsMatching(materials, SOFT_LANDSCAPE).length > 0 ||
+        materials.some(m => m.category === 'landscape' && !materialMatches(m, HARD_LANDSCAPE));
+    },
+    generate: (materials) => ({
+      materials: materials.filter(m => m.category === 'landscape').map(m => m.id),
+      type: 'biodiversity',
+      description: 'Landscape specification supports local ecology and provides habitat value',
+    }),
+  },
+
+  // Demountable/mechanical fixings
+  {
+    id: 'circularity-fixings',
+    condition: (materials) => {
+      return materials.some(m =>
+        (m.description?.toLowerCase().includes('demountable') ||
+         m.description?.toLowerCase().includes('mechanical') ||
+         m.description?.toLowerCase().includes('bolted') ||
+         m.description?.toLowerCase().includes('screwed') ||
+         materialMatches(m, ['dlt', 'nlt']))
       );
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          descriptionContains(m, ['demountable', 'mechanical']) ||
-          keywordsContain(m, ['demountable'])
-      ).map((m) => m.id),
+      materials: materials.filter(m =>
+        m.description?.toLowerCase().includes('demountable') ||
+        m.description?.toLowerCase().includes('mechanical')
+      ).map(m => m.id),
       type: 'circularity',
-      description:
-        'Mechanical fixings enable future disassembly and material reuse',
+      description: 'Mechanical fixings enable future disassembly and material recovery',
     }),
   },
 
-  // Green roof + rainwater = performance synergy
+  // Low-carbon structure
   {
-    id: 'green-roof-water',
+    id: 'low-carbon-structure',
     condition: (materials) => {
-      const hasGreenRoof = hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.category === 'roof' &&
-          (idContains(m, ['green', 'sedum', 'living']) ||
-            keywordsContain(m, ['green roof', 'living roof']))
+      const structure = materials.filter(m => m.category === 'structure' || m.category === 'exposed-structure');
+      const lowCarbon = structure.filter(m =>
+        materialMatches(m, ['timber', 'wood', 'clt', 'glulam', 'rammed', 'hempcrete', 'straw', 'bamboo'])
       );
-      return hasGreenRoof;
+      return structure.length > 0 && lowCarbon.length >= structure.length * 0.5;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          m.category === 'roof' &&
-          (idContains(m, ['green', 'sedum']) || keywordsContain(m, ['green roof']))
-      ).map((m) => m.id),
+      materials: materials.filter(m =>
+        (m.category === 'structure' || m.category === 'exposed-structure') &&
+        materialMatches(m, ['timber', 'wood', 'clt', 'glulam', 'rammed', 'hempcrete'])
+      ).map(m => m.id),
+      type: 'carbon',
+      description: 'Low-carbon structural system significantly reduces whole-building embodied carbon',
+    }),
+  },
+
+  // Reclaimed/recycled content
+  {
+    id: 'reclaimed-materials',
+    condition: (materials) => {
+      return materials.some(m =>
+        materialMatches(m, ['reclaimed', 'recycled', 'salvaged', 'upcycled', 'reused'])
+      );
+    },
+    generate: (materials) => ({
+      materials: materials.filter(m =>
+        materialMatches(m, ['reclaimed', 'recycled', 'salvaged', 'upcycled'])
+      ).map(m => m.id),
+      type: 'circularity',
+      description: 'Reclaimed materials avoid virgin resource extraction and extend material lifespan',
+    }),
+  },
+
+  // Natural finishes
+  {
+    id: 'natural-finishes',
+    condition: (materials) => {
+      const finishes = materials.filter(m =>
+        ['floor', 'wall-internal', 'finish'].includes(m.category)
+      );
+      const natural = finishes.filter(m =>
+        materialMatches(m, ['timber', 'wood', 'cork', 'stone', 'clay', 'lime', 'earth', 'terracotta'])
+      );
+      return finishes.length > 0 && natural.length >= finishes.length * 0.4;
+    },
+    generate: (materials) => ({
+      materials: materials.filter(m =>
+        ['floor', 'wall-internal', 'finish'].includes(m.category) &&
+        materialMatches(m, ['timber', 'wood', 'cork', 'stone', 'clay', 'lime'])
+      ).map(m => m.id),
       type: 'performance',
-      description:
-        'Green roof provides stormwater attenuation, biodiversity, and thermal benefits',
+      description: 'Natural finish materials contribute to healthy indoor air quality and occupant wellbeing',
     }),
   },
 ];
 
 // ============== CONFLICT RULES ==============
 
+interface ConflictRule {
+  id: string;
+  condition: (materials: MaterialOption[]) => boolean;
+  generate: (materials: MaterialOption[]) => Conflict;
+}
+
 const CONFLICT_RULES: ConflictRule[] = [
-  // Large glazing + acoustic panels = potential conflict
+  // Glazing + acoustic (performance conflict)
   {
     id: 'glazing-acoustic',
     condition: (materials) => {
-      const hasLargeGlazing = hasMatchingMaterial(
-        materials,
-        (m) =>
-          idContains(m, ['curtain-wall', 'frameless-glazing', 'structural-glazing']) ||
-          (m.category === 'window' &&
-            (descriptionContains(m, ['full-height', 'floor-to-ceiling']) ||
-              idContains(m, ['large', 'full'])))
-      );
-      const hasAcoustic = hasMatchingMaterial(materials, (m) =>
-        idContains(m, ['acoustic'])
-      );
-      return hasLargeGlazing && hasAcoustic;
+      const hasGlazing = getMaterialsMatching(materials, GLAZING).length > 0 ||
+        hasCategory(materials, ['window']);
+      const hasAcoustic = getMaterialsMatching(materials, ACOUSTIC).length > 0;
+      return hasGlazing && hasAcoustic;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          idContains(m, ['glazing', 'curtain', 'window']) ||
-          idContains(m, ['acoustic'])
-      ).map((m) => m.id),
+      materials: [
+        ...getMaterialsMatching(materials, GLAZING),
+        ...getMaterialsMatching(materials, ACOUSTIC),
+      ].map(m => m.id),
       type: 'acoustic',
-      description:
-        'Large glazing areas may compromise acoustic performance despite panel treatment',
-      mitigation:
-        'Consider acoustic laminated glass or secondary glazing in noise-sensitive areas',
+      description: 'Extensive glazing may compromise acoustic performance despite panel treatment',
+      mitigation: 'Consider acoustic laminated glass or review glazing-to-wall ratios',
     }),
   },
 
-  // High-carbon structure + low-carbon finishes = mixed message
+  // Multiple hard landscape (redundant carbon)
+  {
+    id: 'hard-landscape-duplication',
+    condition: (materials) => {
+      const hardLandscape = getMaterialsMatching(materials, HARD_LANDSCAPE);
+      const landscapeMaterials = materials.filter(m =>
+        m.category === 'landscape' || m.category === 'external-ground'
+      );
+      return hardLandscape.length >= 2 ||
+        (landscapeMaterials.length >= 2 && hardLandscape.length >= 1);
+    },
+    generate: (materials) => ({
+      materials: getMaterialsMatching(materials, HARD_LANDSCAPE).map(m => m.id),
+      type: 'aesthetic',
+      description: 'Multiple hard landscape materials may duplicate embodied carbon without design benefit',
+      mitigation: 'Rationalise hard landscape palette or substitute with permeable alternatives',
+    }),
+  },
+
+  // High-carbon structure + low-carbon finishes (mixed message)
   {
     id: 'mixed-carbon-message',
     condition: (materials) => {
-      const hasHighCarbonStructure = hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.category === 'structure' &&
-          (idContains(m, ['steel', 'concrete']) ||
-            m.carbonIntensity === 'high') &&
-          !idContains(m, ['ggbs', 'recycled', 'reclaimed'])
+      const structure = materials.filter(m => m.category === 'structure');
+      const highCarbonStructure = structure.filter(m =>
+        materialMatches(m, HIGH_EMBODIED)
       );
-      const hasLowCarbonFinish = hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.carbonIntensity === 'low' &&
-          (m.category === 'finish' ||
-            m.category === 'wall-internal' ||
-            m.category === 'floor')
+      const finishes = materials.filter(m =>
+        ['floor', 'wall-internal', 'finish'].includes(m.category)
       );
-      return hasHighCarbonStructure && hasLowCarbonFinish;
+      const lowCarbonFinish = finishes.filter(m =>
+        m.carbonIntensity === 'low' || materialMatches(m, ['timber', 'cork', 'bamboo'])
+      );
+      return highCarbonStructure.length > 0 && lowCarbonFinish.length > 0;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) => m.category === 'structure' || m.category === 'finish'
-      ).map((m) => m.id),
+      materials: materials.filter(m =>
+        m.category === 'structure' || ['floor', 'wall-internal', 'finish'].includes(m.category)
+      ).map(m => m.id),
       type: 'aesthetic',
-      description:
-        'Low-carbon finishes paired with high-carbon structure may create inconsistent sustainability narrative',
-      mitigation:
-        'Consider structural alternatives or emphasize whole-life carbon story in client communications',
+      description: 'Low-carbon finishes with high-carbon structure may undermine sustainability narrative',
+      mitigation: 'Consider structural alternatives or emphasise whole-life carbon benefits in communications',
     }),
   },
 
-  // Multiple high-maintenance materials
+  // High-maintenance materials
   {
     id: 'high-maintenance',
     condition: (materials) => {
-      const highMaintenance = findMatchingMaterials(
-        materials,
-        (m) =>
-          descriptionContains(m, [
-            'requires maintenance',
-            'refinish',
-            'regular maintenance',
-            're-oiling',
-          ]) || idContains(m, ['living-wall', 'green-wall'])
+      const highMaintenance = materials.filter(m =>
+        m.description?.toLowerCase().includes('maintenance') ||
+        m.description?.toLowerCase().includes('refinish') ||
+        m.description?.toLowerCase().includes('re-oil') ||
+        materialMatches(m, ['living-wall', 'green-wall', 'planted'])
       );
       return highMaintenance.length >= 2;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          descriptionContains(m, ['maintenance', 'refinish']) ||
-          idContains(m, ['living'])
-      ).map((m) => m.id),
+      materials: materials.filter(m =>
+        m.description?.toLowerCase().includes('maintenance') ||
+        materialMatches(m, ['living-wall', 'green-wall'])
+      ).map(m => m.id),
       type: 'maintenance',
-      description:
-        'Multiple high-maintenance materials may increase whole-life costs',
-      mitigation:
-        'Provide clear maintenance schedules and consider lifecycle cost analysis',
+      description: 'Multiple high-maintenance materials increase whole-life operational burden',
+      mitigation: 'Provide clear maintenance schedules and consider lifecycle cost implications',
+    }),
+  },
+
+  // Fit-out churn risk (partitions + acoustic)
+  {
+    id: 'fitout-churn',
+    condition: (materials) => {
+      const partitions = materials.filter(m =>
+        materialMatches(m, ['partition', 'divider', 'screen']) ||
+        m.category === 'wall-internal'
+      );
+      const fitout = materials.filter(m =>
+        m.category === 'acoustic-panel' || m.category === 'ceiling' ||
+        materialMatches(m, ['suspended', 'demountable', 'modular'])
+      );
+      return partitions.length > 0 && fitout.length > 0;
+    },
+    generate: (materials) => ({
+      materials: materials.filter(m =>
+        materialMatches(m, ['partition', 'divider']) ||
+        m.category === 'acoustic-panel'
+      ).map(m => m.id),
+      type: 'maintenance',
+      description: 'Extensive fit-out elements may face early replacement due to occupancy changes',
+      mitigation: 'Design for adaptability and specify demountable systems where possible',
     }),
   },
 
@@ -332,43 +322,131 @@ const CONFLICT_RULES: ConflictRule[] = [
   {
     id: 'exposed-timber',
     condition: (materials) => {
-      const hasExternalTimber = hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.category === 'external' &&
-          (idContains(m, ['timber', 'wood', 'cedar', 'larch']) ||
-            keywordsContain(m, ['timber', 'wood']))
+      const externalTimber = materials.filter(m =>
+        m.category === 'external' &&
+        materialMatches(m, ['timber', 'wood', 'cedar', 'larch', 'oak'])
       );
-      const hasNoProtection = !hasMatchingMaterial(
-        materials,
-        (m) =>
-          m.category === 'external' &&
-          (idContains(m, ['canopy', 'overhang', 'shelter']) ||
-            keywordsContain(m, ['protected', 'sheltered']))
-      );
-      return hasExternalTimber && hasNoProtection;
+      return externalTimber.length > 0;
     },
     generate: (materials) => ({
-      materials: findMatchingMaterials(
-        materials,
-        (m) =>
-          m.category === 'external' &&
-          (idContains(m, ['timber', 'wood']) || keywordsContain(m, ['timber']))
-      ).map((m) => m.id),
+      materials: materials.filter(m =>
+        m.category === 'external' && materialMatches(m, ['timber', 'wood'])
+      ).map(m => m.id),
       type: 'maintenance',
-      description:
-        'External timber cladding may require regular maintenance without adequate roof overhang',
-      mitigation:
-        'Ensure 300mm+ overhang at eaves or specify acetylated/thermally-modified timber',
+      description: 'External timber cladding requires ongoing maintenance to prevent weathering',
+      mitigation: 'Ensure adequate roof overhang or specify modified timber (acetylated/thermally-treated)',
     }),
   },
 ];
 
+// ============== FALLBACK GENERATORS ==============
+
+/**
+ * Generate a fallback synergy based on actual material properties
+ */
+function generateFallbackSynergy(materials: MaterialOption[], metrics?: Map<string, MaterialMetrics>): Synergy {
+  // Find the best-performing materials
+  if (metrics && metrics.size > 0) {
+    const sorted = [...metrics.entries()]
+      .sort((a, b) => a[1].overall_impact_proxy - b[1].overall_impact_proxy);
+
+    if (sorted.length >= 2) {
+      const [id1] = sorted[0];
+      const [id2] = sorted[1];
+      const mat1 = materials.find(m => m.id === id1);
+      const mat2 = materials.find(m => m.id === id2);
+
+      if (mat1 && mat2) {
+        return {
+          materials: [id1, id2],
+          type: 'carbon',
+          description: `${mat1.name} and ${mat2.name} are the lowest-impact materials in this palette`,
+        };
+      }
+    }
+  }
+
+  // Check for any category coherence
+  const categories = new Map<MaterialCategory, MaterialOption[]>();
+  materials.forEach(m => {
+    if (!categories.has(m.category)) {
+      categories.set(m.category, []);
+    }
+    categories.get(m.category)!.push(m);
+  });
+
+  // Find a category with multiple materials
+  for (const [category, mats] of categories) {
+    if (mats.length >= 2) {
+      return {
+        materials: mats.slice(0, 2).map(m => m.id),
+        type: 'performance',
+        description: `Consistent ${category} specification supports design coherence`,
+      };
+    }
+  }
+
+  // Ultimate fallback
+  return {
+    materials: materials.slice(0, 2).map(m => m.id),
+    type: 'performance',
+    description: 'Material palette supports early-stage design intent',
+  };
+}
+
+/**
+ * Generate a fallback conflict/watch-out based on actual material properties
+ */
+function generateFallbackConflict(materials: MaterialOption[], metrics?: Map<string, MaterialMetrics>): Conflict {
+  // Find the highest-impact material
+  if (metrics && metrics.size > 0) {
+    const sorted = [...metrics.entries()]
+      .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
+
+    if (sorted.length > 0) {
+      const [id, metric] = sorted[0];
+      const mat = materials.find(m => m.id === id);
+
+      if (mat && metric.embodied_proxy > 2.5) {
+        return {
+          materials: [id],
+          type: 'aesthetic',
+          description: `${mat.name} has the highest embodied carbon in this palette`,
+          mitigation: 'Review specification for lower-impact alternatives or recycled content',
+        };
+      }
+    }
+  }
+
+  // Check for material count
+  if (materials.length > 8) {
+    return {
+      materials: materials.slice(0, 3).map(m => m.id),
+      type: 'aesthetic',
+      description: 'Large material palette may complicate procurement and increase waste',
+      mitigation: 'Consider rationalising palette to reduce specification complexity',
+    };
+  }
+
+  // Low system interaction fallback
+  return {
+    materials: [],
+    type: 'aesthetic',
+    description: 'Low system interaction detected between materials',
+    mitigation: 'Consider material rationalisation or complementary specifications',
+  };
+}
+
+// ============== PUBLIC API ==============
+
 /**
  * Detect synergies in a material palette
- * Returns top 3 synergies found
+ * ALWAYS returns at least 1 synergy
  */
-export function detectSynergies(materials: MaterialOption[]): Synergy[] {
+export function detectSynergies(
+  materials: MaterialOption[],
+  metrics?: Map<string, MaterialMetrics>
+): Synergy[] {
   if (!materials || materials.length === 0) return [];
 
   const synergies: Synergy[] = [];
@@ -376,18 +454,26 @@ export function detectSynergies(materials: MaterialOption[]): Synergy[] {
   for (const rule of SYNERGY_RULES) {
     if (rule.condition(materials)) {
       synergies.push(rule.generate(materials));
+      if (synergies.length >= 3) break;
     }
   }
 
-  // Return top 3
+  // ALWAYS ensure at least 1 synergy
+  if (synergies.length === 0) {
+    synergies.push(generateFallbackSynergy(materials, metrics));
+  }
+
   return synergies.slice(0, 3);
 }
 
 /**
  * Detect conflicts in a material palette
- * Returns top 3 conflicts found
+ * ALWAYS returns at least 1 watch-out
  */
-export function detectConflicts(materials: MaterialOption[]): Conflict[] {
+export function detectConflicts(
+  materials: MaterialOption[],
+  metrics?: Map<string, MaterialMetrics>
+): Conflict[] {
   if (!materials || materials.length === 0) return [];
 
   const conflicts: Conflict[] = [];
@@ -395,10 +481,15 @@ export function detectConflicts(materials: MaterialOption[]): Conflict[] {
   for (const rule of CONFLICT_RULES) {
     if (rule.condition(materials)) {
       conflicts.push(rule.generate(materials));
+      if (conflicts.length >= 3) break;
     }
   }
 
-  // Return top 3
+  // ALWAYS ensure at least 1 watch-out
+  if (conflicts.length === 0) {
+    conflicts.push(generateFallbackConflict(materials, metrics));
+  }
+
   return conflicts.slice(0, 3);
 }
 
@@ -411,44 +502,36 @@ export function generateNetStatement(
   synergies: Synergy[],
   materials: MaterialOption[]
 ): string {
-  const hasCarbonSynergy = synergies.some((s) => s.type === 'carbon');
-  const hasBiodiversity = synergies.some((s) => s.type === 'biodiversity');
-  const hasCircularity = synergies.some((s) => s.type === 'circularity');
+  const hasCarbonSynergy = synergies.some(s => s.type === 'carbon');
+  const hasBiodiversity = synergies.some(s => s.type === 'biodiversity');
+  const hasCircularity = synergies.some(s => s.type === 'circularity');
 
-  const landscapeCount = materials.filter(
-    (m) => m.category === 'landscape'
-  ).length;
-  const timberCount = materials.filter(
-    (m) =>
-      m.id.includes('timber') || m.id.includes('clt') || m.id.includes('glulam')
+  const landscapeCount = materials.filter(m => m.category === 'landscape').length;
+  const timberCount = materials.filter(m =>
+    m.id.includes('timber') || m.id.includes('clt') || m.id.includes('glulam') || m.id.includes('wood')
   ).length;
 
-  // Build statement based on palette characteristics
   let statement = 'This palette ';
 
   if (topEmbodied.length >= 2 && topBenefit.length >= 2) {
-    statement +=
-      'balances higher-embodied materials with strong sustainability benefits. ';
+    statement += 'balances higher-embodied materials with sustainability benefits. ';
   } else if (topEmbodied.length < 2 && topBenefit.length >= 2) {
-    statement +=
-      'demonstrates strong sustainability credentials with low overall embodied carbon. ';
+    statement += 'demonstrates low overall embodied carbon with additional benefits. ';
   } else if (topEmbodied.length >= 2) {
-    statement +=
-      'includes some higher-embodied materials that require careful specification. ';
+    statement += 'includes materials requiring careful specification to reduce impact. ';
   } else {
-    statement += 'presents a balanced approach to material selection. ';
+    statement += 'presents an early-stage selection requiring further development. ';
   }
 
-  // Add specific synergy mentions
   const benefits: string[] = [];
-  if (hasCarbonSynergy) benefits.push('renewable energy integration');
-  if (hasBiodiversity) benefits.push('biodiversity enhancement');
-  if (hasCircularity) benefits.push('circular design principles');
+  if (hasCarbonSynergy) benefits.push('carbon reduction');
+  if (hasBiodiversity) benefits.push('biodiversity value');
+  if (hasCircularity) benefits.push('circular design');
   if (timberCount >= 2) benefits.push('biogenic carbon storage');
-  if (landscapeCount >= 2) benefits.push('landscape-led ecological value');
+  if (landscapeCount >= 2) benefits.push('landscape integration');
 
   if (benefits.length > 0) {
-    statement += `Key strengths include ${benefits.slice(0, 3).join(', ')}.`;
+    statement += `Key opportunities include ${benefits.slice(0, 2).join(' and ')}.`;
   }
 
   return statement;
@@ -459,7 +542,7 @@ export function generateNetStatement(
  */
 export function getRuleIds(): { synergies: string[]; conflicts: string[] } {
   return {
-    synergies: SYNERGY_RULES.map((r) => r.id),
-    conflicts: CONFLICT_RULES.map((r) => r.id),
+    synergies: SYNERGY_RULES.map(r => r.id),
+    conflicts: CONFLICT_RULES.map(r => r.id),
   };
 }

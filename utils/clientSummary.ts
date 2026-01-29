@@ -1,5 +1,5 @@
 // Client summary generator
-// Creates front-page summary content for the PDF report
+// Creates honest, credible front-page summary for the PDF report
 
 import type {
   ClientSummary,
@@ -8,10 +8,16 @@ import type {
   Synergy,
   Conflict,
 } from '../types/sustainability';
-import type { MaterialOption } from '../types';
+import type { MaterialOption, MaterialCategory } from '../types';
+
+// Category groupings for trade-off analysis
+const STRUCTURE_CATEGORIES: MaterialCategory[] = ['structure', 'exposed-structure'];
+const ENVELOPE_CATEGORIES: MaterialCategory[] = ['external', 'roof', 'window', 'insulation'];
+const FINISH_CATEGORIES: MaterialCategory[] = ['floor', 'wall-internal', 'ceiling', 'finish', 'paint-wall', 'paint-ceiling', 'plaster', 'tile', 'wallpaper', 'timber-panel', 'acoustic-panel', 'timber-slat'];
+const LANDSCAPE_CATEGORIES: MaterialCategory[] = ['landscape', 'external-ground'];
 
 /**
- * Generate the client-facing summary for the front page
+ * Generate the client-facing summary - HONEST and CREDIBLE
  */
 export function generateClientSummary(
   materials: MaterialOption[],
@@ -20,15 +26,26 @@ export function generateClientSummary(
   synergies: Synergy[],
   conflicts: Conflict[]
 ): ClientSummary {
-  const achievements = generateAchievements(materials, metrics, synergies);
-  const risksAndMitigations = generateRisksAndMitigations(
+  // Analyze the palette honestly
+  const analysis = analyzePalette(materials, metrics);
+
+  // Generate trade-off narrative (not celebration)
+  const achievements = generateTradeOffNarrative(materials, metrics, synergies, analysis);
+
+  // Generate risks with specific materials named
+  const risksAndMitigations = generateRisksWithMaterials(
     materials,
     insights,
     metrics,
-    conflicts
+    conflicts,
+    analysis
   );
-  const evidenceChecklist = generateEvidenceChecklist(materials, insights);
-  const confidenceStatement = generateConfidenceStatement(metrics);
+
+  // Generate evidence checklist
+  const evidenceChecklist = generateEvidenceChecklist(materials, insights, analysis);
+
+  // Generate honest confidence statement
+  const confidenceStatement = generateConfidenceStatement(metrics, analysis);
 
   return {
     achievements,
@@ -38,254 +55,314 @@ export function generateClientSummary(
   };
 }
 
-/**
- * Generate achievement bullets based on palette characteristics
- */
-function generateAchievements(
+interface PaletteAnalysis {
+  // Counts by rating
+  greenCount: number;
+  amberCount: number;
+  redCount: number;
+  totalCount: number;
+
+  // Top risks (sorted by embodied impact)
+  topCarbonRisks: Array<{ material: MaterialOption; metric: MaterialMetrics }>;
+
+  // Top benefits (sorted by benefit score)
+  topBenefits: Array<{ material: MaterialOption; metric: MaterialMetrics }>;
+
+  // Materials flagged for redesign (red rating or high impact + low benefit)
+  flaggedForRedesign: Array<{ material: MaterialOption; metric: MaterialMetrics; reason: string }>;
+
+  // Category breakdown
+  structureAvgImpact: number;
+  envelopeAvgImpact: number;
+  finishAvgImpact: number;
+  landscapeAvgImpact: number;
+
+  // Low confidence materials
+  lowConfidenceCount: number;
+}
+
+function analyzePalette(
   materials: MaterialOption[],
-  metrics: Map<string, MaterialMetrics>,
-  synergies: Synergy[]
-): string[] {
-  const achievements: string[] = [];
-  const totalCount = materials.length;
+  metrics: Map<string, MaterialMetrics>
+): PaletteAnalysis {
+  const metricsArray = [...metrics.entries()].map(([id, m]) => ({
+    material: materials.find(mat => mat.id === id)!,
+    metric: m,
+  })).filter(x => x.material);
 
-  // Count by traffic light
-  const greenCount = [...metrics.values()].filter(
-    (m) => m.traffic_light === 'green'
-  ).length;
-  const avgBenefit =
-    [...metrics.values()].reduce((sum, m) => sum + m.benefit_score, 0) /
-    Math.max(totalCount, 1);
+  // Count by rating
+  const greenCount = metricsArray.filter(x => x.metric.traffic_light === 'green').length;
+  const amberCount = metricsArray.filter(x => x.metric.traffic_light === 'amber').length;
+  const redCount = metricsArray.filter(x => x.metric.traffic_light === 'red').length;
 
-  // Count material types
-  const landscapeCount = materials.filter(
-    (m) => m.category === 'landscape'
-  ).length;
-  const timberCount = materials.filter(
-    (m) =>
-      m.id.includes('timber') ||
-      m.id.includes('clt') ||
-      m.id.includes('glulam') ||
-      m.id.includes('wood')
-  ).length;
+  // Top 3 carbon risks (highest embodied impact)
+  const topCarbonRisks = [...metricsArray]
+    .sort((a, b) => b.metric.embodied_proxy - a.metric.embodied_proxy)
+    .slice(0, 3);
 
-  // Achievement: Green ratings
-  if (greenCount > totalCount * 0.5 && totalCount > 0) {
-    achievements.push(
-      `${greenCount} of ${totalCount} materials achieve green sustainability rating`
-    );
-  } else if (greenCount >= 1) {
-    achievements.push(
-      `${greenCount} material${greenCount > 1 ? 's' : ''} achieve${greenCount === 1 ? 's' : ''} green sustainability rating`
-    );
-  }
+  // Top 3 benefits (highest benefit score, must have some benefit)
+  const topBenefits = [...metricsArray]
+    .filter(x => x.metric.benefit_score > 0)
+    .sort((a, b) => b.metric.benefit_score - a.metric.benefit_score)
+    .slice(0, 3);
 
-  // Achievement: Synergy-based
-  if (synergies.some((s) => s.type === 'biodiversity')) {
-    achievements.push(
-      'Landscape strategy enhances biodiversity and ecological value'
-    );
-  }
+  // Materials flagged for redesign
+  const flaggedForRedesign = metricsArray
+    .filter(x => {
+      // Red rating
+      if (x.metric.traffic_light === 'red') return true;
+      // High embodied (top quartile) with low benefit
+      if (x.metric.embodied_proxy > 3.0 && x.metric.benefit_score < 2.0) return true;
+      return false;
+    })
+    .map(x => ({
+      ...x,
+      reason: x.metric.traffic_light === 'red'
+        ? 'High overall impact'
+        : 'High embodied carbon without offsetting benefits',
+    }));
 
-  if (synergies.some((s) => s.type === 'carbon')) {
-    achievements.push(
-      'Material selection supports carbon reduction through renewable integration or biogenic storage'
-    );
-  }
+  // Category averages
+  const getCategoryAvg = (categories: MaterialCategory[]) => {
+    const items = metricsArray.filter(x => categories.includes(x.material.category));
+    if (items.length === 0) return 0;
+    return items.reduce((sum, x) => sum + x.metric.embodied_proxy, 0) / items.length;
+  };
 
-  if (synergies.some((s) => s.type === 'circularity')) {
-    achievements.push(
-      'Circular design principles enable future material reuse'
-    );
-  }
-
-  // Achievement: Timber
-  if (timberCount >= 2) {
-    achievements.push(
-      'Timber-based materials provide biogenic carbon storage benefits'
-    );
-  }
-
-  // Achievement: High benefit score
-  if (avgBenefit > 2.5 && achievements.length < 3) {
-    achievements.push(
-      'Material selection balances environmental performance with practical benefits'
-    );
-  }
-
-  // Achievement: Landscape
-  if (landscapeCount > 0 && achievements.length < 3) {
-    achievements.push(
-      'External landscape specification supports site ecology and wellbeing'
-    );
-  }
-
-  // Fallback achievements
-  if (achievements.length < 3) {
-    achievements.push(
-      'Early-stage sustainability review enables informed design decisions'
-    );
-  }
-
-  return achievements.slice(0, 3);
+  return {
+    greenCount,
+    amberCount,
+    redCount,
+    totalCount: materials.length,
+    topCarbonRisks,
+    topBenefits,
+    flaggedForRedesign,
+    structureAvgImpact: getCategoryAvg(STRUCTURE_CATEGORIES),
+    envelopeAvgImpact: getCategoryAvg(ENVELOPE_CATEGORIES),
+    finishAvgImpact: getCategoryAvg(FINISH_CATEGORIES),
+    landscapeAvgImpact: getCategoryAvg(LANDSCAPE_CATEGORIES),
+    lowConfidenceCount: metricsArray.filter(x => x.metric.low_confidence_flag).length,
+  };
 }
 
 /**
- * Generate risk and mitigation bullets
+ * Generate trade-off narrative - honest about what's good AND what's problematic
  */
-function generateRisksAndMitigations(
+function generateTradeOffNarrative(
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>,
+  synergies: Synergy[],
+  analysis: PaletteAnalysis
+): string[] {
+  const narratives: string[] = [];
+
+  // Primary trade-off statement based on category analysis
+  const parts: string[] = [];
+
+  if (analysis.structureAvgImpact > 0 && analysis.structureAvgImpact < 2.5) {
+    parts.push('low-carbon structure');
+  } else if (analysis.structureAvgImpact >= 3.0) {
+    parts.push('high-embodied structure');
+  }
+
+  if (analysis.envelopeAvgImpact > 0 && analysis.envelopeAvgImpact < 2.5) {
+    parts.push('efficient envelope');
+  }
+
+  if (analysis.finishAvgImpact >= 2.5) {
+    parts.push('processed finishes with higher impact');
+  }
+
+  if (analysis.landscapeAvgImpact >= 2.5) {
+    parts.push('hard landscape elements');
+  }
+
+  // Build the primary statement
+  if (parts.length >= 2) {
+    const positives = parts.filter(p =>
+      p.includes('low-carbon') || p.includes('efficient')
+    );
+    const negatives = parts.filter(p =>
+      p.includes('high') || p.includes('processed') || p.includes('hard')
+    );
+
+    if (positives.length > 0 && negatives.length > 0) {
+      narratives.push(
+        `This palette prioritises ${positives.join(' and ')}, but relies on ${negatives.join(' and ')}`
+      );
+    } else if (negatives.length > 0) {
+      narratives.push(
+        `This palette includes ${negatives.join(' and ')} that require attention`
+      );
+    } else if (positives.length > 0) {
+      narratives.push(
+        `This palette benefits from ${positives.join(' and ')}`
+      );
+    }
+  }
+
+  // Rating breakdown (honest)
+  if (analysis.redCount > 0) {
+    narratives.push(
+      `${analysis.redCount} material${analysis.redCount > 1 ? 's' : ''} flagged for review due to high environmental impact`
+    );
+  } else if (analysis.amberCount > analysis.greenCount) {
+    narratives.push(
+      `Most materials (${analysis.amberCount} of ${analysis.totalCount}) require specification attention to reduce impact`
+    );
+  }
+
+  // Synergy mention (if genuine)
+  if (synergies.length > 0) {
+    const synergyType = synergies[0].type;
+    if (synergyType === 'circularity') {
+      narratives.push('Design supports future disassembly and material reuse');
+    } else if (synergyType === 'biodiversity') {
+      narratives.push('Landscape specification enhances ecological value');
+    } else if (synergyType === 'carbon') {
+      narratives.push('Material combinations support carbon reduction strategy');
+    }
+  }
+
+  // Fallback if we don't have enough
+  if (narratives.length === 0) {
+    narratives.push(
+      'Early-stage assessment identifies areas requiring specification development'
+    );
+  }
+
+  return narratives.slice(0, 3);
+}
+
+/**
+ * Generate risks with specific materials named
+ */
+function generateRisksWithMaterials(
   materials: MaterialOption[],
   insights: EnhancedSustainabilityInsight[],
   metrics: Map<string, MaterialMetrics>,
-  conflicts: Conflict[]
+  conflicts: Conflict[],
+  analysis: PaletteAnalysis
 ): string[] {
-  const risksAndMitigations: string[] = [];
+  const risks: string[] = [];
 
-  // Add conflict-based risks with mitigations
-  conflicts.forEach((conflict) => {
+  // Top carbon risks (name the materials)
+  if (analysis.topCarbonRisks.length > 0) {
+    const topRisk = analysis.topCarbonRisks[0];
+    const insight = insights.find(i => i.id === topRisk.material.id);
+    const lever = insight?.designLevers?.[0];
+
+    risks.push(
+      `${topRisk.material.name} has highest embodied carbon${lever ? ` — ${lever.toLowerCase()}` : ''}`
+    );
+  }
+
+  // Second highest risk
+  if (analysis.topCarbonRisks.length > 1) {
+    const secondRisk = analysis.topCarbonRisks[1];
+    const insight = insights.find(i => i.id === secondRisk.material.id);
+    const lever = insight?.designLevers?.[0];
+
+    risks.push(
+      `${secondRisk.material.name} contributes significant embodied impact${lever ? ` — ${lever.toLowerCase()}` : ''}`
+    );
+  }
+
+  // Flagged for redesign
+  if (analysis.flaggedForRedesign.length > 0) {
+    const flagged = analysis.flaggedForRedesign[0];
+    risks.push(
+      `${flagged.material.name}: ${flagged.reason.toLowerCase()} — consider alternatives`
+    );
+  }
+
+  // Conflicts
+  conflicts.slice(0, 1).forEach(conflict => {
     if (conflict.mitigation) {
-      risksAndMitigations.push(
-        `${conflict.description} — ${conflict.mitigation}`
-      );
-    } else {
-      risksAndMitigations.push(conflict.description);
+      risks.push(`${conflict.description} — ${conflict.mitigation.toLowerCase()}`);
     }
   });
 
-  // Add high-impact material risks
-  const highImpactMaterials = [...metrics.entries()]
-    .filter(([, m]) => m.traffic_light === 'red')
-    .slice(0, 2);
-
-  highImpactMaterials.forEach(([id]) => {
-    const mat = materials.find((m) => m.id === id);
-    const insight = insights.find((i) => i.id === id);
-    if (mat && insight?.designLevers?.[0]) {
-      risksAndMitigations.push(
-        `${mat.name} has high embodied impact — ${insight.designLevers[0]}`
-      );
-    }
-  });
-
-  // Add amber material warnings if no reds
-  if (highImpactMaterials.length === 0) {
-    const amberMaterials = [...metrics.entries()]
-      .filter(([, m]) => m.traffic_light === 'amber')
-      .slice(0, 1);
-
-    amberMaterials.forEach(([id]) => {
-      const mat = materials.find((m) => m.id === id);
-      const insight = insights.find((i) => i.id === id);
-      if (mat && insight?.designLevers?.[0]) {
-        risksAndMitigations.push(
-          `${mat.name} requires attention — ${insight.designLevers[0]}`
-        );
-      }
-    });
+  // Fallback
+  if (risks.length < 2) {
+    risks.push('Gather EPD data to refine impact estimates during detailed design');
   }
 
-  // Standard mitigation actions
-  if (risksAndMitigations.length < 3) {
-    risksAndMitigations.push(
-      'Continue to gather EPD data as specifications develop'
-    );
-  }
-
-  if (risksAndMitigations.length < 3) {
-    risksAndMitigations.push(
-      'Review transport distances during procurement to minimize impact'
-    );
-  }
-
-  return risksAndMitigations.slice(0, 3);
+  return risks.slice(0, 3);
 }
 
 /**
- * Generate evidence checklist items
+ * Generate evidence checklist focused on flagged materials
  */
 function generateEvidenceChecklist(
   materials: MaterialOption[],
-  insights: EnhancedSustainabilityInsight[]
+  insights: EnhancedSustainabilityInsight[],
+  analysis: PaletteAnalysis
 ): string[] {
   const checklist: string[] = [];
-  const addedTypes = new Set<string>();
 
-  // Check for missing EPDs
-  insights.forEach((insight) => {
-    const mat = materials.find((m) => m.id === insight.id);
-    if (!mat) return;
-
-    const hasEPD = insight.ukChecks?.some(
-      (c) =>
-        c.standard_code?.includes('EN 15804') ||
-        c.label.toLowerCase().includes('epd')
-    );
-
-    if (!hasEPD && !addedTypes.has('epd')) {
-      checklist.push(`Request EPD (EN 15804) for key materials`);
-      addedTypes.add('epd');
-    }
+  // Priority: EPDs for high-impact materials
+  analysis.topCarbonRisks.slice(0, 2).forEach(risk => {
+    checklist.push(`Request EPD for ${risk.material.name} to verify impact estimates`);
   });
 
-  // Standard evidence items
-  const standardItems = [
-    'Confirm recycled content percentages with suppliers',
-    'Verify chain-of-custody certificates for timber products',
-    'Assess local sourcing options for high-transport-impact items',
-    'Request manufacturer sustainability commitments',
-    'Document demountability and take-back options',
-  ];
-
-  // Check for timber products
-  const hasTimber = materials.some(
-    (m) =>
-      m.id.includes('timber') ||
-      m.id.includes('wood') ||
-      m.keywords?.some((k) => k.includes('timber'))
+  // Timber certification if relevant
+  const hasTimber = materials.some(m =>
+    m.id.includes('timber') || m.id.includes('wood') || m.id.includes('clt')
   );
-  if (hasTimber && !addedTypes.has('timber')) {
-    checklist.push('Verify FSC/PEFC certification for all timber products');
-    addedTypes.add('timber');
+  if (hasTimber) {
+    checklist.push('Verify FSC/PEFC chain-of-custody for all timber products');
   }
 
-  // Add standard items until we have 5
-  for (const item of standardItems) {
-    if (checklist.length >= 5) break;
-    if (!checklist.includes(item)) {
-      checklist.push(item);
-    }
+  // Recycled content for high-impact items
+  if (analysis.topCarbonRisks.some(r =>
+    r.material.id.includes('steel') || r.material.id.includes('aluminium')
+  )) {
+    checklist.push('Confirm recycled content percentage for metal elements');
   }
+
+  // Low confidence items
+  if (analysis.lowConfidenceCount > 0) {
+    checklist.push(
+      `Obtain manufacturer data for ${analysis.lowConfidenceCount} material${analysis.lowConfidenceCount > 1 ? 's' : ''} with uncertain lifecycle estimates`
+    );
+  }
+
+  // Standard items
+  checklist.push('Assess local sourcing options for high-transport-impact materials');
 
   return checklist.slice(0, 5);
 }
 
 /**
- * Generate confidence statement based on metrics
+ * Generate honest confidence statement
  */
 function generateConfidenceStatement(
-  metrics: Map<string, MaterialMetrics>
+  metrics: Map<string, MaterialMetrics>,
+  analysis: PaletteAnalysis
 ): string {
-  const metricsArray = [...metrics.values()];
-  const lowConfCount = metricsArray.filter((m) => m.low_confidence_flag).length;
-  const totalCount = metricsArray.length;
+  const totalCount = analysis.totalCount;
+  const lowConfCount = analysis.lowConfidenceCount;
 
   if (totalCount === 0) {
     return 'No materials have been assessed. Add materials to generate sustainability insights.';
   }
 
+  // Build honest statement
+  let statement = '';
+
   if (lowConfCount === 0) {
-    return 'This assessment is based on high-confidence lifecycle data for all materials. Figures should be validated with product-specific EPDs during detailed design.';
+    statement = 'Lifecycle estimates are based on industry-average data. ';
+  } else if (lowConfCount <= 2) {
+    statement = `${lowConfCount} material${lowConfCount > 1 ? 's have' : ' has'} limited lifecycle data. `;
+  } else {
+    statement = `${lowConfCount} of ${totalCount} materials have uncertain lifecycle estimates. `;
   }
 
-  if (lowConfCount <= 2) {
-    return `This assessment includes ${lowConfCount} material${lowConfCount > 1 ? 's' : ''} with limited lifecycle data. Priority should be given to obtaining EPDs for ${lowConfCount > 1 ? 'these items' : 'this item'}.`;
-  }
+  statement += 'Product-specific EPDs should be obtained during detailed design to validate these preliminary figures. ';
+  statement += 'This assessment is for early-stage decision support only and does not constitute a formal lifecycle assessment.';
 
-  if (lowConfCount <= totalCount * 0.5) {
-    return `Caution: ${lowConfCount} of ${totalCount} materials have low-confidence data. This assessment should be considered indicative until better data is available.`;
-  }
-
-  return `Note: The majority of materials (${lowConfCount} of ${totalCount}) have limited lifecycle data. Treat this assessment as preliminary and prioritize EPD collection.`;
+  return statement;
 }
 
 /**
@@ -296,23 +373,19 @@ export function getOneLinerSummary(
   synergies: Synergy[]
 ): string {
   const metricsArray = [...metrics.values()];
-  const greenCount = metricsArray.filter(
-    (m) => m.traffic_light === 'green'
-  ).length;
+  const greenCount = metricsArray.filter(m => m.traffic_light === 'green').length;
+  const redCount = metricsArray.filter(m => m.traffic_light === 'red').length;
   const totalCount = metricsArray.length;
 
   if (totalCount === 0) return 'No materials assessed';
 
-  const greenRatio = greenCount / totalCount;
-  const hasSynergies = synergies.length > 0;
-
-  if (greenRatio >= 0.7 && hasSynergies) {
-    return 'Strong sustainability palette with synergistic benefits';
-  } else if (greenRatio >= 0.5) {
-    return 'Balanced palette with good sustainability performance';
-  } else if (greenRatio >= 0.3) {
-    return 'Mixed palette requiring focused improvement areas';
+  if (redCount >= totalCount * 0.3) {
+    return 'Palette requires significant review — multiple high-impact materials';
+  } else if (redCount > 0) {
+    return `${redCount} material${redCount > 1 ? 's' : ''} flagged for attention`;
+  } else if (greenCount >= totalCount * 0.5) {
+    return 'Balanced palette with improvement opportunities';
   } else {
-    return 'Palette requires review of high-impact materials';
+    return 'Early-stage palette requiring specification development';
   }
 }

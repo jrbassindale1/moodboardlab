@@ -56,6 +56,13 @@ export interface Risk {
   note?: string;
 }
 
+// Carbon payback for sequestering/generating materials
+export interface CarbonPayback {
+  years: number; // Years until embodied carbon is offset
+  mechanism: 'sequestration' | 'generation' | 'avoided_emissions';
+  assumption: string; // What the payback is based on
+}
+
 // Computed metrics for a single material
 export interface MaterialMetrics {
   embodied_proxy: number; // Weighted RAW + MFG + TRN + INS
@@ -66,6 +73,11 @@ export interface MaterialMetrics {
   confidence_score: number; // 0-1 scale
   traffic_light: TrafficLight;
   low_confidence_flag: boolean;
+  // Lifecycle duration metrics (NEW)
+  service_life: number; // Expected lifespan in years
+  replacement_cycle: number; // How often replaced/refurbished (years)
+  lifecycle_multiplier: number; // How many replacements over 60-year building life
+  carbon_payback?: CarbonPayback; // Only for sequestering/generating materials
 }
 
 // Enhanced sustainability insight (extends current SustainabilityInsight)

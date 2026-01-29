@@ -5,7 +5,7 @@ import { MATERIAL_PALETTE } from '../constants';
 import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
-import { generateMaterialIcon } from '../utils/materialIconGenerator';
+import { generateMaterialIcon, loadMaterialIcons } from '../utils/materialIconGenerator';
 import LifecycleFingerprint from './LifecycleFingerprint';
 
 // Sustainability report utilities
@@ -32,6 +32,7 @@ import {
   renderUKComplianceDashboard,
   renderEnhancedMaterialSection,
   addDisclaimer,
+  MaterialPaletteContext,
 } from '../utils/pdfSections';
 
 type BoardItem = MaterialOption;
@@ -781,13 +782,13 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       if (profile) {
         const insight = insights.find((i) => i.id === material.id);
         const benefits = insight?.benefits || [];
-        metrics.set(material.id, calculateMaterialMetrics(profile, benefits));
+        metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
       }
     });
 
-    // Detect synergies and conflicts
-    const synergies = detectSynergies(board);
-    const conflicts = detectConflicts(board);
+    // Detect synergies and conflicts (pass metrics for fallback generation)
+    const synergies = detectSynergies(board, metrics);
+    const conflicts = detectConflicts(board, metrics);
 
     // Sort materials by metrics for top lists
     const sortedByEmbodied = [...board]
@@ -877,13 +878,64 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       doc.setTextColor(0);
       ctx.cursorY += 20;
 
-      // Render each material
+      // Calculate palette context for rankings
+      const totalEmbodied = Array.from(metrics.values()).reduce(
+        (sum, m) => sum + m.embodied_proxy,
+        0
+      );
+      const sortedByEmbodiedForRanking = [...board]
+        .filter((m) => metrics.has(m.id))
+        .sort(
+          (a, b) =>
+            (metrics.get(b.id)?.embodied_proxy || 0) -
+            (metrics.get(a.id)?.embodied_proxy || 0)
+        );
+      const rankMap = new Map<string, number>();
+      sortedByEmbodiedForRanking.forEach((m, idx) => {
+        rankMap.set(m.id, idx + 1);
+      });
+
+      // Load material icons for thumbnails
+      const materialIcons = loadMaterialIcons();
+
+      // Render each material with palette context and thumbnail
       board.forEach((material) => {
         const insight = insights.find((i) => i.id === material.id);
         const metric = metrics.get(material.id);
         const profile = MATERIAL_LIFECYCLE_PROFILES[material.id] || null;
 
-        renderEnhancedMaterialSection(ctx, material, insight, metric, profile);
+        // Get thumbnail - check custom image first, then generated icon
+        let thumbnailDataUri: string | undefined;
+        if (material.customImage) {
+          thumbnailDataUri = material.customImage;
+        } else {
+          const icon = materialIcons.get(material.id);
+          if (icon?.dataUri) {
+            thumbnailDataUri = icon.dataUri;
+          }
+        }
+
+        // Build palette context with thumbnail
+        const paletteContext: MaterialPaletteContext | undefined = metric
+          ? {
+              rank: rankMap.get(material.id) || 1,
+              totalMaterials: board.length,
+              contributionPercent:
+                totalEmbodied > 0
+                  ? (metric.embodied_proxy / totalEmbodied) * 100
+                  : 0,
+              thumbnailDataUri,
+            }
+          : undefined;
+
+        renderEnhancedMaterialSection(
+          ctx,
+          material,
+          insight,
+          metric,
+          profile,
+          paletteContext
+        );
       });
     }
 
@@ -1696,9 +1748,10 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                   }))
                 : [];
 
-              // Generate design consequences from hotspots
-              const design_risk = generateDesignRisk(hotspots);
-              const design_response = generateDesignResponse(hotspots);
+              // Generate design consequences from hotspots and material type
+              const materialForConsequences = board.find(m => m.id === item.id);
+              const design_risk = generateDesignRisk(hotspots, materialForConsequences);
+              const design_response = generateDesignResponse(hotspots, materialForConsequences);
 
               return {
                 id: String(item.id || ''),

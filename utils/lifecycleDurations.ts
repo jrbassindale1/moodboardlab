@@ -1,0 +1,576 @@
+// Lifecycle duration data
+// Service life, replacement cycles, and carbon payback for materials
+// Critical for honest lifecycle assessment
+
+import type { MaterialOption, MaterialCategory } from '../types';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface LifecycleDuration {
+  serviceLife: number; // Expected lifespan in years
+  replacementCycle: number; // How often replaced/refurbished (years)
+  carbonPayback?: CarbonPayback; // Only for sequestering/generating materials
+  notes?: string;
+}
+
+export interface CarbonPayback {
+  years: number; // Years until embodied carbon is offset
+  mechanism: 'sequestration' | 'generation' | 'avoided_emissions';
+  assumption: string; // What the payback is based on
+}
+
+// ============================================================================
+// CATEGORY-BASED SERVICE LIFE DEFAULTS
+// Based on RICS whole-life carbon assessment guidance
+// ============================================================================
+
+const CATEGORY_DURATIONS: Record<MaterialCategory, LifecycleDuration> = {
+  // Long-life structural elements (60+ years)
+  structure: { serviceLife: 60, replacementCycle: 60, notes: 'Building lifespan' },
+  'exposed-structure': { serviceLife: 60, replacementCycle: 60, notes: 'Building lifespan' },
+
+  // Envelope (40-60 years with maintenance)
+  external: { serviceLife: 40, replacementCycle: 40, notes: 'Weather exposure reduces life' },
+  roof: { serviceLife: 40, replacementCycle: 40, notes: 'Depends on material type' },
+  window: { serviceLife: 30, replacementCycle: 30, notes: 'Seal degradation limits life' },
+  insulation: { serviceLife: 60, replacementCycle: 60, notes: 'If protected from moisture' },
+
+  // Internal partitions (25-40 years)
+  'wall-internal': { serviceLife: 25, replacementCycle: 25, notes: 'Tenant churn drives replacement' },
+  door: { serviceLife: 30, replacementCycle: 30 },
+  balustrade: { serviceLife: 40, replacementCycle: 40 },
+
+  // Floors (15-25 years for finishes)
+  floor: { serviceLife: 20, replacementCycle: 15, notes: 'High wear area' },
+
+  // Ceilings (20-30 years)
+  ceiling: { serviceLife: 25, replacementCycle: 20, notes: 'Access requirements affect life' },
+  soffit: { serviceLife: 30, replacementCycle: 30 },
+
+  // Finishes and coatings (5-15 years)
+  finish: { serviceLife: 10, replacementCycle: 10, notes: 'Aesthetic-driven replacement' },
+  'paint-wall': { serviceLife: 7, replacementCycle: 5, notes: 'Touch-up at 3-5 years, full at 7' },
+  'paint-ceiling': { serviceLife: 10, replacementCycle: 7, notes: 'Less wear than walls' },
+  plaster: { serviceLife: 40, replacementCycle: 40, notes: 'Substrate for other finishes' },
+  microcement: { serviceLife: 20, replacementCycle: 15 },
+
+  // Wall finishes (10-25 years)
+  'timber-panel': { serviceLife: 25, replacementCycle: 20, notes: 'Depends on timber type' },
+  tile: { serviceLife: 25, replacementCycle: 25, notes: 'Grout needs maintenance' },
+  wallpaper: { serviceLife: 10, replacementCycle: 8, notes: 'Fashion-driven replacement' },
+  'acoustic-panel': { serviceLife: 20, replacementCycle: 15, notes: 'Absorption degrades' },
+  'timber-slat': { serviceLife: 25, replacementCycle: 20 },
+
+  // Joinery and fixtures (15-25 years)
+  joinery: { serviceLife: 25, replacementCycle: 20, notes: 'Quality-dependent' },
+  fixture: { serviceLife: 15, replacementCycle: 15, notes: 'Technology obsolescence' },
+
+  // Landscape (varies widely)
+  landscape: { serviceLife: 25, replacementCycle: 10, notes: 'Planting: 10-30 years' },
+  'external-ground': { serviceLife: 30, replacementCycle: 25, notes: 'Hard landscape more durable' },
+
+  // Furniture (5-15 years)
+  furniture: { serviceLife: 10, replacementCycle: 7, notes: 'Tenant churn drives replacement' },
+};
+
+// ============================================================================
+// MATERIAL-SPECIFIC OVERRIDES
+// Pattern matching for specific materials with different characteristics
+// ============================================================================
+
+interface MaterialDurationOverride {
+  pattern: RegExp;
+  categories?: MaterialCategory[];
+  duration: LifecycleDuration;
+}
+
+const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
+  // CARBON PAYBACK MATERIALS (sequestration/generation)
+
+  // Timber - carbon sequestration
+  {
+    pattern: /timber|wood|oak|ash|pine|birch|clt|glulam/i,
+    categories: ['structure', 'exposed-structure'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 0, // Immediate - carbon already stored
+        mechanism: 'sequestration',
+        assumption: '1 m³ timber stores ~1 tonne CO₂; counted at installation',
+      },
+      notes: 'Carbon stored from day 1; maintained if kept in use',
+    },
+  },
+
+  // CLT/Mass timber - significant sequestration
+  {
+    pattern: /clt|cross.?laminated|mass.?timber|glulam/i,
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'sequestration',
+        assumption: '~800 kgCO₂/m³ stored; processing adds ~150 kgCO₂/m³',
+      },
+      notes: 'Net carbon negative if sustainably sourced',
+    },
+  },
+
+  // Hempcrete - carbon negative
+  {
+    pattern: /hempcrete|hemp.?lime|hemp.?block/i,
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'sequestration',
+        assumption: 'Hemp sequesters ~1.5 tonnes CO₂/tonne; lime carbonation adds more',
+      },
+      notes: 'Carbon negative material; improves with age',
+    },
+  },
+
+  // Cork - sequestration
+  {
+    pattern: /cork/i,
+    duration: {
+      serviceLife: 30,
+      replacementCycle: 25,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'sequestration',
+        assumption: 'Cork oak regenerates; harvesting promotes growth',
+      },
+    },
+  },
+
+  // Wool insulation - sequestration
+  {
+    pattern: /wool.?insulation|sheep.?wool/i,
+    categories: ['insulation'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'sequestration',
+        assumption: 'Biogenic carbon storage; low processing emissions',
+      },
+    },
+  },
+
+  // Wood fibre insulation - sequestration
+  {
+    pattern: /wood.?fibre|woodfibre|cellulose.?insulation/i,
+    categories: ['insulation'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'sequestration',
+        assumption: 'Recycled newsprint or wood waste; stored carbon',
+      },
+    },
+  },
+
+  // PV panels - energy generation
+  {
+    pattern: /pv|photovoltaic|solar.?panel/i,
+    duration: {
+      serviceLife: 30,
+      replacementCycle: 25,
+      carbonPayback: {
+        years: 2,
+        mechanism: 'generation',
+        assumption: 'UK average ~2 years; varies with orientation and location',
+      },
+      notes: 'Inverter replacement at 15 years',
+    },
+  },
+
+  // Green roof - multiple benefits
+  {
+    pattern: /green.?roof|sedum|living.?roof/i,
+    categories: ['roof', 'landscape'],
+    duration: {
+      serviceLife: 40,
+      replacementCycle: 40,
+      carbonPayback: {
+        years: 8,
+        mechanism: 'avoided_emissions',
+        assumption: 'Reduces cooling load; extends roof membrane life',
+      },
+      notes: 'Biodiversity and stormwater benefits not counted',
+    },
+  },
+
+  // LOW-EMBODIED MATERIALS
+
+  // Rammed earth
+  {
+    pattern: /rammed.?earth|pisé|cob/i,
+    duration: {
+      serviceLife: 100,
+      replacementCycle: 100,
+      carbonPayback: {
+        years: 0,
+        mechanism: 'avoided_emissions',
+        assumption: 'Minimal processing; local material',
+      },
+      notes: 'Very low embodied carbon if local',
+    },
+  },
+
+  // Lime mortar/plaster - carbonation
+  {
+    pattern: /lime.?mortar|lime.?plaster|limecrete/i,
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 20,
+        mechanism: 'sequestration',
+        assumption: 'Reabsorbs CO₂ during carbonation; ~60% over 60 years',
+      },
+    },
+  },
+
+  // HIGH-EMBODIED / SHORT-LIFE MATERIALS
+
+  // Carpet
+  {
+    pattern: /carpet|rug/i,
+    categories: ['floor', 'finish'],
+    duration: {
+      serviceLife: 10,
+      replacementCycle: 7,
+      notes: 'High wear; aesthetic replacement common',
+    },
+  },
+
+  // Vinyl/LVT
+  {
+    pattern: /vinyl|lvt|linoleum/i,
+    categories: ['floor'],
+    duration: {
+      serviceLife: 15,
+      replacementCycle: 12,
+      notes: 'Linoleum lasts longer than vinyl',
+    },
+  },
+
+  // Aluminium windows
+  {
+    pattern: /aluminium.*window|aluminum.*window/i,
+    categories: ['window'],
+    duration: {
+      serviceLife: 40,
+      replacementCycle: 40,
+      notes: 'Frame durable; seals need maintenance',
+    },
+  },
+
+  // Steel structure
+  {
+    pattern: /steel/i,
+    categories: ['structure', 'exposed-structure'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      notes: 'Requires corrosion protection',
+    },
+  },
+
+  // Concrete structure
+  {
+    pattern: /concrete|cement/i,
+    categories: ['structure', 'exposed-structure'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      carbonPayback: {
+        years: 50,
+        mechanism: 'sequestration',
+        assumption: 'Carbonation reabsorbs ~15-20% of cement CO₂ over 50 years',
+      },
+    },
+  },
+
+  // Brick
+  {
+    pattern: /brick|masonry/i,
+    categories: ['structure', 'external', 'wall-internal'],
+    duration: {
+      serviceLife: 100,
+      replacementCycle: 100,
+      notes: 'With lime mortar, can be reclaimed',
+    },
+  },
+
+  // Natural stone
+  {
+    pattern: /stone|marble|granite|slate|limestone/i,
+    duration: {
+      serviceLife: 100,
+      replacementCycle: 100,
+      notes: 'Extremely durable; reusable',
+    },
+  },
+
+  // Porcelain/ceramic tiles
+  {
+    pattern: /porcelain|ceramic|tile/i,
+    categories: ['floor', 'wall-internal', 'tile'],
+    duration: {
+      serviceLife: 40,
+      replacementCycle: 35,
+      notes: 'Durable but adhesive limits reuse',
+    },
+  },
+
+  // Glass
+  {
+    pattern: /glass|glazing/i,
+    duration: {
+      serviceLife: 30,
+      replacementCycle: 30,
+      notes: 'IGU seal failure typically 25-30 years',
+    },
+  },
+
+  // Paint
+  {
+    pattern: /paint|emulsion/i,
+    categories: ['paint-wall', 'paint-ceiling', 'finish'],
+    duration: {
+      serviceLife: 7,
+      replacementCycle: 5,
+      notes: 'Touch-up at 3-5 years',
+    },
+  },
+
+  // Plasterboard/drywall
+  {
+    pattern: /plasterboard|drywall|gypsum.?board/i,
+    duration: {
+      serviceLife: 40,
+      replacementCycle: 25,
+      notes: 'Partition churn in offices',
+    },
+  },
+
+  // Mineral wool insulation
+  {
+    pattern: /mineral.?wool|rockwool|glass.?wool/i,
+    categories: ['insulation'],
+    duration: {
+      serviceLife: 60,
+      replacementCycle: 60,
+      notes: 'If kept dry, lasts building life',
+    },
+  },
+
+  // PIR/PUR insulation
+  {
+    pattern: /pir|pur|polyurethane|polyisocyanurate/i,
+    categories: ['insulation'],
+    duration: {
+      serviceLife: 50,
+      replacementCycle: 50,
+      notes: 'Some thermal drift over time',
+    },
+  },
+
+  // Soft landscape
+  {
+    pattern: /plant|meadow|grass|turf|hedge|shrub|tree/i,
+    categories: ['landscape'],
+    duration: {
+      serviceLife: 30,
+      replacementCycle: 10,
+      carbonPayback: {
+        years: 5,
+        mechanism: 'sequestration',
+        assumption: 'Trees: ~20 kgCO₂/year; hedges: ~5 kgCO₂/m/year',
+      },
+      notes: 'Trees have longest payback but highest storage',
+    },
+  },
+
+  // Hard landscape - gravel
+  {
+    pattern: /gravel|aggregate|pebble/i,
+    categories: ['landscape', 'external-ground'],
+    duration: {
+      serviceLife: 50,
+      replacementCycle: 30,
+      notes: 'Needs periodic top-up',
+    },
+  },
+
+  // Hard landscape - paving
+  {
+    pattern: /paving|paver|flag|sett/i,
+    categories: ['landscape', 'external-ground'],
+    duration: {
+      serviceLife: 40,
+      replacementCycle: 40,
+      notes: 'Dry-laid can be lifted and reused',
+    },
+  },
+];
+
+// ============================================================================
+// PUBLIC FUNCTIONS
+// ============================================================================
+
+/**
+ * Get lifecycle duration for a material
+ * Uses pattern matching then falls back to category default
+ */
+export function getLifecycleDuration(material: MaterialOption): LifecycleDuration {
+  const materialText = `${material.id} ${material.name} ${material.description || ''}`;
+
+  // Try pattern matching first
+  for (const override of MATERIAL_OVERRIDES) {
+    if (!override.pattern.test(materialText)) continue;
+
+    // Check category filter if specified
+    if (override.categories && !override.categories.includes(material.category)) continue;
+
+    return override.duration;
+  }
+
+  // Fall back to category default
+  return CATEGORY_DURATIONS[material.category];
+}
+
+/**
+ * Get carbon payback if applicable, null otherwise
+ */
+export function getCarbonPayback(material: MaterialOption): CarbonPayback | null {
+  const duration = getLifecycleDuration(material);
+  return duration.carbonPayback || null;
+}
+
+/**
+ * Check if material has carbon payback (is sequestering/generating)
+ */
+export function hasPayback(material: MaterialOption): boolean {
+  return getCarbonPayback(material) !== null;
+}
+
+/**
+ * Format carbon payback for display
+ */
+export function formatCarbonPayback(payback: CarbonPayback): string {
+  if (payback.years === 0) {
+    if (payback.mechanism === 'sequestration') {
+      return 'Carbon negative from day 1';
+    }
+    return 'Immediate carbon benefit';
+  }
+
+  const mechanismText =
+    payback.mechanism === 'sequestration'
+      ? 'carbon stored'
+      : payback.mechanism === 'generation'
+      ? 'energy generated'
+      : 'emissions avoided';
+
+  return `~${payback.years} years (${mechanismText})`;
+}
+
+/**
+ * Calculate lifecycle multiplier for impact assessment
+ * Materials replaced more often have higher lifetime impact
+ */
+export function getLifecycleMultiplier(
+  material: MaterialOption,
+  buildingLife: number = 60
+): number {
+  const duration = getLifecycleDuration(material);
+  // How many times will this material be installed over the building's life?
+  return Math.ceil(buildingLife / duration.replacementCycle);
+}
+
+/**
+ * Get service life category for display
+ */
+export function getServiceLifeCategory(
+  years: number
+): 'short' | 'medium' | 'long' | 'permanent' {
+  if (years <= 10) return 'short';
+  if (years <= 25) return 'medium';
+  if (years <= 50) return 'long';
+  return 'permanent';
+}
+
+/**
+ * Format service life for display
+ */
+export function formatServiceLife(years: number): string {
+  if (years >= 100) return '100+ years';
+  return `${years} years`;
+}
+
+/**
+ * Get all durations for a set of materials
+ * Returns a Map for easy lookup
+ */
+export function getDurationsForMaterials(
+  materials: MaterialOption[]
+): Map<string, LifecycleDuration> {
+  const map = new Map<string, LifecycleDuration>();
+  materials.forEach((m) => {
+    map.set(m.id, getLifecycleDuration(m));
+  });
+  return map;
+}
+
+/**
+ * Categorize materials by service life
+ * Useful for grouping in reports
+ */
+export function categorizeMaterialsByLife(
+  materials: MaterialOption[]
+): {
+  short: MaterialOption[];
+  medium: MaterialOption[];
+  long: MaterialOption[];
+  permanent: MaterialOption[];
+} {
+  const result = {
+    short: [] as MaterialOption[],
+    medium: [] as MaterialOption[],
+    long: [] as MaterialOption[],
+    permanent: [] as MaterialOption[],
+  };
+
+  materials.forEach((m) => {
+    const duration = getLifecycleDuration(m);
+    const category = getServiceLifeCategory(duration.serviceLife);
+    result[category].push(m);
+  });
+
+  return result;
+}
+
+/**
+ * Get materials with carbon payback (for highlighting)
+ */
+export function getMaterialsWithPayback(
+  materials: MaterialOption[]
+): Array<{ material: MaterialOption; payback: CarbonPayback }> {
+  return materials
+    .map((m) => ({ material: m, payback: getCarbonPayback(m) }))
+    .filter((x): x is { material: MaterialOption; payback: CarbonPayback } =>
+      x.payback !== null
+    );
+}
