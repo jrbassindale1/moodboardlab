@@ -258,19 +258,21 @@ export function calculateMaterialMetrics(
   let replacement_cycle = 25;
   let lifecycle_multiplier = 2;
   let carbon_payback: CarbonPayback | undefined;
+  let carbon_payback_note: string | undefined;
 
   if (material) {
     const duration = getLifecycleDuration(material);
     service_life = duration.serviceLife;
     replacement_cycle = duration.replacementCycle;
     lifecycle_multiplier = getLifecycleMultiplier(material);
+    carbon_payback_note = duration.carbonPaybackNote;
 
     // Get carbon payback if applicable
     const payback = getPaybackData(material);
     if (payback) {
       carbon_payback = {
         years: payback.years,
-        mechanism: payback.mechanism,
+        category: payback.category,
         assumption: payback.assumption,
       };
     }
@@ -301,6 +303,7 @@ export function calculateMaterialMetrics(
     replacement_cycle,
     lifecycle_multiplier,
     carbon_payback,
+    carbon_payback_note,
   };
 }
 

@@ -11,6 +11,7 @@ import type {
   PDFContext,
   Hotspot,
   LifecycleProfile,
+  CarbonPaybackCategory,
 } from '../types/sustainability';
 import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
@@ -22,6 +23,11 @@ const TRAFFIC_LIGHT_COLORS: Record<TrafficLight, [number, number, number]> = {
   green: [34, 139, 34],
   amber: [255, 191, 0],
   red: [220, 53, 69],
+};
+const PAYBACK_CATEGORY_LABELS: Record<CarbonPaybackCategory, string> = {
+  biogenic_storage: 'Biogenic storage',
+  operational_offset: 'Operational offset',
+  ecosystem_sequestration: 'Ecosystem sequestration',
 };
 
 /**
@@ -396,12 +402,7 @@ export function renderComparativeDashboard(
     // Carbon payback
     if (metric.carbon_payback) {
       const payback = metric.carbon_payback;
-      let paybackText: string;
-      if (payback.years === 0) {
-        paybackText = payback.mechanism === 'sequestration' ? 'Carbon -ve' : 'Immediate';
-      } else {
-        paybackText = `~${payback.years} years`;
-      }
+      const paybackText = payback.years === 0 ? 'Immediate' : `~${payback.years} years`;
       // Color code based on payback
       if (payback.years === 0) {
         ctx.doc.setTextColor(34, 139, 34); // Green
@@ -412,7 +413,7 @@ export function renderComparativeDashboard(
       ctx.doc.setTextColor(0);
     } else {
       ctx.doc.setTextColor(150);
-      ctx.doc.text('—', xPos, ctx.cursorY);
+      ctx.doc.text('No payback claim', xPos, ctx.cursorY);
       ctx.doc.setTextColor(0);
     }
 
@@ -430,7 +431,7 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Carbon Payback: years until embodied carbon is offset by sequestration, energy generation, or avoided emissions. Carbon -ve = net negative.',
+    'Carbon Payback: years until embodied carbon is offset by biogenic storage, operational offsets, or ecosystem sequestration. If none, we show "No payback claim".',
     ctx.margin,
     ctx.cursorY
   );
@@ -607,9 +608,11 @@ export function renderSystemSummaryPage(
  */
 export interface DesignRecommendation {
   priority: 'high' | 'medium' | 'low';
-  category: 'reduce' | 'replace' | 'rethink' | 'specify';
+  category: 'reduce' | 'replace' | 'specify' | 'keep';
+  recommendationId: string;
   action: string;
   rationale: string;
+  driver: string;
   materialIds?: string[]; // Related materials
 }
 
@@ -626,6 +629,12 @@ export function generateDesignRecommendations(
     (sum, m) => sum + m.embodied_proxy,
     0
   );
+  const categoryCaps: Record<DesignRecommendation['category'], number> = {
+    replace: 2,
+    specify: 3,
+    reduce: 2,
+    keep: 2,
+  };
 
   // Sort materials by embodied impact
   const sortedByEmbodied = [...materials].sort((a, b) => {
@@ -633,6 +642,30 @@ export function generateDesignRecommendations(
     const metricB = metrics.get(b.id);
     return (metricB?.embodied_proxy || 0) - (metricA?.embodied_proxy || 0);
   });
+  const rankMap = new Map<string, number>();
+  sortedByEmbodied.forEach((mat, idx) => {
+    rankMap.set(mat.id, idx + 1);
+  });
+
+  const buildDriver = (materialIds?: string[]): string => {
+    if (!materialIds || materialIds.length === 0) {
+      return 'Driver: data limited';
+    }
+    const candidates = materialIds
+      .map((id) => ({ id, metric: metrics.get(id) }))
+      .filter((entry) => entry.metric);
+    const primary = candidates.sort(
+      (a, b) => (b.metric?.embodied_proxy || 0) - (a.metric?.embodied_proxy || 0)
+    )[0];
+    if (!primary?.metric) return 'Driver: data limited';
+    const rank = rankMap.get(primary.id);
+    const rankText = rank ? `#${rank} embodied contributor` : 'embodied contributor';
+    const replacements = primary.metric.lifecycle_multiplier;
+    const replacementText = `${replacements} replacement${replacements === 1 ? '' : 's'}`;
+    const circularity = getCircularityIndicator(primary.metric.end_of_life_proxy);
+    const circularityText = `${circularity} circularity`;
+    return `Driver: ${rankText} + ${replacementText} + ${circularityText}`;
+  };
 
   // Check for carbon dominant components (>15%)
   sortedByEmbodied.forEach((mat) => {
@@ -646,24 +679,30 @@ export function generateDesignRecommendations(
         recommendations.push({
           priority: 'high',
           category: 'reduce',
+          recommendationId: `reduce-floor-${mat.id}`,
           action: `Limit ${mat.name.toLowerCase()} to high-traffic zones only`,
           rationale: `Currently ${percent.toFixed(0)}% of palette embodied carbon`,
+          driver: buildDriver([mat.id]),
           materialIds: [mat.id],
         });
       } else if (mat.category === 'external' || mat.category === 'wall-internal') {
         recommendations.push({
           priority: 'high',
           category: 'replace',
+          recommendationId: `replace-${mat.id}`,
           action: `Consider bio-based alternatives to ${mat.name.toLowerCase()}`,
           rationale: `High embodied carbon (${percent.toFixed(0)}% of total)`,
+          driver: buildDriver([mat.id]),
           materialIds: [mat.id],
         });
       } else if (mat.category === 'external-ground') {
         recommendations.push({
           priority: 'high',
           category: 'reduce',
+          recommendationId: `reduce-hardscape-${mat.id}`,
           action: 'Reduce hard landscape area by 20-30%',
           rationale: `Hard landscape contributing ${percent.toFixed(0)}% of palette carbon`,
+          driver: buildDriver([mat.id]),
           materialIds: [mat.id],
         });
       }
@@ -685,8 +724,10 @@ export function generateDesignRecommendations(
     recommendations.push({
       priority: 'medium',
       category: 'specify',
+      recommendationId: 'specify-demountable-glazing',
       action: 'Replace frameless glazing with modular demountable system',
       rationale: `Enables future reuse and reduces lifetime impact (${glazingWithoutDisassembly.length} glazing element${glazingWithoutDisassembly.length > 1 ? 's' : ''})`,
+      driver: buildDriver(glazingWithoutDisassembly.map((m) => m.id)),
       materialIds: glazingWithoutDisassembly.map((m) => m.id),
     });
   }
@@ -699,9 +740,11 @@ export function generateDesignRecommendations(
   if (highMaintenance.length >= 3) {
     recommendations.push({
       priority: 'medium',
-      category: 'rethink',
+      category: 'reduce',
+      recommendationId: 'reduce-maintenance-complexity',
       action: 'Consolidate finishes to reduce maintenance complexity',
       rationale: `${highMaintenance.length} materials require significant maintenance`,
+      driver: buildDriver(highMaintenance.map((m) => m.id)),
       materialIds: highMaintenance.map((m) => m.id),
     });
   }
@@ -715,8 +758,10 @@ export function generateDesignRecommendations(
     recommendations.push({
       priority: 'medium',
       category: 'specify',
+      recommendationId: `specify-fixings-${mat.id}`,
       action: `Specify mechanical fixings for ${mat.name}`,
       rationale: 'Enables disassembly and material recovery',
+      driver: buildDriver([mat.id]),
       materialIds: [mat.id],
     });
   });
@@ -733,17 +778,43 @@ export function generateDesignRecommendations(
     recommendations.push({
       priority: 'high',
       category: 'replace',
+      recommendationId: 'replace-bio-based-structure',
       action: 'Prioritise hempcrete, rammed earth, or mass timber in envelope',
       rationale: 'Bio-based materials store carbon rather than emit it',
+      driver: buildDriver(highEmbodiedStructure.map((m) => m.id)),
       materialIds: highEmbodiedStructure.map((m) => m.id),
     });
   }
 
+  // Deduplicate by recommendationId
+  const seen = new Set<string>();
+  const deduped = recommendations.filter((rec) => {
+    if (seen.has(rec.recommendationId)) return false;
+    seen.add(rec.recommendationId);
+    return true;
+  });
+
   // Sort by priority
   const priorityOrder = { high: 0, medium: 1, low: 2 };
-  recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  deduped.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-  return recommendations.slice(0, 6); // Max 6 recommendations
+  // Cap per type
+  const counts: Record<DesignRecommendation['category'], number> = {
+    replace: 0,
+    specify: 0,
+    reduce: 0,
+    keep: 0,
+  };
+  const capped: DesignRecommendation[] = [];
+  deduped.forEach((rec) => {
+    const cap = categoryCaps[rec.category];
+    if (counts[rec.category] < cap) {
+      counts[rec.category] += 1;
+      capped.push(rec);
+    }
+  });
+
+  return capped; // Apply caps instead of total count
 }
 
 /**
@@ -791,8 +862,8 @@ export function renderDesignDirectionPage(
   const categoryLabels: Record<string, string> = {
     reduce: 'REDUCE',
     replace: 'REPLACE',
-    rethink: 'RETHINK',
     specify: 'SPECIFY',
+    keep: 'KEEP',
   };
 
   // Render recommendations
@@ -834,7 +905,14 @@ export function renderDesignDirectionPage(
     ctx.doc.setFontSize(9);
     ctx.doc.setTextColor(80);
     ctx.doc.text(rec.rationale, ctx.margin + 5, ctx.cursorY);
-    ctx.cursorY += 18;
+    ctx.cursorY += 12;
+
+    // Driver
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(100);
+    ctx.doc.text(rec.driver, ctx.margin + 5, ctx.cursorY);
+    ctx.cursorY += 14;
 
     ctx.doc.setTextColor(0);
   });
@@ -1187,18 +1265,113 @@ export function renderUKComplianceDashboard(
  */
 export function renderLifecycleFingerprint(
   ctx: PDFContext,
-  _materialId: string,
+  materialId: string,
   materialName: string,
   profile: LifecycleProfile | null,
   lowConfidence?: boolean
 ): void {
   if (!profile) {
+    const materialText = `${materialId} ${materialName}`.toLowerCase();
+    const proxyClass = materialText.includes('terracotta')
+      ? 'Terracotta cladding'
+      : materialText.includes('timber') || materialText.includes('wood')
+      ? 'Timber system'
+      : materialText.includes('aluminium') || materialText.includes('aluminum')
+      ? 'Aluminium support system'
+      : materialText.includes('steel') || materialText.includes('stair') || materialText.includes('tread')
+      ? 'Steel stair system'
+      : materialText.includes('rail') || materialText.includes('support')
+      ? 'Metal support rails'
+      : materialText.includes('glass') || materialText.includes('glazing')
+      ? 'Glazing system'
+      : 'Generic material system';
+
+    const isMetal = materialText.includes('aluminium') || materialText.includes('aluminum') || materialText.includes('steel');
+    const isCeramic = materialText.includes('terracotta') || materialText.includes('ceramic') || materialText.includes('clay');
+    const isGlass = materialText.includes('glass') || materialText.includes('glazing');
+    const isTimber = materialText.includes('timber') || materialText.includes('wood');
+
+    const proxyProfile: LifecycleProfile = {
+      raw: { impact: isTimber ? 2 : isMetal ? 4 : 3, confidence: 'low' },
+      manufacturing: { impact: isTimber ? 2 : isMetal || isCeramic || isGlass ? 4 : 3, confidence: 'low' },
+      transport: { impact: isCeramic || isGlass ? 3 : 2, confidence: 'low' },
+      installation: { impact: 2, confidence: 'low' },
+      inUse: { impact: 2, confidence: 'low' },
+      maintenance: { impact: isTimber ? 3 : 2, confidence: 'low' },
+      endOfLife: { impact: isTimber ? 2 : 3, confidence: 'low' },
+    };
+
+    const proxyLine = `Proxy lifecycle scores (very low confidence): RAW ${proxyProfile.raw.impact} • MFG ${proxyProfile.manufacturing.impact} • TRN ${proxyProfile.transport.impact} • INS ${proxyProfile.installation.impact} • USE ${proxyProfile.inUse.impact} • MNT ${proxyProfile.maintenance.impact} • EOL ${proxyProfile.endOfLife.impact}`;
+    const cardWidth = ctx.pageWidth - ctx.margin * 2;
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(10);
-    ctx.doc.setTextColor(100);
-    ctx.doc.text(`${materialName}: Fingerprint not available`, ctx.margin, ctx.cursorY);
+    ctx.doc.setFontSize(8);
+    const scoreLines = ctx.doc.splitTextToSize(proxyLine, cardWidth - 16);
+    const requestItems = [
+      'EPD (EN 15804 / ISO 14025)',
+      'Recycled content declaration',
+      'Take-back or reuse scheme',
+    ];
+
+    const cardHeight =
+      8 + // top padding
+      8 + // banner
+      10 + // class line
+      scoreLines.length * 9 +
+      9 + // "What to request" label
+      requestItems.length * 9 +
+      6; // bottom padding
+
+    ensureSpace(ctx, cardHeight + 8);
+
+    // Card background
+    ctx.doc.setFillColor(248, 248, 248);
+    ctx.doc.setDrawColor(220, 220, 220);
+    ctx.doc.roundedRect(ctx.margin, ctx.cursorY, cardWidth, cardHeight, 2, 2, 'FD');
+
+    let y = ctx.cursorY + 8;
+
+    // Banner
+    ctx.doc.setFillColor(255, 240, 220);
+    ctx.doc.roundedRect(ctx.margin + 6, y - 5, cardWidth - 12, 8, 2, 2, 'F');
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(160, 90, 0);
+    ctx.doc.text('PROFILE MISSING — PROXY USED', ctx.margin + 10, y);
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 15;
+    y += 10;
+
+    // Typical class
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(9);
+    ctx.doc.text(`Typical class: ${proxyClass}`, ctx.margin + 10, y);
+    y += 10;
+
+    // Proxy scores
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(90);
+    scoreLines.forEach((line: string) => {
+      ctx.doc.text(line, ctx.margin + 10, y);
+      y += 9;
+    });
+
+    // What to request
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text('What to request:', ctx.margin + 10, y);
+    y += 9;
+
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(80);
+    requestItems.forEach((item) => {
+      ctx.doc.text(`• ${item}`, ctx.margin + 14, y);
+      y += 9;
+    });
+
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += cardHeight + 10;
     return;
   }
 
@@ -1586,24 +1759,22 @@ export function renderEnhancedMaterialSection(
     const replText = metrics.lifecycle_multiplier === 1 ? 'full building life' : `${metrics.lifecycle_multiplier}× over 60 years`;
     ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
 
-    // Carbon payback if applicable
+    // Carbon payback / claim
+    const paybackNote = metrics.carbon_payback_note;
+    let paybackText: string;
     if (metrics.carbon_payback) {
       const payback = metrics.carbon_payback;
-      let paybackText: string;
-      if (payback.years === 0) {
-        paybackText = payback.mechanism === 'sequestration'
-          ? 'Carbon payback: Negative from day 1 (carbon stored)'
-          : 'Carbon payback: Immediate benefit';
-      } else {
-        const mechText = payback.mechanism === 'generation' ? 'energy generated'
-          : payback.mechanism === 'sequestration' ? 'carbon stored'
-          : 'emissions avoided';
-        paybackText = `Carbon payback: ~${payback.years} years (${mechText})`;
-      }
-      ctx.cursorY += 10;
+      const categoryLabel = PAYBACK_CATEGORY_LABELS[payback.category];
+      paybackText = payback.years === 0
+        ? `Carbon payback: Immediate (${categoryLabel})`
+        : `Carbon payback: ~${payback.years} years (${categoryLabel})`;
       ctx.doc.setTextColor(34, 100, 34);
-      ctx.doc.text(paybackText, ctx.margin, ctx.cursorY);
+    } else {
+      paybackText = `Carbon payback: No payback claim${paybackNote ? ` (${paybackNote})` : ''}`;
+      ctx.doc.setTextColor(120);
     }
+    ctx.cursorY += 10;
+    ctx.doc.text(paybackText, ctx.margin, ctx.cursorY);
 
     ctx.doc.setTextColor(0);
     ctx.cursorY += 14;

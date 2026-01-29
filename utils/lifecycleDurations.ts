@@ -3,6 +3,7 @@
 // Critical for honest lifecycle assessment
 
 import type { MaterialOption, MaterialCategory } from '../types';
+import type { CarbonPaybackCategory } from '../types/sustainability';
 
 // ============================================================================
 // TYPES
@@ -11,13 +12,14 @@ import type { MaterialOption, MaterialCategory } from '../types';
 export interface LifecycleDuration {
   serviceLife: number; // Expected lifespan in years
   replacementCycle: number; // How often replaced/refurbished (years)
-  carbonPayback?: CarbonPayback; // Only for sequestering/generating materials
+  carbonPayback?: CarbonPayback; // Only for biogenic/operational/ecosystem claims
+  carbonPaybackNote?: string; // Used when no payback claim is appropriate
   notes?: string;
 }
 
 export interface CarbonPayback {
-  years: number; // Years until embodied carbon is offset
-  mechanism: 'sequestration' | 'generation' | 'avoided_emissions';
+  years: number; // Years until embodied carbon is offset (0 = immediate)
+  category: CarbonPaybackCategory;
   assumption: string; // What the payback is based on
 }
 
@@ -87,9 +89,9 @@ interface MaterialDurationOverride {
 }
 
 const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
-  // CARBON PAYBACK MATERIALS (sequestration/generation)
+  // CARBON PAYBACK MATERIALS (biogenic/operational/ecosystem)
 
-  // Timber - carbon sequestration
+  // Timber - biogenic storage
   {
     pattern: /timber|wood|oak|ash|pine|birch|clt|glulam/i,
     categories: ['structure', 'exposed-structure'],
@@ -97,15 +99,15 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       serviceLife: 60,
       replacementCycle: 60,
       carbonPayback: {
-        years: 0, // Immediate - carbon already stored
-        mechanism: 'sequestration',
+        years: 0, // Immediate - biogenic storage at installation
+        category: 'biogenic_storage',
         assumption: '1 m³ timber stores ~1 tonne CO₂; counted at installation',
       },
-      notes: 'Carbon stored from day 1; maintained if kept in use',
+      notes: 'Biogenic storage from day 1; maintained if kept in use',
     },
   },
 
-  // CLT/Mass timber - significant sequestration
+  // CLT/Mass timber - biogenic storage
   {
     pattern: /clt|cross.?laminated|mass.?timber|glulam/i,
     duration: {
@@ -113,14 +115,14 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 60,
       carbonPayback: {
         years: 0,
-        mechanism: 'sequestration',
+        category: 'biogenic_storage',
         assumption: '~800 kgCO₂/m³ stored; processing adds ~150 kgCO₂/m³',
       },
       notes: 'Net carbon negative if sustainably sourced',
     },
   },
 
-  // Hempcrete - carbon negative
+  // Hempcrete - biogenic storage
   {
     pattern: /hempcrete|hemp.?lime|hemp.?block/i,
     duration: {
@@ -128,14 +130,14 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 60,
       carbonPayback: {
         years: 0,
-        mechanism: 'sequestration',
+        category: 'biogenic_storage',
         assumption: 'Hemp sequesters ~1.5 tonnes CO₂/tonne; lime carbonation adds more',
       },
       notes: 'Carbon negative material; improves with age',
     },
   },
 
-  // Cork - sequestration
+  // Cork - biogenic storage
   {
     pattern: /cork/i,
     duration: {
@@ -143,13 +145,13 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 25,
       carbonPayback: {
         years: 0,
-        mechanism: 'sequestration',
+        category: 'biogenic_storage',
         assumption: 'Cork oak regenerates; harvesting promotes growth',
       },
     },
   },
 
-  // Wool insulation - sequestration
+  // Wool insulation - biogenic storage
   {
     pattern: /wool.?insulation|sheep.?wool/i,
     categories: ['insulation'],
@@ -158,13 +160,13 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 60,
       carbonPayback: {
         years: 0,
-        mechanism: 'sequestration',
+        category: 'biogenic_storage',
         assumption: 'Biogenic carbon storage; low processing emissions',
       },
     },
   },
 
-  // Wood fibre insulation - sequestration
+  // Wood fibre insulation - biogenic storage
   {
     pattern: /wood.?fibre|woodfibre|cellulose.?insulation/i,
     categories: ['insulation'],
@@ -173,13 +175,13 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 60,
       carbonPayback: {
         years: 0,
-        mechanism: 'sequestration',
+        category: 'biogenic_storage',
         assumption: 'Recycled newsprint or wood waste; stored carbon',
       },
     },
   },
 
-  // PV panels - energy generation
+  // PV panels - operational offset
   {
     pattern: /pv|photovoltaic|solar.?panel/i,
     duration: {
@@ -187,14 +189,14 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 25,
       carbonPayback: {
         years: 2,
-        mechanism: 'generation',
+        category: 'operational_offset',
         assumption: 'UK average ~2 years; varies with orientation and location',
       },
       notes: 'Inverter replacement at 15 years',
     },
   },
 
-  // Green roof - multiple benefits
+  // Green roof - ecosystem sequestration
   {
     pattern: /green.?roof|sedum|living.?roof/i,
     categories: ['roof', 'landscape'],
@@ -203,8 +205,8 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 40,
       carbonPayback: {
         years: 8,
-        mechanism: 'avoided_emissions',
-        assumption: 'Reduces cooling load; extends roof membrane life',
+        category: 'ecosystem_sequestration',
+        assumption: 'Modeled sequestration from planting/soil; site-specific',
       },
       notes: 'Biodiversity and stormwater benefits not counted',
     },
@@ -218,26 +220,16 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
     duration: {
       serviceLife: 100,
       replacementCycle: 100,
-      carbonPayback: {
-        years: 0,
-        mechanism: 'avoided_emissions',
-        assumption: 'Minimal processing; local material',
-      },
       notes: 'Very low embodied carbon if local',
     },
   },
 
-  // Lime mortar/plaster - carbonation
+  // Lime mortar/plaster - carbonation (no payback claim)
   {
     pattern: /lime.?mortar|lime.?plaster|limecrete/i,
     duration: {
       serviceLife: 60,
       replacementCycle: 60,
-      carbonPayback: {
-        years: 20,
-        mechanism: 'sequestration',
-        assumption: 'Reabsorbs CO₂ during carbonation; ~60% over 60 years',
-      },
     },
   },
 
@@ -294,11 +286,7 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
     duration: {
       serviceLife: 60,
       replacementCycle: 60,
-      carbonPayback: {
-        years: 50,
-        mechanism: 'sequestration',
-        assumption: 'Carbonation reabsorbs ~15-20% of cement CO₂ over 50 years',
-      },
+      carbonPaybackNote: 'durability benefit only',
     },
   },
 
@@ -396,7 +384,7 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
       replacementCycle: 10,
       carbonPayback: {
         years: 5,
-        mechanism: 'sequestration',
+        category: 'ecosystem_sequestration',
         assumption: 'Trees: ~20 kgCO₂/year; hedges: ~5 kgCO₂/m/year',
       },
       notes: 'Trees have longest payback but highest storage',
@@ -460,7 +448,7 @@ export function getCarbonPayback(material: MaterialOption): CarbonPayback | null
 }
 
 /**
- * Check if material has carbon payback (is sequestering/generating)
+ * Check if material has carbon payback (biogenic/operational/ecosystem)
  */
 export function hasPayback(material: MaterialOption): boolean {
   return getCarbonPayback(material) !== null;
@@ -471,20 +459,23 @@ export function hasPayback(material: MaterialOption): boolean {
  */
 export function formatCarbonPayback(payback: CarbonPayback): string {
   if (payback.years === 0) {
-    if (payback.mechanism === 'sequestration') {
-      return 'Carbon negative from day 1';
-    }
-    return 'Immediate carbon benefit';
+    const immediateLabel =
+      payback.category === 'biogenic_storage'
+        ? 'Biogenic storage from day 1'
+        : payback.category === 'operational_offset'
+        ? 'Immediate operational offset'
+        : 'Immediate ecosystem sequestration';
+    return immediateLabel;
   }
 
-  const mechanismText =
-    payback.mechanism === 'sequestration'
-      ? 'carbon stored'
-      : payback.mechanism === 'generation'
-      ? 'energy generated'
-      : 'emissions avoided';
+  const categoryText =
+    payback.category === 'biogenic_storage'
+      ? 'biogenic storage'
+      : payback.category === 'operational_offset'
+      ? 'operational offset'
+      : 'ecosystem sequestration';
 
-  return `~${payback.years} years (${mechanismText})`;
+  return `~${payback.years} years (${categoryText})`;
 }
 
 /**

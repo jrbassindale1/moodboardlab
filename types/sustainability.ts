@@ -75,10 +75,16 @@ export interface Risk {
   note?: string;
 }
 
-// Carbon payback for sequestering/generating materials
+// Carbon payback categories (defensible claim types)
+export type CarbonPaybackCategory =
+  | 'biogenic_storage'
+  | 'operational_offset'
+  | 'ecosystem_sequestration';
+
+// Carbon payback for defensible claims only
 export interface CarbonPayback {
-  years: number; // Years until embodied carbon is offset
-  mechanism: 'sequestration' | 'generation' | 'avoided_emissions';
+  years: number; // Years until embodied carbon is offset (0 = immediate)
+  category: CarbonPaybackCategory;
   assumption: string; // What the payback is based on
 }
 
@@ -99,7 +105,8 @@ export interface MaterialMetrics {
   service_life: number; // Expected lifespan in years
   replacement_cycle: number; // How often replaced/refurbished (years)
   lifecycle_multiplier: number; // How many replacements over 60-year building life
-  carbon_payback?: CarbonPayback; // Only for sequestering/generating materials
+  carbon_payback?: CarbonPayback; // Only for biogenic/operational/ecosystem payback claims
+  carbon_payback_note?: string; // Used when no payback claim is appropriate
 }
 
 // Enhanced sustainability insight (extends current SustainabilityInsight)
