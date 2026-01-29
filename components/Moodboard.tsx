@@ -1962,7 +1962,9 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                                       key={idx}
                                       className="inline-block px-2 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-sans"
                                     >
-                                      {hotspot}
+                                      {typeof hotspot === 'string'
+                                        ? hotspot
+                                        : `${hotspot.stage?.toUpperCase() || 'N/A'} (${hotspot.score || '?'}): ${hotspot.reason || ''}`}
                                     </span>
                                   ))}
                                 </div>
@@ -1998,7 +2000,11 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                                 <ul className="list-disc list-inside space-y-1">
                                   {insight.ukChecks.map((check, idx) => (
                                     <li key={idx} className="font-sans text-sm text-gray-800">
-                                      {check}
+                                      {typeof check === 'string'
+                                        ? check
+                                        : check.standard_code
+                                          ? `${check.label} (${check.standard_code})`
+                                          : check.label}
                                     </li>
                                   ))}
                                 </ul>
