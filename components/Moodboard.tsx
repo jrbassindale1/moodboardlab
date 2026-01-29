@@ -853,7 +853,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     }
 
     // ========== PAGE 3: System-Level Summary ==========
-    renderSystemSummaryPage(ctx, systemSummary, board);
+    renderSystemSummaryPage(ctx, systemSummary, board, metrics);
 
     // ========== PAGE 4: Design Direction ==========
     if (board.length > 0 && metrics.size > 0 && insights.length > 0) {

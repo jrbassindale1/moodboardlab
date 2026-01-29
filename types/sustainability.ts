@@ -84,6 +84,7 @@ export type CarbonPaybackCategory =
 // Carbon payback for defensible claims only
 export interface CarbonPayback {
   years: number; // Years until embodied carbon is offset (0 = immediate)
+  rangeYears?: [number, number]; // Optional range for variable contexts
   category: CarbonPaybackCategory;
   assumption: string; // What the payback is based on
 }

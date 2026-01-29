@@ -382,8 +382,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'recycled-aluminum-frame': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 2, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },

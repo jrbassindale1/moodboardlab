@@ -40,6 +40,33 @@ export const SCORING_WEIGHTS = {
   },
 } as const;
 
+const WEIGHT_EPSILON = 0.001;
+const isProd =
+  typeof import.meta !== 'undefined' &&
+  typeof import.meta.env !== 'undefined' &&
+  import.meta.env.PROD === true;
+
+function assertWeightSums(): void {
+  if (isProd) return;
+  const sum = (values: Record<string, number>) =>
+    Object.values(values).reduce((acc, v) => acc + v, 0);
+  const embodiedSum = sum(SCORING_WEIGHTS.embodied);
+  const inUseSum = sum(SCORING_WEIGHTS.inUse);
+  const overallSum = sum(SCORING_WEIGHTS.overall);
+
+  if (Math.abs(embodiedSum - 1) > WEIGHT_EPSILON) {
+    console.warn(`[SustainabilityScoring] Embodied weights sum to ${embodiedSum.toFixed(3)} (expected 1.0)`);
+  }
+  if (Math.abs(inUseSum - 1) > WEIGHT_EPSILON) {
+    console.warn(`[SustainabilityScoring] In-use weights sum to ${inUseSum.toFixed(3)} (expected 1.0)`);
+  }
+  if (Math.abs(overallSum - 1) > WEIGHT_EPSILON) {
+    console.warn(`[SustainabilityScoring] Overall weights sum to ${overallSum.toFixed(3)} (expected 1.0)`);
+  }
+}
+
+assertWeightSums();
+
 // Confidence numeric values for averaging
 const CONFIDENCE_VALUES: Record<Confidence, number> = {
   high: 1.0,
@@ -48,7 +75,7 @@ const CONFIDENCE_VALUES: Record<Confidence, number> = {
 };
 
 // Default confidence when not specified
-const DEFAULT_CONFIDENCE: Confidence = 'high';
+const DEFAULT_CONFIDENCE: Confidence = 'medium';
 
 // Threshold below which confidence is considered "low"
 export const CONFIDENCE_THRESHOLD = 0.5;
@@ -116,7 +143,7 @@ export function calculateBenefitScore(benefits: Benefit[]): number {
  * Calculate environmental benefit score
  * Only includes benefits that CAN offset embodied carbon:
  * - biodiversity, sequestration, operational_carbon
- * This score is used for traffic light determination
+ * Uses the maximum score to avoid penalizing multiple benefits.
  */
 export function calculateEnvironmentalBenefitScore(benefits: Benefit[]): number {
   if (!benefits || benefits.length === 0) return 0;
@@ -124,8 +151,7 @@ export function calculateEnvironmentalBenefitScore(benefits: Benefit[]): number 
     (b) => BENEFIT_CATEGORIES[b.type as BenefitType] === 'environmental'
   );
   if (envBenefits.length === 0) return 0;
-  const sum = envBenefits.reduce((acc, b) => acc + b.score_1to5, 0);
-  return sum / envBenefits.length;
+  return Math.max(...envBenefits.map((b) => b.score_1to5));
 }
 
 /**
@@ -165,9 +191,10 @@ export function calculateConfidenceScore(profile: LifecycleProfile): number {
  * shown for information but CANNOT improve the rating for high-carbon materials.
  *
  * STRICT Rules (credibility-focused):
- * - Embodied ≥ 4.0 → RED (very high carbon, avoid unless essential)
+ * - Embodied ≥ 3.6 OR max stage ≥ 4.5 → RED (very high carbon, avoid unless essential)
  * - Embodied ≥ 3.6 AND replacements ≥ 2 → RED (high carbon compounded by short life)
  * - Overall impact > 3.2 → RED
+ * - Moderate-high impact without environmental offset → AMBER
  * - Green: Genuinely low impact (≤ 1.8) AND some environmental benefit (≥ 2.0) - should be RARE
  * - Cap at Amber if confidence < threshold
  */
@@ -176,34 +203,30 @@ export function determineTrafficLight(
   environmentalBenefitScore: number,
   confidenceScore: number,
   embodiedProxy: number = 0,
-  lifecycleMultiplier: number = 1
+  lifecycleMultiplier: number = 1,
+  maxEmbodiedStage: number = 0
 ): { light: TrafficLight; lowConfidenceFlag: boolean; reason: string } {
   const lowConfidenceFlag = confidenceScore < CONFIDENCE_THRESHOLD;
 
   let light: TrafficLight;
   let reason: string;
 
-  // RULE 1: Very high embodied carbon (≥ 4.0) = RED
+  // RULE 1: Very high embodied carbon (≥ 3.6) or extreme stage (≥ 4.5) = RED
   // These materials should be avoided unless structurally essential
-  if (embodiedProxy >= 4.0) {
+  if (embodiedProxy >= 3.6 || maxEmbodiedStage >= 4.5) {
     light = 'red';
-    reason = `Embodied ${embodiedProxy.toFixed(1)} — avoid unless essential`;
+    reason = `Embodied ${embodiedProxy.toFixed(1)} - avoid unless essential`;
   }
   // RULE 2: High embodied (≥ 3.6) with multiple replacements = RED
   // Short-lived high-carbon materials multiply their impact
   else if (embodiedProxy >= 3.6 && lifecycleMultiplier >= 2) {
     light = 'red';
-    reason = `Embodied ${embodiedProxy.toFixed(1)} × ${lifecycleMultiplier} replacements`;
+    reason = `Embodied ${embodiedProxy.toFixed(1)} x ${lifecycleMultiplier} replacements`;
   }
   // RULE 3: High overall impact (> 3.2) = RED
   else if (overallImpact > 3.2) {
     light = 'red';
-    reason = `Overall impact ${overallImpact.toFixed(1)} — high lifecycle burden`;
-  }
-  // RULE 4: Moderate-high impact (2.5-3.2) without strong environmental benefits = RED
-  else if (overallImpact > 2.5 && environmentalBenefitScore < 3.0) {
-    light = 'red';
-    reason = `Impact ${overallImpact.toFixed(1)} without environmental offset`;
+    reason = `Overall impact ${overallImpact.toFixed(1)} - high lifecycle burden`;
   }
   // RULE 5: Genuinely low impact with meaningful environmental benefits = GREEN (rare)
   else if (overallImpact <= 1.8 && environmentalBenefitScore >= 2.0) {
@@ -218,12 +241,17 @@ export function determineTrafficLight(
   // RULE 7: Low impact but no environmental benefits = AMBER
   else if (overallImpact <= 2.0 && environmentalBenefitScore < 2.0) {
     light = 'amber';
-    reason = 'Low impact but no environmental upside';
+    reason = 'Low impact with no carbon-offsetting benefit identified';
+  }
+  // RULE 8: Moderate-high impact without environmental offset = AMBER (review)
+  else if (overallImpact > 2.5 && environmentalBenefitScore < 2.0) {
+    light = 'amber';
+    reason = `Moderate-high impact (${overallImpact.toFixed(1)}) without environmental offset`;
   }
   // DEFAULT: Everything else = AMBER
   else {
     light = 'amber';
-    reason = `Moderate impact (${overallImpact.toFixed(1)}) — review design levers`;
+    reason = `Moderate impact (${overallImpact.toFixed(1)}) - review design levers`;
   }
 
   // Cap at amber if low confidence
@@ -244,14 +272,19 @@ export function calculateMaterialMetrics(
   benefits: Benefit[] = [],
   material?: MaterialOption
 ): MaterialMetrics {
-  const embodied_proxy = calculateEmbodiedProxy(profile);
+  const embodied_proxy_per_install = calculateEmbodiedProxy(profile);
   const in_use_proxy = calculateInUseProxy(profile);
   const end_of_life_proxy = calculateEndOfLifeProxy(profile);
-  const overall_impact_proxy = calculateOverallImpactProxy(profile);
   const benefit_score = calculateBenefitScore(benefits);
   const environmental_benefit_score = calculateEnvironmentalBenefitScore(benefits);
   const practical_benefit_score = calculatePracticalBenefitScore(benefits);
   const confidence_score = calculateConfidenceScore(profile);
+  const max_embodied_stage = Math.max(
+    profile.raw.impact,
+    profile.manufacturing.impact,
+    profile.transport.impact,
+    profile.installation.impact
+  );
 
   // Get lifecycle duration data FIRST (needed for traffic light calculation)
   let service_life = 25; // Default
@@ -272,20 +305,44 @@ export function calculateMaterialMetrics(
     if (payback) {
       carbon_payback = {
         years: payback.years,
+        rangeYears: payback.rangeYears,
         category: payback.category,
         assumption: payback.assumption,
       };
     }
   }
 
-  // IMPORTANT: Pass embodied_proxy and lifecycle_multiplier for stricter thresholds
+  const embodied_proxy = embodied_proxy_per_install * lifecycle_multiplier;
+  const overall_impact_proxy =
+    embodied_proxy * SCORING_WEIGHTS.overall.embodied +
+    in_use_proxy * SCORING_WEIGHTS.overall.inUse +
+    end_of_life_proxy * SCORING_WEIGHTS.overall.endOfLife;
+
+  // IMPORTANT: Pass per-install embodied proxy and lifecycle multiplier for stricter thresholds
   const { light, lowConfidenceFlag, reason } = determineTrafficLight(
     overall_impact_proxy,
     environmental_benefit_score,
     confidence_score,
-    embodied_proxy,
-    lifecycle_multiplier
+    embodied_proxy_per_install,
+    lifecycle_multiplier,
+    max_embodied_stage
   );
+
+  let traffic_light_reason = reason;
+  if (
+    carbon_payback?.category === 'biogenic_storage' &&
+    traffic_light_reason === 'Low impact with no carbon-offsetting benefit identified'
+  ) {
+    traffic_light_reason =
+      'Low embodied impact with biogenic carbon storage benefits (subject to system boundary assumptions)';
+  }
+  if (material && light !== 'green') {
+    const materialText = `${material.id} ${material.name}`.toLowerCase();
+    if (materialText.includes('recycled') && (materialText.includes('aluminium') || materialText.includes('aluminum'))) {
+      traffic_light_reason =
+        'Still high impact relative to bio-based alternatives; prioritise only where durability and recyclability justify use';
+    }
+  }
 
   return {
     embodied_proxy,
@@ -297,7 +354,7 @@ export function calculateMaterialMetrics(
     practical_benefit_score,
     confidence_score,
     traffic_light: light,
-    traffic_light_reason: reason,
+    traffic_light_reason,
     low_confidence_flag: lowConfidenceFlag,
     service_life,
     replacement_cycle,
@@ -314,6 +371,7 @@ export function calculateMaterialMetrics(
 export function getCircularityIndicator(
   endOfLifeScore: number
 ): 'high' | 'medium' | 'low' {
+  // Assumes endOfLifeScore represents environmental burden (lower = more circular).
   if (endOfLifeScore <= 2) return 'high';
   if (endOfLifeScore <= 3) return 'medium';
   return 'low';

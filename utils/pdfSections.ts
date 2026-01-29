@@ -203,7 +203,7 @@ export function renderClientSummaryPage(
     ensureSpace(ctx, 14);
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(10);
-    ctx.doc.text(`☐ ${item}`, ctx.margin + 5, ctx.cursorY);
+    ctx.doc.text(`[ ] ${item}`, ctx.margin + 5, ctx.cursorY);
     ctx.cursorY += 14;
   });
   ctx.cursorY += 15;
@@ -268,7 +268,7 @@ export function renderComparativeDashboard(
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(10);
     ctx.doc.setTextColor(220, 53, 69);
-    ctx.doc.text('CARBON DOMINANT COMPONENTS — act here first:', ctx.margin + 8, ctx.cursorY);
+    ctx.doc.text('CARBON DOMINANT COMPONENTS - act here first:', ctx.margin + 8, ctx.cursorY);
     ctx.cursorY += 12;
 
     ctx.doc.setFont('helvetica', 'normal');
@@ -278,7 +278,17 @@ export function renderComparativeDashboard(
       ctx.doc.text(`- ${material.name} (${percent.toFixed(0)}% of palette embodied carbon)`, ctx.margin + 15, ctx.cursorY);
       ctx.cursorY += 12;
     });
-    ctx.cursorY += 8;
+    ctx.cursorY += 4;
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(7);
+    ctx.doc.setTextColor(90);
+    ctx.doc.text(
+      'Percentages reflect normalized early-stage weighting rather than detailed quantity take-offs.',
+      ctx.margin + 15,
+      ctx.cursorY
+    );
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 10;
   }
 
   // ===== TABLE 1: Impact & Rating =====
@@ -389,20 +399,28 @@ export function renderComparativeDashboard(
     xPos += lifecycleColWidths[1];
 
     // Replacement cycles (over 60-year building life)
-    const replText = metric.lifecycle_multiplier === 1 ? '1x (full life)' : `${metric.lifecycle_multiplier}x`;
+    const isPartial = !Number.isInteger(metric.lifecycle_multiplier);
+    const replValue = metric.lifecycle_multiplier.toString();
+    const replText = metric.lifecycle_multiplier === 1
+      ? '1x (full life)'
+      : `${replValue}x${isPartial ? ' (partial system)' : ''}`;
     ctx.doc.text(replText, xPos, ctx.cursorY);
     xPos += lifecycleColWidths[2];
 
     // Circularity indicator
     const circ = getCircularityIndicator(metric.end_of_life_proxy);
-    const circText = circ === 'high' ? '● High' : circ === 'medium' ? '◐ Medium' : '○ Low';
+    const circText = circ === 'high' ? 'High' : circ === 'medium' ? 'Medium' : 'Low';
     ctx.doc.text(circText, xPos, ctx.cursorY);
     xPos += lifecycleColWidths[3];
 
     // Carbon payback
     if (metric.carbon_payback) {
       const payback = metric.carbon_payback;
-      const paybackText = payback.years === 0 ? 'Immediate' : `~${payback.years} years`;
+      const paybackText = payback.years === 0
+        ? 'Immediate'
+        : payback.rangeYears
+        ? `~${payback.rangeYears[0]}-${payback.rangeYears[1]} years`
+        : `~${payback.years} years`;
       // Color code based on payback
       if (payback.years === 0) {
         ctx.doc.setTextColor(34, 139, 34); // Green
@@ -431,13 +449,19 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Carbon Payback: years until embodied carbon is offset by biogenic storage, operational offsets, or ecosystem sequestration. If none, we show "No payback claim".',
+    'Carbon Payback: refers to biogenic storage, operational offsets, or ecosystem sequestration (depending on material type). If none, we show "No payback claim".',
     ctx.margin,
     ctx.cursorY
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied ≥4.0 or high impact. Circularity: ● High | ◐ Medium | ○ Low',
+    'Replacement counts assume full material replacement; partial system retention can reduce actual lifecycle impact.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.cursorY += 10;
+  ctx.doc.text(
+    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied >=4.0 or high impact. Circularity: High | Medium | Low',
     ctx.margin,
     ctx.cursorY
   );
@@ -457,7 +481,8 @@ export function renderComparativeDashboard(
 export function renderSystemSummaryPage(
   ctx: PDFContext,
   summary: SystemLevelSummary,
-  materials: MaterialOption[]
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>
 ): void {
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
@@ -498,19 +523,46 @@ export function renderSystemSummaryPage(
   ctx.cursorY += 14;
 
   ctx.doc.setFont('helvetica', 'normal');
+  const envBenefitItems: MaterialOption[] = [];
+  const functionalBenefitItems: MaterialOption[] = [];
   summary.top_benefit_items.slice(0, 3).forEach((id) => {
     const mat = materials.find((m) => m.id === id);
-    if (mat) {
-      ctx.doc.text(`  - ${mat.name}`, ctx.margin + 10, ctx.cursorY);
-      ctx.cursorY += 12;
+    const metric = metrics.get(id);
+    if (!mat || !metric) return;
+    const isLandscape = mat.category === 'landscape' || mat.category === 'external-ground';
+    const isEnvironmental =
+      metric.environmental_benefit_score >= 2 &&
+      (isLandscape || (metric.embodied_proxy <= 2.8 && metric.end_of_life_proxy <= 3.5));
+    if (isEnvironmental) {
+      envBenefitItems.push(mat);
+    } else {
+      functionalBenefitItems.push(mat);
     }
   });
 
-  if (summary.top_benefit_items.length === 0) {
+  envBenefitItems.forEach((mat) => {
+    ctx.doc.text(`  - ${mat.name}`, ctx.margin + 10, ctx.cursorY);
+    ctx.cursorY += 12;
+  });
+
+  if (envBenefitItems.length === 0) {
     ctx.doc.setTextColor(100);
     ctx.doc.text('  No materials with significant environmental benefits', ctx.margin + 10, ctx.cursorY);
     ctx.doc.setTextColor(0);
     ctx.cursorY += 12;
+  }
+
+  if (functionalBenefitItems.length > 0) {
+    ctx.cursorY += 6;
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.text('Highest functional benefit (daylight / spatial flexibility, durability):', ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
+
+    ctx.doc.setFont('helvetica', 'normal');
+    functionalBenefitItems.forEach((mat) => {
+      ctx.doc.text(`  - ${mat.name}`, ctx.margin + 10, ctx.cursorY);
+      ctx.cursorY += 12;
+    });
   }
 
   // Net statement
@@ -1091,7 +1143,7 @@ export function renderUKComplianceDashboard(
     categories.forEach(({ key, label }) => {
       const status = getComplianceStatus(insight, material, key);
       if (status === 'red') {
-        redFlags.push(`${material.name}: ${label} — risk or non-compliant`);
+        redFlags.push(`${material.name}: ${label} - risk or non-compliant`);
       } else if (status === 'amber') {
         amberRequired.push(`${material.name}: ${label}`);
       }
@@ -1336,7 +1388,7 @@ export function renderLifecycleFingerprint(
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(8);
     ctx.doc.setTextColor(160, 90, 0);
-    ctx.doc.text('PROFILE MISSING — PROXY USED', ctx.margin + 10, y);
+    ctx.doc.text('PROFILE MISSING - PROXY USED', ctx.margin + 10, y);
     ctx.doc.setTextColor(0);
     y += 10;
 
@@ -1688,7 +1740,7 @@ export function renderEnhancedMaterialSection(
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(9);
       ctx.doc.setTextColor(220, 53, 69);
-      ctx.doc.text('CARBON DOMINANT COMPONENT — act here first', ctx.margin + 4, ctx.cursorY + 5);
+      ctx.doc.text('CARBON DOMINANT COMPONENT - act here first', ctx.margin + 4, ctx.cursorY + 5);
       ctx.cursorY += 18;
     }
 
@@ -1724,8 +1776,8 @@ export function renderEnhancedMaterialSection(
       metrics.traffic_light === 'green'
         ? 'Low impact'
         : metrics.traffic_light === 'amber'
-        ? 'Moderate impact — review design levers'
-        : 'High impact — consider alternatives'
+        ? 'Moderate impact - review design levers'
+        : 'High impact - consider alternatives'
     );
     ctx.doc.text(ratingLabel, ctx.margin + 15, ctx.cursorY);
     ctx.cursorY += 12;
@@ -1756,7 +1808,11 @@ export function renderEnhancedMaterialSection(
 
     // Service life and replacements
     const lifeText = metrics.service_life >= 100 ? '100+' : String(metrics.service_life);
-    const replText = metrics.lifecycle_multiplier === 1 ? 'full building life' : `${metrics.lifecycle_multiplier}x over 60 years`;
+    const isPartial = !Number.isInteger(metrics.lifecycle_multiplier);
+    const replValue = metrics.lifecycle_multiplier.toString();
+    const replText = metrics.lifecycle_multiplier === 1
+      ? 'full building life'
+      : `${replValue}x over 60 years${isPartial ? ' (partial system)' : ''}`;
     ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
 
     // Carbon payback / claim
@@ -1765,9 +1821,18 @@ export function renderEnhancedMaterialSection(
     if (metrics.carbon_payback) {
       const payback = metrics.carbon_payback;
       const categoryLabel = PAYBACK_CATEGORY_LABELS[payback.category];
-      paybackText = payback.years === 0
-        ? `Carbon payback: Immediate (${categoryLabel})`
-        : `Carbon payback: ~${payback.years} years (${categoryLabel})`;
+      const isEcosystem = payback.category === 'ecosystem_sequestration';
+      if (payback.years === 0) {
+        paybackText = isEcosystem
+          ? `Potential sequestration over time (${categoryLabel})`
+          : `Carbon payback: Immediate (${categoryLabel})`;
+      } else if (payback.rangeYears) {
+        const prefix = isEcosystem ? 'Potential sequestration over time' : 'Typical carbon payback';
+        paybackText = `${prefix}: ~${payback.rangeYears[0]}-${payback.rangeYears[1]} years (${payback.assumption})`;
+      } else {
+        const prefix = isEcosystem ? 'Potential sequestration over time' : 'Carbon payback';
+        paybackText = `${prefix}: ~${payback.years} years (${payback.assumption})`;
+      }
       ctx.doc.setTextColor(34, 100, 34);
     } else {
       paybackText = `Carbon payback: No payback claim${paybackNote ? ` (${paybackNote})` : ''}`;
@@ -1787,7 +1852,7 @@ export function renderEnhancedMaterialSection(
   ctx.doc.setTextColor(100);
 
   // Cost band
-  const costLabel = bands.costBand === '£' ? '£ Low cost' : bands.costBand === '££' ? '££ Medium cost' : '£££ High cost';
+  const costLabel = bands.costBand === '£' ? 'Low cost' : bands.costBand === '££' ? 'Medium cost' : 'High cost';
   ctx.doc.text(costLabel, ctx.margin, ctx.cursorY);
 
   // Build complexity
