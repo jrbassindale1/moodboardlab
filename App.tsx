@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
+import ApplyMaterials from './components/ApplyMaterials';
 import MaterialSelection from './components/MaterialSelection';
 import AdRail from './components/AdRail';
 import Product from './components/Product';
@@ -14,6 +15,8 @@ import { MaterialOption } from './types';
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('concept');
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
+  const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
+  const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
 
   const renderPage = () => {
@@ -34,6 +37,18 @@ const App: React.FC = () => {
             onNavigate={setCurrentPage}
             initialBoard={selectedMaterials}
             onBoardChange={setSelectedMaterials}
+            moodboardRenderUrl={moodboardRenderUrl}
+            onMoodboardRenderUrlChange={setMoodboardRenderUrl}
+          />
+        );
+      case 'apply':
+        return (
+          <ApplyMaterials
+            onNavigate={setCurrentPage}
+            board={selectedMaterials}
+            moodboardRenderUrl={moodboardRenderUrl}
+            appliedRenderUrl={appliedRenderUrl}
+            onAppliedRenderUrlChange={setAppliedRenderUrl}
           />
         );
       case 'product':
@@ -49,7 +64,7 @@ const App: React.FC = () => {
     }
   };
 
-  const showAds = currentPage !== 'moodboard';
+  const showAds = currentPage !== 'moodboard' && currentPage !== 'apply';
   const adRailPadding = showAds ? 'xl:px-[210px] 2xl:px-[260px]' : '';
 
   return (

@@ -120,6 +120,8 @@ interface MoodboardProps {
   onNavigate?: (page: string) => void;
   initialBoard?: BoardItem[];
   onBoardChange?: (items: BoardItem[]) => void;
+  moodboardRenderUrl?: string | null;
+  onMoodboardRenderUrlChange?: (url: string | null) => void;
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
@@ -189,41 +191,6 @@ const downscaleImage = (
     img.src = dataUrl;
   });
 
-/**
- * Calculate the closest matching aspect ratio from Gemini's supported list
- * Valid ratios: "1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"
- */
-const calculateAspectRatio = (width: number, height: number): string => {
-  const ratio = width / height;
-
-  const validRatios: { label: string; value: number }[] = [
-    { label: '1:1', value: 1 },
-    { label: '3:2', value: 3 / 2 },
-    { label: '2:3', value: 2 / 3 },
-    { label: '3:4', value: 3 / 4 },
-    { label: '4:3', value: 4 / 3 },
-    { label: '4:5', value: 4 / 5 },
-    { label: '5:4', value: 5 / 4 },
-    { label: '9:16', value: 9 / 16 },
-    { label: '16:9', value: 16 / 9 },
-    { label: '21:9', value: 21 / 9 }
-  ];
-
-  // Find the closest matching ratio
-  let closest = validRatios[0];
-  let minDiff = Math.abs(ratio - closest.value);
-
-  for (const validRatio of validRatios) {
-    const diff = Math.abs(ratio - validRatio.value);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closest = validRatio;
-    }
-  }
-
-  return closest.label;
-};
-
 const dataUrlToInlineData = (dataUrl: string) => {
   const [meta, content] = dataUrl.split(',');
   const mimeMatch = meta?.match(/data:(.*);base64/);
@@ -235,17 +202,21 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
-const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoardChange }) => {
+const Moodboard: React.FC<MoodboardProps> = ({
+  onNavigate,
+  initialBoard,
+  onBoardChange,
+  moodboardRenderUrl: moodboardRenderUrlProp,
+  onMoodboardRenderUrlChange
+}) => {
   const [board, setBoard] = useState<BoardItem[]>(initialBoard || []);
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
-  const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
-  const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
-  const [renderNote, setRenderNote] = useState('');
+  const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
+    moodboardRenderUrlProp ?? null
+  );
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
-  const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [status, setStatus] = useState<'idle' | 'sustainability' | 'render' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -656,9 +627,21 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     });
     return acc;
   });
-  const [applyAccordionOpen, setApplyAccordionOpen] = useState(true);
   const [materialFlagsOpen, setMaterialFlagsOpen] = useState(false);
   const [assessmentOpen, setAssessmentOpen] = useState(false);
+
+  const moodboardRenderUrl = moodboardRenderUrlProp ?? moodboardRenderUrlState;
+
+  const setMoodboardRenderUrl = (url: string | null) => {
+    setMoodboardRenderUrlState(url);
+    onMoodboardRenderUrlChange?.(url);
+  };
+
+  useEffect(() => {
+    if (moodboardRenderUrlProp !== undefined) {
+      setMoodboardRenderUrlState(moodboardRenderUrlProp);
+    }
+  }, [moodboardRenderUrlProp]);
 
   useEffect(() => {
     if (!hasSearch) return;
@@ -707,34 +690,14 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     return board.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
-  const persistGeneration = async (imageDataUri: string, prompt: string, useUploads: boolean) => {
-    const trimmedNote = renderNote.trim();
-    const includeSustainability = !useUploads;
+  const persistGeneration = async (imageDataUri: string, prompt: string) => {
     const metadata = {
-      renderMode: useUploads ? 'apply-to-upload' : 'moodboard',
+      renderMode: 'moodboard',
       materialKey: buildMaterialKey(),
       summary: summaryText,
-      renderNote: trimmedNote || undefined,
-      userNote: trimmedNote || undefined,
       generatedPrompt: prompt,
-      ...(includeSustainability
-        ? {
-            sustainabilityInsights: sustainabilityInsightsRef.current || undefined
-          }
-        : {}),
-      board,
-      uploads: useUploads
-        ? uploadedImages.map((img) => ({
-            id: img.id,
-            name: img.name,
-            mimeType: img.mimeType,
-            sizeBytes: img.sizeBytes,
-            originalSizeBytes: img.originalSizeBytes,
-            width: img.width,
-            height: img.height,
-            dataUrl: img.dataUrl
-          }))
-        : undefined
+      sustainabilityInsights: sustainabilityInsightsRef.current || undefined,
+      board
     };
 
     try {
@@ -1360,7 +1323,7 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     setError(null);
     try {
       await runGemini('sustainability');
-      await runGemini('render', { useUploads: false, onRender: setMoodboardRenderUrl });
+      await runGemini('render', { onRender: setMoodboardRenderUrl });
       setMaterialsAccordionOpen(false);
     } finally {
       setIsCreatingMoodboard(false);
@@ -1389,68 +1352,6 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       setIsCreatingMoodboard(false);
     }
   };
-
-  const handleAppliedEdit = async () => {
-    const trimmed = appliedEditPrompt.trim();
-    if (!appliedRenderUrl) {
-      setError('Render with an upload first.');
-      return;
-    }
-    if (!trimmed) {
-      setError('Add text instructions to update the applied render.');
-      return;
-    }
-    await runGemini('render', {
-      onRender: setAppliedRenderUrl,
-      baseImageDataUrl: appliedRenderUrl,
-      editPrompt: trimmed,
-      useUploads: true
-    });
-  };
-
-  const handleFileInput = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const list: UploadedImage[] = [];
-    let errorMessage: string | null = null;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
-      if (file.size > MAX_UPLOAD_BYTES) {
-        errorMessage = `Upload "${file.name}" is over the 5 MB limit.`;
-        continue;
-      }
-      try {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        const resized = await downscaleImage(dataUrl);
-        list.push({
-          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          name: file.name,
-          dataUrl: resized.dataUrl,
-          mimeType: resized.mimeType,
-          sizeBytes: resized.sizeBytes,
-          originalSizeBytes: file.size,
-          width: resized.width,
-          height: resized.height
-        });
-      } catch (err) {
-        console.error('Could not process upload', err);
-        errorMessage = `Could not process "${file.name}".`;
-      }
-    }
-    if (errorMessage) setError(errorMessage);
-    if (list.length) setUploadedImages(list.slice(-3)); // keep latest
-  };
-
-  const onDropFiles = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    handleFileInput(e.dataTransfer.files);
-  };
-  const onFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
-    handleFileInput(e.target.files);
 
   const addManualMaterial = () => {
     if (!manualLabel.trim()) return;
@@ -1630,7 +1531,6 @@ IMPORTANT:
   const runGemini = async (
     mode: 'sustainability' | 'render',
     options?: {
-      useUploads?: boolean;
       onRender?: (url: string) => void;
       retryAttempt?: number;
       editPrompt?: string;
@@ -1688,7 +1588,6 @@ IMPORTANT:
       })
       .join('\n');
 
-    const trimmedNote = renderNote.trim();
     const isEditingRender = mode === 'render' && options?.editPrompt && options?.baseImageDataUrl;
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
@@ -1781,32 +1680,15 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
       mode === 'sustainability'
         ? buildSustainabilityPrompt()
         : isEditingRender
-        ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
-        : options?.useUploads
-        ? `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`
+        ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
     if (mode === 'render') {
       // Image render call
       try {
         // Determine aspect ratio based on context
-        let aspectRatio = '1:1'; // Default for moodboard generation
-
-        if (options?.useUploads && uploadedImages.length > 0) {
-          // For "Apply your materials" - calculate aspect ratio from first uploaded image
-          const firstImage = uploadedImages[0];
-          if (firstImage.width && firstImage.height) {
-            aspectRatio = calculateAspectRatio(firstImage.width, firstImage.height);
-            console.log('[Aspect Ratio]', {
-              source: 'uploaded image',
-              dimensions: `${firstImage.width}x${firstImage.height}`,
-              calculated: aspectRatio
-            });
-          }
-        } else {
-          // For moodboard generation or editing - always use 1:1
-          console.log('[Aspect Ratio]', { source: 'moodboard generation', fixed: '1:1' });
-        }
+        const aspectRatio = '1:1';
+        console.log('[Aspect Ratio]', { source: 'moodboard generation', fixed: '1:1' });
 
         const payload = {
           contents: [
@@ -1815,8 +1697,6 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                 { text: prompt },
                 ...(isEditingRender && options?.baseImageDataUrl
                   ? [dataUrlToInlineData(options.baseImageDataUrl)]
-                  : options?.useUploads
-                  ? uploadedImages.map((img) => dataUrlToInlineData(img.dataUrl))
                   : [])
               ]
             }
@@ -1834,9 +1714,8 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
         };
         console.log('[Gemini prompt]', {
           mode,
-          promptType: isEditingRender ? 'edit-render' : options?.useUploads ? 'apply-to-base' : 'moodboard',
-          prompt,
-          uploadedImages: uploadedImages.length
+          promptType: isEditingRender ? 'edit-render' : 'moodboard',
+          prompt
         });
         const data = await callGeminiImage(payload);
         let img: string | null = null;
@@ -1857,7 +1736,7 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
-        void persistGeneration(newUrl, prompt, !!options?.useUploads);
+        void persistGeneration(newUrl, prompt);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
       } finally {
@@ -2366,6 +2245,13 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                     )}
                   </button>
                   <button
+                    onClick={() => onNavigate?.('apply')}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    Apply your materials
+                  </button>
+                  <button
                     onClick={handleMobileSaveReport}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
                   >
@@ -2403,160 +2289,6 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                     )}
                   </button>
                 </div>
-              </div>
-            )}
-            {appliedRenderUrl && (
-              <div className="space-y-4">
-                <div className="border border-gray-200 p-4 bg-white space-y-3">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                      Applied Render
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
-                        disabled={downloadingId === 'applied'}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                      >
-                        {downloadingId === 'applied' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Preparing...
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                          Download
-                        </>
-                      )}
-                    </button>
-                    <button
-                        onClick={handleMobileSaveReport}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
-                      >
-                        Save report (PDF)
-                      </button>
-                    </div>
-                  </div>
-                  <div className="w-full border border-gray-200 bg-gray-50">
-                    <img src={appliedRenderUrl} alt="Applied render" className="w-full h-auto object-contain" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                      Edit applied render (multi-turn)
-                    </div>
-                    <p className="font-sans text-sm text-gray-700">
-                      Send another instruction to refine this render without losing the palette application.
-                    </p>
-                    <textarea
-                      value={appliedEditPrompt}
-                      onChange={(e) => setAppliedEditPrompt(e.target.value)}
-                      placeholder="E.g., increase contrast and add dusk lighting."
-                      className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
-                    />
-                    <button
-                      onClick={handleAppliedEdit}
-                      disabled={status !== 'idle' || !appliedRenderUrl}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {status === 'render' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Updating render
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="w-4 h-4" />
-                          Apply text edit
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {moodboardRenderUrl && (
-              <div className="space-y-4">
-                <button
-                  onClick={() => setApplyAccordionOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 text-left"
-                >
-                  <span className="font-mono text-xs uppercase tracking-widest text-gray-600">
-                    Apply Your Materials
-                  </span>
-                  <span className="font-mono text-xs text-gray-500">
-                    {applyAccordionOpen ? '−' : '+'}
-                  </span>
-                </button>
-                {applyAccordionOpen && (
-                  <div className="space-y-3 border-2 border-dashed border-gray-300 bg-gray-50 p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                        Upload Base Image (JPG/PNG)
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={onFileInputChange}
-                        className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-                      />
-                    </div>
-                    <p className="font-sans text-sm text-gray-600">
-                      Drag and drop an image to apply your own base on the next render.
-                    </p>
-                    <div className="space-y-2">
-                      <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                        Custom render instructions (optional)
-                      </label>
-                      <textarea
-                        value={renderNote}
-                        onChange={(e) => setRenderNote(e.target.value)}
-                        placeholder="E.g., set the building next to a river in a natural environment."
-                        className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
-                      />
-                    </div>
-                    {uploadedImages.length > 0 && (
-                      <>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {uploadedImages.map((img) => (
-                            <div key={img.id} className="border border-gray-200 bg-white p-2">
-                              <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                                <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
-                                {img.name}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <button
-                          onClick={() =>
-                            runGemini('render', {
-                              useUploads: true,
-                              onRender: setAppliedRenderUrl
-                            })
-                          }
-                          disabled={status !== 'idle' || !board.length}
-                          className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                        >
-                          {status === 'render' ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Rendering with Upload
-                            </>
-                          ) : (
-                            <>
-                              <ImageDown className="w-4 h-4" />
-                              Render with Upload
-                            </>
-                          )}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             )}
         </div>

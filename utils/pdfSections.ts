@@ -339,6 +339,12 @@ export function renderComparativeDashboard(
       ctx.margin + 15,
       ctx.cursorY
     );
+    ctx.cursorY += 8;
+    ctx.doc.text(
+      'High ranking may be driven by frequent replacement over 60 years, not single-application intensity.',
+      ctx.margin + 15,
+      ctx.cursorY
+    );
     ctx.doc.setTextColor(0);
     ctx.cursorY += 10;
   }
@@ -642,7 +648,7 @@ export function renderSystemSummaryPage(
   if (functionalBenefitItems.length > 0) {
     ctx.cursorY += 6;
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.text('Functional benefits (permeability, durability, SuDS):', ctx.margin, ctx.cursorY);
+    ctx.doc.text('Functional necessity (durability, load capacity, SuDS infrastructure):', ctx.margin, ctx.cursorY);
     ctx.cursorY += 12;
 
     ctx.doc.setFont('helvetica', 'normal');
@@ -1219,8 +1225,14 @@ export function renderComplianceReadinessSummary(
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
     ctx.cursorY += 11;
   });
+  ctx.cursorY += 2;
+  ctx.doc.text(
+    'At concept stage, most materials require standard evidence rather than presenting unique compliance risks.',
+    ctx.margin,
+    ctx.cursorY
+  );
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 6;
+  ctx.cursorY += 12;
 
   const stats = new Map<ComplianceKey, { red: number; amber: number; green: number; na: number }>();
   COMPLIANCE_BADGE_KEY.forEach(({ key }) => {

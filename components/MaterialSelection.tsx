@@ -357,7 +357,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         generateColoredIcon(materialToAdd).then(result => {
           if (result?.blobUrl) {
             // Update the material with the blob URL
-            const updatedBoard = newBoard.map(item =>
+            const updatedBoard = boardRef.current.map(item =>
               item.colorVariantId === colorVariantId
                 ? { ...item, coloredIconBlobUrl: result.blobUrl }
                 : item
@@ -1308,7 +1308,10 @@ IMPORTANT:
                 <button
                   onClick={() => {
                     // Add the base material without customization
-                    onBoardChange([...board, recentlyAdded]);
+                    const baseBoard = boardRef.current;
+                    const nextBoard = [...baseBoard, recentlyAdded];
+                    onBoardChange(nextBoard);
+                    boardRef.current = nextBoard;
                     setRecentlyAdded(null);
                   }}
                   className="flex-1 px-4 py-3 bg-arch-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
