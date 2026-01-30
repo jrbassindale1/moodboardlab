@@ -69,7 +69,12 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar currentPage={currentPage} onNavigate={setCurrentPage} boardCount={selectedMaterials.length} />
+      <Navbar
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        boardCount={selectedMaterials.length}
+        moodboardReady={Boolean(moodboardRenderUrl)}
+      />
 
       <main className={`flex-grow relative ${adRailPadding}`}>
         {showAds && (
