@@ -16,7 +16,7 @@ import type {
 import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
 import { getCircularityIndicator, formatScore, LANDSCAPE_CARBON_CAP_HARD } from './sustainabilityScoring';
-import { isLandscapeMaterial } from './lifecycleDurations';
+import { isLandscapeMaterial, isHardLandscapeMaterial } from './lifecycleDurations';
 
 // PDF constants
 const MARGIN = 48;
@@ -168,12 +168,12 @@ type ComplianceKey =
   | 'biodiversity'
   | 'certification';
 
-const COMPLIANCE_BADGE_KEY: Array<{ key: ComplianceKey; code: string; label: string }> = [
-  { key: 'epd', code: '1', label: 'EPD (EN 15804 / ISO 14025)' },
-  { key: 'recycled', code: '2', label: 'Recycled content declaration' },
-  { key: 'fixings', code: '3', label: 'Design for disassembly / reversible fixings' },
-  { key: 'certification', code: '4', label: 'Chain of custody certification (FSC/PEFC)' },
-  { key: 'biodiversity', code: '5', label: 'Biodiversity assessment (landscape only)' },
+const COMPLIANCE_BADGE_KEY: Array<{ key: ComplianceKey; code: string; label: string; explanation: string }> = [
+  { key: 'epd', code: '1', label: 'EPD (EN 15804 / ISO 14025)', explanation: 'Required for all primary structure and envelope systems' },
+  { key: 'recycled', code: '2', label: 'Recycled content declaration', explanation: 'Critical for steel, concrete, polymers' },
+  { key: 'fixings', code: '3', label: 'Design for disassembly / reversible fixings', explanation: 'Relevant to finishes and secondary systems' },
+  { key: 'certification', code: '4', label: 'Chain of custody certification (FSC/PEFC)', explanation: 'Required for all timber products' },
+  { key: 'biodiversity', code: '5', label: 'Biodiversity assessment (landscape only)', explanation: 'Required for all landscape elements' },
 ];
 
 // ============== PAGE RENDERERS ==============
@@ -198,6 +198,18 @@ export function renderClientSummaryPage(
   ctx.doc.setTextColor(0);
   addHeading(ctx, 'Sustainability Summary', 20);
   ctx.cursorY += 5;
+
+  // How to read this report note
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(100);
+  ctx.doc.text(
+    'This report prioritises relative decision-making over numerical precision at concept stage.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 14;
 
   // What this palette achieves
   addHeading(ctx, 'What this palette achieves', 13);
@@ -308,7 +320,7 @@ export function renderComparativeDashboard(
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(10);
     ctx.doc.setTextColor(220, 53, 69);
-    ctx.doc.text('CARBON DOMINANT COMPONENTS - act here first:', ctx.margin + 8, ctx.cursorY);
+    ctx.doc.text('CARBON DOMINANT COMPONENTS (within this palette, early-stage estimate):', ctx.margin + 8, ctx.cursorY);
     ctx.cursorY += 12;
 
     ctx.doc.setFont('helvetica', 'normal');
@@ -349,7 +361,7 @@ export function renderComparativeDashboard(
   addHeading(ctx, 'Impact Assessment', 12);
 
   const impactColWidths = [120, 55, 50, 45, 45, 45, 45];
-  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Benefit', 'Conf.', 'Rating'];
+  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Benefit*', 'Conf.', 'Rating'];
   const tableStartX = ctx.margin;
 
   // Table header
@@ -522,7 +534,7 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied >=3.6 or high impact. Landscape rated on ecosystem benefits.',
+    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = high embodied impact or repeated replacement burden. Landscape rated on ecosystem benefits.',
     ctx.margin,
     ctx.cursorY
   );
@@ -530,6 +542,12 @@ export function renderComparativeDashboard(
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.text(
     'Note: Landscape contributions capped at 10% of palette carbon in early-stage mode (without quantities). Ecosystem benefits not captured in embodied metrics.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.cursorY += 10;
+  ctx.doc.text(
+    '*Benefit shown for context only; does not offset embodied impact in rating calculation for high-carbon materials.',
     ctx.margin,
     ctx.cursorY
   );
@@ -578,9 +596,9 @@ export function renderSystemSummaryPage(
 
   ctx.cursorY += 8;
 
-  // Top environmental benefit materials (biodiversity, sequestration, operational savings)
+  // Ecosystem benefits (biodiversity, sequestration) - only for soft landscape and bio-based
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.text('Highest environmental benefit:', ctx.margin, ctx.cursorY);
+  ctx.doc.text('Ecosystem benefits:', ctx.margin, ctx.cursorY);
   ctx.cursorY += 14;
 
   ctx.doc.setFont('helvetica', 'normal');
@@ -590,6 +608,14 @@ export function renderSystemSummaryPage(
     const mat = materials.find((m) => m.id === id);
     const metric = metrics.get(id);
     if (!mat || !metric) return;
+
+    // Hard landscape (gravel, paving, etc.) can NEVER appear in ecosystem benefits
+    // They should only appear under functional benefits (permeability, SuDS)
+    if (isHardLandscapeMaterial(mat)) {
+      functionalBenefitItems.push(mat);
+      return;
+    }
+
     const isLandscape = mat.category === 'landscape' || mat.category === 'external-ground';
     const isEnvironmental =
       metric.environmental_benefit_score >= 2 &&
@@ -608,7 +634,7 @@ export function renderSystemSummaryPage(
 
   if (envBenefitItems.length === 0) {
     ctx.doc.setTextColor(100);
-    ctx.doc.text('  No materials with significant environmental benefits', ctx.margin + 10, ctx.cursorY);
+    ctx.doc.text('  No materials with significant ecosystem benefits', ctx.margin + 10, ctx.cursorY);
     ctx.doc.setTextColor(0);
     ctx.cursorY += 12;
   }
@@ -616,7 +642,7 @@ export function renderSystemSummaryPage(
   if (functionalBenefitItems.length > 0) {
     ctx.cursorY += 6;
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.text('Highest functional benefit (daylight / spatial flexibility, durability):', ctx.margin, ctx.cursorY);
+    ctx.doc.text('Functional benefits (permeability, durability, SuDS):', ctx.margin, ctx.cursorY);
     ctx.cursorY += 12;
 
     ctx.doc.setFont('helvetica', 'normal');
@@ -949,12 +975,13 @@ export function renderDesignDirectionPage(
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(80);
-  ctx.doc.text(
-    'Recommended adjustments based on palette analysis. Address high-priority items first.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 18;
+  const directionDisclaimer = 'Recommendations are proportional to early-stage impact drivers and should be revisited once quantities and specifications are known.';
+  const disclaimerLines = ctx.doc.splitTextToSize(directionDisclaimer, ctx.pageWidth - ctx.margin * 2);
+  disclaimerLines.forEach((line: string) => {
+    ctx.doc.text(line, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
+  });
+  ctx.cursorY += 6;
   ctx.doc.setTextColor(0);
 
   // Generate recommendations
@@ -1328,10 +1355,15 @@ export function renderComplianceReadinessSummary(
   ctx.doc.text('Badge key (used on material pages):', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
 
-  ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(9);
-  COMPLIANCE_BADGE_KEY.forEach(({ code, label }) => {
+  COMPLIANCE_BADGE_KEY.forEach(({ code, label, explanation }) => {
+    ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.text(`${code}. ${label}`, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 10;
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(`   ${explanation}`, ctx.margin, ctx.cursorY);
+    ctx.doc.setTextColor(0);
     ctx.cursorY += 12;
   });
 }

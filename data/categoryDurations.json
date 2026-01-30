@@ -1,0 +1,136 @@
+{
+  "$schema": "./schemas/categoryDuration.schema.json",
+  "_comment": "Category-based service life defaults (RICS whole-life carbon assessment guidance)",
+  "durations": {
+    "structure": {
+      "serviceLife": 60,
+      "replacementCycle": 60,
+      "notes": "Building lifespan"
+    },
+    "exposed-structure": {
+      "serviceLife": 60,
+      "replacementCycle": 60,
+      "notes": "Building lifespan"
+    },
+    "external": {
+      "serviceLife": 40,
+      "replacementCycle": 40,
+      "notes": "Weather exposure reduces life"
+    },
+    "roof": {
+      "serviceLife": 40,
+      "replacementCycle": 40,
+      "notes": "Depends on material type"
+    },
+    "window": {
+      "serviceLife": 30,
+      "replacementCycle": 30,
+      "notes": "Seal degradation limits life"
+    },
+    "insulation": {
+      "serviceLife": 60,
+      "replacementCycle": 60,
+      "notes": "If protected from moisture"
+    },
+    "wall-internal": {
+      "serviceLife": 25,
+      "replacementCycle": 25,
+      "notes": "Tenant churn drives replacement"
+    },
+    "door": {
+      "serviceLife": 30,
+      "replacementCycle": 30
+    },
+    "balustrade": {
+      "serviceLife": 40,
+      "replacementCycle": 40
+    },
+    "floor": {
+      "serviceLife": 20,
+      "replacementCycle": 15,
+      "notes": "High wear area"
+    },
+    "ceiling": {
+      "serviceLife": 25,
+      "replacementCycle": 20,
+      "notes": "Access requirements affect life"
+    },
+    "soffit": {
+      "serviceLife": 30,
+      "replacementCycle": 30
+    },
+    "finish": {
+      "serviceLife": 10,
+      "replacementCycle": 10,
+      "notes": "Aesthetic-driven replacement"
+    },
+    "paint-wall": {
+      "serviceLife": 7,
+      "replacementCycle": 5,
+      "notes": "Touch-up at 3-5 years, full at 7"
+    },
+    "paint-ceiling": {
+      "serviceLife": 10,
+      "replacementCycle": 7,
+      "notes": "Less wear than walls"
+    },
+    "plaster": {
+      "serviceLife": 40,
+      "replacementCycle": 40,
+      "notes": "Substrate for other finishes"
+    },
+    "microcement": {
+      "serviceLife": 20,
+      "replacementCycle": 15
+    },
+    "timber-panel": {
+      "serviceLife": 25,
+      "replacementCycle": 20,
+      "notes": "Depends on timber type"
+    },
+    "tile": {
+      "serviceLife": 25,
+      "replacementCycle": 25,
+      "notes": "Grout needs maintenance"
+    },
+    "wallpaper": {
+      "serviceLife": 10,
+      "replacementCycle": 8,
+      "notes": "Fashion-driven replacement"
+    },
+    "acoustic-panel": {
+      "serviceLife": 20,
+      "replacementCycle": 15,
+      "notes": "Absorption degrades"
+    },
+    "timber-slat": {
+      "serviceLife": 25,
+      "replacementCycle": 20
+    },
+    "joinery": {
+      "serviceLife": 25,
+      "replacementCycle": 20,
+      "notes": "Quality-dependent"
+    },
+    "fixture": {
+      "serviceLife": 15,
+      "replacementCycle": 15,
+      "notes": "Technology obsolescence"
+    },
+    "landscape": {
+      "serviceLife": 25,
+      "replacementCycle": 10,
+      "notes": "Planting: 10-30 years"
+    },
+    "external-ground": {
+      "serviceLife": 30,
+      "replacementCycle": 25,
+      "notes": "Hard landscape more durable"
+    },
+    "furniture": {
+      "serviceLife": 10,
+      "replacementCycle": 7,
+      "notes": "Tenant churn drives replacement"
+    }
+  }
+}

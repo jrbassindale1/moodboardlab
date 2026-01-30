@@ -11,7 +11,22 @@ import type {
   BenefitType,
 } from '../types/sustainability';
 import { BENEFIT_CATEGORIES } from '../types/sustainability';
-import type { MaterialOption } from '../types';
+import type { MaterialOption, MaterialCategory } from '../types';
+
+// Categories that are structural/infrastructure - use different language for high-impact
+const STRUCTURAL_INFRASTRUCTURE_CATEGORIES: MaterialCategory[] = [
+  'structure',
+  'exposed-structure',
+  'roof',
+  'external',
+  'window',
+  'insulation',
+];
+
+function isStructuralOrInfrastructure(category?: MaterialCategory): boolean {
+  if (!category) return false;
+  return STRUCTURAL_INFRASTRUCTURE_CATEGORIES.includes(category);
+}
 import {
   getLifecycleDuration,
   getLifecycleMultiplier,
@@ -223,7 +238,8 @@ export function determineTrafficLight(
   embodiedProxy: number = 0,
   lifecycleMultiplier: number = 1,
   maxEmbodiedStage: number = 0,
-  isLandscape: boolean = false
+  isLandscape: boolean = false,
+  materialCategory?: MaterialCategory
 ): { light: TrafficLight; lowConfidenceFlag: boolean; reason: string } {
   const lowConfidenceFlag = confidenceScore < CONFIDENCE_THRESHOLD;
 
@@ -264,10 +280,14 @@ export function determineTrafficLight(
   // =========================================================================
 
   // RULE 1: Very high embodied carbon (≥ 3.6) or extreme stage (≥ 4.5) = RED
-  // These materials should be avoided unless structurally essential
+  // Different phrasing for structure/infrastructure vs finishes
   if (embodiedProxy >= 3.6 || maxEmbodiedStage >= 4.5) {
     light = 'red';
-    reason = `Embodied ${embodiedProxy.toFixed(1)} - avoid unless essential`;
+    if (isStructuralOrInfrastructure(materialCategory)) {
+      reason = `High-impact, performance-led choice requiring strong justification (embodied ${embodiedProxy.toFixed(1)})`;
+    } else {
+      reason = `Embodied ${embodiedProxy.toFixed(1)} - avoid unless essential`;
+    }
   }
   // RULE 2: High embodied (≥ 3.6) with multiple replacements = RED
   // Short-lived high-carbon materials multiply their impact
@@ -381,7 +401,8 @@ export function calculateMaterialMetrics(
     embodied_proxy_per_install,
     lifecycle_multiplier,
     max_embodied_stage,
-    isLandscape
+    isLandscape,
+    material?.category
   );
 
   let traffic_light_reason = reason;

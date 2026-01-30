@@ -1,0 +1,356 @@
+{
+  "$schema": "./schemas/materialDuration.schema.json",
+  "_comment": "Material-specific lifecycle duration overrides with pattern matching",
+  "overrides": [
+    {
+      "id": "clt-mass-timber",
+      "pattern": "clt|cross.?laminated|mass.?timber|glulam",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Rule of thumb: ~0.7-1.0 tCO2 stored per m3 timber (density-dependent)"
+        },
+        "notes": "Biogenic storage benefit depends on accounting method and end-of-life scenario"
+      }
+    },
+    {
+      "id": "timber-structural",
+      "pattern": "timber|wood|oak|ash|pine|birch",
+      "patternFlags": "i",
+      "categories": ["structure", "exposed-structure"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Rule of thumb: ~0.7-1.0 tCO2 stored per m3 timber (density-dependent); counted as biogenic storage at installation under EN 15978 conventions"
+        },
+        "notes": "Biogenic storage from day 1; maintained if kept in use"
+      }
+    },
+    {
+      "id": "hempcrete",
+      "pattern": "hempcrete|hemp.?lime|hemp.?block",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Bio-based content stores carbon; net sequestration depends on mix design, binder content, and LCA boundary"
+        },
+        "notes": "Often low-carbon; potential net sequestration depends on mix design, binder content, and LCA boundary"
+      }
+    },
+    {
+      "id": "cork",
+      "pattern": "cork",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 30,
+        "replacementCycle": 25,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Biogenic carbon stored in product; benefits depend on forestry management and product lifespan"
+        }
+      }
+    },
+    {
+      "id": "sheep-wool-insulation",
+      "pattern": "sheep.?wool|lambswool|natural.?wool",
+      "patternFlags": "i",
+      "categories": ["insulation"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Bio-based content stores carbon; overall footprint depends strongly on farming system allocation and processing"
+        }
+      }
+    },
+    {
+      "id": "wood-fibre-insulation",
+      "pattern": "wood.?fibre|woodfibre|cellulose.?insulation",
+      "patternFlags": "i",
+      "categories": ["insulation"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPayback": {
+          "years": 0,
+          "category": "biogenic_storage",
+          "assumption": "Recycled newsprint or wood waste; stored carbon"
+        }
+      }
+    },
+    {
+      "id": "pv-solar",
+      "pattern": "pv|photovoltaic|solar.?panel",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 30,
+        "replacementCycle": 25,
+        "replacementScope": "partial",
+        "partialReplacementFactor": 0.6,
+        "carbonPayback": {
+          "years": 2,
+          "rangeYears": [1.5, 4],
+          "category": "operational_offset",
+          "assumption": "UK context, grid-dependent"
+        },
+        "notes": "Inverter replacement at 15 years"
+      }
+    },
+    {
+      "id": "green-roof",
+      "pattern": "green.?roof|sedum|living.?roof",
+      "patternFlags": "i",
+      "categories": ["roof", "landscape"],
+      "duration": {
+        "serviceLife": 40,
+        "replacementCycle": 40,
+        "carbonPayback": {
+          "years": 8,
+          "category": "ecosystem_sequestration",
+          "assumption": "Modeled sequestration from planting/soil; site-specific"
+        },
+        "notes": "Biodiversity and stormwater benefits not counted"
+      }
+    },
+    {
+      "id": "rammed-earth",
+      "pattern": "rammed.?earth|pise|cob",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 100,
+        "replacementCycle": 100,
+        "notes": "Very low embodied carbon if local"
+      }
+    },
+    {
+      "id": "lime-mortar",
+      "pattern": "lime.?mortar|lime.?plaster|limecrete",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60
+      }
+    },
+    {
+      "id": "carpet",
+      "pattern": "carpet|rug",
+      "patternFlags": "i",
+      "categories": ["floor", "finish"],
+      "duration": {
+        "serviceLife": 10,
+        "replacementCycle": 7,
+        "notes": "High wear; aesthetic replacement common"
+      }
+    },
+    {
+      "id": "vinyl-lvt",
+      "pattern": "vinyl|lvt|linoleum",
+      "patternFlags": "i",
+      "categories": ["floor"],
+      "duration": {
+        "serviceLife": 15,
+        "replacementCycle": 12,
+        "notes": "Linoleum lasts longer than vinyl"
+      }
+    },
+    {
+      "id": "aluminium-window",
+      "pattern": "aluminium.*window|aluminum.*window",
+      "patternFlags": "i",
+      "categories": ["window"],
+      "duration": {
+        "serviceLife": 40,
+        "replacementCycle": 30,
+        "replacementScope": "partial",
+        "partialReplacementFactor": 0.7,
+        "notes": "Frame durable; IGUs and gaskets often replaced before full frame"
+      }
+    },
+    {
+      "id": "steel-structure",
+      "pattern": "steel",
+      "patternFlags": "i",
+      "categories": ["structure", "exposed-structure"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "notes": "Requires corrosion protection"
+      }
+    },
+    {
+      "id": "concrete",
+      "pattern": "concrete|cement",
+      "patternFlags": "i",
+      "categories": ["structure", "exposed-structure"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "carbonPaybackNote": "durability benefit only"
+      }
+    },
+    {
+      "id": "brick",
+      "pattern": "brick|masonry",
+      "patternFlags": "i",
+      "categories": ["structure", "external", "wall-internal"],
+      "duration": {
+        "serviceLife": 100,
+        "replacementCycle": 100,
+        "notes": "With lime mortar, can be reclaimed"
+      }
+    },
+    {
+      "id": "natural-stone",
+      "pattern": "stone|marble|granite|slate|limestone",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 100,
+        "replacementCycle": 100,
+        "notes": "Extremely durable; reusable"
+      }
+    },
+    {
+      "id": "porcelain-ceramic",
+      "pattern": "porcelain|ceramic|tile",
+      "patternFlags": "i",
+      "categories": ["floor", "wall-internal", "tile"],
+      "duration": {
+        "serviceLife": 40,
+        "replacementCycle": 35,
+        "notes": "Durable but adhesive limits reuse"
+      }
+    },
+    {
+      "id": "glass",
+      "pattern": "glass|glazing",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 30,
+        "replacementCycle": 30,
+        "notes": "IGU seal failure typically 25-30 years"
+      }
+    },
+    {
+      "id": "paint",
+      "pattern": "paint|emulsion",
+      "patternFlags": "i",
+      "categories": ["paint-wall", "paint-ceiling", "finish"],
+      "duration": {
+        "serviceLife": 7,
+        "replacementCycle": 5,
+        "notes": "Touch-up at 3-5 years"
+      }
+    },
+    {
+      "id": "plasterboard",
+      "pattern": "plasterboard|drywall|gypsum.?board",
+      "patternFlags": "i",
+      "duration": {
+        "serviceLife": 40,
+        "replacementCycle": 25,
+        "notes": "Partition churn in offices"
+      }
+    },
+    {
+      "id": "mineral-wool",
+      "pattern": "mineral.?wool|rockwool|glass.?wool",
+      "patternFlags": "i",
+      "categories": ["insulation"],
+      "duration": {
+        "serviceLife": 60,
+        "replacementCycle": 60,
+        "notes": "If kept dry, lasts building life"
+      }
+    },
+    {
+      "id": "pir-pur-insulation",
+      "pattern": "pir|pur|polyurethane|polyisocyanurate",
+      "patternFlags": "i",
+      "categories": ["insulation"],
+      "duration": {
+        "serviceLife": 50,
+        "replacementCycle": 50,
+        "notes": "Some thermal drift over time"
+      }
+    },
+    {
+      "id": "soft-landscape",
+      "pattern": "plant|meadow|grass|turf|hedge|shrub|tree",
+      "patternFlags": "i",
+      "categories": ["landscape"],
+      "duration": {
+        "serviceLife": 30,
+        "replacementCycle": 10,
+        "carbonPayback": {
+          "years": 15,
+          "rangeYears": [10, 40],
+          "category": "ecosystem_sequestration",
+          "assumption": "Order-of-magnitude placeholder; sequestration depends on species, age profile, maintenance, survival and site conditions"
+        },
+        "notes": "Potential sequestration over time (site-specific), not directly comparable to operational payback"
+      }
+    },
+    {
+      "id": "gravel-aggregate",
+      "pattern": "gravel|aggregate|pebble",
+      "patternFlags": "i",
+      "categories": ["landscape", "external-ground"],
+      "duration": {
+        "serviceLife": 50,
+        "replacementCycle": 30,
+        "notes": "Needs periodic top-up"
+      }
+    },
+    {
+      "id": "paving",
+      "pattern": "paving|paver|flag|sett",
+      "patternFlags": "i",
+      "categories": ["landscape", "external-ground"],
+      "duration": {
+        "serviceLife": 40,
+        "replacementCycle": 40,
+        "notes": "Dry-laid can be lifted and reused"
+      }
+    }
+  ],
+  "landscapeConfig": {
+    "materialIds": [
+      "wildflower-meadow",
+      "native-planting",
+      "rain-garden",
+      "living-wall-external",
+      "ornamental-planting",
+      "tree-planting",
+      "green-roof",
+      "living-green-wall"
+    ],
+    "patterns": [
+      "wildflower|meadow",
+      "native.?plant",
+      "rain.?garden",
+      "bioswale",
+      "living.?wall",
+      "green.?wall",
+      "green.?roof|sedum|living.?roof",
+      "tree.?plant",
+      "ornamental.?plant",
+      "hedge|shrub"
+    ],
+    "maintenanceFactor": 1.8,
+    "_comment": "Landscape maintenance factor represents establishment + ongoing maintenance over 60 years (~1.8-2.2x, NOT 6x full replacements)"
+  }
+}

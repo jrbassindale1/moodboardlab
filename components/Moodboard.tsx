@@ -876,93 +876,80 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       return 'Validate alternatives and avoid over-specification.';
     };
 
-    const sortedByEmbodied = [...metrics.entries()]
+    const nonLandscapeEmbodied = [...metrics.entries()]
       .filter(([id]) => !isLandscapeId(id))
       .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
     const allEmbodiedSorted = [...metrics.entries()].sort(
       (a, b) => b[1].embodied_proxy - a[1].embodied_proxy
     );
-    const embodiedFallback = sortedByEmbodied.length > 0 ? sortedByEmbodied : allEmbodiedSorted;
+    const embodiedFallback = nonLandscapeEmbodied.length > 0 ? nonLandscapeEmbodied : allEmbodiedSorted;
 
-    const carbonDominantIds = sortedByEmbodied.slice(0, 3).map(([id]) => id);
-    const carbonDominant = carbonDominantIds.map(labelFor);
+    const highestImpactIds = embodiedFallback.slice(0, 3).map(([id]) => id);
+    const highestImpact = highestImpactIds.map(labelFor);
 
-    const greenCandidates = [...metrics.entries()]
-      .filter(([id, metric]) => !isLandscapeId(id) && metric.traffic_light === 'green')
+    const lowCarbonCandidates = [...metrics.entries()]
+      .filter(([id, metric]) => {
+        const material = materialById.get(id);
+        if (!material) return false;
+        if (highestImpactIds.includes(id)) return false;
+        return (
+          metric.traffic_light === 'green' ||
+          metric.environmental_benefit_score >= 2 ||
+          isLandscapeMaterial(material)
+        );
+      })
       .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
 
-    let lowCarbonCandidates = greenCandidates;
-    if (lowCarbonCandidates.length < 2) {
-      lowCarbonCandidates = [...metrics.entries()]
-        .filter(([id]) => !isLandscapeId(id))
-        .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
-    }
-    if (lowCarbonCandidates.length === 0) {
-      lowCarbonCandidates = [...metrics.entries()].sort(
-        (a, b) => a[1].embodied_proxy - b[1].embodied_proxy
-      );
-    }
-
-    const lowCarbonAnchors = lowCarbonCandidates
-      .filter(([id]) => !carbonDominantIds.includes(id))
+    const lowCarbonSystems = (lowCarbonCandidates.length > 0
+      ? lowCarbonCandidates
+      : [...metrics.entries()].filter(([id]) => !highestImpactIds.includes(id))
+    )
       .slice(0, 3)
       .map(([id]) => labelFor(id));
 
-    const riskRanking = sustainabilityInsights
-      .map((insight) => {
-        const material = materialById.get(insight.id);
-        const maxRisk = insight.risks?.reduce(
-          (acc, risk) => Math.max(acc, risk.severity_1to5),
-          0
-        ) || 0;
-        const embodied = metrics.get(insight.id)?.embodied_proxy || 0;
-        return {
-          id: insight.id,
-          label: labelFor(insight.id),
-          maxRisk,
-          embodied,
-          isLandscape: material ? isLandscapeMaterial(material) : false
-        };
-      })
-      .filter((item) => !item.isLandscape)
-      .sort((a, b) => (b.maxRisk - a.maxRisk) || (b.embodied - a.embodied));
-
-    const designRisks = (
-      riskRanking.length > 0
-        ? riskRanking
-        : sortedByEmbodied.map(([id]) => ({ id, label: labelFor(id) }))
-    )
-      .slice(0, 3)
-      .map((item) => item.label);
-
-    const quickWinSourceIds =
-      carbonDominantIds.length > 0
-        ? carbonDominantIds
-        : embodiedFallback.map(([id]) => id);
-
-    const quickWins = uniqueList(
-      quickWinSourceIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))
+    const actionPriorities = uniqueList(
+      highestImpactIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))
     ).slice(0, 3);
 
-    const flags = board.map((material) => {
-      const insight = insightById.get(material.id);
+    const summarySentence = highestImpact.length > 0 && lowCarbonSystems.length > 0
+      ? 'This palette combines performance-led finishes with lower-carbon structural and landscape systems. Several components will need justification or refinement at later stages.'
+      : highestImpact.length > 0
+        ? 'Several high-impact components will need justification or refinement at later stages.'
+        : 'Early-stage sustainability signals are available once materials are assessed.';
+
+    const goodPracticeIds = lowCarbonCandidates
+      .filter(([id]) => !highestImpactIds.includes(id))
+      .sort((a, b) => {
+        const benefitDiff = b[1].environmental_benefit_score - a[1].environmental_benefit_score;
+        if (benefitDiff !== 0) return benefitDiff;
+        return a[1].embodied_proxy - b[1].embodied_proxy;
+      })
+      .slice(0, 2)
+      .map(([id]) => id);
+
+    const highlightIds = [...highestImpactIds, ...goodPracticeIds];
+    const highlights = highlightIds.map((id) => {
+      const material = materialById.get(id);
+      const insight = insightById.get(id);
+      const isHighImpact = highestImpactIds.includes(id);
+      const left = isHighImpact ? getRiskLine(material, insight) : getBenefitLine(material, insight);
+      const right = getActionLine(material, insight);
+      const clean = (value: string) => value.trim().replace(/\.$/, '');
       return {
-        id: material.id,
-        title: material.name,
-        risk: getRiskLine(material, insight),
-        benefit: getBenefitLine(material, insight),
-        action: getActionLine(material, insight)
+        id,
+        title: material?.name || insight?.title || 'Material',
+        line: `${clean(left)} → ${clean(right)}`
       };
     });
 
     return {
       snapshot: {
-        carbonDominant,
-        lowCarbonAnchors,
-        designRisks,
-        quickWins
+        summarySentence,
+        highestImpact,
+        lowCarbonSystems,
+        actionPriorities
       },
-      flags
+      highlights
     };
   }, [board, sustainabilityInsights]);
 
@@ -2183,51 +2170,52 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                   </span>
                 </div>
                 <div className="p-4 space-y-6">
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="font-display text-sm uppercase tracking-wide text-gray-900">
                       Sustainability snapshot
                     </div>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="space-y-1">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          Carbon-dominant components
-                        </p>
+                    <p className="font-sans text-sm text-gray-700">
+                      {sustainabilityPreview.snapshot.summarySentence}
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                        Highest impact items (early-stage estimate)
+                      </p>
+                      <p className="font-sans text-sm text-gray-800">
+                        {sustainabilityPreview.snapshot.highestImpact.length > 0
+                          ? sustainabilityPreview.snapshot.highestImpact.join(' • ')
+                          : 'No high-impact items flagged yet.'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                        Low-carbon systems
+                      </p>
+                      <p className="font-sans text-sm text-gray-800">
+                        {sustainabilityPreview.snapshot.lowCarbonSystems.length > 0
+                          ? sustainabilityPreview.snapshot.lowCarbonSystems.join(' • ')
+                          : 'No low-carbon systems identified yet.'}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                        Where to act first
+                      </p>
+                      {sustainabilityPreview.snapshot.actionPriorities.length > 0 ? (
+                        <ul className="list-disc list-inside space-y-1">
+                          {sustainabilityPreview.snapshot.actionPriorities.map((item) => (
+                            <li key={item} className="font-sans text-sm text-gray-800">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
                         <p className="font-sans text-sm text-gray-800">
-                          {sustainabilityPreview.snapshot.carbonDominant.length > 0
-                            ? sustainabilityPreview.snapshot.carbonDominant.join(', ')
-                            : 'No dominant components flagged yet.'}
+                          Prioritize refinements after reviewing the report.
                         </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          Low-carbon anchors
-                        </p>
-                        <p className="font-sans text-sm text-gray-800">
-                          {sustainabilityPreview.snapshot.lowCarbonAnchors.length > 0
-                            ? sustainabilityPreview.snapshot.lowCarbonAnchors.join(', ')
-                            : 'No low-carbon anchors identified yet.'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          Design-stage risks
-                        </p>
-                        <p className="font-sans text-sm text-gray-800">
-                          {sustainabilityPreview.snapshot.designRisks.length > 0
-                            ? sustainabilityPreview.snapshot.designRisks.join(', ')
-                            : 'No major design-stage risks flagged yet.'}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          Quick wins
-                        </p>
-                        <p className="font-sans text-sm text-gray-800">
-                          {sustainabilityPreview.snapshot.quickWins.length > 0
-                            ? sustainabilityPreview.snapshot.quickWins.join(' • ')
-                            : 'No quick wins suggested yet.'}
-                        </p>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -2237,7 +2225,7 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                       className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
                     >
                       <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                        Material flags
+                        Material highlights
                       </span>
                       <span className="font-mono text-xs text-gray-500">
                         {materialFlagsOpen ? '−' : '+'}
@@ -2245,31 +2233,17 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                     </button>
                     {materialFlagsOpen && (
                       <div className="p-4 bg-white border-t border-gray-200 space-y-4">
-                        {sustainabilityPreview.flags.map((flag) => (
-                          <div key={flag.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                        {sustainabilityPreview.highlights.map((highlight) => (
+                          <div
+                            key={highlight.id}
+                            className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0"
+                          >
                             <div className="font-display text-sm uppercase tracking-wide text-gray-900">
-                              {flag.title}
+                              {highlight.title}
                             </div>
-                            <div className="mt-2 space-y-2">
-                              <p className="font-sans text-sm text-gray-700">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
-                                  Risk
-                                </span>
-                                {flag.risk}
-                              </p>
-                              <p className="font-sans text-sm text-gray-700">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
-                                  Benefit
-                                </span>
-                                {flag.benefit}
-                              </p>
-                              <p className="font-sans text-sm text-gray-700">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
-                                  Action
-                                </span>
-                                {flag.action}
-                              </p>
-                            </div>
+                            <p className="mt-2 font-sans text-sm text-gray-700">
+                              {highlight.line}
+                            </p>
                           </div>
                         ))}
                       </div>
