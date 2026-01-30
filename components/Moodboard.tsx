@@ -2429,16 +2429,6 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                     )}
                   </button>
                 </div>
-                {materialKey && (
-                  <div className="border border-gray-200 p-4 bg-white">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-                      Material Key
-                    </div>
-                    <p className="font-sans text-sm text-gray-800 whitespace-pre-line leading-relaxed">
-                      {materialKey}
-                    </p>
-                  </div>
-                )}
               </div>
             )}
             {appliedRenderUrl && (
