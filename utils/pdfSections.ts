@@ -15,7 +15,8 @@ import type {
 } from '../types/sustainability';
 import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
-import { getCircularityIndicator, formatScore } from './sustainabilityScoring';
+import { getCircularityIndicator, formatScore, LANDSCAPE_CARBON_CAP_HARD } from './sustainabilityScoring';
+import { isLandscapeMaterial } from './lifecycleDurations';
 
 // PDF constants
 const MARGIN = 48;
@@ -241,12 +242,30 @@ export function renderComparativeDashboard(
 
   // ===== CARBON DOMINANT COMPONENTS CALLOUT =====
   // Identify materials contributing >15% of total embodied carbon
+  // IMPORTANT: Landscape materials are EXCLUDED from this callout
+  // because they use a different carbon model (regenerative, not industrial)
   const totalEmbodied = Array.from(metrics.values()).reduce(
     (sum, m) => sum + m.embodied_proxy,
     0
   );
+
+  // Calculate landscape contribution for capping purposes
+  let landscapeEmbodied = 0;
+  materials.forEach((mat) => {
+    if (isLandscapeMaterial(mat)) {
+      const metric = metrics.get(mat.id);
+      if (metric) landscapeEmbodied += metric.embodied_proxy;
+    }
+  });
+  const landscapePercent = totalEmbodied > 0 ? (landscapeEmbodied / totalEmbodied) * 100 : 0;
+  const landscapeCapped = landscapePercent > LANDSCAPE_CARBON_CAP_HARD * 100;
+
+  // Only include INDUSTRIAL materials (not landscape) as carbon dominants
   const carbonDominants: { material: MaterialOption; percent: number }[] = [];
   materials.forEach((mat) => {
+    // CRITICAL: Landscape materials cannot be "carbon dominant components"
+    if (isLandscapeMaterial(mat)) return;
+
     const metric = metrics.get(mat.id);
     if (metric && totalEmbodied > 0) {
       const percent = (metric.embodied_proxy / totalEmbodied) * 100;
@@ -289,6 +308,20 @@ export function renderComparativeDashboard(
     );
     ctx.doc.setTextColor(0);
     ctx.cursorY += 10;
+  }
+
+  // Show landscape cap note if landscape contribution was significant
+  if (landscapeCapped) {
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(100);
+    ctx.doc.text(
+      `Note: Landscape systems (${landscapePercent.toFixed(0)}% raw) capped at ${LANDSCAPE_CARBON_CAP_HARD * 100}% to prevent distortion without quantities.`,
+      ctx.margin,
+      ctx.cursorY
+    );
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 12;
   }
 
   // ===== TABLE 1: Impact & Rating =====
@@ -399,11 +432,18 @@ export function renderComparativeDashboard(
     xPos += lifecycleColWidths[1];
 
     // Replacement cycles (over 60-year building life)
+    // Landscape materials show "establishment + maintenance" not "replacements"
+    const isLandscape = isLandscapeMaterial(material);
     const isPartial = !Number.isInteger(metric.lifecycle_multiplier);
     const replValue = metric.lifecycle_multiplier.toString();
-    const replText = metric.lifecycle_multiplier === 1
-      ? '1x (full life)'
-      : `${replValue}x${isPartial ? ' (partial system)' : ''}`;
+    let replText: string;
+    if (isLandscape) {
+      replText = `${replValue}x (est. + maint.)`; // Landscape: establishment + maintenance
+    } else if (metric.lifecycle_multiplier === 1) {
+      replText = '1x (full life)';
+    } else {
+      replText = `${replValue}x${isPartial ? ' (partial system)' : ''}`;
+    }
     ctx.doc.text(replText, xPos, ctx.cursorY);
     xPos += lifecycleColWidths[2];
 
@@ -443,7 +483,13 @@ export function renderComparativeDashboard(
   ctx.doc.setFontSize(7);
   ctx.doc.setTextColor(80);
   ctx.doc.text(
-    '* Replacements = how many times installed over 60-year building life. Higher = more lifetime embodied carbon.',
+    '* Industrial materials: Replacements = how many times installed over 60-year building life.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.cursorY += 10;
+  ctx.doc.text(
+    '* Landscape materials: "est. + maint." = establishment + maintenance factor (~1.8x), NOT full replacements. Re-seeding ≠ re-manufacturing.',
     ctx.margin,
     ctx.cursorY
   );
@@ -455,20 +501,14 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    'Replacement counts assume full material replacement; partial system retention can reduce actual lifecycle impact.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.text(
-    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied >=4.0 or high impact. Circularity: High | Medium | Low',
+    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = embodied >=3.6 or high impact. Landscape rated on ecosystem benefits.',
     ctx.margin,
     ctx.cursorY
   );
   ctx.cursorY += 10;
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.text(
-    'Note: Landscape materials include ecosystem benefit multipliers (carbon sequestration, biodiversity, stormwater) not captured in embodied carbon metrics.',
+    'Note: Landscape contributions capped at 10% of palette carbon in early-stage mode (without quantities). Ecosystem benefits not captured in embodied metrics.',
     ctx.margin,
     ctx.cursorY
   );
@@ -1732,7 +1772,9 @@ export function renderEnhancedMaterialSection(
   // Palette context box (NEW) - shows ranking and contribution
   if (paletteContext && metrics) {
     // CARBON DOMINANT badge if applicable
-    if (paletteContext.isCarbonDominant) {
+    // CRITICAL: Landscape materials NEVER show as "carbon dominant" - conceptually wrong
+    const showCarbonDominant = paletteContext.isCarbonDominant && !isLandscapeMaterial(material);
+    if (showCarbonDominant) {
       ctx.doc.setFillColor(255, 245, 238);
       ctx.doc.setDrawColor(220, 53, 69);
       ctx.doc.setLineWidth(1);
@@ -1806,13 +1848,19 @@ export function renderEnhancedMaterialSection(
     ctx.doc.setFontSize(8);
     ctx.doc.setTextColor(80);
 
-    // Service life and replacements
+    // Service life and replacements/maintenance
     const lifeText = metrics.service_life >= 100 ? '100+' : String(metrics.service_life);
-    const isPartial = !Number.isInteger(metrics.lifecycle_multiplier);
+    const matIsLandscape = isLandscapeMaterial(material);
+    const isPartialSystem = !Number.isInteger(metrics.lifecycle_multiplier);
     const replValue = metrics.lifecycle_multiplier.toString();
-    const replText = metrics.lifecycle_multiplier === 1
-      ? 'full building life'
-      : `${replValue}x over 60 years${isPartial ? ' (partial system)' : ''}`;
+    let replText: string;
+    if (matIsLandscape) {
+      replText = `${replValue}x establishment + maintenance factor`;
+    } else if (metrics.lifecycle_multiplier === 1) {
+      replText = 'full building life';
+    } else {
+      replText = `${replValue}x over 60 years${isPartialSystem ? ' (partial system)' : ''}`;
+    }
     ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
 
     // Carbon payback / claim

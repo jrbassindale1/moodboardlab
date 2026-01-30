@@ -424,6 +424,74 @@ const MATERIAL_OVERRIDES: MaterialDurationOverride[] = [
 ];
 
 // ============================================================================
+// LANDSCAPE / REGENERATIVE MATERIAL DETECTION
+// ============================================================================
+
+/**
+ * Landscape material IDs - these get special treatment:
+ * - Capped contribution to palette carbon
+ * - "Establishment + maintenance" model instead of "replacement"
+ * - Cannot be "carbon dominant components"
+ * - Different rating language (no "avoid unless essential")
+ */
+const LANDSCAPE_MATERIAL_IDS = new Set([
+  'wildflower-meadow',
+  'native-planting',
+  'rain-garden',
+  'living-wall-external',
+  'ornamental-planting',
+  'tree-planting',
+  'green-roof',
+  'living-green-wall',
+]);
+
+const LANDSCAPE_PATTERNS = [
+  /wildflower|meadow/i,
+  /native.?plant/i,
+  /rain.?garden/i,
+  /bioswale/i,
+  /living.?wall/i,
+  /green.?wall/i,
+  /green.?roof|sedum|living.?roof/i,
+  /tree.?plant/i,
+  /ornamental.?plant/i,
+  /hedge|shrub/i,
+];
+
+/**
+ * Check if a material is a landscape/regenerative system
+ * These materials use a different carbon model (establishment + maintenance)
+ */
+export function isLandscapeMaterial(material: MaterialOption): boolean {
+  // Check by ID first
+  if (LANDSCAPE_MATERIAL_IDS.has(material.id)) return true;
+
+  // Check by category
+  if (material.category === 'landscape') return true;
+
+  // Check by pattern matching
+  const materialText = `${material.id} ${material.name} ${material.description || ''}`;
+  return LANDSCAPE_PATTERNS.some((pattern) => pattern.test(materialText));
+}
+
+/**
+ * Landscape maintenance factor - represents ongoing carbon from re-seeding,
+ * soil amendments, plant replacement, etc. over 60 years.
+ * This is MUCH lower than full replacement multiplier.
+ *
+ * Typical landscape maintenance activities:
+ * - Annual mowing/management: ~5% of initial embodied
+ * - Periodic re-seeding (every 5-10 years): ~10-15% each
+ * - Soil amendments: ~5% per decade
+ *
+ * Over 60 years with good establishment:
+ * - Initial establishment: 100%
+ * - Ongoing maintenance: ~80-120% additional
+ * - Total: ~1.8-2.2x, NOT 6x
+ */
+const LANDSCAPE_MAINTENANCE_FACTOR = 1.8;
+
+// ============================================================================
 // PUBLIC FUNCTIONS
 // ============================================================================
 
@@ -494,11 +562,21 @@ export function formatCarbonPayback(payback: CarbonPayback): string {
 /**
  * Calculate lifecycle multiplier for impact assessment
  * Materials replaced more often have higher lifetime impact
+ *
+ * IMPORTANT: Landscape materials use a different model:
+ * - Industrial materials: Full replacement cycles (e.g., carpet replaced 8x)
+ * - Landscape materials: Establishment + maintenance (NOT full replacement)
+ *   Re-seeding a meadow ≠ re-manufacturing steel
  */
 export function getLifecycleMultiplier(
   material: MaterialOption,
   buildingLife: number = 60
 ): number {
+  // Landscape materials use maintenance factor, NOT replacement multiplier
+  if (isLandscapeMaterial(material)) {
+    return LANDSCAPE_MAINTENANCE_FACTOR;
+  }
+
   const duration = getLifecycleDuration(material);
   // How many times will this material be installed over the building's life?
   const baseMultiplier = Math.ceil(buildingLife / duration.replacementCycle);

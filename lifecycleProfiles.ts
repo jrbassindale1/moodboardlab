@@ -19,27 +19,63 @@ export type LifecycleStageScore = {
 
 export type LifecycleProfile = Record<LifecycleStageKey, LifecycleStageScore>;
 
+const makeSteelStructureProfile = (): LifecycleProfile => ({
+  raw: { impact: 5, confidence: 'high' }, // Iron ore mining + pre-processing
+  manufacturing: { impact: 5, confidence: 'high' }, // Blast furnace / EAF very energy-intensive
+  transport: { impact: 3, confidence: 'medium' }, // Heavy but often local/regional
+  installation: { impact: 2, confidence: 'high' }, // Welding/bolting moderate
+  inUse: { impact: 1, confidence: 'high' }, // Inert, long life
+  maintenance: { impact: 1, confidence: 'high' }, // Painting occasionally
+  endOfLife: { impact: 1, confidence: 'high' } // Highly recyclable
+});
+
+const makeConcreteFrameProfile = (): LifecycleProfile => ({
+  raw: { impact: 3, confidence: 'high' }, // Cement + aggregates
+  manufacturing: { impact: 5, confidence: 'high' }, // Cement very high
+  transport: { impact: 3, confidence: 'medium' }, // Heavy
+  installation: { impact: 3, confidence: 'high' }, // Formwork + curing
+  inUse: { impact: 1, confidence: 'high' }, // Inert in use
+  maintenance: { impact: 1, confidence: 'high' }, // Very low
+  endOfLife: { impact: 3, confidence: 'medium' } // Crushing possible
+});
+
+const makeGlulamProfile = (): LifecycleProfile => ({
+  raw: { impact: 1, confidence: 'high' },
+  manufacturing: { impact: 2, confidence: 'high' }, // Glue + pressing
+  transport: { impact: 2, confidence: 'medium' },
+  installation: { impact: 2, confidence: 'high' },
+  inUse: { impact: 1, confidence: 'high' }, // Inert in use
+  maintenance: { impact: 1, confidence: 'high' },
+  endOfLife: { impact: 1, confidence: 'high' }
+});
+
+const makePlasterboardProfile = (): LifecycleProfile => ({
+  raw: { impact: 2, confidence: 'high' },
+  manufacturing: { impact: 3, confidence: 'medium' },
+  transport: { impact: 3, confidence: 'medium' },
+  installation: { impact: 2, confidence: 'high' },
+  inUse: { impact: 1, confidence: 'high' },
+  maintenance: { impact: 1, confidence: 'high' },
+  endOfLife: { impact: 2, confidence: 'medium' }
+});
+
+const makePrecastConcreteProfile = (): LifecycleProfile => ({
+  raw: { impact: 3, confidence: 'high' },
+  manufacturing: { impact: 5, confidence: 'high' },
+  transport: { impact: 3, confidence: 'medium' },
+  installation: { impact: 3, confidence: 'high' },
+  inUse: { impact: 1, confidence: 'high' },
+  maintenance: { impact: 1, confidence: 'high' },
+  endOfLife: { impact: 3, confidence: 'medium' }
+});
+
+// NOTE: Impact scores represent burdens (higher = worse). Model benefits elsewhere.
+
 // Export lifecycle profiles mapping
 export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   // STEEL
-  'steel-frame': {
-    raw: { impact: 5, confidence: 'high' }, // Iron ore mining + pre-processing
-    manufacturing: { impact: 5, confidence: 'high' }, // Blast furnace / EAF very energy-intensive
-    transport: { impact: 3, confidence: 'medium' }, // Heavy but often local/regional
-    installation: { impact: 2, confidence: 'high' }, // Welding/bolting moderate
-    inUse: { impact: 1, confidence: 'high' }, // Inert, long life
-    maintenance: { impact: 1, confidence: 'high' }, // Painting occasionally
-    endOfLife: { impact: 1, confidence: 'high' } // Highly recyclable
-  },
-  'steel-columns-beams': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
+  'steel-frame': makeSteelStructureProfile(),
+  'steel-columns-beams': makeSteelStructureProfile(),
 
   // RAMMED EARTH
   'rammed-earth-structure': {
@@ -59,7 +95,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 2, confidence: 'high' }, // Milling + lamination
     transport: { impact: 2, confidence: 'medium' }, // Varies by source
     installation: { impact: 1, confidence: 'high' }, // Adhesive/clips
-    inUse: { impact: 1, confidence: 'high' }, // Carbon storage
+    inUse: { impact: 1, confidence: 'high' }, // Inert in use
     maintenance: { impact: 2, confidence: 'medium' }, // Refinishing possible
     endOfLife: { impact: 1, confidence: 'high' } // Recyclable/biodegradable
   },
@@ -87,44 +123,12 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   // CONCRETE
-  'concrete-frame': {
-    raw: { impact: 3, confidence: 'high' }, // Cement + aggregates
-    manufacturing: { impact: 5, confidence: 'high' }, // Cement very high
-    transport: { impact: 3, confidence: 'medium' }, // Heavy
-    installation: { impact: 3, confidence: 'high' }, // Formwork + curing
-    inUse: { impact: 1, confidence: 'high' }, // Thermal mass benefit
-    maintenance: { impact: 1, confidence: 'high' }, // Very low
-    endOfLife: { impact: 3, confidence: 'medium' } // Crushing possible
-  },
-  'rc-columns-beams': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
-  },
+  'concrete-frame': makeConcreteFrameProfile(),
+  'rc-columns-beams': makeConcreteFrameProfile(),
 
   // TIMBER STRUCTURES
-  'glulam-structure': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 2, confidence: 'high' }, // Glue + pressing
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' }, // Carbon storage
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
-  'glulam-columns-beams': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 2, confidence: 'high' },
-    transport: { impact: 2, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
+  'glulam-structure': makeGlulamProfile(),
+  'glulam-columns-beams': makeGlulamProfile(),
   'clt-structure': {
     raw: { impact: 1, confidence: 'high' },
     manufacturing: { impact: 2, confidence: 'high' },
@@ -182,8 +186,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'ggbs-concrete': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 2, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'high' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 3, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -193,7 +197,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'lino-floor': {
     raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 3, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -208,7 +212,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     installation: { impact: 1, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
     maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 4, confidence: 'low' }
+    endOfLife: { impact: 3, confidence: 'low' }
   },
 
   'rubber-floor': {
@@ -226,7 +230,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 5, confidence: 'high' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 3, confidence: 'medium' }
   },
@@ -243,7 +247,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'cork-plank-floor': {
     raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
+    manufacturing: { impact: 2, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
@@ -263,7 +267,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'stone-paver': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -276,7 +280,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 4, confidence: 'high' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 1, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 4, confidence: 'low' }
   },
@@ -286,7 +290,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 4, confidence: 'high' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 1, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 4, confidence: 'low' }
   },
@@ -316,14 +320,14 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 4, confidence: 'high' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 1, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 4, confidence: 'low' }
   },
 
   'travertine-tiles': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -333,7 +337,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'marble-floor': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -353,7 +357,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'linoleum-tiles': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -443,8 +447,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'clay-plaster': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 2, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
     maintenance: { impact: 1, confidence: 'high' },
@@ -461,15 +465,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 2, confidence: 'low' }
   },
 
-  'plasterboard-wall': {
-    raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
+  'plasterboard-wall': makePlasterboardProfile(),
 
   'plywood-panels-wall': {
     raw: { impact: 1, confidence: 'high' },
@@ -536,7 +532,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 2, confidence: 'medium' },
     endOfLife: { impact: 2, confidence: 'low' }
   },
@@ -546,7 +542,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 2, confidence: 'medium' },
     endOfLife: { impact: 2, confidence: 'low' }
   },
@@ -556,7 +552,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 2, confidence: 'medium' },
     endOfLife: { impact: 2, confidence: 'low' }
   },
@@ -566,7 +562,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 2, confidence: 'medium' },
     endOfLife: { impact: 2, confidence: 'low' }
   },
@@ -632,15 +628,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 1, confidence: 'high' }
   },
 
-  'plasterboard-ceiling': {
-    raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 2, confidence: 'medium' }
-  },
+  'plasterboard-ceiling': makePlasterboardProfile(),
 
   'exposed-clt-ceiling': {
     raw: { impact: 1, confidence: 'high' },
@@ -747,7 +735,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 5, confidence: 'high' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 3, confidence: 'medium' }
   },
@@ -773,8 +761,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'cork-panels': {
-    raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -794,7 +782,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'mycelium-tiles': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -803,8 +791,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'wool-felt-panels': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
+    raw: { impact: 1, confidence: 'medium' },
+    manufacturing: { impact: 2, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
@@ -834,7 +822,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'marble-panels': {
     raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 3, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 4, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -844,10 +832,10 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'leather-panels': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 4, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 1, confidence: 'high' },
     endOfLife: { impact: 2, confidence: 'medium' }
   },
@@ -902,15 +890,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 1, confidence: 'high' }
   },
 
-  'secondary-steelwork': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
+  'secondary-steelwork': makeSteelStructureProfile(),
 
   'brick-loadbearing': {
     raw: { impact: 2, confidence: 'high' },
@@ -942,15 +922,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 1, confidence: 'high' }
   },
 
-  'precast-concrete': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
-  },
+  'precast-concrete': makePrecastConcreteProfile(),
 
   'mass-timber-columns': {
     raw: { impact: 1, confidence: 'high' },
@@ -962,15 +934,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     endOfLife: { impact: 1, confidence: 'high' }
   },
 
-  'steel-trusses': {
-    raw: { impact: 5, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 2, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 1, confidence: 'high' }
-  },
+  'steel-trusses': makeSteelStructureProfile(),
 
   'prestressed-concrete': {
     raw: { impact: 3, confidence: 'high' },
@@ -1023,42 +987,42 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'green-roof': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 4, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 3, confidence: 'medium' },
     endOfLife: { impact: 3, confidence: 'medium' }
   },
 
   'cool-roof': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'pv-roof': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 4, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
+    installation: { impact: 3, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 3, confidence: 'low' }
   },
 
   'blue-roof': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    raw: { impact: 3, confidence: 'medium' },
+    manufacturing: { impact: 4, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
     endOfLife: { impact: 3, confidence: 'medium' }
   },
 
@@ -1074,7 +1038,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
 
   'slate-tiles-roof': {
     raw: { impact: 2, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 3, confidence: 'medium' },
     installation: { impact: 2, confidence: 'high' },
     inUse: { impact: 1, confidence: 'high' },
@@ -1163,18 +1127,18 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'cellulose-insulation': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 2, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 2, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
     maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'mineral-wool': {
-    raw: { impact: 1, confidence: 'high' },
-    manufacturing: { impact: 1, confidence: 'high' },
+    raw: { impact: 2, confidence: 'medium' },
+    manufacturing: { impact: 3, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 2, confidence: 'medium' },
     inUse: { impact: 1, confidence: 'high' },
@@ -1406,13 +1370,8 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   // stone-rainscreen, slate-cladding — profiles defined earlier in file
 
   'precast-concrete-panels': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 4, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    ...makePrecastConcreteProfile(),
+    transport: { impact: 4, confidence: 'medium' }
   },
 
   'gfrc-grc-panels': {
@@ -1453,7 +1412,7 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
     manufacturing: { impact: 2, confidence: 'medium' },
     transport: { impact: 2, confidence: 'medium' },
     installation: { impact: 3, confidence: 'medium' },
-    inUse: { impact: 1, confidence: 'high' },
+    inUse: { impact: 2, confidence: 'medium' },
     maintenance: { impact: 3, confidence: 'medium' },
     endOfLife: { impact: 1, confidence: 'medium' }
   },
@@ -1513,63 +1472,63 @@ export const MATERIAL_LIFECYCLE_PROFILES: Record<string, LifecycleProfile> = {
   },
 
   'native-planting': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'low' },
+    transport: { impact: 2, confidence: 'low' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'wildflower-meadow': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'low' },
+    transport: { impact: 2, confidence: 'low' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'rain-garden': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'low' },
+    transport: { impact: 2, confidence: 'low' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'living-wall-external': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'medium' },
+    transport: { impact: 2, confidence: 'medium' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 3, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'ornamental-planting': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'low' },
+    transport: { impact: 2, confidence: 'low' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'tree-planting': {
-    raw: { impact: 3, confidence: 'high' },
-    manufacturing: { impact: 5, confidence: 'high' },
-    transport: { impact: 3, confidence: 'medium' },
-    installation: { impact: 3, confidence: 'high' },
-    inUse: { impact: 1, confidence: 'high' },
-    maintenance: { impact: 1, confidence: 'high' },
-    endOfLife: { impact: 3, confidence: 'medium' }
+    raw: { impact: 2, confidence: 'low' },
+    manufacturing: { impact: 3, confidence: 'low' },
+    transport: { impact: 2, confidence: 'low' },
+    installation: { impact: 3, confidence: 'medium' },
+    inUse: { impact: 2, confidence: 'medium' },
+    maintenance: { impact: 2, confidence: 'medium' },
+    endOfLife: { impact: 2, confidence: 'medium' }
   },
 
   'oak-dining-table': {

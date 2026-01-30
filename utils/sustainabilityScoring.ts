@@ -16,6 +16,7 @@ import {
   getLifecycleDuration,
   getLifecycleMultiplier,
   getCarbonPayback as getPaybackData,
+  isLandscapeMaterial,
 } from './lifecycleDurations';
 
 // Configurable weights for aggregate calculations
@@ -79,6 +80,18 @@ const DEFAULT_CONFIDENCE: Confidence = 'medium';
 
 // Threshold below which confidence is considered "low"
 export const CONFIDENCE_THRESHOLD = 0.5;
+
+// ============================================================================
+// LANDSCAPE CARBON CAP
+// ============================================================================
+// Landscape materials cannot dominate palette carbon in early-stage mode
+// because we don't have quantities - treating meadow seeds as equivalent to
+// steel is conceptually wrong.
+//
+// Hard cap: 10% - landscape cannot exceed this share of total embodied
+// Soft cap: 15% - warning added if exceeded
+export const LANDSCAPE_CARBON_CAP_HARD = 0.10;
+export const LANDSCAPE_CARBON_CAP_SOFT = 0.15;
 
 /**
  * Calculate embodied carbon proxy score
@@ -190,13 +203,18 @@ export function calculateConfidenceScore(profile: LifecycleProfile): number {
  * can offset embodied carbon. Practical benefits (durability, circularity, health_voc) are
  * shown for information but CANNOT improve the rating for high-carbon materials.
  *
- * STRICT Rules (credibility-focused):
+ * STRICT Rules for INDUSTRIAL materials (credibility-focused):
  * - Embodied ≥ 3.6 OR max stage ≥ 4.5 → RED (very high carbon, avoid unless essential)
  * - Embodied ≥ 3.6 AND replacements ≥ 2 → RED (high carbon compounded by short life)
  * - Overall impact > 3.2 → RED
  * - Moderate-high impact without environmental offset → AMBER
  * - Green: Genuinely low impact (≤ 1.8) AND some environmental benefit (≥ 2.0) - should be RARE
  * - Cap at Amber if confidence < threshold
+ *
+ * LANDSCAPE materials use different rules:
+ * - NEVER "avoid unless essential" - that language is inappropriate for regenerative systems
+ * - Focus on establishment quality and long-term ecosystem benefits
+ * - Green is achievable with meaningful biodiversity/sequestration scores
  */
 export function determineTrafficLight(
   overallImpact: number,
@@ -204,12 +222,46 @@ export function determineTrafficLight(
   confidenceScore: number,
   embodiedProxy: number = 0,
   lifecycleMultiplier: number = 1,
-  maxEmbodiedStage: number = 0
+  maxEmbodiedStage: number = 0,
+  isLandscape: boolean = false
 ): { light: TrafficLight; lowConfidenceFlag: boolean; reason: string } {
   const lowConfidenceFlag = confidenceScore < CONFIDENCE_THRESHOLD;
 
   let light: TrafficLight;
   let reason: string;
+
+  // =========================================================================
+  // LANDSCAPE MATERIALS - Different rules for regenerative systems
+  // =========================================================================
+  if (isLandscape) {
+    // Landscape with strong environmental benefits = GREEN
+    if (environmentalBenefitScore >= 3.0) {
+      light = 'green';
+      reason = 'Regenerative system with biodiversity/sequestration benefits';
+    }
+    // Landscape with some environmental benefits = GREEN (lower threshold)
+    else if (environmentalBenefitScore >= 2.0) {
+      light = 'green';
+      reason = 'Landscape system with ecosystem benefits';
+    }
+    // Landscape without documented benefits = AMBER (needs assessment)
+    else {
+      light = 'amber';
+      reason = 'Landscape system - biodiversity assessment recommended';
+    }
+
+    // Cap at amber if low confidence
+    if (lowConfidenceFlag && light === 'green') {
+      light = 'amber';
+      reason = `${reason} (capped: low confidence)`;
+    }
+
+    return { light, lowConfidenceFlag, reason };
+  }
+
+  // =========================================================================
+  // INDUSTRIAL MATERIALS - Standard strict rules
+  // =========================================================================
 
   // RULE 1: Very high embodied carbon (≥ 3.6) or extreme stage (≥ 4.5) = RED
   // These materials should be avoided unless structurally essential
@@ -221,7 +273,7 @@ export function determineTrafficLight(
   // Short-lived high-carbon materials multiply their impact
   else if (embodiedProxy >= 3.6 && lifecycleMultiplier >= 2) {
     light = 'red';
-    reason = `Embodied ${embodiedProxy.toFixed(1)} x ${lifecycleMultiplier} replacements`;
+    reason = `Embodied ${embodiedProxy.toFixed(1)} × ${lifecycleMultiplier} replacements`;
   }
   // RULE 3: High overall impact (> 3.2) = RED
   else if (overallImpact > 3.2) {
@@ -318,6 +370,9 @@ export function calculateMaterialMetrics(
     in_use_proxy * SCORING_WEIGHTS.overall.inUse +
     end_of_life_proxy * SCORING_WEIGHTS.overall.endOfLife;
 
+  // Detect if this is a landscape/regenerative material
+  const isLandscape = material ? isLandscapeMaterial(material) : false;
+
   // IMPORTANT: Pass per-install embodied proxy and lifecycle multiplier for stricter thresholds
   const { light, lowConfidenceFlag, reason } = determineTrafficLight(
     overall_impact_proxy,
@@ -325,22 +380,37 @@ export function calculateMaterialMetrics(
     confidence_score,
     embodied_proxy_per_install,
     lifecycle_multiplier,
-    max_embodied_stage
+    max_embodied_stage,
+    isLandscape
   );
 
   let traffic_light_reason = reason;
-  if (
+
+  // Landscape-specific reason enhancements
+  if (isLandscape) {
+    if (carbon_payback?.category === 'ecosystem_sequestration') {
+      traffic_light_reason = `${reason} - potential carbon sequestration over time (site-dependent)`;
+    }
+    // Add establishment note for landscape
+    if (light === 'green' && environmental_benefit_score >= 3.0) {
+      traffic_light_reason = 'Regenerative landscape with biodiversity and potential sequestration benefits';
+    }
+  }
+  // Non-landscape biogenic storage note
+  else if (
     carbon_payback?.category === 'biogenic_storage' &&
     traffic_light_reason === 'Low impact with no carbon-offsetting benefit identified'
   ) {
     traffic_light_reason =
       'Low embodied impact with biogenic carbon storage benefits (subject to system boundary assumptions)';
   }
+
+  // Recycled aluminium specific note
   if (material && light !== 'green') {
     const materialText = `${material.id} ${material.name}`.toLowerCase();
     if (materialText.includes('recycled') && (materialText.includes('aluminium') || materialText.includes('aluminum'))) {
       traffic_light_reason =
-        'Still high impact relative to bio-based alternatives; prioritise only where durability and recyclability justify use';
+        'Lower impact than virgin aluminium, but still higher than bio-based alternatives; prioritise where durability and recyclability justify use';
     }
   }
 

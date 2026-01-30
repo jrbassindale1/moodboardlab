@@ -865,29 +865,8 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       renderUKComplianceDashboard(ctx, insights, board);
     }
 
-    // ========== PAGES 6+: Material Details ==========
+    // ========== PAGES 6+: Material Details (one material per page) ==========
     if (board.length > 0) {
-      doc.addPage();
-      ctx.cursorY = ctx.margin;
-
-      // Section header
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.setTextColor(0);
-      doc.text('Material Detail Pages', ctx.margin, ctx.cursorY);
-      ctx.cursorY += 25;
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.setTextColor(80);
-      doc.text(
-        'Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.',
-        ctx.margin,
-        ctx.cursorY
-      );
-      doc.setTextColor(0);
-      ctx.cursorY += 20;
-
       // Calculate palette context for rankings
       const totalEmbodied = Array.from(metrics.values()).reduce(
         (sum, m) => sum + m.embodied_proxy,
@@ -911,8 +890,29 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       // Also check localStorage for AI-generated icons as fallback
       const storedIcons = loadMaterialIcons();
 
-      // Render each material with palette context and thumbnail
+      // Render each material on its own page
       board.forEach((material) => {
+        doc.addPage();
+        ctx.cursorY = ctx.margin;
+
+        // Page header
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text('Material Detail', ctx.margin, ctx.cursorY);
+        ctx.cursorY += 20;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(80);
+        doc.text(
+          'Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.',
+          ctx.margin,
+          ctx.cursorY
+        );
+        doc.setTextColor(0);
+        ctx.cursorY += 16;
+
         const insight = insights.find((i) => i.id === material.id);
         const metric = metrics.get(material.id);
         const profile = MATERIAL_LIFECYCLE_PROFILES[material.id] || null;
