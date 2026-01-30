@@ -6,7 +6,6 @@ import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import { generateMaterialIcon, loadMaterialIcons } from '../utils/materialIconGenerator';
-import LifecycleFingerprint from './LifecycleFingerprint';
 
 // Sustainability report utilities
 import type {
@@ -24,6 +23,7 @@ import { generateDesignRisk, generateDesignResponse } from '../utils/designConse
 import { detectSynergies, detectConflicts, generateNetStatement } from '../utils/synergyConflictRules';
 import { validateInsights } from '../utils/qaValidation';
 import { generateClientSummary } from '../utils/clientSummary';
+import { isLandscapeMaterial } from '../utils/lifecycleDurations';
 import {
   createPDFContext,
   renderClientSummaryPage,
@@ -126,6 +126,28 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
+const REPORT_PREVIEW_INCLUDES = [
+  'Comparative lifecycle dashboard',
+  'Carbon dominance ranking',
+  'System-level synergies and risks',
+  'Design actions and alternatives',
+  'Confidence and compliance notes'
+];
+const ASSESSMENT_NOTES = [
+  'Relative lifecycle impacts across key stages',
+  'Early-stage proxies, not product EPDs',
+  'Separate models for industrial materials and landscape systems',
+  'Benefits are not allowed to greenwash high-carbon items',
+  'Full assumptions and confidence levels in the downloadable report'
+];
+const BENEFIT_LABELS: Record<Benefit['type'], string> = {
+  biodiversity: 'Biodiversity and habitat uplift potential',
+  circularity: 'Strong reuse and circularity potential',
+  durability: 'Durable system with long service life',
+  operational_carbon: 'Operational carbon savings potential',
+  health_voc: 'Lower VOC and indoor health benefit',
+  sequestration: 'Biogenic carbon storage potential'
+};
 
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
@@ -635,7 +657,8 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
     return acc;
   });
   const [applyAccordionOpen, setApplyAccordionOpen] = useState(true);
-  const [sustainabilityAccordionOpen, setSustainabilityAccordionOpen] = useState(true);
+  const [materialFlagsOpen, setMaterialFlagsOpen] = useState(false);
+  const [assessmentOpen, setAssessmentOpen] = useState(false);
 
   useEffect(() => {
     if (!hasSearch) return;
@@ -771,6 +794,177 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
 
   const hasTextContent = () =>
     Boolean(sustainabilityInsightsRef.current && sustainabilityInsightsRef.current.length > 0);
+
+  const sustainabilityPreview = useMemo(() => {
+    if (!sustainabilityInsights || sustainabilityInsights.length === 0) return null;
+
+    const materialById = new Map<string, BoardItem>();
+    board.forEach((material) => materialById.set(material.id, material));
+
+    const insightById = new Map<string, SustainabilityInsight>();
+    sustainabilityInsights.forEach((insight) => {
+      if (insight?.id) insightById.set(insight.id, insight);
+    });
+
+    const metrics = new Map<string, MaterialMetrics>();
+    board.forEach((material) => {
+      const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+      if (!profile) return;
+      const insight = insightById.get(material.id);
+      const benefits = insight?.benefits || [];
+      metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
+    });
+
+    const labelFor = (id: string) =>
+      materialById.get(id)?.name || insightById.get(id)?.title || 'Material';
+
+    const isLandscapeId = (id: string) => {
+      const material = materialById.get(id);
+      return material ? isLandscapeMaterial(material) : false;
+    };
+
+    const uniqueList = (items: string[]) => {
+      const seen = new Set<string>();
+      const result: string[] = [];
+      items.forEach((item) => {
+        const trimmed = item.trim();
+        if (!trimmed || seen.has(trimmed)) return;
+        seen.add(trimmed);
+        result.push(trimmed);
+      });
+      return result;
+    };
+
+    const isWildflowerMeadow = (material?: BoardItem) => {
+      if (!material) return false;
+      if (material.id === 'wildflower-meadow') return true;
+      return /wildflower|meadow/i.test(material.name);
+    };
+
+    const getRiskLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
+      if (material && isWildflowerMeadow(material)) {
+        return 'High upfront establishment impact if pre-grown systems are used.';
+      }
+      if (insight?.design_risk) return insight.design_risk;
+      const topRisk = insight?.risks?.reduce((best, risk) => {
+        if (!best || risk.severity_1to5 > best.severity_1to5) return risk;
+        return best;
+      }, undefined as Risk | undefined);
+      if (topRisk?.note) return topRisk.note;
+      return 'Performance justification is required at concept stage.';
+    };
+
+    const getBenefitLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
+      if (material && isWildflowerMeadow(material)) {
+        return 'Long-term ecological, water, and biodiversity benefits dominate lifecycle performance.';
+      }
+      const benefits = insight?.benefits || [];
+      if (benefits.length > 0) {
+        const topBenefit = [...benefits].sort((a, b) => b.score_1to5 - a.score_1to5)[0];
+        if (topBenefit.note) return topBenefit.note;
+        return BENEFIT_LABELS[topBenefit.type] || 'Documented sustainability benefits are available.';
+      }
+      return 'Documented sustainability benefits are limited at concept stage.';
+    };
+
+    const getActionLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
+      if (material && isWildflowerMeadow(material)) {
+        return 'Avoid pre-grown mats. Use plug planting in site-won soil.';
+      }
+      if (insight?.design_response) return insight.design_response;
+      if (insight?.designLevers?.length) return insight.designLevers[0];
+      return 'Validate alternatives and avoid over-specification.';
+    };
+
+    const sortedByEmbodied = [...metrics.entries()]
+      .filter(([id]) => !isLandscapeId(id))
+      .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
+    const allEmbodiedSorted = [...metrics.entries()].sort(
+      (a, b) => b[1].embodied_proxy - a[1].embodied_proxy
+    );
+    const embodiedFallback = sortedByEmbodied.length > 0 ? sortedByEmbodied : allEmbodiedSorted;
+
+    const carbonDominantIds = sortedByEmbodied.slice(0, 3).map(([id]) => id);
+    const carbonDominant = carbonDominantIds.map(labelFor);
+
+    const greenCandidates = [...metrics.entries()]
+      .filter(([id, metric]) => !isLandscapeId(id) && metric.traffic_light === 'green')
+      .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
+
+    let lowCarbonCandidates = greenCandidates;
+    if (lowCarbonCandidates.length < 2) {
+      lowCarbonCandidates = [...metrics.entries()]
+        .filter(([id]) => !isLandscapeId(id))
+        .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
+    }
+    if (lowCarbonCandidates.length === 0) {
+      lowCarbonCandidates = [...metrics.entries()].sort(
+        (a, b) => a[1].embodied_proxy - b[1].embodied_proxy
+      );
+    }
+
+    const lowCarbonAnchors = lowCarbonCandidates
+      .filter(([id]) => !carbonDominantIds.includes(id))
+      .slice(0, 3)
+      .map(([id]) => labelFor(id));
+
+    const riskRanking = sustainabilityInsights
+      .map((insight) => {
+        const material = materialById.get(insight.id);
+        const maxRisk = insight.risks?.reduce(
+          (acc, risk) => Math.max(acc, risk.severity_1to5),
+          0
+        ) || 0;
+        const embodied = metrics.get(insight.id)?.embodied_proxy || 0;
+        return {
+          id: insight.id,
+          label: labelFor(insight.id),
+          maxRisk,
+          embodied,
+          isLandscape: material ? isLandscapeMaterial(material) : false
+        };
+      })
+      .filter((item) => !item.isLandscape)
+      .sort((a, b) => (b.maxRisk - a.maxRisk) || (b.embodied - a.embodied));
+
+    const designRisks = (
+      riskRanking.length > 0
+        ? riskRanking
+        : sortedByEmbodied.map(([id]) => ({ id, label: labelFor(id) }))
+    )
+      .slice(0, 3)
+      .map((item) => item.label);
+
+    const quickWinSourceIds =
+      carbonDominantIds.length > 0
+        ? carbonDominantIds
+        : embodiedFallback.map(([id]) => id);
+
+    const quickWins = uniqueList(
+      quickWinSourceIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))
+    ).slice(0, 3);
+
+    const flags = board.map((material) => {
+      const insight = insightById.get(material.id);
+      return {
+        id: material.id,
+        title: material.name,
+        risk: getRiskLine(material, insight),
+        benefit: getBenefitLine(material, insight),
+        action: getActionLine(material, insight)
+      };
+    });
+
+    return {
+      snapshot: {
+        carbonDominant,
+        lowCarbonAnchors,
+        designRisks,
+        quickWins
+      },
+      flags
+    };
+  }, [board, sustainabilityInsights]);
 
   const generateReportPdf = async () => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
@@ -1978,160 +2172,180 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
               </div>
             )}
 
-            {sustainabilityInsights && sustainabilityInsights.length > 0 && (
-              <div className="border border-gray-200">
-                <button
-                  onClick={() => setSustainabilityAccordionOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
-                >
+            {sustainabilityInsights && sustainabilityInsights.length > 0 && sustainabilityPreview && (
+              <div className="border border-gray-200 bg-white">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
                   <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                    Sustainability Insights
+                    Sustainability Insights (Preview)
                   </span>
-                  <span className="font-mono text-xs text-gray-500">
-                    {sustainabilityAccordionOpen ? '−' : '+'}
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                    Report ready
                   </span>
-                </button>
-                {sustainabilityAccordionOpen && (
-                  <div className="p-4 bg-white border-t border-gray-200 space-y-6">
-                    {sustainabilityInsights.map((insight) => {
-                      const material = board.find(m => m.id === insight.id);
-                      return (
-                        <div key={insight.id} className="space-y-3">
-                          <div className="font-display text-sm font-semibold uppercase tracking-wide text-gray-900">
-                            {insight.title}
-                          </div>
-
-                          {/* Lifecycle Fingerprint as hero */}
-                          {material && (
-                            <div>
-                              <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-                                Design-stage lifecycle fingerprint (relative)
-                              </p>
-                              <LifecycleFingerprint material={material} />
-                            </div>
-                          )}
-
-                          {/* Insights below fingerprint */}
-                          <div className="space-y-3">
-                            {insight.headline && (
-                              <p className="font-sans text-sm font-medium text-gray-900">
-                                {insight.headline}
-                              </p>
-                            )}
-
-                            {insight.hotspots && insight.hotspots.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  Hotspots
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {insight.hotspots.map((hotspot, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="inline-block px-2 py-1 bg-amber-50 border border-amber-200 text-amber-900 text-xs font-sans"
-                                    >
-                                      {typeof hotspot === 'string'
-                                        ? hotspot
-                                        : `${hotspot.stage?.toUpperCase() || 'N/A'} (${hotspot.score || '?'}): ${hotspot.reason || ''}`}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {insight.whyItLooksLikeThis && (
-                              <p className="font-sans text-sm text-gray-700 leading-relaxed">
-                                {insight.whyItLooksLikeThis}
-                              </p>
-                            )}
-
-                            {insight.designLevers && insight.designLevers.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  Design Levers
-                                </p>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {insight.designLevers.map((lever, idx) => (
-                                    <li key={idx} className="font-sans text-sm text-gray-800">
-                                      {lever}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {insight.ukChecks && insight.ukChecks.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-1">
-                                  UK Checks
-                                </p>
-                                <ul className="list-disc list-inside space-y-1">
-                                  {insight.ukChecks.map((check, idx) => (
-                                    <li key={idx} className="font-sans text-sm text-gray-800">
-                                      {typeof check === 'string'
-                                        ? check
-                                        : check.standard_code
-                                          ? `${check.label} (${check.standard_code})`
-                                          : check.label}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {insight.whatCouldChange && insight.whatCouldChange.length > 0 && (
-                              <div>
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-1">
-                                  What Could Change
-                                </p>
-                                <div className="space-y-1">
-                                  {insight.whatCouldChange.map((change, idx) => (
-                                    <p key={idx} className="font-sans text-xs text-gray-600">
-                                      {change}
-                                    </p>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                </div>
+                <div className="p-4 space-y-6">
+                  <div className="space-y-3">
+                    <div className="font-display text-sm uppercase tracking-wide text-gray-900">
+                      Sustainability snapshot
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="space-y-1">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          Carbon-dominant components
+                        </p>
+                        <p className="font-sans text-sm text-gray-800">
+                          {sustainabilityPreview.snapshot.carbonDominant.length > 0
+                            ? sustainabilityPreview.snapshot.carbonDominant.join(', ')
+                            : 'No dominant components flagged yet.'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          Low-carbon anchors
+                        </p>
+                        <p className="font-sans text-sm text-gray-800">
+                          {sustainabilityPreview.snapshot.lowCarbonAnchors.length > 0
+                            ? sustainabilityPreview.snapshot.lowCarbonAnchors.join(', ')
+                            : 'No low-carbon anchors identified yet.'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          Design-stage risks
+                        </p>
+                        <p className="font-sans text-sm text-gray-800">
+                          {sustainabilityPreview.snapshot.designRisks.length > 0
+                            ? sustainabilityPreview.snapshot.designRisks.join(', ')
+                            : 'No major design-stage risks flagged yet.'}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          Quick wins
+                        </p>
+                        <p className="font-sans text-sm text-gray-800">
+                          {sustainabilityPreview.snapshot.quickWins.length > 0
+                            ? sustainabilityPreview.snapshot.quickWins.join(' • ')
+                            : 'No quick wins suggested yet.'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {hasTextContent() && (
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={handleDownloadReport}
-                  disabled={exportingReport}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                >
-                  {exportingReport ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Building report…
-                    </>
-                  ) : (
-                    'Download report (PDF)'
-                  )}
-                </button>
-                <button
-                  onClick={handleMobileSaveReport}
-                  disabled={exportingReport}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-                >
-                  {exportingReport ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    'Save report (PDF)'
-                  )}
-                </button>
+                  <div className="border border-gray-200">
+                    <button
+                      onClick={() => setMaterialFlagsOpen((prev) => !prev)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
+                    >
+                      <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                        Material flags
+                      </span>
+                      <span className="font-mono text-xs text-gray-500">
+                        {materialFlagsOpen ? '−' : '+'}
+                      </span>
+                    </button>
+                    {materialFlagsOpen && (
+                      <div className="p-4 bg-white border-t border-gray-200 space-y-4">
+                        {sustainabilityPreview.flags.map((flag) => (
+                          <div key={flag.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                            <div className="font-display text-sm uppercase tracking-wide text-gray-900">
+                              {flag.title}
+                            </div>
+                            <div className="mt-2 space-y-2">
+                              <p className="font-sans text-sm text-gray-700">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
+                                  Risk
+                                </span>
+                                {flag.risk}
+                              </p>
+                              <p className="font-sans text-sm text-gray-700">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
+                                  Benefit
+                                </span>
+                                {flag.benefit}
+                              </p>
+                              <p className="font-sans text-sm text-gray-700">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mr-2">
+                                  Action
+                                </span>
+                                {flag.action}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border border-gray-200">
+                    <button
+                      onClick={() => setAssessmentOpen((prev) => !prev)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-left"
+                    >
+                      <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                        How this is assessed
+                      </span>
+                      <span className="font-mono text-xs text-gray-500">
+                        {assessmentOpen ? '−' : '+'}
+                      </span>
+                    </button>
+                    {assessmentOpen && (
+                      <div className="p-4 bg-white border-t border-gray-200">
+                        <ul className="list-disc list-inside space-y-1">
+                          {ASSESSMENT_NOTES.map((note) => (
+                            <li key={note} className="font-sans text-sm text-gray-700">
+                              {note}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border border-gray-200 bg-gray-50 p-4 space-y-3">
+                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                      What the full report includes
+                    </div>
+                    <ul className="list-disc list-inside space-y-1">
+                      {REPORT_PREVIEW_INCLUDES.map((item) => (
+                        <li key={item} className="font-sans text-sm text-gray-700">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                    {hasTextContent() && (
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={handleDownloadReport}
+                          disabled={exportingReport}
+                          className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                        >
+                          {exportingReport ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Building report…
+                            </>
+                          ) : (
+                            'Download full report (PDF)'
+                          )}
+                        </button>
+                        <button
+                          onClick={handleMobileSaveReport}
+                          disabled={exportingReport}
+                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                        >
+                          {exportingReport ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Saving…
+                            </>
+                          ) : (
+                            'Save report (PDF)'
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
