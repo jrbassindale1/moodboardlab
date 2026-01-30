@@ -161,6 +161,21 @@ function drawTrafficLight(
   ctx.doc.circle(x, y, radius, 'F');
 }
 
+type ComplianceKey =
+  | 'epd'
+  | 'recycled'
+  | 'fixings'
+  | 'biodiversity'
+  | 'certification';
+
+const COMPLIANCE_BADGE_KEY: Array<{ key: ComplianceKey; code: string; label: string }> = [
+  { key: 'epd', code: '1', label: 'EPD (EN 15804 / ISO 14025)' },
+  { key: 'recycled', code: '2', label: 'Recycled content declaration' },
+  { key: 'fixings', code: '3', label: 'Design for disassembly / reversible fixings' },
+  { key: 'certification', code: '4', label: 'Chain of custody certification (FSC/PEFC)' },
+  { key: 'biodiversity', code: '5', label: 'Biodiversity assessment (landscape only)' },
+];
+
 // ============== PAGE RENDERERS ==============
 
 /**
@@ -198,16 +213,22 @@ export function renderClientSummaryPage(
   });
   ctx.cursorY += 10;
 
-  // Evidence checklist
-  addHeading(ctx, 'Next evidence to collect', 13);
-  summary.evidence_checklist.forEach((item) => {
-    ensureSpace(ctx, 14);
-    ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(10);
-    ctx.doc.text(`[ ] ${item}`, ctx.margin + 5, ctx.cursorY);
-    ctx.cursorY += 14;
+  // Evidence priorities
+  addHeading(ctx, 'Evidence priorities', 13);
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(80);
+  const evidenceLines = ctx.doc.splitTextToSize(
+    'See Compliance Readiness Summary for prioritised evidence items and badge key.',
+    ctx.pageWidth - ctx.margin * 2
+  );
+  evidenceLines.forEach((line: string) => {
+    ensureSpace(ctx, 12);
+    ctx.doc.text(line, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
   });
-  ctx.cursorY += 15;
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 10;
 
   // Confidence statement
   ctx.doc.setFont('helvetica', 'italic');
@@ -1031,7 +1052,7 @@ export function renderDesignDirectionPage(
 }
 
 /**
- * Render Page 4: UK Compliance Dashboard
+ * Compliance helpers (concept-stage readiness)
  */
 /**
  * Determine compliance status for a category
@@ -1040,7 +1061,7 @@ export function renderDesignDirectionPage(
 function getComplianceStatus(
   insight: EnhancedSustainabilityInsight,
   material: MaterialOption,
-  category: 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification'
+  category: ComplianceKey
 ): TrafficLight {
   const ukChecks = insight.ukChecks || [];
   const benefits = insight.benefits || [];
@@ -1148,7 +1169,7 @@ function getComplianceStatus(
   return 'amber';
 }
 
-export function renderUKComplianceDashboard(
+export function renderComplianceReadinessSummary(
   ctx: PDFContext,
   insights: EnhancedSustainabilityInsight[],
   materials: MaterialOption[]
@@ -1156,200 +1177,163 @@ export function renderUKComplianceDashboard(
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
 
-  addHeading(ctx, 'UK Compliance & Evidence', 16);
-  ctx.cursorY += 5;
+  addHeading(ctx, 'Compliance Readiness Summary (UK)', 16);
+  ctx.cursorY += 4;
 
-  // Build evidence lists by priority (red first, then amber)
-  const redFlags: string[] = [];
-  const amberRequired: string[] = [];
+  // Intro (concept-stage framing)
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(80);
+  const introLines = ctx.doc.splitTextToSize(
+    'Concept-stage view: highlights real risk items, evidence priorities, and what can safely wait. Detailed checks appear as badges on material pages.',
+    ctx.pageWidth - ctx.margin * 2
+  );
+  introLines.forEach((line: string) => {
+    ctx.doc.text(line, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 11;
+  });
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 6;
+
+  const stats = new Map<ComplianceKey, { red: number; amber: number; green: number; na: number }>();
+  COMPLIANCE_BADGE_KEY.forEach(({ key }) => {
+    stats.set(key, { red: 0, amber: 0, green: 0, na: 0 });
+  });
+
+  const redMaterials: Array<{ name: string; codes: string[] }> = [];
 
   insights.forEach((insight) => {
     const material = materials.find((m) => m.id === insight.id);
     if (!material) return;
 
-    // Check each category and collect issues
-    const categories: Array<{ key: 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification'; label: string }> = [
-      { key: 'epd', label: 'EPD (EN 15804)' },
-      { key: 'recycled', label: 'recycled content verification' },
-      { key: 'fixings', label: 'mechanical fixings / disassembly' },
-      { key: 'certification', label: 'chain of custody certification' },
-    ];
+    const codes: string[] = [];
+    const isLandscape = material.category === 'landscape' || material.category === 'external-ground';
 
-    // Add biodiversity for landscape materials
-    if (material.category === 'landscape' || material.category === 'external-ground') {
-      categories.push({ key: 'biodiversity', label: 'biodiversity assessment' });
-    }
+    COMPLIANCE_BADGE_KEY.forEach(({ key, code }) => {
+      const bucket = stats.get(key);
+      if (!bucket) return;
 
-    categories.forEach(({ key, label }) => {
-      const status = getComplianceStatus(insight, material, key);
-      if (status === 'red') {
-        redFlags.push(`${material.name}: ${label} - risk or non-compliant`);
-      } else if (status === 'amber') {
-        amberRequired.push(`${material.name}: ${label}`);
+      if (key === 'biodiversity' && !isLandscape) {
+        bucket.na += 1;
+        return;
       }
+
+      const status = getComplianceStatus(insight, material, key);
+      bucket[status] += 1;
+      if (status === 'red') codes.push(code);
     });
+
+    if (codes.length > 0) {
+      redMaterials.push({ name: material.name, codes });
+    }
   });
 
-  // SECTION 1: Evidence Required (at TOP)
-  const hasIssues = redFlags.length > 0 || amberRequired.length > 0;
+  // 1) Real risks
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(11);
+  ctx.doc.text('1) Real risks', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 12;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
 
-  if (hasIssues) {
-    addHeading(ctx, 'Evidence Required', 13);
-
-    // Red flags first (risks)
-    if (redFlags.length > 0) {
-      ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(9);
-      ctx.doc.setTextColor(220, 53, 69);
-      ctx.doc.text('Non-compliant / Risk:', ctx.margin, ctx.cursorY);
+  if (redMaterials.length === 0) {
+    ctx.doc.setTextColor(100);
+    ctx.doc.text('No red-flag compliance risks identified at concept stage.', ctx.margin, ctx.cursorY);
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 12;
+  } else {
+    redMaterials.slice(0, 4).forEach((item) => {
+      ensureSpace(ctx, 12);
+      ctx.doc.text(`- ${item.name} (codes ${item.codes.join(', ')})`, ctx.margin, ctx.cursorY);
       ctx.cursorY += 12;
-
-      ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setTextColor(0);
-      const maxRed = Math.min(redFlags.length, 5);
-      for (let i = 0; i < maxRed; i++) {
-        ensureSpace(ctx, 12);
-        drawTrafficLight(ctx, ctx.margin + 5, ctx.cursorY - 3, 'red', 3);
-        ctx.doc.text(redFlags[i], ctx.margin + 15, ctx.cursorY);
-        ctx.cursorY += 12;
-      }
-      ctx.cursorY += 5;
-    }
-
-    // Amber items (evidence required)
-    if (amberRequired.length > 0) {
-      ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(9);
-      ctx.doc.setTextColor(180, 130, 0);
-      ctx.doc.text('Evidence to obtain:', ctx.margin, ctx.cursorY);
-      ctx.cursorY += 12;
-
-      ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setTextColor(0);
-      const maxAmber = Math.min(amberRequired.length, 8);
-      for (let i = 0; i < maxAmber; i++) {
-        ensureSpace(ctx, 12);
-        drawTrafficLight(ctx, ctx.margin + 5, ctx.cursorY - 3, 'amber', 3);
-        ctx.doc.text(amberRequired[i], ctx.margin + 15, ctx.cursorY);
-        ctx.cursorY += 12;
-      }
-
-      if (amberRequired.length > 8) {
-        ctx.doc.setTextColor(100);
-        ctx.doc.text(
-          `... and ${amberRequired.length - 8} more items`,
-          ctx.margin + 15,
-          ctx.cursorY
-        );
-        ctx.doc.setTextColor(0);
-        ctx.cursorY += 12;
-      }
-    }
-
-    ctx.cursorY += 15;
+    });
   }
 
-  // SECTION 2: Compliance Matrix
-  addHeading(ctx, 'Compliance Matrix', 13);
+  ctx.cursorY += 6;
 
-  // Table layout
-  const colWidths = [130, 50, 50, 50, 50, 50];
-  const headers = ['Material', 'EPD', 'Recycled', 'Fixings', 'Cert.', 'Bio.'];
-  const tableStartX = ctx.margin;
-
-  // Table header
+  // 2) Evidence to prioritise next
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(60);
-  let xPos = tableStartX;
-  headers.forEach((header, i) => {
-    ctx.doc.text(header, xPos, ctx.cursorY);
-    xPos += colWidths[i];
-  });
+  ctx.doc.setFontSize(11);
+  ctx.doc.text('2) Evidence to prioritise next', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
 
-  // Header line
-  ctx.doc.setDrawColor(180);
-  ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(
-    ctx.margin,
-    ctx.cursorY - 5,
-    ctx.pageWidth - ctx.margin,
-    ctx.cursorY - 5
-  );
+  const priority = COMPLIANCE_BADGE_KEY.map(({ key, code }) => {
+    const bucket = stats.get(key);
+    const total = bucket ? bucket.red + bucket.amber : 0;
+    return { code, total };
+  })
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total);
 
-  // Table rows
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(0);
+  ctx.doc.setFontSize(9);
+  if (priority.length === 0) {
+    ctx.doc.setTextColor(100);
+    ctx.doc.text('No evidence gaps flagged across the palette.', ctx.margin, ctx.cursorY);
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 12;
+  } else {
+    priority.slice(0, 3).forEach((item) => {
+      ctx.doc.text(`- Code ${item.code}: ${item.total} material${item.total > 1 ? 's' : ''} flagged`, ctx.margin, ctx.cursorY);
+      ctx.cursorY += 12;
+    });
+  }
 
-  insights.forEach((insight) => {
-    ensureSpace(ctx, 16);
-    const material = materials.find((m) => m.id === insight.id);
-    if (!material) return;
+  ctx.cursorY += 6;
 
-    xPos = tableStartX;
-
-    // Material name
-    const truncatedName =
-      material.name.length > 20
-        ? material.name.substring(0, 18) + '...'
-        : material.name;
-    ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-    xPos += colWidths[0];
-
-    // EPD
-    const epdStatus = getComplianceStatus(insight, material, 'epd');
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, epdStatus, 3);
-    xPos += colWidths[1];
-
-    // Recycled
-    const recycledStatus = getComplianceStatus(insight, material, 'recycled');
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, recycledStatus, 3);
-    xPos += colWidths[2];
-
-    // Fixings
-    const fixingsStatus = getComplianceStatus(insight, material, 'fixings');
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, fixingsStatus, 3);
-    xPos += colWidths[3];
-
-    // Certification
-    const certStatus = getComplianceStatus(insight, material, 'certification');
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, certStatus, 3);
-    xPos += colWidths[4];
-
-    // Biodiversity (landscape only, otherwise show n/a)
-    if (material.category === 'landscape' || material.category === 'external-ground') {
-      const bioStatus = getComplianceStatus(insight, material, 'biodiversity');
-      drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, bioStatus, 3);
-    } else {
-      ctx.doc.setTextColor(150);
-      ctx.doc.setFontSize(7);
-      ctx.doc.text('n/a', xPos + 8, ctx.cursorY);
-      ctx.doc.setFontSize(8);
-      ctx.doc.setTextColor(0);
-    }
-
-    ctx.cursorY += 14;
-  });
-
-  // Legend
+  // 3) What can safely wait
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(11);
+  ctx.doc.text('3) Can safely wait (concept stage)', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
+
+  const deferCodes = COMPLIANCE_BADGE_KEY.filter(({ key }) => {
+    const bucket = stats.get(key);
+    if (!bucket) return false;
+    return bucket.red + bucket.amber === 0 && bucket.green > 0;
+  }).map(({ code }) => code);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  if (deferCodes.length > 0) {
+    ctx.doc.text(`- Codes ${deferCodes.join(', ')} show no current gaps across the palette`, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
+  } else {
+    ctx.doc.setTextColor(100);
+    ctx.doc.text('Defer supplier-specific certificates and test reports to detailed specification.', ctx.margin, ctx.cursorY);
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 12;
+  }
+
+  ctx.cursorY += 6;
+
+  // Out of scope note
+  ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(80);
-
-  // Draw legend with actual traffic lights
-  const legendY = ctx.cursorY;
-  drawTrafficLight(ctx, ctx.margin + 5, legendY - 3, 'green', 3);
-  ctx.doc.text('Evidence available', ctx.margin + 15, legendY);
-
-  drawTrafficLight(ctx, ctx.margin + 100, legendY - 3, 'amber', 3);
-  ctx.doc.text('Evidence required', ctx.margin + 110, legendY);
-
-  drawTrafficLight(ctx, ctx.margin + 205, legendY - 3, 'red', 3);
-  ctx.doc.text('Risk / Non-compliant', ctx.margin + 215, legendY);
-
+  ctx.doc.setTextColor(100);
+  const outScopeLines = ctx.doc.splitTextToSize(
+    'Out of scope at concept stage: supplier test reports, product-level verification of claims, construction-phase method statements, commissioning evidence.',
+    ctx.pageWidth - ctx.margin * 2
+  );
+  outScopeLines.forEach((line: string) => {
+    ctx.doc.text(line, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 10;
+  });
   ctx.doc.setTextColor(0);
+  ctx.cursorY += 6;
+
+  // Badge key (listed once)
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(10);
+  ctx.doc.text('Badge key (used on material pages):', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 12;
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  COMPLIANCE_BADGE_KEY.forEach(({ code, label }) => {
+    ctx.doc.text(`${code}. ${label}`, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
+  });
 }
 
 /**
@@ -1399,9 +1383,8 @@ export function renderLifecycleFingerprint(
     ctx.doc.setFontSize(8);
     const scoreLines = ctx.doc.splitTextToSize(proxyLine, cardWidth - 16);
     const requestItems = [
-      'EPD (EN 15804 / ISO 14025)',
-      'Recycled content declaration',
-      'Take-back or reuse scheme',
+      'Evidence key items: 1, 2, 3',
+      'Supplier data for service life and maintenance assumptions',
     ];
 
     const cardHeight =
@@ -1686,6 +1669,54 @@ function renderLowConfidenceIndicator(ctx: PDFContext, metrics: MaterialMetrics)
   ctx.doc.setTextColor(0);
 }
 
+function renderComplianceBadges(
+  ctx: PDFContext,
+  insight: EnhancedSustainabilityInsight,
+  material: MaterialOption
+): void {
+  ensureSpace(ctx, 20);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(80);
+  ctx.doc.text('Compliance badges (see readiness key):', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 10;
+  ctx.doc.setTextColor(0);
+
+  const startX = ctx.margin + 4;
+  const centerY = ctx.cursorY;
+  const radius = 6;
+  const isLandscape = material.category === 'landscape' || material.category === 'external-ground';
+
+  COMPLIANCE_BADGE_KEY.forEach(({ key, code }, idx) => {
+    const x = startX + idx * 22;
+    let status: TrafficLight | 'na' = 'amber';
+    if (key === 'biodiversity' && !isLandscape) {
+      status = 'na';
+    } else {
+      status = getComplianceStatus(insight, material, key);
+    }
+
+    if (status === 'na') {
+      ctx.doc.setFillColor(230, 230, 230);
+      ctx.doc.circle(x, centerY, radius, 'F');
+      ctx.doc.setTextColor(140);
+    } else {
+      const [r, g, b] = TRAFFIC_LIGHT_COLORS[status];
+      ctx.doc.setFillColor(r, g, b);
+      ctx.doc.circle(x, centerY, radius, 'F');
+      ctx.doc.setTextColor(status === 'amber' ? 0 : 255);
+    }
+
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(7);
+    ctx.doc.text(code, x, centerY + 2, { align: 'center' });
+    ctx.doc.setTextColor(0);
+  });
+
+  ctx.cursorY += 12;
+}
+
 /**
  * Render enhanced material section with design consequences
  */
@@ -1825,6 +1856,10 @@ export function renderEnhancedMaterialSection(
     ctx.cursorY += 12;
   }
 
+  if (insight) {
+    renderComplianceBadges(ctx, insight, material);
+  }
+
   if (!insight) {
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(10);
@@ -1954,33 +1989,21 @@ export function renderEnhancedMaterialSection(
     ctx.cursorY += 4;
   }
 
-  // Design Levers
-  if (insight.designLevers && insight.designLevers.length > 0) {
+  // Design Levers (filter out compliance-evidence phrasing; handled via badges)
+  const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
+  const filteredLevers = insight.designLevers
+    ? insight.designLevers.filter((lever) => !compliancePhrase.test(lever))
+    : [];
+
+  if (filteredLevers.length > 0) {
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(9);
     ctx.doc.text('Design Levers:', ctx.margin, ctx.cursorY);
     ctx.cursorY += 11;
 
     ctx.doc.setFont('helvetica', 'normal');
-    insight.designLevers.slice(0, 4).forEach((lever) => {
+    filteredLevers.slice(0, 4).forEach((lever) => {
       addBullet(ctx, lever, 9);
-    });
-    ctx.cursorY += 4;
-  }
-
-  // UK Checks
-  if (insight.ukChecks && insight.ukChecks.length > 0) {
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.text('UK Checks:', ctx.margin, ctx.cursorY);
-    ctx.cursorY += 11;
-
-    ctx.doc.setFont('helvetica', 'normal');
-    insight.ukChecks.slice(0, 4).forEach((check) => {
-      const text = check.standard_code
-        ? `${check.label} (${check.standard_code})`
-        : check.label;
-      addBullet(ctx, text, 9);
     });
     ctx.cursorY += 4;
   }

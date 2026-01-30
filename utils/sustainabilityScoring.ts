@@ -247,7 +247,7 @@ export function determineTrafficLight(
     // Landscape without documented benefits = AMBER (needs assessment)
     else {
       light = 'amber';
-      reason = 'Landscape system - biodiversity assessment recommended';
+      reason = 'Landscape system - ecological review recommended';
     }
 
     // Cap at amber if low confidence

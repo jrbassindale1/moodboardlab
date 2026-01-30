@@ -30,7 +30,7 @@ import {
   renderComparativeDashboard,
   renderDesignDirectionPage,
   renderSystemSummaryPage,
-  renderUKComplianceDashboard,
+  renderComplianceReadinessSummary,
   renderEnhancedMaterialSection,
   addDisclaimer,
   MaterialPaletteContext,
@@ -860,9 +860,9 @@ const Moodboard: React.FC<MoodboardProps> = ({ onNavigate, initialBoard, onBoard
       renderDesignDirectionPage(ctx, board, metrics, insights);
     }
 
-    // ========== PAGE 5: UK Compliance Dashboard ==========
+    // ========== PAGE 5: Compliance Readiness Summary ==========
     if (insights.length > 0) {
-      renderUKComplianceDashboard(ctx, insights, board);
+      renderComplianceReadinessSummary(ctx, insights, board);
     }
 
     // ========== PAGES 6+: Material Details (one material per page) ==========

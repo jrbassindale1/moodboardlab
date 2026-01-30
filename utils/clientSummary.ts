@@ -285,7 +285,7 @@ function generateRisksWithMaterials(
 
   // Fallback
   if (risks.length < 2) {
-    risks.push('Gather EPD data to refine impact estimates during detailed design');
+    risks.push('Gather product-level data to refine impact estimates during detailed design');
   }
 
   return risks.slice(0, 3);
@@ -301,35 +301,26 @@ function generateEvidenceChecklist(
 ): string[] {
   const checklist: string[] = [];
 
-  // Priority: EPDs for high-impact materials
+  if (materials.length === 0 || insights.length === 0) {
+    checklist.push('Add materials and generate insights to surface evidence priorities.');
+    return checklist;
+  }
+
+  // High-impact items: prioritise data verification
   analysis.topCarbonRisks.slice(0, 2).forEach(risk => {
-    checklist.push(`Request EPD for ${risk.material.name} to verify impact estimates`);
+    checklist.push(`Prioritise data verification for ${risk.material.name}`);
   });
-
-  // Timber certification if relevant
-  const hasTimber = materials.some(m =>
-    m.id.includes('timber') || m.id.includes('wood') || m.id.includes('clt')
-  );
-  if (hasTimber) {
-    checklist.push('Verify FSC/PEFC chain-of-custody for all timber products');
-  }
-
-  // Recycled content for high-impact items
-  if (analysis.topCarbonRisks.some(r =>
-    r.material.id.includes('steel') || r.material.id.includes('aluminium')
-  )) {
-    checklist.push('Confirm recycled content percentage for metal elements');
-  }
 
   // Low confidence items
   if (analysis.lowConfidenceCount > 0) {
     checklist.push(
-      `Obtain manufacturer data for ${analysis.lowConfidenceCount} material${analysis.lowConfidenceCount > 1 ? 's' : ''} with uncertain lifecycle estimates`
+      `Obtain supplier data for ${analysis.lowConfidenceCount} material${analysis.lowConfidenceCount > 1 ? 's' : ''} with uncertain lifecycle estimates`
     );
   }
 
-  // Standard items
-  checklist.push('Assess local sourcing options for high-transport-impact materials');
+  // Transport and sourcing
+  checklist.push('Review sourcing and transport assumptions for high-mass materials');
+  checklist.push('Confirm end-of-life pathways for key components');
 
   return checklist.slice(0, 5);
 }
@@ -359,7 +350,7 @@ function generateConfidenceStatement(
     statement = `${lowConfCount} of ${totalCount} materials have uncertain lifecycle estimates. `;
   }
 
-  statement += 'Product-specific EPDs should be obtained during detailed design to validate these preliminary figures. ';
+  statement += 'Product-specific data should be obtained during detailed design to validate these preliminary figures. ';
   statement += 'This assessment is for early-stage decision support only and does not constitute a formal lifecycle assessment.';
 
   return statement;
