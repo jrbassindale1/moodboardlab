@@ -1097,7 +1097,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.setFontSize(9);
         doc.setTextColor(80);
         doc.text(
-          'Impact scale: 1 = very low, 5 = very high. ? indicates lower confidence.',
+          'Impact scale: 1 (very low) to 5 (very high). "?" marks lower confidence.',
           ctx.margin,
           ctx.cursorY
         );
@@ -2255,11 +2255,11 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
                   <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                     Moodboard Render
                   </div>
-                  <div className="w-full border border-gray-200 bg-gray-50 relative overflow-hidden">
+                  <div className="w-full max-h-[80vh] border border-gray-200 bg-gray-50 relative overflow-hidden flex items-center justify-center">
                     <img
                       src={moodboardRenderUrl}
                       alt="Moodboard"
-                      className={`w-full h-auto object-contain transition ${
+                      className={`max-h-full max-w-full h-auto w-auto object-contain transition ${
                         isCreatingMoodboard ? 'opacity-40 grayscale' : ''
                       }`}
                     />

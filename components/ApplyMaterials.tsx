@@ -556,11 +556,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                 <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                   Current Moodboard
                 </div>
-                <div className="border border-gray-200 bg-gray-50 overflow-hidden">
+                <div className="border border-gray-200 bg-gray-50 overflow-hidden max-h-[80vh] flex items-center justify-center">
                   <img
                     src={moodboardRenderUrl}
                     alt="Moodboard preview"
-                    className="w-full h-auto object-contain max-h-[320px]"
+                    className="max-h-full max-w-full h-auto w-auto object-contain"
                   />
                 </div>
               </div>

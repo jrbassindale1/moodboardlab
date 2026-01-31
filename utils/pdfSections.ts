@@ -10,8 +10,8 @@ import type {
   TrafficLight,
   PDFContext,
   Hotspot,
+  LifecycleStageKey,
   LifecycleProfile,
-  CarbonPaybackCategory,
 } from '../types/sustainability';
 import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
@@ -24,11 +24,6 @@ const TRAFFIC_LIGHT_COLORS: Record<TrafficLight, [number, number, number]> = {
   green: [34, 139, 34],
   amber: [255, 191, 0],
   red: [220, 53, 69],
-};
-const PAYBACK_CATEGORY_LABELS: Record<CarbonPaybackCategory, string> = {
-  biogenic_storage: 'Biogenic storage',
-  operational_offset: 'Operational offset',
-  ecosystem_sequestration: 'Ecosystem sequestration',
 };
 
 /**
@@ -1218,7 +1213,7 @@ export function renderComplianceReadinessSummary(
   ctx.doc.setFontSize(9);
   ctx.doc.setTextColor(80);
   const introLines = ctx.doc.splitTextToSize(
-    'Concept-stage view: highlights real risk items, evidence priorities, and what can safely wait. Detailed checks appear as badges on material pages.',
+    'Compliance readiness = whether standard supplier evidence (environmental product declarations, certificates, recycled-content declarations) is likely to be available at this stage. Concept-stage view: highlights real risk items, evidence priorities, and what can safely wait.',
     ctx.pageWidth - ctx.margin * 2
   );
   introLines.forEach((line: string) => {
@@ -1455,7 +1450,7 @@ export function renderLifecycleFingerprint(
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(8);
     ctx.doc.setTextColor(160, 90, 0);
-    ctx.doc.text('PROFILE MISSING - PROXY USED', ctx.margin + 10, y);
+    ctx.doc.text('Profile missing: proxy scores used', ctx.margin + 10, y);
     ctx.doc.setTextColor(0);
     y += 10;
 
@@ -1496,11 +1491,15 @@ export function renderLifecycleFingerprint(
 
   ensureSpace(ctx, 50);
 
-  // Material name
-  ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
-  ctx.doc.text(materialName, ctx.margin, ctx.cursorY);
-  ctx.cursorY += 14;
+  // Material name (optional)
+  if (materialName) {
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(10);
+    ctx.doc.text(materialName, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 14;
+  } else {
+    ctx.cursorY += 4;
+  }
 
   // Draw fingerprint dots
   const stageKeys: Array<keyof LifecycleProfile> = [
@@ -1525,7 +1524,7 @@ export function renderLifecycleFingerprint(
     // Stage label
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(7);
-    ctx.doc.setTextColor(80);
+    ctx.doc.setTextColor(110);
     ctx.doc.text(label, xPos, ctx.cursorY);
     ctx.doc.setTextColor(0);
 
@@ -1538,22 +1537,22 @@ export function renderLifecycleFingerprint(
       if (isFilled) {
         if (lowConfidence) {
           // Overall low confidence - grey out all filled dots
-          ctx.doc.setFillColor(180, 180, 180);
+          ctx.doc.setFillColor(200, 200, 200);
           ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
         } else if (stageData.confidence === 'low') {
-          ctx.doc.setDrawColor(100);
-          ctx.doc.setFillColor(255, 255, 255);
+          ctx.doc.setDrawColor(170);
+          ctx.doc.setFillColor(245, 245, 245);
           ctx.doc.setLineWidth(0.5);
           ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
         } else if (stageData.confidence === 'medium') {
-          ctx.doc.setFillColor(150, 150, 150);
+          ctx.doc.setFillColor(140, 140, 140);
           ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
         } else {
-          ctx.doc.setFillColor(0, 0, 0);
+          ctx.doc.setFillColor(70, 70, 70);
           ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
         }
       } else {
-        ctx.doc.setDrawColor(200, 200, 200);
+        ctx.doc.setDrawColor(220, 220, 220);
         ctx.doc.setFillColor(255, 255, 255);
         ctx.doc.setLineWidth(0.5);
         ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
@@ -1563,7 +1562,9 @@ export function renderLifecycleFingerprint(
     // Confidence indicator
     if (stageData.confidence === 'low' || stageData.confidence === 'medium') {
       ctx.doc.setFontSize(6);
+      ctx.doc.setTextColor(120);
       ctx.doc.text('?', xPos + 5 * (dotSize + dotGap) + 2, ctx.cursorY + 7);
+      ctx.doc.setTextColor(0);
     }
   });
 
@@ -1704,13 +1705,145 @@ export function estimatePracticalityBands(material: MaterialOption): Practicalit
 function renderLowConfidenceIndicator(ctx: PDFContext, metrics: MaterialMetrics): void {
   if (!metrics.low_confidence_flag) return;
 
-  // Draw "INDICATIVE ONLY" watermark
+  // Draw subtle advisory note
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(180, 130, 0);
-  ctx.doc.text('NOTE: INDICATIVE ONLY - low data confidence', ctx.margin, ctx.cursorY);
+  ctx.doc.setTextColor(170, 120, 0);
+  ctx.doc.text('Note: Indicative only (low data confidence).', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
   ctx.doc.setTextColor(0);
+}
+
+const STAGE_LONG_LABELS: Record<LifecycleStageKey, string> = {
+  raw: 'Raw material',
+  manufacturing: 'Manufacturing',
+  transport: 'Transport',
+  installation: 'Installation',
+  inUse: 'In-use',
+  maintenance: 'Maintenance',
+  endOfLife: 'End of life',
+};
+
+function fitSingleLineText(doc: jsPDF, text: string, maxWidth: number): string {
+  if (doc.getTextWidth(text) <= maxWidth) return text;
+  const ellipsis = '...';
+  let trimmed = text;
+  while (trimmed.length > 0 && doc.getTextWidth(`${trimmed}${ellipsis}`) > maxWidth) {
+    trimmed = trimmed.slice(0, -1);
+  }
+  return `${trimmed.trimEnd()}${ellipsis}`;
+}
+
+function decapitalize(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function capitalizeFirst(text: string): string {
+  if (!text) return text;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function getImpactCharacter(metrics?: MaterialMetrics): string {
+  if (!metrics) return 'moderate';
+  if (metrics.traffic_light === 'green') return 'low';
+  if (metrics.traffic_light === 'amber') return 'moderate';
+  return 'high';
+}
+
+function formatHotspotDriver(hotspot: Hotspot): string {
+  const stageLabel = STAGE_LONG_LABELS[hotspot.stage] || 'Manufacturing';
+  const reason = (hotspot.reason || '').trim();
+  if (!reason) return stageLabel;
+  const cleaned = reason.replace(/[.]+$/, '');
+  const objectMatch = cleaned.match(
+    /^(processing|manufacturing|transport|installation|use|maintenance|end of life|raw material|raw)\s+of\s+(.+)/i
+  );
+  if (objectMatch) {
+    return `${stageLabel} of ${objectMatch[2]}`;
+  }
+  return cleaned;
+}
+
+function buildMaterialSummaryLine(
+  material: MaterialOption,
+  insight: EnhancedSustainabilityInsight | undefined,
+  metrics: MaterialMetrics | undefined
+): string {
+  const roleSource = material.finish || material.description || material.name;
+  let role = roleSource.split(/[.;]/)[0].trim();
+  if (!role) role = material.name;
+  role = capitalizeFirst(role);
+  const impactLabel = getImpactCharacter(metrics);
+  const drivers: string[] = [];
+
+  if (insight?.hotspots?.length) {
+    drivers.push(decapitalize(formatHotspotDriver(insight.hotspots[0])));
+  }
+
+  if (metrics && !isLandscapeMaterial(material) && metrics.lifecycle_multiplier > 1) {
+    drivers.push('repeat replacement');
+  }
+
+  if (drivers.length === 0) {
+    drivers.push('manufacturing');
+  }
+
+  const driverText = drivers.slice(0, 2).join(' and ');
+  return `${role} with ${impactLabel} embodied impact, driven by ${driverText}.`;
+}
+
+function buildLifecycleDrivers(
+  material: MaterialOption,
+  insight: EnhancedSustainabilityInsight | undefined,
+  metrics: MaterialMetrics | undefined
+): string[] {
+  const drivers: string[] = [];
+  if (insight?.hotspots?.length) {
+    drivers.push(formatHotspotDriver(insight.hotspots[0]));
+  }
+
+  if (metrics) {
+    const lifeText = metrics.service_life >= 100 ? '100+ year' : `${metrics.service_life}-year`;
+    const multiplier = Math.round(metrics.lifecycle_multiplier * 10) / 10;
+    if (isLandscapeMaterial(material)) {
+      drivers.push(`Establishment and maintenance factor (${multiplier}x over 60 years)`);
+    } else if (metrics.lifecycle_multiplier > 1) {
+      const replText =
+        Number.isInteger(multiplier)
+          ? `${multiplier} replacements over 60 years`
+          : `${multiplier}x over 60 years`;
+      drivers.push(`${lifeText} service life (${replText})`);
+    } else {
+      drivers.push(`${lifeText} service life (full building life)`);
+    }
+  }
+
+  return drivers.slice(0, 2);
+}
+
+function normalizeDesignAction(text: string): string {
+  const cleaned = text.trim().replace(/[.;]+$/, '');
+  const lower = cleaned.toLowerCase();
+  const isImperative = /^(use|design|specify|select|choose|avoid|reduce|minimise|minimize|limit|source|prioritise|prioritize|standardise|standardize|detail|ensure|allow|enable|plan|provide|target|optimize|optimise|prefer|reuse|demount|disassemble|size|set|keep|replace|shift)\b/.test(
+    lower
+  );
+  if (isImperative) return capitalizeFirst(cleaned);
+  if (lower.startsWith('to ')) return `Use ${cleaned.slice(3)}`;
+  return `Use ${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}`;
+}
+
+function getDeliveryComplexityLabel(
+  bands: ReturnType<typeof estimatePracticalityBands>
+): 'Low' | 'Moderate' | 'High' {
+  const costScore = bands.costBand === '£' ? 1 : bands.costBand === '££' ? 2 : 3;
+  const buildScore = bands.buildComplexity === 'Low' ? 1 : bands.buildComplexity === 'Medium' ? 2 : 3;
+  const procurementScore =
+    bands.procurementRisk === 'Low' ? 1 : bands.procurementRisk === 'Medium' ? 2 : 3;
+  const avg = (costScore + buildScore + procurementScore) / 3;
+  if (avg <= 1.4) return 'Low';
+  if (avg <= 2.3) return 'Moderate';
+  return 'High';
 }
 
 function renderComplianceBadges(
@@ -1772,12 +1905,83 @@ export function renderEnhancedMaterialSection(
   profile: LifecycleProfile | null,
   paletteContext?: MaterialPaletteContext
 ): void {
-  ensureSpace(ctx, 140);
+  ensureSpace(ctx, 190);
 
-  // Material thumbnail (if available) or color swatch fallback
+  const addSubtleBullet = (text: string, size = 8): void => {
+    ensureSpace(ctx, size * 1.4);
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(size);
+    ctx.doc.setTextColor(90);
+    const maxWidth = ctx.pageWidth - ctx.margin * 2 - 15;
+    const lines = ctx.doc.splitTextToSize(text, maxWidth);
+    ctx.doc.text('-', ctx.margin, ctx.cursorY);
+    lines.forEach((line: string, i: number) => {
+      ctx.doc.text(line, ctx.margin + 12, ctx.cursorY + i * (size + 3));
+    });
+    ctx.cursorY += lines.length * (size + 3) + 3;
+    ctx.doc.setTextColor(0);
+  };
+
+  const renderDesignActionsBox = (actions: string[]): void => {
+    const header = 'DESIGN ACTIONS (CONCEPT STAGE)';
+    const headerSize = 10;
+    const bodySize = 10;
+    const boxPaddingX = 10;
+    const boxPaddingY = 8;
+    const bulletIndent = 12;
+    const boxWidth = ctx.pageWidth - ctx.margin * 2;
+    const contentWidth = boxWidth - boxPaddingX * 2 - bulletIndent;
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(bodySize);
+    const linesPerAction = actions.map((action) => ctx.doc.splitTextToSize(action, contentWidth));
+    const bodyLineCount = linesPerAction.reduce((sum, lines) => sum + lines.length, 0);
+    const bodyHeight =
+      actions.length === 0 ? bodySize + 3 : bodyLineCount * (bodySize + 3) + (actions.length - 1) * 2;
+    const boxHeight = boxPaddingY + headerSize + 6 + bodyHeight + boxPaddingY;
+
+    ensureSpace(ctx, boxHeight + 6);
+    const boxY = ctx.cursorY;
+    ctx.doc.setFillColor(245, 245, 245);
+    ctx.doc.setDrawColor(220, 220, 220);
+    ctx.doc.roundedRect(ctx.margin, boxY, boxWidth, boxHeight, 2, 2, 'FD');
+
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(headerSize);
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(header, ctx.margin + boxPaddingX, boxY + boxPaddingY + headerSize);
+
+    let y = boxY + boxPaddingY + headerSize + 6;
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(bodySize);
+
+    if (actions.length === 0) {
+      ctx.doc.setTextColor(90);
+    ctx.doc.text('No design actions available yet', ctx.margin + boxPaddingX, y);
+      ctx.doc.setTextColor(0);
+      y += bodySize + 3;
+    } else {
+      actions.forEach((action, index) => {
+        const lines = linesPerAction[index];
+        ctx.doc.text('-', ctx.margin + boxPaddingX, y);
+        lines.forEach((line: string, lineIndex: number) => {
+          ctx.doc.text(
+            line,
+            ctx.margin + boxPaddingX + bulletIndent,
+            y + lineIndex * (bodySize + 3)
+          );
+        });
+        y += lines.length * (bodySize + 3) + 2;
+      });
+    }
+
+    ctx.cursorY = boxY + boxHeight + 10;
+  };
+
+  // ZONE 1: Material summary
   const thumbnailSize = 50;
   let contentStartX = ctx.margin;
   let thumbnailRendered = false;
+  const summaryStartY = ctx.cursorY;
 
   if (paletteContext?.thumbnailDataUri) {
     try {
@@ -1799,13 +2003,10 @@ export function renderEnhancedMaterialSection(
   // Fallback: Draw colored swatch using material.tone
   if (!thumbnailRendered && material.tone) {
     try {
-      // Parse hex color to RGB
       const hex = material.tone.replace('#', '');
       const r = parseInt(hex.substring(0, 2), 16);
       const g = parseInt(hex.substring(2, 4), 16);
       const b = parseInt(hex.substring(4, 6), 16);
-
-      // Draw color swatch with border
       ctx.doc.setFillColor(r, g, b);
       ctx.doc.setDrawColor(200, 200, 200);
       ctx.doc.setLineWidth(0.5);
@@ -1820,247 +2021,181 @@ export function renderEnhancedMaterialSection(
   // Material name header (next to thumbnail if present)
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(12);
-  ctx.doc.text(material.name, contentStartX, ctx.cursorY + 8);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text(material.name, contentStartX, summaryStartY + 8);
 
   // Category tag
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(100);
-  ctx.doc.text(`[${material.category}]`, contentStartX, ctx.cursorY + 18);
+  ctx.doc.text(`[${material.category}]`, contentStartX, summaryStartY + 18);
   ctx.doc.setTextColor(0);
 
-  // Move cursor past thumbnail area
-  if (thumbnailRendered) {
-    ctx.cursorY += thumbnailSize + 10;
-  } else {
-    ctx.cursorY += 25;
-  }
+  // Summary line (single blunt statement)
+  const summaryLine = buildMaterialSummaryLine(material, insight, metrics);
+  const summaryFontSize = 9;
+  const summaryMaxWidth = ctx.pageWidth - ctx.margin - contentStartX;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(summaryFontSize);
+  ctx.doc.setTextColor(40);
+  const fittedSummary = fitSingleLineText(ctx.doc, summaryLine, summaryMaxWidth);
+  const summaryLineY = summaryStartY + 28;
+  ctx.doc.text(fittedSummary, contentStartX, summaryLineY);
+  ctx.doc.setTextColor(0);
 
-  // Low confidence indicator (if applicable)
+  const summaryBottom = Math.max(
+    thumbnailRendered ? summaryStartY + thumbnailSize : summaryStartY + 24,
+    summaryLineY + summaryFontSize + 4
+  );
+  ctx.cursorY = summaryBottom + 10;
+
+  // ZONE 2: Lifecycle drivers
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(90);
+  ctx.doc.text('Lifecycle drivers (context)', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 10;
+  ctx.doc.setTextColor(0);
+
   if (metrics?.low_confidence_flag) {
     renderLowConfidenceIndicator(ctx, metrics);
   }
 
-  // Lifecycle fingerprint (moved below header)
-  renderLifecycleFingerprint(ctx, material.id, '', profile, metrics?.low_confidence_flag); // Empty name since we already rendered it
+  renderLifecycleFingerprint(ctx, material.id, '', profile, metrics?.low_confidence_flag);
 
-  // Palette context box (NEW) - shows ranking and contribution
-  if (paletteContext && metrics) {
-    // CARBON DOMINANT badge if applicable
-    // CRITICAL: Landscape materials NEVER show as "carbon dominant" - conceptually wrong
-    const showCarbonDominant = paletteContext.isCarbonDominant && !isLandscapeMaterial(material);
-    if (showCarbonDominant) {
-      ctx.doc.setFillColor(255, 245, 238);
-      ctx.doc.setDrawColor(220, 53, 69);
-      ctx.doc.setLineWidth(1);
-      ctx.doc.roundedRect(ctx.margin, ctx.cursorY - 4, 180, 14, 2, 2, 'FD');
-      ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(9);
-      ctx.doc.setTextColor(220, 53, 69);
-      ctx.doc.text('CARBON DOMINANT COMPONENT - act here first', ctx.margin + 4, ctx.cursorY + 5);
-      ctx.cursorY += 18;
-    }
-
+  const mainDrivers = buildLifecycleDrivers(material, insight, metrics);
+  if (mainDrivers.length > 0) {
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-
-    // Color code based on ranking
-    if (paletteContext.rank <= 2) {
-      ctx.doc.setTextColor(220, 53, 69); // Red for top 2
-    } else if (paletteContext.rank <= Math.ceil(paletteContext.totalMaterials / 2)) {
-      ctx.doc.setTextColor(180, 130, 0); // Amber for upper half
-    } else {
-      ctx.doc.setTextColor(34, 139, 34); // Green for lower half
-    }
-
-    // Ranking text
-    const rankText = `#${paletteContext.rank} of ${paletteContext.totalMaterials} by embodied carbon`;
-    ctx.doc.text(rankText, ctx.margin, ctx.cursorY);
-
-    // Contribution percentage
-    const contribText = `(${paletteContext.contributionPercent.toFixed(0)}% of palette total)`;
-    ctx.doc.text(contribText, ctx.margin + 150, ctx.cursorY);
-
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 14;
-
-    // Traffic light indicator with dynamic reason
-    ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
-    drawTrafficLight(ctx, ctx.margin, ctx.cursorY - 3, metrics.traffic_light, 4);
-    // Use the specific reason from scoring, or fall back to generic
-    const ratingLabel = metrics.traffic_light_reason || (
-      metrics.traffic_light === 'green'
-        ? 'Low impact'
-        : metrics.traffic_light === 'amber'
-        ? 'Moderate impact - review design levers'
-        : 'High impact - consider alternatives'
-    );
-    ctx.doc.text(ratingLabel, ctx.margin + 15, ctx.cursorY);
-    ctx.cursorY += 12;
-  }
-
-  if (insight) {
-    renderComplianceBadges(ctx, insight, material);
-  }
-
-  if (!insight) {
-    ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(10);
-    ctx.doc.setTextColor(100);
-    ctx.doc.text('No sustainability insights available', ctx.margin + 10, ctx.cursorY);
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 20;
-    return;
-  }
-
-  // Headline
-  if (insight.headline) {
-    ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(10);
-    addParagraph(ctx, insight.headline, 10, 6);
-  }
-
-  // Lifecycle metrics box (NEW)
-  if (metrics) {
-    ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(8);
     ctx.doc.setTextColor(80);
-
-    // Service life and replacements/maintenance
-    const lifeText = metrics.service_life >= 100 ? '100+' : String(metrics.service_life);
-    const matIsLandscape = isLandscapeMaterial(material);
-    const isPartialSystem = !Number.isInteger(metrics.lifecycle_multiplier);
-    const replValue = metrics.lifecycle_multiplier.toString();
-    let replText: string;
-    if (matIsLandscape) {
-      replText = `${replValue}x establishment + maintenance factor`;
-    } else if (metrics.lifecycle_multiplier === 1) {
-      replText = 'full building life';
-    } else {
-      replText = `${replValue}x over 60 years${isPartialSystem ? ' (partial system)' : ''}`;
-    }
-    ctx.doc.text(`Service life: ${lifeText} years (${replText})`, ctx.margin, ctx.cursorY);
-
-    // Carbon payback / claim
-    const paybackNote = metrics.carbon_payback_note;
-    let paybackText: string;
-    if (metrics.carbon_payback) {
-      const payback = metrics.carbon_payback;
-      const categoryLabel = PAYBACK_CATEGORY_LABELS[payback.category];
-      const isEcosystem = payback.category === 'ecosystem_sequestration';
-      if (payback.years === 0) {
-        paybackText = isEcosystem
-          ? `Potential sequestration over time (${categoryLabel})`
-          : `Carbon payback: Immediate (${categoryLabel})`;
-      } else if (payback.rangeYears) {
-        const prefix = isEcosystem ? 'Potential sequestration over time' : 'Typical carbon payback';
-        paybackText = `${prefix}: ~${payback.rangeYears[0]}-${payback.rangeYears[1]} years (${payback.assumption})`;
-      } else {
-        const prefix = isEcosystem ? 'Potential sequestration over time' : 'Carbon payback';
-        paybackText = `${prefix}: ~${payback.years} years (${payback.assumption})`;
-      }
-      ctx.doc.setTextColor(34, 100, 34);
-    } else {
-      paybackText = `Carbon payback: No payback claim${paybackNote ? ` (${paybackNote})` : ''}`;
-      ctx.doc.setTextColor(120);
-    }
-    ctx.cursorY += 10;
-    ctx.doc.text(paybackText, ctx.margin, ctx.cursorY);
-
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 14;
-  }
-
-  // Practicality bands (cost, complexity, procurement risk)
-  const bands = estimatePracticalityBands(material);
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(100);
-
-  // Cost band
-  const costLabel = bands.costBand === '£' ? 'Low cost' : bands.costBand === '££' ? 'Medium cost' : 'High cost';
-  ctx.doc.text(costLabel, ctx.margin, ctx.cursorY);
-
-  // Build complexity
-  const complexityLabel = `Build: ${bands.buildComplexity}`;
-  ctx.doc.text(complexityLabel, ctx.margin + 80, ctx.cursorY);
-
-  // Procurement risk
-  const riskColor: [number, number, number] =
-    bands.procurementRisk === 'Low' ? [34, 139, 34] :
-    bands.procurementRisk === 'Medium' ? [180, 130, 0] : [220, 53, 69];
-  ctx.doc.setTextColor(...riskColor);
-  ctx.doc.text(`Procurement: ${bands.procurementRisk}`, ctx.margin + 160, ctx.cursorY);
-  ctx.doc.setTextColor(0);
-  ctx.cursorY += 14;
-
-  // Hotspots with reasons
-  if (insight.hotspots && insight.hotspots.length > 0) {
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.text('Hotspots:', ctx.margin, ctx.cursorY);
-    ctx.cursorY += 11;
-
-    ctx.doc.setFont('helvetica', 'normal');
-    insight.hotspots.forEach((hotspot: Hotspot) => {
-      const label = STAGE_LABELS[hotspot.stage];
-      ctx.doc.setTextColor(220, 53, 69);
-      ctx.doc.text(`${label} (${hotspot.score}):`, ctx.margin + 10, ctx.cursorY);
-      ctx.doc.setTextColor(0);
-      ctx.doc.text(` ${hotspot.reason}`, ctx.margin + 50, ctx.cursorY);
-      ctx.cursorY += 11;
-    });
+    ctx.doc.text('Main drivers:', ctx.margin, ctx.cursorY);
+    ctx.cursorY += 9;
+    mainDrivers.forEach((driver) => addSubtleBullet(driver, 8));
     ctx.cursorY += 4;
   }
 
-  // Design Risk / Response (NEW)
-  if (insight.design_risk || insight.design_response) {
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(100);
-
-    if (insight.design_risk) {
-      ctx.doc.text(insight.design_risk, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 11;
-    }
-    if (insight.design_response) {
-      ctx.doc.setTextColor(34, 139, 34);
-      ctx.doc.text(insight.design_response, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 11;
-    }
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 4;
-  }
-
-  // Design Levers (filter out compliance-evidence phrasing; handled via badges)
+  // ZONE 3: Design actions
   const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
-  const filteredLevers = insight.designLevers
+  const filteredLevers = insight?.designLevers
     ? insight.designLevers.filter((lever) => !compliancePhrase.test(lever))
     : [];
+  const actions = filteredLevers.map((lever) => normalizeDesignAction(lever)).slice(0, 3);
+  renderDesignActionsBox(actions);
 
-  if (filteredLevers.length > 0) {
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.text('Design Levers:', ctx.margin, ctx.cursorY);
-    ctx.cursorY += 11;
-
-    ctx.doc.setFont('helvetica', 'normal');
-    filteredLevers.slice(0, 4).forEach((lever) => {
-      addBullet(ctx, lever, 9);
+  // Secondary info (de-emphasised)
+  const secondaryLines: Array<{ text: string; tone?: 'amber' }> = [];
+  if (paletteContext && metrics) {
+    secondaryLines.push({
+      text: `#${paletteContext.rank} of ${paletteContext.totalMaterials} by embodied carbon (${paletteContext.contributionPercent.toFixed(0)}% of palette total)`,
     });
-    ctx.cursorY += 4;
   }
 
-  ctx.cursorY += 10;
+  secondaryLines.push({
+    text: 'Compliance readiness: supplier evidence (environmental product declarations, timber chain-of-custody certificates, recycled-content statements) is typically gathered by RIBA Stage 3.',
+  });
+
+  const bands = estimatePracticalityBands(material);
+  const deliveryComplexity = getDeliveryComplexityLabel(bands);
+  secondaryLines.push({
+    text: `Delivery complexity: ${deliveryComplexity}`,
+  });
+
+  if (secondaryLines.length > 0) {
+    const footerFontSize = 7;
+    const footerLineHeight = footerFontSize + 3;
+    const footerHeight = secondaryLines.length * footerLineHeight;
+    if (ctx.cursorY + footerHeight < ctx.pageHeight - ctx.margin) {
+      ctx.cursorY = ctx.pageHeight - ctx.margin - footerHeight;
+    } else {
+      ctx.cursorY += 4;
+    }
+
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(footerFontSize);
+    secondaryLines.forEach((line) => {
+      if (line.tone === 'amber') {
+        ctx.doc.setTextColor(180, 130, 0);
+      } else {
+        ctx.doc.setTextColor(110);
+      }
+      ctx.doc.text(line.text, ctx.margin, ctx.cursorY);
+      ctx.cursorY += footerLineHeight;
+    });
+    ctx.doc.setTextColor(0);
+  }
+
+  ctx.cursorY += 6;
 }
 
 /**
  * Add disclaimer footer
  */
 export function addDisclaimer(ctx: PDFContext): void {
-  ensureSpace(ctx, 80);
-  ctx.cursorY = ctx.pageHeight - ctx.margin - 50;
+  ctx.doc.addPage();
+  ctx.cursorY = ctx.margin;
+
+  // Glossary
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(14);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text('Glossary', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 16;
+
+  const glossaryItems: Array<{ term: string; description: string }> = [
+    {
+      term: 'RIBA Stage 3',
+      description: 'Developed design stage in the UK work stages.',
+    },
+    {
+      term: 'Environmental product declaration',
+      description: 'Standardised product life-cycle data sheet (often called an EPD).',
+    },
+    {
+      term: 'FSC / PEFC',
+      description: 'Timber chain-of-custody certification schemes.',
+    },
+    {
+      term: 'EN 15804 / ISO 14025',
+      description: 'Standards that define how environmental product declarations are produced.',
+    },
+    {
+      term: 'EOL',
+      description: 'End of life (what happens when a material is removed or disposed).',
+    },
+    {
+      term: 'Conf.',
+      description: 'Confidence in data quality.',
+    },
+    {
+      term: 'SuDS',
+      description: 'Sustainable drainage systems.',
+    },
+    {
+      term: 'AI',
+      description: 'Artificial intelligence used to draft early-stage insights.',
+    },
+    {
+      term: 'RAW / MFG / TRN / INS / USE / MNT / EOL',
+      description:
+        'Lifecycle stages: raw material, manufacturing, transport, installation, in-use, maintenance, end of life.',
+    },
+  ];
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(80);
+  glossaryItems.forEach((item) => {
+    const line = `${item.term}: ${item.description}`;
+    const lines = ctx.doc.splitTextToSize(line, ctx.pageWidth - ctx.margin * 2);
+    lines.forEach((textLine: string) => {
+      ctx.doc.text(textLine, ctx.margin, ctx.cursorY);
+      ctx.cursorY += 11;
+    });
+    ctx.cursorY += 2;
+  });
+
+  // Disclaimer footer
+  ctx.cursorY = ctx.pageHeight - ctx.margin - 55;
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(9);
