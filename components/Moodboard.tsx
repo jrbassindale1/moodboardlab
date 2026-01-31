@@ -219,6 +219,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
   const [status, setStatus] = useState<'idle' | 'sustainability' | 'render' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
+  const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
@@ -916,10 +917,51 @@ const Moodboard: React.FC<MoodboardProps> = ({
     };
   }, [board, sustainabilityInsights]);
 
-  const generateReportPdf = async () => {
+  const generateReportPdf = async (
+    onProgress?: (step: string, percent: number) => void
+  ) => {
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const ctx = createPDFContext(doc);
     const insights = sustainabilityInsightsRef.current || [];
+
+    // ========== PAGE 1: Moodboard Render (Front Page) ==========
+    onProgress?.('Adding moodboard cover page...', 5);
+    if (moodboardRenderUrl) {
+      try {
+        // Add full-page moodboard render as cover
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // Add the moodboard image to fill most of the page with margins
+        const margin = 40;
+        const imgWidth = pageWidth - margin * 2;
+        const imgHeight = pageHeight - margin * 2 - 60; // Leave space for title
+
+        // Title at top
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(24);
+        doc.setTextColor(0);
+        doc.text('Moodboard', pageWidth / 2, margin + 20, { align: 'center' });
+
+        // Add the render image
+        doc.addImage(
+          moodboardRenderUrl,
+          'PNG',
+          margin,
+          margin + 40,
+          imgWidth,
+          imgHeight,
+          undefined,
+          'FAST'
+        );
+
+        // Add page - next page will be sustainability summary
+        doc.addPage();
+        ctx.cursorY = ctx.margin;
+      } catch (imgErr) {
+        console.warn('Could not add moodboard render to PDF:', imgErr);
+      }
+    }
 
     // Calculate metrics for all materials
     const metrics = new Map<string, MaterialMetrics>();
@@ -988,23 +1030,28 @@ const Moodboard: React.FC<MoodboardProps> = ({
       console.warn('[PDF QA] Warnings:', qaResult.warnings);
     }
 
-    // ========== PAGE 1: Client Summary ==========
+    // ========== PAGE 2: Client Summary ==========
+    onProgress?.('Generating sustainability summary...', 15);
     renderClientSummaryPage(ctx, clientSummary);
 
-    // ========== PAGE 2: Comparative Dashboard ==========
+    // ========== PAGE 3: Comparative Dashboard ==========
+    onProgress?.('Building comparative dashboard...', 25);
     if (board.length > 0 && metrics.size > 0) {
       renderComparativeDashboard(ctx, board, metrics);
     }
 
-    // ========== PAGE 3: System-Level Summary ==========
+    // ========== PAGE 4: System-Level Summary ==========
+    onProgress?.('Analysing system-level impacts...', 35);
     renderSystemSummaryPage(ctx, systemSummary, board, metrics);
 
-    // ========== PAGE 4: Design Direction ==========
+    // ========== PAGE 5: Design Direction ==========
+    onProgress?.('Generating design recommendations...', 45);
     if (board.length > 0 && metrics.size > 0 && insights.length > 0) {
       renderDesignDirectionPage(ctx, board, metrics, insights);
     }
 
-    // ========== PAGE 5: Compliance Readiness Summary ==========
+    // ========== PAGE 6: Compliance Readiness Summary ==========
+    onProgress?.('Checking compliance readiness...', 55);
     if (insights.length > 0) {
       renderComplianceReadinessSummary(ctx, insights, board);
     }
