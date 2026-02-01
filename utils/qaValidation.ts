@@ -8,6 +8,7 @@ import type {
 } from '../types/sustainability';
 import type { MaterialOption } from '../types';
 import { CONFIDENCE_THRESHOLD } from './sustainabilityScoring';
+import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
 
 /**
  * Validate sustainability insights before PDF export
@@ -28,9 +29,13 @@ export function validateInsights(
     }
   });
 
-  // Check: At least 1 hotspot per material
+  // Check: At least 1 hotspot per material when lifecycle profile indicates hotspots
   insights.forEach((insight) => {
-    if (!insight.hotspots || insight.hotspots.length === 0) {
+    const profile = MATERIAL_LIFECYCLE_PROFILES[insight.id];
+    const requiresHotspots = profile
+      ? Object.values(profile).some((stage) => stage.impact >= 3)
+      : true;
+    if (requiresHotspots && (!insight.hotspots || insight.hotspots.length === 0)) {
       errors.push(`Material "${insight.title}" has no hotspots identified`);
     }
   });

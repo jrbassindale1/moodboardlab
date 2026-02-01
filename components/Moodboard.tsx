@@ -28,9 +28,11 @@ import { detectSynergies, detectConflicts, generateNetStatement } from '../utils
 import { validateInsights } from '../utils/qaValidation';
 import { generateClientSummary } from '../utils/clientSummary';
 import { isLandscapeMaterial } from '../utils/lifecycleDurations';
+import { getMaterialIconId } from '../utils/materialIconMapping';
 import {
   createPDFContext,
-  renderClientSummaryPage,
+  renderSpecifiersSnapshot,
+  renderStrategicOverview,
   renderComparativeDashboard,
   renderDesignDirectionPage,
   renderSystemSummaryPage,
@@ -1072,67 +1074,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const ctx = createPDFContext(doc);
     const insights = sustainabilityInsightsRef.current || [];
-
-    // ========== PAGE 1: Moodboard Render (Front Page) ==========
-    onProgress?.('Adding moodboard cover page...', 5);
-    if (moodboardRenderUrl) {
-      try {
-        // Add full-page moodboard render as cover
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-
-        // Add the moodboard image as a square with margins
-        const margin = 40;
-        const titleOffset = 44;
-        const availableWidth = pageWidth - margin * 2;
-        const availableHeight = pageHeight - margin * 2 - titleOffset;
-        const imageSize = Math.min(availableWidth, availableHeight);
-        const imageX = margin + (availableWidth - imageSize) / 2;
-        const imageY = margin + titleOffset + (availableHeight - imageSize) / 2;
-
-        // Title at top
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(24);
-        doc.setTextColor(0);
-        doc.text('Moodboard', pageWidth / 2, margin + 20, { align: 'center' });
-
-        // Add the render image (square)
-        doc.addImage(
-          moodboardRenderUrl,
-          'PNG',
-          imageX,
-          imageY,
-          imageSize,
-          imageSize,
-          undefined,
-          'FAST'
-        );
-
-        // Brand tab anchored to the image
-        const brand = 'created by moodboard-lab.com';
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        const brandPaddingX = 6;
-        const brandPaddingY = 4;
-        const brandWidth = doc.getTextWidth(brand) + brandPaddingX * 2;
-        const brandHeight = 10 + brandPaddingY * 2;
-        const brandX = imageX + 12;
-        const brandY = imageY + imageSize - brandHeight - 12;
-        doc.setFillColor(17, 24, 39);
-        doc.rect(brandX, brandY, brandWidth, brandHeight, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.text(brand, brandX + brandPaddingX, brandY + brandHeight - brandPaddingY - 2);
-        doc.setTextColor(0);
-
-        // Add page - next page will be sustainability summary
-        doc.addPage();
-        ctx.cursorY = ctx.margin;
-      } catch (imgErr) {
-        console.warn('Could not add moodboard render to PDF:', imgErr);
-      }
-    }
-
-    // Calculate metrics for all materials
     const metrics = new Map<string, MaterialMetrics>();
     board.forEach((material) => {
       const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
@@ -1142,6 +1083,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
         metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
       }
     });
+
+    // ========== PAGE 1: Specifier's Snapshot ==========
+    onProgress?.('Building specifier snapshot...', 5);
+    renderSpecifiersSnapshot(ctx, moodboardRenderUrl, board, metrics);
 
     // Detect synergies and conflicts (pass metrics for fallback generation)
     const synergies = detectSynergies(board, metrics);
@@ -1201,7 +1146,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // ========== PAGE 2: Client Summary ==========
     onProgress?.('Generating sustainability summary...', 15);
-    renderClientSummaryPage(ctx, clientSummary);
+    renderStrategicOverview(ctx, clientSummary, board, metrics);
 
     // ========== PAGE 3: Comparative Dashboard ==========
     onProgress?.('Building comparative dashboard...', 25);
@@ -2299,7 +2244,9 @@ ${JSON.stringify(summaryContext, null, 2)}`;
               </div>
             ) : (
               <div className="space-y-0 border border-gray-200">
-                {board.map((item, idx) => (
+                {board.map((item, idx) => {
+                  const iconId = getMaterialIconId(item.id);
+                  return (
                   <div
                     key={`${item.id}-${idx}`}
                     className="border-b border-gray-200 last:border-b-0 bg-white hover:bg-gray-50 transition-colors group"
@@ -2323,9 +2270,9 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                           // Show material icon for standard materials
                           <>
                             <picture>
-                              <source srcSet={`/icons/${item.id}.webp`} type="image/webp" />
+                              <source srcSet={`/icons/${iconId}.webp`} type="image/webp" />
                               <img
-                                src={`/icons/${item.id}.png`}
+                                src={`/icons/${iconId}.png`}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -2373,7 +2320,8 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 

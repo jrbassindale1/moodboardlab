@@ -11,6 +11,12 @@ import { generateMaterialIcon, MaterialIconRequest } from '../utils/materialIcon
 import { saveColoredIcon } from '../api';
 
 const COLORED_ICONS_STORAGE_KEY = 'coloredMaterialIcons';
+const COLORED_ICON_SERVER_DISABLED_KEY = 'coloredIconServerDisabledUntil';
+const COLORED_ICON_SERVER_DISABLED_REASON_KEY = 'coloredIconServerDisabledReason';
+const COLORED_ICON_SERVER_DISABLED_MS = 24 * 60 * 60 * 1000;
+const COLORED_ICON_CACHE_MAX_ITEMS = 20;
+const COLORED_ICON_CACHE_MAX_BYTES = 4_500_000;
+const COLORED_ICON_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 interface ColoredIconCache {
   [colorVariantId: string]: {
@@ -33,6 +39,97 @@ function loadColoredIconCache(): ColoredIconCache {
   }
 }
 
+function isQuotaError(error: unknown): boolean {
+  if (!error) return false;
+  if (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'QuotaExceededError') {
+    return true;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('QuotaExceededError') || message.includes('quota');
+}
+
+function pruneColoredIconCache(cache: ColoredIconCache): ColoredIconCache {
+  const entries = Object.entries(cache)
+    .filter(([, value]) => Date.now() - value.generatedAt <= COLORED_ICON_CACHE_MAX_AGE_MS)
+    .sort((a, b) => a[1].generatedAt - b[1].generatedAt);
+
+  const pruned: ColoredIconCache = Object.fromEntries(entries);
+  let serialized = JSON.stringify(pruned);
+
+  while (
+    entries.length > 0 &&
+    (Object.keys(pruned).length > COLORED_ICON_CACHE_MAX_ITEMS ||
+      serialized.length > COLORED_ICON_CACHE_MAX_BYTES)
+  ) {
+    const [oldestKey] = entries.shift() as [string, ColoredIconCache[string]];
+    delete pruned[oldestKey];
+    serialized = JSON.stringify(pruned);
+  }
+
+  return pruned;
+}
+
+function persistColoredIconCache(cache: ColoredIconCache) {
+  try {
+    localStorage.setItem(COLORED_ICONS_STORAGE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    if (isQuotaError(error)) {
+      const entries = Object.entries(cache).sort((a, b) => a[1].generatedAt - b[1].generatedAt);
+      const keepFrom = Math.floor(entries.length / 2);
+      const reduced = Object.fromEntries(entries.slice(keepFrom));
+      try {
+        localStorage.setItem(COLORED_ICONS_STORAGE_KEY, JSON.stringify(reduced));
+        return;
+      } catch (retryError) {
+        console.error('Failed to save colored icon to cache after pruning:', retryError);
+        return;
+      }
+    }
+    console.error('Failed to save colored icon to cache:', error);
+  }
+}
+
+function isColoredIconServerDisabled(): boolean {
+  try {
+    const untilRaw = localStorage.getItem(COLORED_ICON_SERVER_DISABLED_KEY);
+    if (!untilRaw) return false;
+    const until = Number(untilRaw);
+    if (!Number.isFinite(until)) {
+      localStorage.removeItem(COLORED_ICON_SERVER_DISABLED_KEY);
+      localStorage.removeItem(COLORED_ICON_SERVER_DISABLED_REASON_KEY);
+      return false;
+    }
+    if (Date.now() < until) return true;
+    localStorage.removeItem(COLORED_ICON_SERVER_DISABLED_KEY);
+    localStorage.removeItem(COLORED_ICON_SERVER_DISABLED_REASON_KEY);
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function disableColoredIconServer(reason: string) {
+  try {
+    localStorage.setItem(
+      COLORED_ICON_SERVER_DISABLED_KEY,
+      String(Date.now() + COLORED_ICON_SERVER_DISABLED_MS)
+    );
+    localStorage.setItem(COLORED_ICON_SERVER_DISABLED_REASON_KEY, reason);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function shouldDisableColoredIconServer(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('Public access is not permitted') ||
+    message.includes('AuthorizationPermissionMismatch') ||
+    message.includes('AuthenticationFailed') ||
+    message.includes('Permission')
+  );
+}
+
 /**
  * Save colored icon to cache
  */
@@ -43,9 +140,10 @@ function saveColoredIconToCache(colorVariantId: string, dataUri: string) {
       dataUri,
       generatedAt: Date.now()
     };
-    localStorage.setItem(COLORED_ICONS_STORAGE_KEY, JSON.stringify(cache));
+    const pruned = pruneColoredIconCache(cache);
+    persistColoredIconCache(pruned);
   } catch (error) {
-    console.error('Failed to save colored icon to cache:', error);
+    console.error('Failed to prepare colored icon cache:', error);
   }
 }
 
@@ -82,16 +180,24 @@ export async function generateColoredIcon(
 
     // Save to server (Azure Blob Storage)
     let blobUrl = icon.dataUri;
-    try {
-      const saveResult = await saveColoredIcon({
-        colorVariantId: material.colorVariantId,
-        imageDataUri: icon.dataUri
-      });
-      blobUrl = saveResult.blobUrl;
-      console.log(`Colored icon saved to server: ${material.colorVariantId} -> ${blobUrl}`);
-    } catch (saveError) {
-      console.error(`Failed to save colored icon to server (using local cache):`, saveError);
-      // Continue with local cache even if server save fails
+    if (!isColoredIconServerDisabled()) {
+      try {
+        const saveResult = await saveColoredIcon({
+          colorVariantId: material.colorVariantId,
+          imageDataUri: icon.dataUri
+        });
+        blobUrl = saveResult.blobUrl;
+        console.log(`Colored icon saved to server: ${material.colorVariantId} -> ${blobUrl}`);
+      } catch (saveError) {
+        if (shouldDisableColoredIconServer(saveError)) {
+          const reason = saveError instanceof Error ? saveError.message : String(saveError);
+          disableColoredIconServer(reason);
+          console.warn('Colored icon server disabled temporarily:', reason);
+        } else {
+          console.error(`Failed to save colored icon to server (using local cache):`, saveError);
+        }
+        // Continue with local cache even if server save fails
+      }
     }
 
     // Also save to local cache as backup
@@ -176,21 +282,8 @@ export function getCachedColoredIcon(colorVariantId: string): string | null {
  */
 export function cleanupOldColoredIcons() {
   try {
-    const cache = loadColoredIconCache();
-    const maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-    const now = Date.now();
-
-    let cleaned = false;
-    Object.keys(cache).forEach(key => {
-      if (now - cache[key].generatedAt > maxAge) {
-        delete cache[key];
-        cleaned = true;
-      }
-    });
-
-    if (cleaned) {
-      localStorage.setItem(COLORED_ICONS_STORAGE_KEY, JSON.stringify(cache));
-    }
+    const cache = pruneColoredIconCache(loadColoredIconCache());
+    persistColoredIconCache(cache);
   } catch (error) {
     console.error('Failed to cleanup old colored icons:', error);
   }

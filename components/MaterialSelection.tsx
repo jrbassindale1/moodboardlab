@@ -7,6 +7,7 @@ import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
+import { getMaterialIconId } from '../utils/materialIconMapping';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -1090,7 +1091,9 @@ IMPORTANT:
               <>
                 {/* Product Grid */}
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
-                  {sortedMaterials.map((mat) => (
+                  {sortedMaterials.map((mat) => {
+                    const iconId = getMaterialIconId(mat.id);
+                    return (
                     <article key={mat.id} className="group space-y-3">
                       {/* Product image/swatch */}
                       <div className="aspect-square bg-arch-gray relative overflow-hidden border border-arch-line">
@@ -1098,9 +1101,9 @@ IMPORTANT:
                           <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
                         ) : (
                           <picture>
-                            <source srcSet={`/icons/${mat.id}.webp`} type="image/webp" />
+                            <source srcSet={`/icons/${iconId}.webp`} type="image/webp" />
                             <img
-                              src={`/icons/${mat.id}.png`}
+                              src={`/icons/${iconId}.png`}
                               alt={mat.name}
                               className="w-full h-full object-cover"
                               loading="lazy"
@@ -1151,7 +1154,8 @@ IMPORTANT:
                         Add to board
                       </button>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Empty state when no results */}

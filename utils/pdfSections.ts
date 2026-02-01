@@ -17,6 +17,85 @@ import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
 import { getCircularityIndicator, formatScore, LANDSCAPE_CARBON_CAP_HARD } from './sustainabilityScoring';
 import { isLandscapeMaterial, isHardLandscapeMaterial } from './lifecycleDurations';
+import { getMaterialIconId } from './materialIconMapping';
+
+type ElementGroupId = 'structure' | 'enclosure' | 'finishes' | 'landscape';
+
+const ELEMENT_GROUPS: { id: ElementGroupId; label: string }[] = [
+  { id: 'structure', label: 'Structure' },
+  { id: 'enclosure', label: 'Enclosure' },
+  { id: 'finishes', label: 'Finishes' },
+  { id: 'landscape', label: 'Landscape' },
+];
+
+const ELEMENT_CATEGORY_MAP: Record<ElementGroupId, Set<MaterialOption['category']>> = {
+  structure: new Set(['structure', 'exposed-structure']),
+  enclosure: new Set(['external', 'window', 'roof', 'insulation', 'soffit']),
+  finishes: new Set([
+    'floor',
+    'finish',
+    'wall-internal',
+    'ceiling',
+    'paint-wall',
+    'paint-ceiling',
+    'plaster',
+    'microcement',
+    'timber-panel',
+    'tile',
+    'wallpaper',
+    'acoustic-panel',
+    'timber-slat',
+    'joinery',
+    'fixture',
+    'door',
+    'balustrade',
+    'furniture',
+  ]),
+  landscape: new Set(['landscape', 'external-ground']),
+};
+
+function getElementGroupId(material: MaterialOption): ElementGroupId {
+  if (material.category === 'external-ground' || isLandscapeMaterial(material)) {
+    return 'landscape';
+  }
+  const category = material.category;
+  if (ELEMENT_CATEGORY_MAP.structure.has(category)) return 'structure';
+  if (ELEMENT_CATEGORY_MAP.enclosure.has(category)) return 'enclosure';
+  return 'finishes';
+}
+
+function groupMaterialsByElement(
+  materials: MaterialOption[]
+): { group: { id: ElementGroupId; label: string }; items: MaterialOption[] }[] {
+  const grouped = ELEMENT_GROUPS.map((group) => ({ group, items: [] as MaterialOption[] }));
+  const indexById = new Map<ElementGroupId, number>();
+  ELEMENT_GROUPS.forEach((group, idx) => indexById.set(group.id, idx));
+
+  materials.forEach((material) => {
+    const groupId = getElementGroupId(material);
+    const index = indexById.get(groupId) ?? 0;
+    grouped[index].items.push(material);
+  });
+
+  return grouped;
+}
+
+function drawGroupHeader(
+  ctx: PDFContext,
+  label: string,
+  tableStartX: number,
+  tableWidth: number
+): void {
+  ensureSpace(ctx, 14);
+  ctx.doc.setFillColor(246, 247, 249);
+  ctx.doc.rect(tableStartX, ctx.cursorY - 8, tableWidth, 10, 'F');
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(70);
+  ctx.doc.text(label, tableStartX + 4, ctx.cursorY);
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 12;
+}
 
 // PDF constants
 const MARGIN = 48;
@@ -31,11 +110,12 @@ const TRAFFIC_LIGHT_COLORS: Record<TrafficLight, [number, number, number]> = {
  * Tries webp first, then falls back to png
  */
 export async function fetchIconAsDataUri(materialId: string): Promise<string | null> {
+  const iconId = getMaterialIconId(materialId);
   const formats = ['webp', 'png'];
 
   for (const format of formats) {
     try {
-      const response = await fetch(`/icons/${materialId}.${format}`);
+      const response = await fetch(`/icons/${iconId}.${format}`);
       if (response.ok) {
         const blob = await response.blob();
         return new Promise((resolve) => {
@@ -255,136 +335,389 @@ const COMPLIANCE_BADGE_KEY: Array<{ key: ComplianceKey; code: string; label: str
 /**
  * Render Page 1: Client Summary
  */
-export function renderClientSummaryPage(
+function calculateProjectMetrics(
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>
+) {
+  let totalEmbodied = 0;
+  let bioBasedCount = 0;
+  let circularCount = 0;
+  let landscapeCount = 0;
+
+  materials.forEach((material) => {
+    const metric = metrics.get(material.id);
+    if (!metric) return;
+
+    totalEmbodied += metric.embodied_proxy;
+
+    const lowerName = material.name.toLowerCase();
+    const isBio =
+      lowerName.includes('timber') ||
+      lowerName.includes('wood') ||
+      lowerName.includes('lino') ||
+      lowerName.includes('cork') ||
+      lowerName.includes('hemp') ||
+      lowerName.includes('wool') ||
+      lowerName.includes('clt') ||
+      lowerName.includes('glulam');
+
+    if (isBio) bioBasedCount += 1;
+
+    if (metric.end_of_life_proxy <= 2.5) circularCount += 1;
+
+    if (isLandscapeMaterial(material)) landscapeCount += 1;
+  });
+
+  const bioRatio = materials.length > 0 ? bioBasedCount / materials.length : 0;
+  const circularRatio = materials.length > 0 ? circularCount / materials.length : 0;
+
+  let paletteType = 'Mixed Material Palette';
+  if (bioRatio > 0.4) paletteType = 'Bio-based / Hybrid Palette';
+  if (landscapeCount > 2) paletteType = 'Landscape-Integrated Palette';
+
+  return {
+    bioRatio,
+    circularRatio,
+    paletteType,
+  };
+}
+
+export function renderSpecifiersSnapshot(
   ctx: PDFContext,
-  summary: ClientSummary
+  moodboardImage: string | null,
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>
 ): void {
-  // Brand header
+  ctx.doc.setFillColor(245, 247, 250);
+  ctx.doc.rect(0, 0, ctx.pageWidth, 35, 'F');
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(18);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text('Sustainability Snapshot', ctx.margin, 20);
+
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(80);
+  const dateStr = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+  const metaX = ctx.pageWidth - ctx.margin;
+  ctx.doc.text(`DATE: ${dateStr}`, metaX, 15, { align: 'right' });
+  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 20, { align: 'right' });
+  ctx.doc.text('LOCATION: UK Context', metaX, 25, { align: 'right' });
+
+  ctx.cursorY = 50;
+
+  const imgSize = 100;
+  const imgX = (ctx.pageWidth - imgSize) / 2;
+
+  if (moodboardImage) {
+    try {
+      ctx.doc.addImage(moodboardImage, 'PNG', imgX, ctx.cursorY, imgSize, imgSize);
+    } catch (error) {
+      ctx.doc.setDrawColor(200);
+      ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize);
+      ctx.doc.text('Moodboard Image', imgX + 40, ctx.cursorY + 50);
+    }
+  } else {
+    ctx.doc.setFillColor(240);
+    ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize, 'F');
+    ctx.doc.setFontSize(10);
+    ctx.doc.setTextColor(150);
+    ctx.doc.text('No Image Available', ctx.pageWidth / 2, ctx.cursorY + 50, { align: 'center' });
+  }
+
+  ctx.cursorY += imgSize + 15;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(100);
-  ctx.doc.text('MOODBOARD-LAB.COM', ctx.pageWidth - ctx.margin, ctx.cursorY, {
-    align: 'right',
-  });
-  ctx.cursorY += 15;
-
-  // Title
   ctx.doc.setTextColor(0);
-  addHeading(ctx, 'Sustainability Summary', 20);
+  ctx.doc.text('Material Palette Composition', ctx.margin, ctx.cursorY);
+  ctx.cursorY += 8;
+
+  const colCount = 2;
+  const colWidth = (ctx.pageWidth - ctx.margin * 2) / colCount;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(60);
+
+  materials.forEach((material, idx) => {
+    const col = idx % colCount;
+    const row = Math.floor(idx / colCount);
+    const x = ctx.margin + col * colWidth;
+    const y = ctx.cursorY + row * 10;
+    const num = (idx + 1).toString().padStart(2, '0');
+    ctx.doc.text(`${num}. ${material.name}`, x, y);
+  });
+
+  const rows = Math.ceil(materials.length / colCount);
+  ctx.cursorY += rows * 10 + 15;
+
+  const calc = calculateProjectMetrics(materials, metrics);
+
+  ctx.doc.setDrawColor(34, 139, 34);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.setFillColor(246, 252, 246);
+  ctx.doc.roundedRect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, 35, 2, 2, 'FD');
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(34, 139, 34);
+  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + 10, ctx.cursorY + 10);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(40);
+
+  let insightText = `This configuration represents a ${calc.paletteType}. `;
+  if (calc.bioRatio > 0.3) {
+    insightText += 'It relies on bio-based materials, offering high carbon storage potential. ';
+  } else {
+    insightText += 'It relies on industrial finishes which require careful carbon management. ';
+  }
+  insightText += 'See Page 2 for critical hotspots and detailed strategy.';
+
+  const lines = ctx.doc.splitTextToSize(insightText, ctx.pageWidth - ctx.margin * 2 - 20);
+  ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY + 18);
+}
+
+export function renderStrategicOverview(
+  ctx: PDFContext,
+  _summary: ClientSummary,
+  materials: MaterialOption[],
+  metrics: Map<string, MaterialMetrics>
+): void {
+  ctx.doc.addPage();
+  ctx.cursorY = ctx.margin;
+
+  addHeading(ctx, 'Strategic Overview', 16);
   ctx.cursorY += 5;
 
-  const addSectionTitle = (text: string) => {
+  const dialY = ctx.cursorY;
+  const colWidth = (ctx.pageWidth - ctx.margin * 2) / 3;
+  const calc = calculateProjectMetrics(materials, metrics);
+
+  const drawDial = (label: string, value: string, subtext: string, x: number) => {
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(11);
-    ctx.doc.setTextColor(0);
-    ctx.doc.text(text, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 12;
-  };
-
-  const addBodyText = (text: string) => {
-    ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(60);
-    const lines = ctx.doc.splitTextToSize(text, ctx.pageWidth - ctx.margin * 2);
-    lines.forEach((line: string) => {
-      ctx.doc.text(line, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 11;
-    });
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 4;
-  };
+    ctx.doc.setTextColor(100);
+    ctx.doc.text(label.toUpperCase(), x, dialY);
 
-  const addSmallBullet = (text: string) => {
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(14);
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(value, x, dialY + 10);
+
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(60);
-    const maxWidth = ctx.pageWidth - ctx.margin * 2 - 12;
-    const lines = ctx.doc.splitTextToSize(text, maxWidth);
-    ctx.doc.text('•', ctx.margin, ctx.cursorY);
-    lines.forEach((line: string, idx: number) => {
-      ctx.doc.text(line, ctx.margin + 10, ctx.cursorY + idx * 10);
-    });
-    ctx.cursorY += lines.length * 10 + 2;
-    ctx.doc.setTextColor(0);
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(subtext, x, dialY + 18);
+
+    const barWidth = 40;
+    ctx.doc.setFillColor(230);
+    ctx.doc.rect(x, dialY + 24, barWidth, 3, 'F');
+
+    if (value === 'High' || value === 'Good') ctx.doc.setFillColor(34, 139, 34);
+    else if (value === 'Medium') ctx.doc.setFillColor(255, 191, 0);
+    else ctx.doc.setFillColor(220, 53, 69);
+
+    const fillW = value === 'High' ? barWidth : value === 'Medium' ? barWidth * 0.6 : barWidth * 0.3;
+    ctx.doc.rect(x, dialY + 24, fillW, 3, 'F');
   };
 
-  // Section 1: What this report is
-  addSectionTitle('What this report is');
-  addBodyText(
-    'This is a concept-stage sustainability insight report generated from the selected material palette. ' +
-      'It is designed to support early design decisions, highlight carbon drivers, and identify where specification choices matter most.'
+  const avgEmbodied =
+    materials.length > 0
+      ? Array.from(metrics.values()).reduce((a, b) => a + b.embodied_proxy, 0) / materials.length
+      : 0;
+  let effLabel = 'Medium';
+  if (avgEmbodied < 2.5) effLabel = 'High';
+  if (avgEmbodied > 3.8) effLabel = 'Low';
+  drawDial(
+    'Production Impact',
+    effLabel === 'Low' ? 'High' : effLabel === 'High' ? 'Low' : 'Medium',
+    'A1-A3 Manufacturing',
+    ctx.margin
   );
 
-  // Section 2: What this report is not
-  addSectionTitle('What this report is not');
-  addBodyText(
-    'This is not a formal Life Cycle Assessment (LCA), carbon calculation, or EPD-based compliance report. ' +
-      'It does not replace quantity-based modelling or consultant-led assessments at later stages.'
-  );
+  let circLabel = 'Medium';
+  if (calc.circularRatio > 0.6) circLabel = 'High';
+  if (calc.circularRatio < 0.3) circLabel = 'Low';
+  drawDial('Circularity', circLabel, 'Reuse Potential', ctx.margin + colWidth);
 
-  // Section 3: How the scoring works
-  addSectionTitle('How to read the scores');
-  addSmallBullet('Impact scores run from 1 (very low) to 5 (very high).');
-  addSmallBullet('Scores are relative within this palette, not absolute carbon values.');
-  addSmallBullet('Confidence reflects data availability at concept stage.');
-  addSmallBullet('Landscape systems are treated differently to industrial materials.');
-  addBodyText('Scores highlight where to focus effort, not exact emissions.');
+  const bioLabel = calc.bioRatio > 0.3 ? 'High' : calc.bioRatio > 0.1 ? 'Medium' : 'Low';
+  drawDial('Biogenic Carbon', bioLabel, 'Storage Potential', ctx.margin + colWidth * 2);
 
-  // Section 4: How to use this report
-  addSectionTitle('How to use this report');
-  addSmallBullet('Use the dashboard to identify dominant carbon contributors.');
-  addSmallBullet('Use material pages to understand why a material scores highly.');
-  addSmallBullet('Use design actions to adjust the palette before fixing quantities.');
-  addSmallBullet('Revisit findings once specifications and quantities are defined.');
+  ctx.cursorY += 45;
 
-  // Divider before summary content
-  ctx.doc.setDrawColor(220);
-  ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin, ctx.cursorY);
-  ctx.cursorY += 12;
+  const halfWidth = (ctx.pageWidth - ctx.margin * 2) / 2 - 5;
+  const rightColX = ctx.margin + halfWidth + 10;
 
-  // What this palette achieves
-  addHeading(ctx, 'What this palette achieves', 13);
-  summary.achievements.slice(0, 2).forEach((achievement) => {
-    addBullet(ctx, achievement, 11);
-  });
-  ctx.cursorY += 10;
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(11);
+  ctx.doc.setTextColor(34, 139, 34);
+  ctx.doc.text('Project Strengths', ctx.margin, ctx.cursorY);
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 8;
 
-  // Key risks and mitigations
-  addHeading(ctx, 'Key risks and how we mitigate', 13);
-  summary.risks_and_mitigations.slice(0, 2).forEach((risk) => {
-    addBullet(ctx, risk, 11);
-  });
-  ctx.cursorY += 10;
-
-  // Evidence priorities
-  addHeading(ctx, 'Evidence priorities', 13);
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(80);
-  ctx.doc.text(
-    'See Compliance Readiness Summary for prioritised evidence items and the badge key.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.doc.setTextColor(0);
-  ctx.cursorY += 14;
+  ctx.doc.setFontSize(9);
 
-  // Confidence statement
-  ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(80);
-  const confidenceText = summary.confidence_statement.split('. ')[0] || summary.confidence_statement;
-  const confLines = ctx.doc.splitTextToSize(
-    confidenceText,
-    ctx.pageWidth - ctx.margin * 2
-  );
-  confLines.forEach((line: string) => {
-    ensureSpace(ctx, 12);
-    ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 12;
+  const strengths: string[] = [];
+  if (calc.bioRatio > 0.3)
+    strengths.push(
+      'Bio-based Core: Significant use of renewable materials (timber/natural fibres) actively stores carbon.'
+    );
+  if (calc.circularRatio > 0.5)
+    strengths.push('Design for Reuse: Mechanical fixings in key layers allow for future disassembly.');
+  if (strengths.length === 0)
+    strengths.push('Durability: Robust material palette suitable for long-life application.');
+
+  strengths.forEach((strength) => {
+    const lines = ctx.doc.splitTextToSize(`• ${strength}`, halfWidth);
+    ctx.doc.text(lines, ctx.margin, ctx.cursorY);
+    ctx.cursorY += lines.length * 10 + 2;
   });
+
+  const winEndY = ctx.cursorY;
+  ctx.cursorY = dialY + 45;
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(11);
+  ctx.doc.setTextColor(220, 53, 69);
+  ctx.doc.text('Project Watch-outs', rightColX, ctx.cursorY);
   ctx.doc.setTextColor(0);
+  ctx.cursorY += 8;
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+
+  const watchouts: string[] = [];
+  const highReplacementItems = materials.filter((material) => {
+    const metric = metrics.get(material.id);
+    return metric && metric.lifecycle_multiplier >= 3;
+  });
+
+  if (highReplacementItems.length > 0) {
+    watchouts.push(
+      'Recurring Carbon: Short-lifespan finishes (e.g. flooring) will multiply embodied carbon over 60 years.'
+    );
+  }
+
+  const heavyItems = materials.filter((material) => {
+    const metric = metrics.get(material.id);
+    return metric && metric.embodied_proxy > 4;
+  });
+  if (heavyItems.length > 0) {
+    watchouts.push(
+      'Production Spikes: Key structural or cladding elements rely on energy-intensive manufacturing.'
+    );
+  }
+
+  watchouts.forEach((watchout) => {
+    const lines = ctx.doc.splitTextToSize(`• ${watchout}`, halfWidth);
+    ctx.doc.text(lines, rightColX, ctx.cursorY);
+    ctx.cursorY += lines.length * 10 + 2;
+  });
+
+  ctx.cursorY = Math.max(winEndY, ctx.cursorY) + 10;
+
+  addHeading(ctx, 'Priority Specification Notes', 12);
+
+  const tableY = ctx.cursorY;
+  const col1 = ctx.margin;
+  const col2 = ctx.margin + 60;
+  const col3 = ctx.margin + 120;
+  const tableW = ctx.pageWidth - ctx.margin * 2;
+
+  ctx.doc.setFillColor(245);
+  ctx.doc.rect(col1, tableY - 5, tableW, 8, 'F');
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(80);
+  ctx.doc.text('MATERIAL', col1 + 2, tableY);
+  ctx.doc.text('THE RISK / DRIVER', col2, tableY);
+  ctx.doc.text('RECOMMENDED ACTION', col3, tableY);
+
+  ctx.cursorY += 10;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setTextColor(0);
+
+  const riskItems = materials
+    .map((material) => {
+      const metric = metrics.get(material.id);
+      if (!metric) return { material, score: 0, reason: '', action: '' };
+
+      let riskScore = 0;
+      let reason = '';
+      let action = '';
+
+      if (metric.lifecycle_multiplier >= 3) {
+        riskScore += 10;
+        reason = `Frequent replacement (~${Math.round(60 / metric.lifecycle_multiplier)} yr cycle)`;
+        action = 'Specify loose-lay / adhesive-free to allow clean removal.';
+      } else if (metric.embodied_proxy > 3.5) {
+        riskScore += 5;
+        reason = 'High production energy intensity';
+        action = 'Target high recycled content (>30%) or low-carbon fuel mfg.';
+      } else if (metric.end_of_life_proxy > 3.5) {
+        riskScore += 3;
+        reason = 'Difficult to recycle (Composite)';
+        action = 'Ensure mechanical fixings to allow material separation.';
+      }
+
+      return { material, score: riskScore, reason, action };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
+  riskItems.forEach((item) => {
+    if (item.score === 0) return;
+
+    const rowHeight = 12;
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.text(item.material.name, col1 + 2, ctx.cursorY);
+
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    ctx.doc.text(item.reason, col2, ctx.cursorY);
+
+    const actionLines = ctx.doc.splitTextToSize(
+      item.action,
+      ctx.pageWidth - ctx.margin - col3
+    );
+    ctx.doc.text(actionLines, col3, ctx.cursorY);
+
+    ctx.doc.setDrawColor(230);
+    ctx.doc.line(col1, ctx.cursorY + 4, col1 + tableW, ctx.cursorY + 4);
+
+    ctx.cursorY += Math.max(rowHeight, actionLines.length * 5 + 6);
+  });
+
+  const footerH = 30;
+  ctx.cursorY = ctx.pageHeight - ctx.margin - footerH;
+
+  ctx.doc.setFillColor(245);
+  ctx.doc.rect(0, ctx.cursorY - 5, ctx.pageWidth, footerH + 40, 'F');
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(100);
+  ctx.doc.text('HOW TO USE THIS REPORT:', ctx.margin, ctx.cursorY + 5);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.text(
+    '• Scores (1-5) are relative. A high score often indicates frequency of replacement, not toxicity.',
+    ctx.margin,
+    ctx.cursorY + 15
+  );
+  ctx.doc.text(
+    "• 'Landscape' items are scored on Biodiversity contribution, not just carbon.",
+    ctx.margin,
+    ctx.cursorY + 22
+  );
+  ctx.doc.text(
+    '• Abbreviations: A1-A3 (Production), B (In-Use), C (End of Life).',
+    ctx.margin + 100,
+    ctx.cursorY + 15
+  );
 }
 
 /**
@@ -495,11 +828,22 @@ export function renderComparativeDashboard(
   renderEpdLifecycleMapping(ctx);
 
   // ===== TABLE 1: Impact & Rating =====
-  addHeading(ctx, 'Impact Assessment', 12);
+  addHeading(ctx, 'Impact Assessment (Grouped by Element)', 12);
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(90);
+  ctx.doc.text(
+    'Grouped to avoid cross-comparing structural necessities with landscape or finish items.',
+    ctx.margin,
+    ctx.cursorY
+  );
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 10;
 
   const impactColWidths = [120, 55, 50, 45, 45, 45, 45];
   const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Module D*', 'Conf.', 'Rating'];
   const tableStartX = ctx.margin;
+  const impactTableWidth = impactColWidths.reduce((sum, width) => sum + width, 0);
 
   // Table header
   ctx.doc.setFont('helvetica', 'bold');
@@ -522,48 +866,53 @@ export function renderComparativeDashboard(
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(0);
 
-  materials.forEach((material) => {
-    ensureSpace(ctx, 14);
-    const metric = metrics.get(material.id);
-    if (!metric) return;
+  groupMaterialsByElement(materials).forEach(({ group, items }) => {
+    if (items.length === 0) return;
+    drawGroupHeader(ctx, group.label, tableStartX, impactTableWidth);
+    items.forEach((material) => {
+      ensureSpace(ctx, 14);
+      const metric = metrics.get(material.id);
+      if (!metric) return;
 
-    xPos = tableStartX;
+      xPos = tableStartX;
 
-    // Material name (truncated)
-    const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
-    ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-    xPos += impactColWidths[0];
+      // Material name (truncated)
+      const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
+      ctx.doc.text(truncatedName, xPos, ctx.cursorY);
+      xPos += impactColWidths[0];
 
-    // Scores
-    ctx.doc.text(formatScore(metric.embodied_proxy), xPos, ctx.cursorY);
-    xPos += impactColWidths[1];
+      // Scores
+      ctx.doc.text(formatScore(metric.embodied_proxy), xPos, ctx.cursorY);
+      xPos += impactColWidths[1];
 
-    ctx.doc.text(formatScore(metric.in_use_proxy), xPos, ctx.cursorY);
-    xPos += impactColWidths[2];
+      ctx.doc.text(formatScore(metric.in_use_proxy), xPos, ctx.cursorY);
+      xPos += impactColWidths[2];
 
-    ctx.doc.text(formatScore(metric.end_of_life_proxy), xPos, ctx.cursorY);
-    xPos += impactColWidths[3];
+      ctx.doc.text(formatScore(metric.end_of_life_proxy), xPos, ctx.cursorY);
+      xPos += impactColWidths[3];
 
-    ctx.doc.text(formatScore(metric.benefit_score), xPos, ctx.cursorY);
-    xPos += impactColWidths[4];
+      ctx.doc.text(formatScore(metric.benefit_score), xPos, ctx.cursorY);
+      xPos += impactColWidths[4];
 
-    // Confidence
-    const confPercent = Math.round(metric.confidence_score * 100);
-    ctx.doc.text(`${confPercent}%`, xPos, ctx.cursorY);
-    xPos += impactColWidths[5];
+      // Confidence
+      const confPercent = Math.round(metric.confidence_score * 100);
+      ctx.doc.text(`${confPercent}%`, xPos, ctx.cursorY);
+      xPos += impactColWidths[5];
 
-    // Traffic light
-    drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, metric.traffic_light, 4);
+      // Traffic light
+      drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, metric.traffic_light, 4);
 
-    ctx.cursorY += 13;
+      ctx.cursorY += 13;
+    });
   });
 
   // ===== TABLE 2: Lifecycle & Durability =====
   ctx.cursorY += 15;
-  addHeading(ctx, 'Lifecycle & Durability', 12);
+  addHeading(ctx, 'Lifecycle & Durability (Grouped by Element)', 12);
 
   const lifecycleColWidths = [120, 65, 70, 65, 100];
   const lifecycleHeaders = ['Material', 'Service Life', 'Replacements*', 'Circularity', 'Carbon Payback'];
+  const lifecycleTableWidth = lifecycleColWidths.reduce((sum, width) => sum + width, 0);
 
   // Table header
   ctx.doc.setFont('helvetica', 'bold');
@@ -584,68 +933,72 @@ export function renderComparativeDashboard(
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(0);
 
-  materials.forEach((material) => {
-    ensureSpace(ctx, 14);
-    const metric = metrics.get(material.id);
-    if (!metric) return;
+  groupMaterialsByElement(materials).forEach(({ group, items }) => {
+    if (items.length === 0) return;
+    drawGroupHeader(ctx, group.label, tableStartX, lifecycleTableWidth);
+    items.forEach((material) => {
+      ensureSpace(ctx, 14);
+      const metric = metrics.get(material.id);
+      if (!metric) return;
 
-    xPos = tableStartX;
+      xPos = tableStartX;
 
-    // Material name
-    const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
-    ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-    xPos += lifecycleColWidths[0];
+      // Material name
+      const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
+      ctx.doc.text(truncatedName, xPos, ctx.cursorY);
+      xPos += lifecycleColWidths[0];
 
-    // Service life
-    const lifeText = metric.service_life >= 100 ? '100+ years' : `${metric.service_life} years`;
-    ctx.doc.text(lifeText, xPos, ctx.cursorY);
-    xPos += lifecycleColWidths[1];
+      // Service life
+      const lifeText = metric.service_life >= 100 ? '100+ years' : `${metric.service_life} years`;
+      ctx.doc.text(lifeText, xPos, ctx.cursorY);
+      xPos += lifecycleColWidths[1];
 
-    // Replacement cycles (over 60-year building life)
-    // Landscape materials show "establishment + maintenance" not "replacements"
-    const isLandscape = isLandscapeMaterial(material);
-    const isPartial = !Number.isInteger(metric.lifecycle_multiplier);
-    const replValue = metric.lifecycle_multiplier.toString();
-    let replText: string;
-    if (isLandscape) {
-      replText = `${replValue}x (est. + maint.)`; // Landscape: establishment + maintenance
-    } else if (metric.lifecycle_multiplier === 1) {
-      replText = '1x (full life)';
-    } else {
-      replText = `${replValue}x${isPartial ? ' (partial system)' : ''}`;
-    }
-    ctx.doc.text(replText, xPos, ctx.cursorY);
-    xPos += lifecycleColWidths[2];
-
-    // Circularity indicator
-    const circ = getCircularityIndicator(metric.end_of_life_proxy);
-    const circText = circ === 'high' ? 'High' : circ === 'medium' ? 'Medium' : 'Low';
-    ctx.doc.text(circText, xPos, ctx.cursorY);
-    xPos += lifecycleColWidths[3];
-
-    // Carbon payback
-    if (metric.carbon_payback) {
-      const payback = metric.carbon_payback;
-      const paybackText = payback.years === 0
-        ? 'Immediate'
-        : payback.rangeYears
-        ? `~${payback.rangeYears[0]}-${payback.rangeYears[1]} years`
-        : `~${payback.years} years`;
-      // Color code based on payback
-      if (payback.years === 0) {
-        ctx.doc.setTextColor(34, 139, 34); // Green
-      } else if (payback.years <= 5) {
-        ctx.doc.setTextColor(0, 128, 0);
+      // Replacement cycles (over 60-year building life)
+      // Landscape materials show "establishment + maintenance" not "replacements"
+      const isLandscape = isLandscapeMaterial(material);
+      const isPartial = !Number.isInteger(metric.lifecycle_multiplier);
+      const replValue = metric.lifecycle_multiplier.toString();
+      let replText: string;
+      if (isLandscape) {
+        replText = `${replValue}x (est. + maint.)`; // Landscape: establishment + maintenance
+      } else if (metric.lifecycle_multiplier === 1) {
+        replText = '1x (full life)';
+      } else {
+        replText = `${replValue}x${isPartial ? ' (partial system)' : ''}`;
       }
-      ctx.doc.text(paybackText, xPos, ctx.cursorY);
-      ctx.doc.setTextColor(0);
-    } else {
-      ctx.doc.setTextColor(150);
-      ctx.doc.text('No payback claim', xPos, ctx.cursorY);
-      ctx.doc.setTextColor(0);
-    }
+      ctx.doc.text(replText, xPos, ctx.cursorY);
+      xPos += lifecycleColWidths[2];
 
-    ctx.cursorY += 13;
+      // Circularity indicator
+      const circ = getCircularityIndicator(metric.end_of_life_proxy);
+      const circText = circ === 'high' ? 'High' : circ === 'medium' ? 'Medium' : 'Low';
+      ctx.doc.text(circText, xPos, ctx.cursorY);
+      xPos += lifecycleColWidths[3];
+
+      // Carbon payback
+      if (metric.carbon_payback) {
+        const payback = metric.carbon_payback;
+        const paybackText = payback.years === 0
+          ? 'Immediate'
+          : payback.rangeYears
+          ? `~${payback.rangeYears[0]}-${payback.rangeYears[1]} years`
+          : `~${payback.years} years`;
+        // Color code based on payback
+        if (payback.years === 0) {
+          ctx.doc.setTextColor(34, 139, 34); // Green
+        } else if (payback.years <= 5) {
+          ctx.doc.setTextColor(0, 128, 0);
+        }
+        ctx.doc.text(paybackText, xPos, ctx.cursorY);
+        ctx.doc.setTextColor(0);
+      } else {
+        ctx.doc.setTextColor(150);
+        ctx.doc.text('No payback claim', xPos, ctx.cursorY);
+        ctx.doc.setTextColor(0);
+      }
+
+      ctx.cursorY += 13;
+    });
   });
 
   // Legend
@@ -2499,7 +2852,7 @@ export function addDisclaimer(ctx: PDFContext): void {
   });
 
   ctx.cursorY += 5;
-  ctx.doc.setFont('helvetica', 'medium');
+  ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Generated with Moodboard-Lab', ctx.margin, ctx.cursorY);
