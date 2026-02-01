@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
 import { MATERIAL_PALETTE } from '../constants';
-import { MATERIAL_LIFECYCLE_PROFILES } from '../lifecycleProfiles';
+import {
+  MATERIAL_LIFECYCLE_PROFILES,
+  LifecycleProfile,
+  LifecycleStageKey,
+} from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import { generateMaterialIcon, loadMaterialIcons } from '../utils/materialIconGenerator';
@@ -202,9 +206,55 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
+const LIFECYCLE_STAGE_ORDER: LifecycleStageKey[] = [
+  'raw',
+  'manufacturing',
+  'transport',
+  'installation',
+  'inUse',
+  'maintenance',
+  'endOfLife',
+];
+
+const deriveHotspotsFromProfile = (profile?: LifecycleProfile | null) => {
+  if (!profile) return [];
+  return LIFECYCLE_STAGE_ORDER
+    .map((stage) => ({
+      stage,
+      score: profile[stage]?.impact ?? 0,
+      confidence: profile[stage]?.confidence ?? 'medium',
+    }))
+    .filter((entry) => entry.score >= 3)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+};
+
+const defaultHotspotReason = (stage: LifecycleStageKey, materialName?: string) => {
+  const subject = materialName ? materialName.toLowerCase() : 'this material';
+  switch (stage) {
+    case 'raw':
+      return `Raw material intensity for ${subject}`;
+    case 'manufacturing':
+      return `Manufacturing intensity for ${subject}`;
+    case 'transport':
+      return `Transport and logistics for ${subject}`;
+    case 'installation':
+      return `Installation complexity for ${subject}`;
+    case 'inUse':
+      return `In-use performance for ${subject}`;
+    case 'maintenance':
+      return `Maintenance and replacement for ${subject}`;
+    case 'endOfLife':
+      return `End-of-life processing for ${subject}`;
+    default:
+      return `Lifecycle impact for ${subject}`;
+  }
+};
+
 const buildSustainabilityPayload = (materials: BoardItem[]) =>
   materials.map((mat) => {
     const profile = MATERIAL_LIFECYCLE_PROFILES[mat.id];
+    const metrics = profile ? calculateMaterialMetrics(profile, [], mat) : null;
     return {
       id: mat.id,
       name: mat.name,
@@ -212,7 +262,11 @@ const buildSustainabilityPayload = (materials: BoardItem[]) =>
       finish: mat.finish,
       description: mat.description,
       tone: mat.tone,
-      lifecycleFingerprint: profile || null
+      lifecycleFingerprint: profile || null,
+      hotspotCandidates: deriveHotspotsFromProfile(profile),
+      serviceLifeYears: metrics?.service_life ?? null,
+      replacementCycleYears: metrics?.replacement_cycle ?? null,
+      lifecycleMultiplier: metrics?.lifecycle_multiplier ?? null
     };
   });
 
@@ -220,11 +274,14 @@ const buildSustainabilityPromptText = (materialsPayload: ReturnType<typeof build
 
 Return ONLY valid JSON. No markdown. No prose outside JSON.
 
-You are given selected materials. Each material includes a lifecycleFingerprint with impact (1–5) and confidence (high/medium/low) for stages:
-raw, manufacturing, transport, installation, inUse, maintenance, endOfLife.
+You are given selected materials. Each material includes:
+- lifecycleFingerprint with impact (1–5) and confidence (high/medium/low) for stages: raw, manufacturing, transport, installation, inUse, maintenance, endOfLife.
+- hotspotCandidates (precomputed; must be used as the ONLY hotspots).
+- serviceLifeYears / replacementCycleYears / lifecycleMultiplier (precomputed; do not change).
 
 IMPORTANT RULES:
 - Do NOT change or recalculate any fingerprint scores.
+- Do NOT add new hotspot stages or scores beyond hotspotCandidates.
 - Do NOT invent kgCO2e, EPD figures, or percentage splits.
 - Your role is to interpret the fingerprint for designers and give practical actions.
 - ALWAYS include specific lifecycle stage names (raw/manufacturing/transport/installation/inUse/maintenance/endOfLife) when discussing impacts.
@@ -272,6 +329,7 @@ Output schema:
 }
 
 Guidance:
+- Use hotspotCandidates as the hotspot list. Copy stage and score, only add the reason.
 - Include 1-3 hotspots per material, focusing on stages with impact >= 3.
 - Include at least 1 design lever per material.
 - For benefits: score biodiversity/circularity/durability based on material properties.
@@ -1974,26 +2032,40 @@ ${JSON.stringify(summaryContext, null, 2)}`;
           const parsed = JSON.parse(cleaned);
           const items = parsed?.items;
           if (Array.isArray(items) && items.length > 0) {
+            const hotspotCandidatesById = new Map<string, { stage: LifecycleStageKey; score: number }[]>();
+            sustainabilityPayload.forEach((entry) => {
+              const candidates = Array.isArray(entry.hotspotCandidates) ? entry.hotspotCandidates : [];
+              hotspotCandidatesById.set(String(entry.id), candidates);
+            });
             // Parse enhanced sustainability insights with new schema
             const validated: SustainabilityInsight[] = items.map((item: any) => {
-              // Parse hotspots - handle both old string[] and new object[] format
-              const hotspots: Hotspot[] = Array.isArray(item.hotspots)
-                ? item.hotspots.map((h: any) => {
-                    if (typeof h === 'string') {
-                      // Legacy format - convert string to hotspot object
-                      return {
-                        stage: 'manufacturing' as const,
-                        score: 3 as const,
-                        reason: h,
-                      };
-                    }
-                    return {
-                      stage: h.stage || 'manufacturing',
-                      score: Number(h.score) || 3,
-                      reason: String(h.reason || ''),
-                    };
-                  })
-                : [];
+              const rawHotspots = Array.isArray(item.hotspots) ? item.hotspots : [];
+              const reasonByStage = new Map<string, string>();
+              const legacyReasons: string[] = [];
+              rawHotspots.forEach((h: any) => {
+                if (typeof h === 'string') {
+                  legacyReasons.push(h);
+                  return;
+                }
+                if (h && h.stage && h.reason) {
+                  reasonByStage.set(String(h.stage), String(h.reason));
+                }
+              });
+              const materialForConsequences = board.find(m => m.id === item.id);
+              const computedHotspots = hotspotCandidatesById.get(String(item.id)) || [];
+              const hotspots: Hotspot[] = computedHotspots.map((computed, idx) => {
+                const fallbackLegacy = legacyReasons[idx];
+                const reason =
+                  reasonByStage.get(computed.stage) ||
+                  (rawHotspots[idx] && typeof rawHotspots[idx] === 'object' ? String(rawHotspots[idx].reason || '') : '') ||
+                  fallbackLegacy ||
+                  defaultHotspotReason(computed.stage, materialForConsequences?.name);
+                return {
+                  stage: computed.stage,
+                  score: Number(computed.score) || 3,
+                  reason: reason,
+                };
+              });
 
               // Parse UK checks - handle both old string[] and new object[] format
               const ukChecks: UKCheck[] = Array.isArray(item.ukChecks)
@@ -2028,7 +2100,6 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                 : [];
 
               // Generate design consequences from hotspots and material type
-              const materialForConsequences = board.find(m => m.id === item.id);
               const design_risk = generateDesignRisk(hotspots, materialForConsequences);
               const design_response = generateDesignResponse(hotspots, materialForConsequences);
 
