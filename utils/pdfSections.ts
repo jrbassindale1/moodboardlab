@@ -388,79 +388,97 @@ export function renderSpecifiersSnapshot(
   materials: MaterialOption[],
   metrics: Map<string, MaterialMetrics>
 ): void {
-  ctx.doc.setFillColor(245, 247, 250);
-  ctx.doc.rect(0, 0, ctx.pageWidth, 35, 'F');
+  const headerHeight = 40;
+  ctx.doc.setFillColor(243, 244, 246);
+  ctx.doc.rect(0, 0, ctx.pageWidth, headerHeight, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(18);
   ctx.doc.setTextColor(0);
-  ctx.doc.text('Sustainability Snapshot', ctx.margin, 20);
+  ctx.doc.text('Sustainability Snapshot', ctx.margin, 25);
 
   ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(80);
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setTextColor(102, 102, 102);
   const dateStr = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
   const metaX = ctx.pageWidth - ctx.margin;
-  ctx.doc.text(`DATE: ${dateStr}`, metaX, 15, { align: 'right' });
-  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 20, { align: 'right' });
-  ctx.doc.text('LOCATION: UK Context', metaX, 25, { align: 'right' });
+  ctx.doc.text(`DATE: ${dateStr}`, metaX, 16, { align: 'right' });
+  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 25, { align: 'right' });
+  ctx.doc.text('LOCATION: UK Context', metaX, 34, { align: 'right' });
 
-  ctx.cursorY = 50;
+  ctx.cursorY = headerHeight + 15;
 
-  const imgSize = 100;
+  const imgSize = 120;
   const imgX = (ctx.pageWidth - imgSize) / 2;
 
   if (moodboardImage) {
     try {
       ctx.doc.addImage(moodboardImage, 'PNG', imgX, ctx.cursorY, imgSize, imgSize);
     } catch (error) {
-      ctx.doc.setDrawColor(200);
-      ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize);
-      ctx.doc.text('Moodboard Image', imgX + 40, ctx.cursorY + 50);
+      ctx.doc.setFillColor(240);
+      ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize, 'F');
+      ctx.doc.setFontSize(10);
+      ctx.doc.setTextColor(150);
+      ctx.doc.text('Moodboard Image', ctx.pageWidth / 2, ctx.cursorY + 60, { align: 'center' });
     }
   } else {
     ctx.doc.setFillColor(240);
     ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize, 'F');
     ctx.doc.setFontSize(10);
     ctx.doc.setTextColor(150);
-    ctx.doc.text('No Image Available', ctx.pageWidth / 2, ctx.cursorY + 50, { align: 'center' });
+    ctx.doc.text('No Image Available', ctx.pageWidth / 2, ctx.cursorY + 60, { align: 'center' });
   }
+  ctx.doc.setDrawColor(229, 231, 235);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize);
 
-  ctx.cursorY += imgSize + 15;
+  ctx.cursorY += imgSize + 12;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Material Palette Composition', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 8;
+  ctx.doc.setDrawColor(229, 231, 235);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.line(ctx.margin, ctx.cursorY + 3, ctx.pageWidth - ctx.margin, ctx.cursorY + 3);
+  ctx.cursorY += 10;
 
-  const colCount = 2;
-  const colWidth = (ctx.pageWidth - ctx.margin * 2) / colCount;
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(60);
+  const leftColX = ctx.margin;
+  const rightColX = ctx.pageWidth / 2 + 10;
+  const rowHeight = 10;
 
   materials.forEach((material, idx) => {
-    const col = idx % colCount;
-    const row = Math.floor(idx / colCount);
-    const x = ctx.margin + col * colWidth;
-    const y = ctx.cursorY + row * 10;
+    const col = idx % 2;
+    const row = Math.floor(idx / 2);
+    const x = col === 0 ? leftColX : rightColX;
+    const y = ctx.cursorY + row * rowHeight;
     const num = (idx + 1).toString().padStart(2, '0');
-    ctx.doc.text(`${num}. ${material.name}`, x, y);
+
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(9);
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(`${num}.`, x, y);
+
+    const numWidth = ctx.doc.getTextWidth(`${num}.`);
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setTextColor(51, 51, 51);
+    ctx.doc.text(material.name, x + numWidth + 4, y);
   });
 
-  const rows = Math.ceil(materials.length / colCount);
-  ctx.cursorY += rows * 10 + 15;
+  const rows = Math.ceil(materials.length / 2);
+  ctx.cursorY += rows * rowHeight + 12;
 
   const calc = calculateProjectMetrics(materials, metrics);
 
-  ctx.doc.setDrawColor(34, 139, 34);
-  ctx.doc.setLineWidth(0.5);
-  ctx.doc.setFillColor(246, 252, 246);
-  ctx.doc.roundedRect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, 35, 2, 2, 'FD');
+  const insightHeight = 35;
+  ctx.doc.setFillColor(240, 253, 244);
+  ctx.doc.rect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, insightHeight, 'F');
+  ctx.doc.setFillColor(22, 163, 74);
+  ctx.doc.rect(ctx.margin, ctx.cursorY, 4, insightHeight, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(34, 139, 34);
-  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + 10, ctx.cursorY + 10);
+  ctx.doc.setTextColor(22, 163, 74);
+  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + 10, ctx.cursorY + 12);
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(9);
@@ -475,7 +493,7 @@ export function renderSpecifiersSnapshot(
   insightText += 'See Page 2 for critical hotspots and detailed strategy.';
 
   const lines = ctx.doc.splitTextToSize(insightText, ctx.pageWidth - ctx.margin * 2 - 20);
-  ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY + 18);
+  ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY + 22);
 }
 
 export function renderStrategicOverview(
@@ -491,35 +509,39 @@ export function renderStrategicOverview(
   ctx.cursorY += 5;
 
   const dialY = ctx.cursorY;
-  const colWidth = (ctx.pageWidth - ctx.margin * 2) / 3;
+  const dialGap = 12;
+  const dialWidth = (ctx.pageWidth - ctx.margin * 2 - dialGap * 2) / 3;
   const calc = calculateProjectMetrics(materials, metrics);
 
-  const drawDial = (label: string, value: string, subtext: string, x: number) => {
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(100);
-    ctx.doc.text(label.toUpperCase(), x, dialY);
+  const drawDial = (label: string, value: string, subtext: string, x: number, highIsGood = true) => {
+    const labelY = dialY;
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(8);
+    ctx.doc.setTextColor(102, 102, 102);
+    ctx.doc.text(label.toUpperCase(), x, labelY);
+
+    const valueY = labelY + 14;
+    let circleColor: [number, number, number] = [220, 53, 69];
+    if (highIsGood) {
+      if (value === 'High' || value === 'Good') circleColor = [22, 163, 74];
+      else if (value === 'Medium') circleColor = [255, 191, 0];
+    } else {
+      if (value === 'Low') circleColor = [22, 163, 74];
+      else if (value === 'Medium') circleColor = [255, 191, 0];
+    }
+
+    ctx.doc.setFillColor(...circleColor);
+    ctx.doc.circle(x + 6, valueY - 4, 6, 'F');
 
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(14);
     ctx.doc.setTextColor(0);
-    ctx.doc.text(value, x, dialY + 10);
+    ctx.doc.text(value, x + 16, valueY);
 
-    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.setFontSize(8);
-    ctx.doc.setTextColor(80);
-    ctx.doc.text(subtext, x, dialY + 18);
-
-    const barWidth = 40;
-    ctx.doc.setFillColor(230);
-    ctx.doc.rect(x, dialY + 24, barWidth, 3, 'F');
-
-    if (value === 'High' || value === 'Good') ctx.doc.setFillColor(34, 139, 34);
-    else if (value === 'Medium') ctx.doc.setFillColor(255, 191, 0);
-    else ctx.doc.setFillColor(220, 53, 69);
-
-    const fillW = value === 'High' ? barWidth : value === 'Medium' ? barWidth * 0.6 : barWidth * 0.3;
-    ctx.doc.rect(x, dialY + 24, fillW, 3, 'F');
+    ctx.doc.setTextColor(136, 136, 136);
+    ctx.doc.text(subtext, x, valueY + 12);
   };
 
   const avgEmbodied =
@@ -533,21 +555,23 @@ export function renderStrategicOverview(
     'Production Impact',
     effLabel === 'Low' ? 'High' : effLabel === 'High' ? 'Low' : 'Medium',
     'A1-A3 Manufacturing',
-    ctx.margin
+    ctx.margin,
+    false
   );
 
   let circLabel = 'Medium';
   if (calc.circularRatio > 0.6) circLabel = 'High';
   if (calc.circularRatio < 0.3) circLabel = 'Low';
-  drawDial('Circularity', circLabel, 'Reuse Potential', ctx.margin + colWidth);
+  drawDial('Circularity', circLabel, 'Reuse Potential', ctx.margin + dialWidth + dialGap);
 
   const bioLabel = calc.bioRatio > 0.3 ? 'High' : calc.bioRatio > 0.1 ? 'Medium' : 'Low';
-  drawDial('Biogenic Carbon', bioLabel, 'Storage Potential', ctx.margin + colWidth * 2);
+  drawDial('Biogenic Carbon', bioLabel, 'Storage Potential', ctx.margin + (dialWidth + dialGap) * 2);
 
-  ctx.cursorY += 45;
+  ctx.cursorY += 52;
 
-  const halfWidth = (ctx.pageWidth - ctx.margin * 2) / 2 - 5;
-  const rightColX = ctx.margin + halfWidth + 10;
+  const columnGap = 15 * 2.83465;
+  const halfWidth = (ctx.pageWidth - ctx.margin * 2 - columnGap) / 2;
+  const rightColX = ctx.margin + halfWidth + columnGap;
 
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(11);
@@ -570,13 +594,18 @@ export function renderStrategicOverview(
     strengths.push('Durability: Robust material palette suitable for long-life application.');
 
   strengths.forEach((strength) => {
-    const lines = ctx.doc.splitTextToSize(`• ${strength}`, halfWidth);
-    ctx.doc.text(lines, ctx.margin, ctx.cursorY);
-    ctx.cursorY += lines.length * 10 + 2;
+    const lines = ctx.doc.splitTextToSize(strength, halfWidth - 12);
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setTextColor(22, 163, 74);
+    ctx.doc.text('+', ctx.margin, ctx.cursorY);
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY);
+    ctx.cursorY += lines.length * 10 + 6;
   });
 
   const winEndY = ctx.cursorY;
-  ctx.cursorY = dialY + 45;
+  ctx.cursorY = dialY + 52;
 
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(11);
@@ -611,33 +640,42 @@ export function renderStrategicOverview(
   }
 
   watchouts.forEach((watchout) => {
-    const lines = ctx.doc.splitTextToSize(`• ${watchout}`, halfWidth);
-    ctx.doc.text(lines, rightColX, ctx.cursorY);
-    ctx.cursorY += lines.length * 10 + 2;
+    const lines = ctx.doc.splitTextToSize(watchout, halfWidth - 12);
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setTextColor(220, 53, 69);
+    ctx.doc.text('!', rightColX, ctx.cursorY);
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(lines, rightColX + 10, ctx.cursorY);
+    ctx.cursorY += lines.length * 10 + 6;
   });
 
   ctx.cursorY = Math.max(winEndY, ctx.cursorY) + 10;
 
   addHeading(ctx, 'Priority Specification Notes', 12);
 
-  const tableY = ctx.cursorY;
-  const col1 = ctx.margin;
-  const col2 = ctx.margin + 60;
-  const col3 = ctx.margin + 120;
-  const tableW = ctx.pageWidth - ctx.margin * 2;
+  const tableWidth = ctx.pageWidth - ctx.margin * 2;
+  const col1Width = tableWidth * 0.25;
+  const col2Width = tableWidth * 0.3;
+  const col3Width = tableWidth * 0.45;
+  const col1X = ctx.margin;
+  const col2X = ctx.margin + col1Width;
+  const col3X = ctx.margin + col1Width + col2Width;
+  const mmToPt = 2.83465;
+  const cellPadding = 4 * mmToPt;
+  const textInset = cellPadding / 2;
 
-  ctx.doc.setFillColor(245);
-  ctx.doc.rect(col1, tableY - 5, tableW, 8, 'F');
+  ctx.doc.setFillColor(55, 65, 81);
+  ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, 8, 'F');
 
-  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setTextColor(255, 255, 255);
   ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(80);
-  ctx.doc.text('MATERIAL', col1 + 2, tableY);
-  ctx.doc.text('THE RISK / DRIVER', col2, tableY);
-  ctx.doc.text('RECOMMENDED ACTION', col3, tableY);
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.text('MATERIAL', col1X + 2, ctx.cursorY + 5);
+  ctx.doc.text('RISK / DRIVER', col2X + 2, ctx.cursorY + 5);
+  ctx.doc.text('RECOMMENDED ACTION', col3X + 2, ctx.cursorY + 5);
 
-  ctx.cursorY += 10;
-  ctx.doc.setFont('helvetica', 'normal');
+  ctx.cursorY += 12;
   ctx.doc.setTextColor(0);
 
   const riskItems = materials
@@ -668,56 +706,52 @@ export function renderStrategicOverview(
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
-  riskItems.forEach((item) => {
+  riskItems.forEach((item, index) => {
     if (item.score === 0) return;
 
-    const rowHeight = 12;
+    const nameLines = ctx.doc.splitTextToSize(item.material.name, col1Width - cellPadding);
+    const riskLines = ctx.doc.splitTextToSize(item.reason, col2Width - cellPadding);
+    const actionLines = ctx.doc.splitTextToSize(item.action, col3Width - cellPadding);
+    const maxLines = Math.max(nameLines.length, riskLines.length, actionLines.length);
+    const rowPaddingY = 3;
+    const lineHeight = 9;
+    const rowHeight = maxLines * lineHeight + rowPaddingY * 2;
+
+    if (index % 2 === 0) {
+      ctx.doc.setFillColor(249, 250, 251);
+      ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
+    }
+
+    const textY = ctx.cursorY + rowPaddingY + 6;
+
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.text(item.material.name, col1 + 2, ctx.cursorY);
+    ctx.doc.setFontSize(8);
+    ctx.doc.text(nameLines, col1X + textInset, textY);
 
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(8);
-    ctx.doc.text(item.reason, col2, ctx.cursorY);
+    ctx.doc.text(riskLines, col2X + textInset, textY);
+    ctx.doc.text(actionLines, col3X + textInset, textY);
 
-    const actionLines = ctx.doc.splitTextToSize(
-      item.action,
-      ctx.pageWidth - ctx.margin - col3
-    );
-    ctx.doc.text(actionLines, col3, ctx.cursorY);
+    ctx.doc.setDrawColor(229, 231, 235);
+    ctx.doc.line(ctx.margin, ctx.cursorY + rowHeight - 1, ctx.pageWidth - ctx.margin, ctx.cursorY + rowHeight - 1);
 
-    ctx.doc.setDrawColor(230);
-    ctx.doc.line(col1, ctx.cursorY + 4, col1 + tableW, ctx.cursorY + 4);
-
-    ctx.cursorY += Math.max(rowHeight, actionLines.length * 5 + 6);
+    ctx.cursorY += rowHeight + 2;
   });
 
-  const footerH = 30;
-  ctx.cursorY = ctx.pageHeight - ctx.margin - footerH;
+  const footerHeight = 18;
+  const footerY = ctx.pageHeight - ctx.margin - footerHeight;
+  ctx.doc.setDrawColor(229, 231, 235);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.line(ctx.margin, footerY - 4, ctx.pageWidth - ctx.margin, footerY - 4);
 
-  ctx.doc.setFillColor(245);
-  ctx.doc.rect(0, ctx.cursorY - 5, ctx.pageWidth, footerH + 40, 'F');
-
-  ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(100);
-  ctx.doc.text('HOW TO USE THIS REPORT:', ctx.margin, ctx.cursorY + 5);
-
+  const footerText =
+    'Concept stage only: scores (1-5) are relative and may reflect replacement frequency. Landscape items include biodiversity benefits. Abbreviations: A1-A3 Production, B In-Use, C End of Life.';
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.text(
-    '• Scores (1-5) are relative. A high score often indicates frequency of replacement, not toxicity.',
-    ctx.margin,
-    ctx.cursorY + 15
-  );
-  ctx.doc.text(
-    "• 'Landscape' items are scored on Biodiversity contribution, not just carbon.",
-    ctx.margin,
-    ctx.cursorY + 22
-  );
-  ctx.doc.text(
-    '• Abbreviations: A1-A3 (Production), B (In-Use), C (End of Life).',
-    ctx.margin + 100,
-    ctx.cursorY + 15
-  );
+  ctx.doc.setFontSize(7);
+  ctx.doc.setTextColor(90);
+  const footerLines = ctx.doc.splitTextToSize(footerText, ctx.pageWidth - ctx.margin * 2);
+  ctx.doc.text(footerLines, ctx.margin, footerY);
 }
 
 /**
