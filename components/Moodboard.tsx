@@ -1064,7 +1064,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       },
       highlights
     };
-  }, [board, sustainabilityInsights, paletteSummary]);
+  }, [board, sustainabilityInsights, paletteSummary, summaryReviewed]);
 
   const generateReportPdf = async (
     onProgress?: (step: string, percent: number) => void
