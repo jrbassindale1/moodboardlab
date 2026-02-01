@@ -194,28 +194,86 @@ export function renderClientSummaryPage(
   addHeading(ctx, 'Sustainability Summary', 20);
   ctx.cursorY += 5;
 
-  // How to read this report note
-  ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(100);
-  ctx.doc.text(
-    'This report prioritises relative decision-making over numerical precision at concept stage.',
-    ctx.margin,
-    ctx.cursorY
+  const addSectionTitle = (text: string) => {
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(11);
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(text, ctx.margin, ctx.cursorY);
+    ctx.cursorY += 12;
+  };
+
+  const addBodyText = (text: string) => {
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(9);
+    ctx.doc.setTextColor(60);
+    const lines = ctx.doc.splitTextToSize(text, ctx.pageWidth - ctx.margin * 2);
+    lines.forEach((line: string) => {
+      ctx.doc.text(line, ctx.margin, ctx.cursorY);
+      ctx.cursorY += 11;
+    });
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += 4;
+  };
+
+  const addSmallBullet = (text: string) => {
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(9);
+    ctx.doc.setTextColor(60);
+    const maxWidth = ctx.pageWidth - ctx.margin * 2 - 12;
+    const lines = ctx.doc.splitTextToSize(text, maxWidth);
+    ctx.doc.text('•', ctx.margin, ctx.cursorY);
+    lines.forEach((line: string, idx: number) => {
+      ctx.doc.text(line, ctx.margin + 10, ctx.cursorY + idx * 10);
+    });
+    ctx.cursorY += lines.length * 10 + 2;
+    ctx.doc.setTextColor(0);
+  };
+
+  // Section 1: What this report is
+  addSectionTitle('What this report is');
+  addBodyText(
+    'This is a concept-stage sustainability insight report generated from the selected material palette. ' +
+      'It is designed to support early design decisions, highlight carbon drivers, and identify where specification choices matter most.'
   );
-  ctx.doc.setTextColor(0);
-  ctx.cursorY += 14;
+
+  // Section 2: What this report is not
+  addSectionTitle('What this report is not');
+  addBodyText(
+    'This is not a formal Life Cycle Assessment (LCA), carbon calculation, or EPD-based compliance report. ' +
+      'It does not replace quantity-based modelling or consultant-led assessments at later stages.'
+  );
+
+  // Section 3: How the scoring works
+  addSectionTitle('How to read the scores');
+  addSmallBullet('Impact scores run from 1 (very low) to 5 (very high).');
+  addSmallBullet('Scores are relative within this palette, not absolute carbon values.');
+  addSmallBullet('Confidence reflects data availability at concept stage.');
+  addSmallBullet('Landscape systems are treated differently to industrial materials.');
+  addBodyText('Scores highlight where to focus effort, not exact emissions.');
+
+  // Section 4: How to use this report
+  addSectionTitle('How to use this report');
+  addSmallBullet('Use the dashboard to identify dominant carbon contributors.');
+  addSmallBullet('Use material pages to understand why a material scores highly.');
+  addSmallBullet('Use design actions to adjust the palette before fixing quantities.');
+  addSmallBullet('Revisit findings once specifications and quantities are defined.');
+
+  // Divider before summary content
+  ctx.doc.setDrawColor(220);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.line(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin, ctx.cursorY);
+  ctx.cursorY += 12;
 
   // What this palette achieves
   addHeading(ctx, 'What this palette achieves', 13);
-  summary.achievements.forEach((achievement) => {
+  summary.achievements.slice(0, 2).forEach((achievement) => {
     addBullet(ctx, achievement, 11);
   });
   ctx.cursorY += 10;
 
   // Key risks and mitigations
   addHeading(ctx, 'Key risks and how we mitigate', 13);
-  summary.risks_and_mitigations.forEach((risk) => {
+  summary.risks_and_mitigations.slice(0, 2).forEach((risk) => {
     addBullet(ctx, risk, 11);
   });
   ctx.cursorY += 10;
@@ -225,24 +283,21 @@ export function renderClientSummaryPage(
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(80);
-  const evidenceLines = ctx.doc.splitTextToSize(
-    'See Compliance Readiness Summary for prioritised evidence items and badge key.',
-    ctx.pageWidth - ctx.margin * 2
+  ctx.doc.text(
+    'See Compliance Readiness Summary for prioritised evidence items and the badge key.',
+    ctx.margin,
+    ctx.cursorY
   );
-  evidenceLines.forEach((line: string) => {
-    ensureSpace(ctx, 12);
-    ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 12;
-  });
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 10;
+  ctx.cursorY += 14;
 
   // Confidence statement
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(80);
+  const confidenceText = summary.confidence_statement.split('. ')[0] || summary.confidence_statement;
   const confLines = ctx.doc.splitTextToSize(
-    summary.confidence_statement,
+    confidenceText,
     ctx.pageWidth - ctx.margin * 2
   );
   confLines.forEach((line: string) => {

@@ -932,10 +932,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
 
-        // Add the moodboard image to fill most of the page with margins
+        // Add the moodboard image as a square with margins
         const margin = 40;
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = pageHeight - margin * 2 - 60; // Leave space for title
+        const titleOffset = 44;
+        const availableWidth = pageWidth - margin * 2;
+        const availableHeight = pageHeight - margin * 2 - titleOffset;
+        const imageSize = Math.min(availableWidth, availableHeight);
+        const imageX = margin + (availableWidth - imageSize) / 2;
+        const imageY = margin + titleOffset + (availableHeight - imageSize) / 2;
 
         // Title at top
         doc.setFont('helvetica', 'bold');
@@ -943,17 +947,33 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.setTextColor(0);
         doc.text('Moodboard', pageWidth / 2, margin + 20, { align: 'center' });
 
-        // Add the render image
+        // Add the render image (square)
         doc.addImage(
           moodboardRenderUrl,
           'PNG',
-          margin,
-          margin + 40,
-          imgWidth,
-          imgHeight,
+          imageX,
+          imageY,
+          imageSize,
+          imageSize,
           undefined,
           'FAST'
         );
+
+        // Brand tab anchored to the image
+        const brand = 'created by moodboard-lab.com';
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        const brandPaddingX = 6;
+        const brandPaddingY = 4;
+        const brandWidth = doc.getTextWidth(brand) + brandPaddingX * 2;
+        const brandHeight = 10 + brandPaddingY * 2;
+        const brandX = imageX + 12;
+        const brandY = imageY + imageSize - brandHeight - 12;
+        doc.setFillColor(17, 24, 39);
+        doc.rect(brandX, brandY, brandWidth, brandHeight, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.text(brand, brandX + brandPaddingX, brandY + brandHeight - brandPaddingY - 2);
+        doc.setTextColor(0);
 
         // Add page - next page will be sustainability summary
         doc.addPage();
