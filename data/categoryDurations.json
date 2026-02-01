@@ -65,14 +65,14 @@
       "notes": "Aesthetic-driven replacement"
     },
     "paint-wall": {
-      "serviceLife": 7,
-      "replacementCycle": 5,
-      "notes": "Touch-up at 3-5 years, full at 7"
-    },
-    "paint-ceiling": {
       "serviceLife": 10,
       "replacementCycle": 7,
-      "notes": "Less wear than walls"
+      "notes": "Touch-up at ~5-7 years, full at ~10"
+    },
+    "paint-ceiling": {
+      "serviceLife": 12,
+      "replacementCycle": 10,
+      "notes": "Lower wear than walls"
     },
     "plaster": {
       "serviceLife": 40,

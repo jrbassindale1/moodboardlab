@@ -265,6 +265,14 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Honed stone tiles',
     description: 'Honed natural stone tiles for circulation zones with durable finish.',
     keywords: ['stone', 'paver', 'floor'],
+    colorOptions: [
+      { label: 'Bath Stone', tone: '#d9c9a3' },
+      { label: 'Portland Stone', tone: '#d5d3c8' },
+      { label: 'Yorkstone', tone: '#b59f7b' },
+      { label: 'Purbeck Stone', tone: '#8f8575' },
+      { label: 'Ancaster Stone', tone: '#c9b38a' },
+      { label: 'Cotswold Stone', tone: '#d2b48c' }
+    ],
     category: 'floor',
     carbonIntensity: 'high'
   },
@@ -1492,11 +1500,71 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   },
   {
     id: 'standing-seam-roof',
-    name: 'Standing Seam Metal Roof',
+    name: 'Zinc Standing Seam Roof',
     tone: '#9aa0a8',
-    finish: 'Zinc/steel standing seam',
-    description: 'Slim standing seam zinc/steel roof with long life and recyclability.',
-    keywords: ['roof', 'metal', 'standing seam'],
+    finish: 'ZM zinc or prefinished steel standing seam — select RAL colour',
+    description:
+      'Standing seam zinc or prefinished steel roof; long life, recyclable, and available in many RAL colours.',
+    keywords: ['roof', 'metal', 'standing seam', 'zinc', 'prefinished'],
+    category: 'roof',
+    supportsColor: true,
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'aluminium-standing-seam-roof',
+    name: 'Aluminium Standing Seam Roof',
+    tone: '#aeb2b6',
+    finish: 'Prefinished aluminium standing seam — select RAL colour',
+    description:
+      'Standing seam aluminium roof with factory finish; lightweight, corrosion-resistant, and available in many RAL colours.',
+    keywords: ['roof', 'metal', 'standing seam', 'aluminium', 'prefinished'],
+    category: 'roof',
+    supportsColor: true,
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'copper-standing-seam-roof',
+    name: 'Copper Standing Seam Roof',
+    tone: '#b87333',
+    finish: 'Copper standing seam',
+    description: 'Standing seam copper roof with natural or pre-patinated finishes and long service life.',
+    keywords: ['roof', 'metal', 'standing seam', 'copper', 'patina'],
+    colorOptions: [
+      { label: 'Natural Copper', tone: '#b87333' },
+      { label: 'Pre-patinated Green', tone: '#5f7f6a' },
+      { label: 'Pre-oxidised Brown', tone: '#7a4f2a' },
+      { label: 'Blackened Copper', tone: '#2f2b2a' }
+    ],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'stainless-standing-seam-roof',
+    name: 'Stainless Steel Standing Seam Roof',
+    tone: '#b9bcc0',
+    finish: 'Stainless steel standing seam',
+    description: 'Standing seam stainless steel roof with brushed or bead-blasted finishes.',
+    keywords: ['roof', 'metal', 'standing seam', 'stainless', 'steel'],
+    colorOptions: [
+      { label: 'Brushed Stainless', tone: '#b9bcc0' },
+      { label: 'Bead-Blasted', tone: '#a7abb0' },
+      { label: 'Blackened Stainless', tone: '#4a4f55' }
+    ],
+    category: 'roof',
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'lead-standing-seam-roof',
+    name: 'Lead Standing Seam Roof',
+    tone: '#6f6f73',
+    finish: 'Rolled lead standing seam',
+    description: 'Rolled lead standing seam roof with traditional detailing and long lifespan.',
+    keywords: ['roof', 'metal', 'standing seam', 'lead'],
+    colorOptions: [
+      { label: 'Natural Lead Grey', tone: '#6f6f73' },
+      { label: 'Blue-Grey Patina', tone: '#6a7378' },
+      { label: 'Dark Patina', tone: '#4b4f54' }
+    ],
     category: 'roof',
     carbonIntensity: 'high'
   },
@@ -1936,6 +2004,14 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Natural stone cladding',
     description: 'Natural stone cladding or rainscreen systems; highly durable with long service life.',
     keywords: ['facade', 'stone', 'cladding', 'natural', 'external'],
+    colorOptions: [
+      { label: 'Bath Stone', tone: '#d9c9a3' },
+      { label: 'Portland Stone', tone: '#d5d3c8' },
+      { label: 'Yorkstone', tone: '#b59f7b' },
+      { label: 'Purbeck Stone', tone: '#8f8575' },
+      { label: 'Ancaster Stone', tone: '#c9b38a' },
+      { label: 'Cotswold Stone', tone: '#d2b48c' }
+    ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'high'
@@ -1947,6 +2023,14 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Ventilated stone panels on rails',
     description: 'Ventilated stone panels on rails; demountable and suitable for contemporary construction.',
     keywords: ['facade', 'stone', 'rainscreen', 'ventilated', 'external'],
+    colorOptions: [
+      { label: 'Bath Stone', tone: '#d9c9a3' },
+      { label: 'Portland Stone', tone: '#d5d3c8' },
+      { label: 'Yorkstone', tone: '#b59f7b' },
+      { label: 'Purbeck Stone', tone: '#8f8575' },
+      { label: 'Ancaster Stone', tone: '#c9b38a' },
+      { label: 'Cotswold Stone', tone: '#d2b48c' }
+    ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'medium'
@@ -2041,6 +2125,19 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     carbonIntensity: 'low'
   },
   {
+    id: 'insulated-render-system',
+    name: 'Insulated Render (Sto-type)',
+    tone: '#e4e0d8',
+    finish: 'Insulated render system — select RAL colour',
+    description:
+      'External wall insulation with reinforced render finish; Sto-type system with full RAL colour range.',
+    keywords: ['facade', 'render', 'insulated', 'external wall insulation', 'external'],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    supportsColor: true,
+    carbonIntensity: 'medium'
+  },
+  {
     id: 'living-green-wall',
     name: 'Living Green Wall',
     tone: '#5c8a50',
@@ -2059,9 +2156,23 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Standing seam or flat-lock zinc',
     description: 'Standing seam or flat-lock zinc; self-patinating and long-life.',
     keywords: ['facade', 'zinc', 'cladding', 'metal', 'standing-seam', 'external'],
+    supportsColor: true,
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'medium'
+  },
+  {
+    id: 'aluminium-cladding',
+    name: 'Aluminium Cladding',
+    tone: '#b2b6ba',
+    finish: 'Prefinished aluminium panels — select RAL colour',
+    description:
+      'Prefinished aluminium cladding panels; lightweight, corrosion-resistant, and available in many RAL colours.',
+    keywords: ['facade', 'aluminium', 'cladding', 'metal', 'external'],
+    supportsColor: true,
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
   },
   {
     id: 'copper-cladding',
@@ -2070,6 +2181,44 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Copper sheets or shingles',
     description: 'Copper sheets or shingles developing natural verdigris patina over time.',
     keywords: ['facade', 'copper', 'cladding', 'metal', 'patina', 'external'],
+    colorOptions: [
+      { label: 'Natural Copper', tone: '#b87333' },
+      { label: 'Pre-patinated Green', tone: '#5f7f6a' },
+      { label: 'Pre-oxidised Brown', tone: '#7a4f2a' },
+      { label: 'Blackened Copper', tone: '#2f2b2a' }
+    ],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'stainless-cladding',
+    name: 'Stainless Steel Cladding',
+    tone: '#b9bcc0',
+    finish: 'Stainless steel sheets',
+    description: 'Stainless steel cladding with brushed, bead-blasted, or darkened finishes.',
+    keywords: ['facade', 'stainless', 'steel', 'cladding', 'metal', 'external'],
+    colorOptions: [
+      { label: 'Brushed Stainless', tone: '#b9bcc0' },
+      { label: 'Bead-Blasted', tone: '#a7abb0' },
+      { label: 'Blackened Stainless', tone: '#4a4f55' }
+    ],
+    category: 'external',
+    treePaths: ['Envelope>Façade'],
+    carbonIntensity: 'high'
+  },
+  {
+    id: 'lead-cladding',
+    name: 'Lead Cladding',
+    tone: '#6f6f73',
+    finish: 'Rolled lead sheets',
+    description: 'Rolled lead sheets for traditional or contemporary cladding with long service life.',
+    keywords: ['facade', 'lead', 'cladding', 'metal', 'external'],
+    colorOptions: [
+      { label: 'Natural Lead Grey', tone: '#6f6f73' },
+      { label: 'Blue-Grey Patina', tone: '#6a7378' },
+      { label: 'Dark Patina', tone: '#4b4f54' }
+    ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'high'

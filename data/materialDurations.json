@@ -245,14 +245,25 @@
       }
     },
     {
-      "id": "paint",
+      "id": "paint-wall",
       "pattern": "paint|emulsion",
       "patternFlags": "i",
-      "categories": ["paint-wall", "paint-ceiling", "finish"],
+      "categories": ["paint-wall"],
       "duration": {
-        "serviceLife": 7,
-        "replacementCycle": 5,
-        "notes": "Touch-up at 3-5 years"
+        "serviceLife": 10,
+        "replacementCycle": 7,
+        "notes": "Touch-up at ~5-7 years, full at ~10"
+      }
+    },
+    {
+      "id": "paint-ceiling",
+      "pattern": "paint|emulsion",
+      "patternFlags": "i",
+      "categories": ["paint-ceiling"],
+      "duration": {
+        "serviceLife": 12,
+        "replacementCycle": 10,
+        "notes": "Lower wear than walls"
       }
     },
     {

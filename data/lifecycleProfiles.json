@@ -1271,6 +1271,15 @@
       "maintenance": { "impact": 2, "confidence": "medium" },
       "endOfLife": { "impact": 1, "confidence": "high" }
     },
+    "insulated-render-system": {
+      "raw": { "impact": 2, "confidence": "medium" },
+      "manufacturing": { "impact": 3, "confidence": "medium" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
     "living-green-wall": {
       "raw": { "impact": 1, "confidence": "medium" },
       "manufacturing": { "impact": 2, "confidence": "medium" },
@@ -1285,6 +1294,96 @@
       "manufacturing": { "impact": 5, "confidence": "high" },
       "transport": { "impact": 3, "confidence": "medium" },
       "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "zinc-cladding": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 4, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "copper-cladding": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "aluminium-cladding": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "stainless-cladding": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "lead-cladding": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 4, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "standing-seam-roof": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 4, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "aluminium-standing-seam-roof": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "copper-standing-seam-roof": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "stainless-standing-seam-roof": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 5, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "lead-standing-seam-roof": {
+      "raw": { "impact": 4, "confidence": "medium" },
+      "manufacturing": { "impact": 4, "confidence": "medium" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
       "inUse": { "impact": 1, "confidence": "high" },
       "maintenance": { "impact": 1, "confidence": "high" },
       "endOfLife": { "impact": 2, "confidence": "medium" }
@@ -1432,6 +1531,393 @@
       "inUse": { "impact": 1, "confidence": "high" },
       "maintenance": { "impact": 1, "confidence": "high" },
       "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "terracotta-panels": {
+      "raw": { "impact": 2, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "composite-metal-deck-slabs": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "precast-concrete-floor-planks": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "timber-joists-floor-cassettes": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "clt-floor-panels": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "secondary-steel-infill-beams": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "raised-access-floor-systems": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "timber-rafters-purlins": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "steel-purlins": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "glulam-roof-beams": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "secondary-trusses": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "clt-roof-panels": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "lightweight-space-frame-infill": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "edge-beams": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "spandrel-beams": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "ring-beams": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "secondary-lintels": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "masonry-shelf-angles": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "cross-bracing-steel": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "timber-wind-bracing": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "k-x-bracing-secondary": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "diaphragm-bracing-elements": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "secondary-shear-panels": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 3, "confidence": "medium" }
+    },
+    "steel-stair-stringers": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "timber-stair-carriages": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "stair-landings-trimmers": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "cantilevered-stair-treads": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "facade-support-rails": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "rainscreen-carrier-systems": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "curtain-wall-mullions-transoms": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "secondary-facade-brackets": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "balcony-support-beams": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "steel-canopy-frames": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "timber-pergola-structures": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "tension-rods-tie-members": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "secondary-cantilever-arms": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "cork-insulation": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 1, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "stone-rainscreen": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 3, "confidence": "high" },
+      "transport": { "impact": 4, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "slate-cladding": {
+      "raw": { "impact": 3, "confidence": "high" },
+      "manufacturing": { "impact": 3, "confidence": "high" },
+      "transport": { "impact": 4, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 2, "confidence": "medium" }
+    },
+    "hemp-lime-wall": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 1, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "charred-timber-cladding": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "cork-rainscreen": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 1, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 2, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "metal-composite-panels": {
+      "raw": { "impact": 4, "confidence": "high" },
+      "manufacturing": { "impact": 4, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 1, "confidence": "high" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 1, "confidence": "high" },
+      "endOfLife": { "impact": 4, "confidence": "low" }
     }
   }
 }

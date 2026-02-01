@@ -2322,7 +2322,12 @@ export function addDisclaimer(ctx: PDFContext): void {
     {
       term: 'RAW / MFG / TRN / INS / USE / MNT / EOL',
       description:
-        'Lifecycle stages: raw material, manufacturing, transport, installation, in-use, maintenance, end of life.',
+        'Lifecycle stages: RAW = raw material acquisition (cradle), MFG = production processes, TRN = distribution impacts, INS = construction/assembly effects, USE = operational impacts during service life, MNT = upkeep over life, EOL = disposal or recycling stages.',
+    },
+    {
+      term: 'Impact scores',
+      description:
+        'Scores are relative (1–5) and intended for comparative early-stage design decision-making, not as a substitute for EPD-based carbon calculations.',
     },
   ];
 
