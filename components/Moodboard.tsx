@@ -202,6 +202,88 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
+const buildSustainabilityPayload = (materials: BoardItem[]) =>
+  materials.map((mat) => {
+    const profile = MATERIAL_LIFECYCLE_PROFILES[mat.id];
+    return {
+      id: mat.id,
+      name: mat.name,
+      category: mat.category,
+      finish: mat.finish,
+      description: mat.description,
+      tone: mat.tone,
+      lifecycleFingerprint: profile || null
+    };
+  });
+
+const buildSustainabilityPromptText = (materialsPayload: ReturnType<typeof buildSustainabilityPayload>) => `You are a UK architecture sustainability assistant for early-stage design (RIBA Stage 1–2).
+
+Return ONLY valid JSON. No markdown. No prose outside JSON.
+
+You are given selected materials. Each material includes a lifecycleFingerprint with impact (1–5) and confidence (high/medium/low) for stages:
+raw, manufacturing, transport, installation, inUse, maintenance, endOfLife.
+
+IMPORTANT RULES:
+- Do NOT change or recalculate any fingerprint scores.
+- Do NOT invent kgCO2e, EPD figures, or percentage splits.
+- Your role is to interpret the fingerprint for designers and give practical actions.
+- ALWAYS include specific lifecycle stage names (raw/manufacturing/transport/installation/inUse/maintenance/endOfLife) when discussing impacts.
+- NEVER use vague language without referencing a specific stage, score, and reason.
+
+Output schema:
+{
+  "items": [
+    {
+      "id": "string",
+      "title": "string",
+      "headline": "string (max 120 chars)",
+      "hotspots": [
+        {
+          "stage": "raw|manufacturing|transport|installation|inUse|maintenance|endOfLife",
+          "score": 1-5,
+          "reason": "string (max 80 chars explaining why this stage is a hotspot)"
+        }
+      ],
+      "whyItLooksLikeThis": "string (max 200 chars)",
+      "designLevers": ["string", "string"],
+      "whatCouldChange": ["string", "string"],
+      "ukChecks": [
+        {
+          "label": "string",
+          "standard_code": "string (e.g., 'EN 15804', 'FSC COC', 'ISO 14025')"
+        }
+      ],
+      "benefits": [
+        {
+          "type": "biodiversity|circularity|durability|operational_carbon|health_voc",
+          "score_1to5": 1-5,
+          "note": "string (max 60 chars)"
+        }
+      ],
+      "risks": [
+        {
+          "type": "supply_chain|durability|maintenance|disposal|regulatory|cost",
+          "severity_1to5": 1-5,
+          "note": "string (max 60 chars)"
+        }
+      ]
+    }
+  ]
+}
+
+Guidance:
+- Include 1-3 hotspots per material, focusing on stages with impact >= 3.
+- Include at least 1 design lever per material.
+- For benefits: score biodiversity/circularity/durability based on material properties.
+- For landscape materials: always include a biodiversity benefit.
+- For risks: identify supply chain, durability, or regulatory concerns where relevant.
+- If confidence is medium/low for any stage, note this in risks with type "supply_chain" or relevant type.
+- Use UK-relevant checks only (FSC/PEFC, EPD to EN 15804, recycled content declarations, demountable fixings, take-back schemes).
+- If lifecycleFingerprint is null, return headline "Fingerprint not available" and minimal fields with empty arrays.
+
+MATERIALS:
+${JSON.stringify(materialsPayload, null, 2)}`;
+
 const Moodboard: React.FC<MoodboardProps> = ({
   onNavigate,
   initialBoard,
@@ -212,12 +294,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [board, setBoard] = useState<BoardItem[]>(initialBoard || []);
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
+  const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
   );
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sustainability' | 'render' | 'all' | 'detecting'>('idle');
+  const [status, setStatus] = useState<'idle' | 'sustainability' | 'summary' | 'render' | 'all' | 'detecting'>('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -550,6 +633,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     );
     return lines.join('\n');
   }, [board]);
+  const sustainabilityPayload = useMemo(() => buildSustainabilityPayload(board), [board]);
   const allGroups = useMemo(
     () => MATERIAL_TREE.flatMap((section) => section.groups.map((g) => g)),
     []
@@ -875,11 +959,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
       highestImpactIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))
     ).slice(0, 3);
 
-    const summarySentence = highestImpact.length > 0 && lowCarbonSystems.length > 0
-      ? 'This palette combines performance-led finishes with lower-carbon structural and landscape systems. Several components will need justification or refinement at later stages.'
-      : highestImpact.length > 0
-        ? 'Several high-impact components will need justification or refinement at later stages.'
-        : 'Early-stage sustainability signals are available once materials are assessed.';
+    const summarySentence = paletteSummary?.trim()
+      ? paletteSummary.trim()
+      : highestImpact.length > 0 && lowCarbonSystems.length > 0
+        ? 'This palette combines performance-led finishes with lower-carbon structural and landscape systems. Several components will need justification or refinement at later stages.'
+        : highestImpact.length > 0
+          ? 'Several high-impact components will need justification or refinement at later stages.'
+          : 'Early-stage sustainability signals are available once materials are assessed.';
 
     const goodPracticeIds = lowCarbonCandidates
       .filter(([id]) => !highestImpactIds.includes(id))
@@ -915,7 +1001,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       },
       highlights
     };
-  }, [board, sustainabilityInsights]);
+  }, [board, sustainabilityInsights, paletteSummary]);
 
   const generateReportPdf = async (
     onProgress?: (step: string, percent: number) => void
@@ -1386,10 +1472,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setIsCreatingMoodboard(true);
     setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
+    setPaletteSummary(null);
     setStatus('all');
     setError(null);
     try {
       await runGemini('sustainability');
+      await runGemini('summary');
       await runGemini('render', { onRender: setMoodboardRenderUrl });
       setMaterialsAccordionOpen(false);
     } finally {
@@ -1596,7 +1684,7 @@ IMPORTANT:
   };
 
   const runGemini = async (
-    mode: 'sustainability' | 'render',
+    mode: 'sustainability' | 'summary' | 'render',
     options?: {
       onRender?: (url: string) => void;
       retryAttempt?: number;
@@ -1660,92 +1748,129 @@ IMPORTANT:
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
 
     // Build sustainability prompt with lifecycle fingerprints (enhanced schema)
-    const buildSustainabilityPrompt = () => {
-      const materialsPayload = board.map(mat => {
-        const profile = MATERIAL_LIFECYCLE_PROFILES[mat.id];
+    const buildSustainabilityPrompt = () => buildSustainabilityPromptText(sustainabilityPayload);
+
+    const buildPaletteSummaryPrompt = () => {
+      const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
+      const insightById = new Map<string, SustainabilityInsight>();
+      insights.forEach((insight) => {
+        if (insight?.id) insightById.set(insight.id, insight);
+      });
+
+      const materialById = new Map<string, BoardItem>();
+      board.forEach((material) => materialById.set(material.id, material));
+
+      const metrics = new Map<string, MaterialMetrics>();
+      board.forEach((material) => {
+        const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+        if (!profile) return;
+        const benefits = insightById.get(material.id)?.benefits || [];
+        metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
+      });
+
+      const labelFor = (id: string) =>
+        materialById.get(id)?.name || insightById.get(id)?.title || 'Material';
+
+      const stageOrder = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const;
+      const getTopStages = (profile?: (typeof MATERIAL_LIFECYCLE_PROFILES)[string]) => {
+        if (!profile) return [];
+        return stageOrder
+          .map((stage) => ({
+            stage,
+            impact: profile[stage]?.impact ?? 0,
+            confidence: profile[stage]?.confidence ?? 'unknown'
+          }))
+          .sort((a, b) => b.impact - a.impact)
+          .filter((stage) => stage.impact > 0)
+          .slice(0, 2);
+      };
+
+      const isLandscapeId = (id: string) => {
+        const material = materialById.get(id);
+        return material ? isLandscapeMaterial(material) : false;
+      };
+
+      const nonLandscapeEmbodied = [...metrics.entries()]
+        .filter(([id]) => !isLandscapeId(id))
+        .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
+      const allEmbodiedSorted = [...metrics.entries()].sort(
+        (a, b) => b[1].embodied_proxy - a[1].embodied_proxy
+      );
+      const embodiedFallback = nonLandscapeEmbodied.length > 0 ? nonLandscapeEmbodied : allEmbodiedSorted;
+
+      const highestImpactIds = embodiedFallback.slice(0, 3).map(([id]) => id);
+      const highestImpact = highestImpactIds.map(labelFor);
+
+      const lowCarbonCandidates = [...metrics.entries()]
+        .filter(([id, metric]) => {
+          const material = materialById.get(id);
+          if (!material) return false;
+          if (highestImpactIds.includes(id)) return false;
+          return (
+            metric.traffic_light === 'green' ||
+            metric.environmental_benefit_score >= 2 ||
+            isLandscapeMaterial(material)
+          );
+        })
+        .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
+
+      const lowCarbonSystems = (lowCarbonCandidates.length > 0
+        ? lowCarbonCandidates
+        : [...metrics.entries()].filter(([id]) => !highestImpactIds.includes(id))
+      )
+        .slice(0, 3)
+        .map(([id]) => labelFor(id));
+
+      const driverStages = highestImpactIds.map((id) => {
+        const material = materialById.get(id);
+        const profile = MATERIAL_LIFECYCLE_PROFILES[id];
         return {
-          id: mat.id,
-          name: mat.name,
-          category: mat.category,
-          finish: mat.finish,
-          description: mat.description,
-          tone: mat.tone,
-          lifecycleFingerprint: profile || null
+          name: labelFor(id),
+          category: material?.category || '',
+          topStages: getTopStages(profile)
         };
       });
 
-      return `You are a UK architecture sustainability assistant for early-stage design (RIBA Stage 1–2).
+      const lowConfidenceCount = board.reduce((count, material) => {
+        const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+        if (!profile) return count;
+        const hasLow = stageOrder.some((stage) => profile[stage]?.confidence === 'low');
+        return count + (hasLow ? 1 : 0);
+      }, 0);
+
+      const summaryContext = {
+        totalMaterials: board.length,
+        highestImpact,
+        lowCarbonSystems,
+        driverStages,
+        landscapePresent: board.some((material) => isLandscapeMaterial(material)),
+        lowConfidenceCount
+      };
+
+      return `You are a UK architecture sustainability assistant writing a single-sentence dashboard summary for a concept-stage material palette. This copy is for the UI only (not the PDF report).
 
 Return ONLY valid JSON. No markdown. No prose outside JSON.
 
-You are given selected materials. Each material includes a lifecycleFingerprint with impact (1–5) and confidence (high/medium/low) for stages:
-raw, manufacturing, transport, installation, inUse, maintenance, endOfLife.
-
-IMPORTANT RULES:
-- Do NOT change or recalculate any fingerprint scores.
-- Do NOT invent kgCO2e, EPD figures, or percentage splits.
-- Your role is to interpret the fingerprint for designers and give practical actions.
-- ALWAYS include specific lifecycle stage names (raw/manufacturing/transport/installation/inUse/maintenance/endOfLife) when discussing impacts.
-- NEVER use vague language without referencing a specific stage, score, and reason.
-
 Output schema:
 {
-  "items": [
-    {
-      "id": "string",
-      "title": "string",
-      "headline": "string (max 120 chars)",
-      "hotspots": [
-        {
-          "stage": "raw|manufacturing|transport|installation|inUse|maintenance|endOfLife",
-          "score": 1-5,
-          "reason": "string (max 80 chars explaining why this stage is a hotspot)"
-        }
-      ],
-      "whyItLooksLikeThis": "string (max 200 chars)",
-      "designLevers": ["string", "string"],
-      "whatCouldChange": ["string", "string"],
-      "ukChecks": [
-        {
-          "label": "string",
-          "standard_code": "string (e.g., 'EN 15804', 'FSC COC', 'ISO 14025')"
-        }
-      ],
-      "benefits": [
-        {
-          "type": "biodiversity|circularity|durability|operational_carbon|health_voc",
-          "score_1to5": 1-5,
-          "note": "string (max 60 chars)"
-        }
-      ],
-      "risks": [
-        {
-          "type": "supply_chain|durability|maintenance|disposal|regulatory|cost",
-          "severity_1to5": 1-5,
-          "note": "string (max 60 chars)"
-        }
-      ]
-    }
-  ]
+  "summarySentence": "string (max 200 chars)"
 }
 
-Guidance:
-- Include 1-3 hotspots per material, focusing on stages with impact >= 3.
-- Include at least 1 design lever per material.
-- For benefits: score biodiversity/circularity/durability based on material properties.
-- For landscape materials: always include a biodiversity benefit.
-- For risks: identify supply chain, durability, or regulatory concerns where relevant.
-- If confidence is medium/low for any stage, note this in risks with type "supply_chain" or relevant type.
-- Use UK-relevant checks only (FSC/PEFC, EPD to EN 15804, recycled content declarations, demountable fixings, take-back schemes).
-- If lifecycleFingerprint is null, return headline "Fingerprint not available" and minimal fields with empty arrays.
+Rules:
+- Mention at least one material name from highestImpact or lowCarbonSystems if provided.
+- Mention at least one lifecycle stage (raw, manufacturing, transport, installation, inUse, maintenance, endOfLife) using the driverStages list.
+- Keep it neutral and early-stage; avoid compliance claims, rankings, percentages, or numbers.
+- If highestImpact and lowCarbonSystems are empty, say the palette needs assessment.
 
-MATERIALS:
-${JSON.stringify(materialsPayload, null, 2)}`;
+CONTEXT:
+${JSON.stringify(summaryContext, null, 2)}`;
     };
 
     const prompt =
       mode === 'sustainability'
         ? buildSustainabilityPrompt()
+        : mode === 'summary'
+        ? buildPaletteSummaryPrompt()
         : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
@@ -1785,6 +1910,10 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
           prompt
         });
         const data = await callGeminiImage(payload);
+        console.log('[Gemini response]', {
+          mode: isEditingRender ? 'edit-render' : 'moodboard',
+          data
+        });
         let img: string | null = null;
         let mime: string | null = null;
         const candidates = data?.candidates || [];
@@ -1822,12 +1951,20 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
         temperature: 0.45
       }
     };
-    console.log('[Gemini prompt]', { mode, promptType: 'sustainability', prompt });
+    const promptType = mode === 'summary' ? 'summary' : 'sustainability';
+    console.log('[Gemini prompt]', { mode, promptType, prompt });
+    if (mode === 'sustainability' || mode === 'summary') {
+      console.log('[Gemini prompt text]', prompt);
+    }
 
     try {
       const data = await callGeminiText(payload);
+      console.log('[Gemini response]', { mode, data });
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
+      if (mode === 'sustainability' || mode === 'summary') {
+        console.log('[Gemini response text]', text);
+      }
       const cleaned = text.replace(/```json|```/g, '').trim();
       const retryAttempt = options?.retryAttempt || 0;
       const canRetry = retryAttempt < 1;
@@ -1919,7 +2056,28 @@ ${JSON.stringify(materialsPayload, null, 2)}`;
         } catch (parseError) {
           setSustainabilityInsights(null);
           sustainabilityInsightsRef.current = null;
+          setPaletteSummary(null);
           const message = 'Gemini returned malformed sustainability JSON.';
+          if (canRetry) {
+            setError(`${message} Retrying once...`);
+            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
+          } else {
+            setError(`${message} Please try again.`);
+          }
+          return;
+        }
+      } else if (mode === 'summary') {
+        try {
+          const parsed = JSON.parse(cleaned);
+          const summary = typeof parsed?.summarySentence === 'string' ? parsed.summarySentence.trim() : '';
+          if (!summary) {
+            throw new Error('Invalid summary sentence');
+          }
+          setPaletteSummary(summary);
+          if (retryAttempt) setError(null);
+        } catch (parseError) {
+          setPaletteSummary(null);
+          const message = 'Gemini returned malformed summary JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
             await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
