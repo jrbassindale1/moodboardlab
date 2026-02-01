@@ -27,6 +27,20 @@ function isStructuralOrInfrastructure(category?: MaterialCategory): boolean {
   if (!category) return false;
   return STRUCTURAL_INFRASTRUCTURE_CATEGORIES.includes(category);
 }
+
+const CATEGORY_INTENSITY_FACTORS: Partial<Record<MaterialCategory, number>> = {
+  'paint-wall': 0.2,
+  'paint-ceiling': 0.2,
+  wallpaper: 0.35,
+  plaster: 0.6,
+  microcement: 0.6,
+  tile: 0.75,
+};
+
+function getCategoryIntensityFactor(category?: MaterialCategory): number {
+  if (!category) return 1;
+  return CATEGORY_INTENSITY_FACTORS[category] ?? 1;
+}
 import {
   getLifecycleDuration,
   getLifecycleMultiplier,
@@ -344,7 +358,8 @@ export function calculateMaterialMetrics(
   benefits: Benefit[] = [],
   material?: MaterialOption
 ): MaterialMetrics {
-  const embodied_proxy_per_install = calculateEmbodiedProxy(profile);
+  const intensityFactor = material ? getCategoryIntensityFactor(material.category) : 1;
+  const embodied_proxy_per_install = calculateEmbodiedProxy(profile) * intensityFactor;
   const in_use_proxy = calculateInUseProxy(profile);
   const end_of_life_proxy = calculateEndOfLifeProxy(profile);
   const benefit_score = calculateBenefitScore(benefits);

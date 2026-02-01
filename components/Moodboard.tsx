@@ -354,6 +354,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
   const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
   const paletteSummaryRef = useRef<string | null>(null);
+  const [summaryReviewed, setSummaryReviewed] = useState(false);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
@@ -905,6 +906,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     Boolean(sustainabilityInsightsRef.current && sustainabilityInsightsRef.current.length > 0);
 
   const sustainabilityPreview = useMemo(() => {
+    if (!summaryReviewed) return null;
     if (!sustainabilityInsights || sustainabilityInsights.length === 0) return null;
 
     const materialById = new Map<string, BoardItem>();
@@ -1535,6 +1537,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setSustainabilityInsights(null);
     setPaletteSummary(null);
     paletteSummaryRef.current = null;
+    setSummaryReviewed(false);
     setStatus('all');
     setError(null);
     try {
@@ -2211,12 +2214,21 @@ ${JSON.stringify(summaryContext, null, 2)}`;
             setPaletteSummary(revised);
             paletteSummaryRef.current = revised;
           }
+          if (status === 'ok' || (status === 'revise' && revised)) {
+            setSummaryReviewed(true);
+          } else {
+            throw new Error('Invalid summary review response');
+          }
         } catch (parseError) {
+          setSummaryReviewed(false);
+          setError('Summary QA failed. Please try again.');
           console.warn('Gemini returned malformed summary review JSON.', parseError);
         }
       }
     } catch (err) {
       if (mode === 'summary-review') {
+        setSummaryReviewed(false);
+        setError('Summary QA failed. Please try again.');
         console.warn('Summary review failed', err);
       } else {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');

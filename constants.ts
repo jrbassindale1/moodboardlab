@@ -55,19 +55,19 @@ export const PROJECT_IMAGES: ProjectImage[] = [
 
 export const RAL_COLOR_OPTIONS = RAL_COLORS;
 
-const VMZINC_NATURAL_ZINC_TONE = '#9aa0a8';
-const VMZINC_COLOR_OPTIONS = [
-  { label: 'QUARTZ-ZINC', tone: '#7a7b7a' },
-  { label: 'PIGMENTO blue', tone: '#5b686d' },
-  { label: 'PIGMENTO brown', tone: '#4e3b31' },
-  { label: 'PIGMENTO storm grey', tone: '#2e3032' },
-  { label: 'ANTHRA-ZINC', tone: '#2f3234' },
-  { label: 'PIGMENTO red', tone: '#755c48' },
-  { label: 'PIGMENTO grey', tone: '#4c4a44' },
-  { label: 'Natural Zinc by VMZINC', tone: VMZINC_NATURAL_ZINC_TONE },
-  { label: 'AZENGAR', tone: '#a5a8a6' },
-  { label: 'PIGMENTO green', tone: '#7a7669' },
-  { label: 'PIGMENTO charcoal blue', tone: '#383e42' }
+const ZINC_NATURAL_TONE = '#9aa0a8';
+const ZINC_COLOR_OPTIONS = [
+  { label: 'Quartz Grey', tone: '#7a7b7a' },
+  { label: 'Slate Blue', tone: '#5b686d' },
+  { label: 'Terra Brown', tone: '#4e3b31' },
+  { label: 'Storm Grey', tone: '#2e3032' },
+  { label: 'Anthracite', tone: '#2f3234' },
+  { label: 'Oxide Red', tone: '#755c48' },
+  { label: 'Warm Grey', tone: '#4c4a44' },
+  { label: 'Natural Zinc', tone: ZINC_NATURAL_TONE },
+  { label: 'Textured Grey', tone: '#a5a8a6' },
+  { label: 'Moss Green', tone: '#7a7669' },
+  { label: 'Charcoal Blue', tone: '#383e42' }
 ];
 
 export const MATERIAL_PALETTE: MaterialOption[] = [
@@ -1516,13 +1516,13 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   {
     id: 'standing-seam-roof',
     name: 'Zinc Standing Seam Roof',
-    tone: VMZINC_NATURAL_ZINC_TONE,
-    finish: 'VMZINC zinc standing seam — select finish',
-    description: 'Standing seam zinc roof; long life, recyclable, and available in the VMZINC finish range.',
+    tone: ZINC_NATURAL_TONE,
+    finish: 'Zinc standing seam — select finish',
+    description: 'Standing seam zinc roof; long life, recyclable, and available in a zinc finish range.',
     keywords: ['roof', 'metal', 'standing seam', 'zinc', 'prefinished'],
     category: 'roof',
     supportsColor: true,
-    colorOptions: VMZINC_COLOR_OPTIONS,
+    colorOptions: ZINC_COLOR_OPTIONS,
     carbonIntensity: 'high'
   },
   {
@@ -2167,12 +2167,12 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   {
     id: 'zinc-cladding',
     name: 'Zinc Cladding',
-    tone: VMZINC_NATURAL_ZINC_TONE,
-    finish: 'Standing seam or flat-lock zinc — select VMZINC finish',
-    description: 'Standing seam or flat-lock zinc; self-patinating, long-life, and offered in VMZINC finishes.',
+    tone: ZINC_NATURAL_TONE,
+    finish: 'Standing seam or flat-lock zinc — select finish',
+    description: 'Standing seam or flat-lock zinc; self-patinating, long-life, and offered in the finish range.',
     keywords: ['facade', 'zinc', 'cladding', 'metal', 'standing-seam', 'external'],
     supportsColor: true,
-    colorOptions: VMZINC_COLOR_OPTIONS,
+    colorOptions: ZINC_COLOR_OPTIONS,
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'medium'

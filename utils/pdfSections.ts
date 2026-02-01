@@ -156,6 +156,85 @@ function drawTrafficLight(
   ctx.doc.circle(x, y, radius, 'F');
 }
 
+function renderEpdLifecycleMapping(ctx: PDFContext): void {
+  const title = 'Relationship to EPD lifecycle modules (EN 15804)';
+  const intro =
+    'This report uses a simplified lifecycle structure suitable for concept-stage design. ' +
+    'The impact categories shown correspond to EN 15804 lifecycle modules as follows:';
+  const rows = [
+    { left: 'Raw + Manufacturing', right: 'A1-A3 (product stage)' },
+    { left: 'Transport', right: 'A4 (transport to site)' },
+    { left: 'Installation', right: 'A5 (construction / installation)' },
+    { left: 'In use', right: 'B1, B6-B7 (use and operational effects, where relevant)' },
+    { left: 'Maintenance', right: 'B2-B5 (maintenance, repair, replacement, refurbishment)' },
+    { left: 'End of life', right: 'C1-C4 (end-of-life stages)' },
+    { left: 'Module D (contextual)', right: 'Module D (reuse, recovery, recycling potential)' },
+  ];
+  const closing =
+    'This mapping is indicative and intended for alignment and clarity, not substitution for full EPD-based assessment. ' +
+    'Detailed A-D module separation becomes relevant once quantities and product-specific EPDs are available.';
+
+  ensureSpace(ctx, 18);
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text(title, ctx.margin, ctx.cursorY);
+  ctx.cursorY += 12;
+
+  addParagraph(ctx, intro, 9, 4);
+
+  const tableWidth = ctx.pageWidth - ctx.margin * 2;
+  const gutter = 12;
+  const col1Width = Math.round(tableWidth * 0.38);
+  const col2Width = tableWidth - col1Width - gutter;
+  const col1X = ctx.margin;
+  const col2X = ctx.margin + col1Width + gutter;
+  const headerSize = 8;
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(headerSize);
+  ctx.doc.setTextColor(60);
+  ctx.doc.text('Report category', col1X, ctx.cursorY);
+  ctx.doc.text('EN 15804 reference', col2X, ctx.cursorY);
+  ctx.cursorY += 10;
+
+  ctx.doc.setDrawColor(200);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.line(ctx.margin, ctx.cursorY - 4, ctx.pageWidth - ctx.margin, ctx.cursorY - 4);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(headerSize);
+  ctx.doc.setTextColor(0);
+  const lineHeight = headerSize + 3;
+
+  rows.forEach((row) => {
+    const leftLines = ctx.doc.splitTextToSize(row.left, col1Width);
+    const rightLines = ctx.doc.splitTextToSize(row.right, col2Width);
+    const rowLines = Math.max(leftLines.length, rightLines.length);
+    ensureSpace(ctx, rowLines * lineHeight + 2);
+
+    for (let i = 0; i < rowLines; i += 1) {
+      const y = ctx.cursorY + i * lineHeight;
+      ctx.doc.text(leftLines[i] || '', col1X, y);
+      ctx.doc.text(rightLines[i] || '', col2X, y);
+    }
+    ctx.cursorY += rowLines * lineHeight + 2;
+  });
+
+  ctx.cursorY += 4;
+  ctx.doc.setFont('helvetica', 'italic');
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(90);
+  const closingLines = ctx.doc.splitTextToSize(closing, tableWidth);
+  closingLines.forEach((line: string) => {
+    ensureSpace(ctx, lineHeight);
+    ctx.doc.text(line, ctx.margin, ctx.cursorY);
+    ctx.cursorY += lineHeight;
+  });
+  ctx.doc.setTextColor(0);
+  ctx.cursorY += 6;
+}
+
 type ComplianceKey =
   | 'epd'
   | 'recycled'
@@ -413,11 +492,13 @@ export function renderComparativeDashboard(
     ctx.cursorY += 12;
   }
 
+  renderEpdLifecycleMapping(ctx);
+
   // ===== TABLE 1: Impact & Rating =====
   addHeading(ctx, 'Impact Assessment', 12);
 
   const impactColWidths = [120, 55, 50, 45, 45, 45, 45];
-  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Benefit*', 'Conf.', 'Rating'];
+  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Module D*', 'Conf.', 'Rating'];
   const tableStartX = ctx.margin;
 
   // Table header
@@ -603,7 +684,7 @@ export function renderComparativeDashboard(
   );
   ctx.cursorY += 10;
   ctx.doc.text(
-    '*Benefit shown for context only; does not offset embodied impact in rating calculation for high-carbon materials.',
+    '*Module D (contextual) shown for context only; does not offset embodied impact in rating calculation for high-carbon materials.',
     ctx.margin,
     ctx.cursorY
   );
