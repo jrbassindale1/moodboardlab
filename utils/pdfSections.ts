@@ -531,32 +531,60 @@ export function renderSpecifiersSnapshot(
 
   ctx.cursorY += 12;
 
-  const colWidth = availableWidth / 2;
-  const rightColX = ctx.margin + colWidth + 5;
-  const rowHeight = 12;
+  const swatchSize = 10;
+  const swatchRadius = swatchSize / 2;
+  const swatchX = ctx.margin;
+  const textX = swatchX + swatchSize + 10;
+  const textWidth = availableWidth - (textX - ctx.margin) - 4;
 
-  materials.forEach((material, idx) => {
-    const col = idx % 2;
-    const row = Math.floor(idx / 2);
-    const x = col === 0 ? ctx.margin : rightColX;
-    const y = ctx.cursorY + row * rowHeight;
-    const num = (idx + 1).toString().padStart(2, '0');
+  materials.forEach((material) => {
+    const nameY = ctx.cursorY;
+    const centerY = nameY - 3;
+    const tone = material.tone || '#e5e7eb';
+    const hex = tone.replace('#', '');
+    const isValidHex = hex.length === 6;
+    const r = isValidHex ? parseInt(hex.substring(0, 2), 16) : 229;
+    const g = isValidHex ? parseInt(hex.substring(2, 4), 16) : 231;
+    const b = isValidHex ? parseInt(hex.substring(4, 6), 16) : 235;
 
-    // Number
+    ctx.doc.setFillColor(r, g, b);
+    ctx.doc.setDrawColor(229, 231, 235);
+    ctx.doc.setLineWidth(0.5);
+    ctx.doc.circle(swatchX + swatchRadius, centerY, swatchRadius, 'FD');
+
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(156, 163, 175);
-    ctx.doc.text(`${num}.`, x, y);
-
-    // Name
-    const numWidth = ctx.doc.getTextWidth(`${num}.`);
-    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(10);
     ctx.doc.setTextColor(17, 24, 39);
-    ctx.doc.text(material.name, x + numWidth + 6, y);
+    ctx.doc.text(material.name, textX, nameY);
+
+    const sublineParts: string[] = [];
+    if (material.finish) sublineParts.push(material.finish);
+    if (material.category) {
+      const categoryLabel =
+        material.category === 'external'
+          ? 'External Envelope'
+          : material.category
+              .split('-')
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(' ');
+      sublineParts.push(categoryLabel);
+    }
+    const subline = sublineParts.join(' • ');
+
+    if (subline) {
+      ctx.doc.setFont('helvetica', 'normal');
+      ctx.doc.setFontSize(9);
+      ctx.doc.setTextColor(75, 85, 99);
+      const lines = ctx.doc.splitTextToSize(subline, textWidth);
+      const sublineY = nameY + 10;
+      ctx.doc.text(lines, textX, sublineY);
+      ctx.cursorY = sublineY + lines.length * 10 + 6;
+    } else {
+      ctx.cursorY = nameY + 16;
+    }
   });
 
-  const rows = Math.ceil(materials.length / 2);
-  ctx.cursorY += rows * rowHeight + 15;
+  ctx.cursorY += 10;
 
   // 4. Insight Box
   const calc = calculateProjectMetrics(materials, metrics);
