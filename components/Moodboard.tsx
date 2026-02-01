@@ -353,12 +353,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
   const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
+  const paletteSummaryRef = useRef<string | null>(null);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
   );
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sustainability' | 'summary' | 'render' | 'all' | 'detecting'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'sustainability' | 'summary' | 'summary-review' | 'render' | 'all' | 'detecting'
+  >('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -487,7 +490,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       tone = customization?.tone || steelColor;
       finishText = `${baseSteel?.finish || mat.finish} (${tone})`;
     } else if (mat.supportsColor && customization?.tone) {
-      finishText = `${mat.finish}${finishVariant ? ` ${finishVariant}` : ''} (${customization.tone})`;
+      finishText = `${mat.finish}${labelSuffix}${finishVariant ? ` ${finishVariant}` : ''} (${customization.tone})`;
     }
 
     const next: MaterialOption = {
@@ -1531,11 +1534,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
     setPaletteSummary(null);
+    paletteSummaryRef.current = null;
     setStatus('all');
     setError(null);
     try {
       await runGemini('sustainability');
       await runGemini('summary');
+      await runGemini('summary-review', { summaryDraft: paletteSummaryRef.current || '' });
       await runGemini('render', { onRender: setMoodboardRenderUrl });
       setMaterialsAccordionOpen(false);
     } finally {
@@ -1742,12 +1747,13 @@ IMPORTANT:
   };
 
   const runGemini = async (
-    mode: 'sustainability' | 'summary' | 'render',
+    mode: 'sustainability' | 'summary' | 'summary-review' | 'render',
     options?: {
       onRender?: (url: string) => void;
       retryAttempt?: number;
       editPrompt?: string;
       baseImageDataUrl?: string;
+      summaryDraft?: string;
     }
   ) => {
     if (!board.length) {
@@ -1808,7 +1814,7 @@ IMPORTANT:
     // Build sustainability prompt with lifecycle fingerprints (enhanced schema)
     const buildSustainabilityPrompt = () => buildSustainabilityPromptText(sustainabilityPayload);
 
-    const buildPaletteSummaryPrompt = () => {
+    const buildPaletteSummaryContext = () => {
       const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
       const insightById = new Map<string, SustainabilityInsight>();
       insights.forEach((insight) => {
@@ -1896,7 +1902,7 @@ IMPORTANT:
         return count + (hasLow ? 1 : 0);
       }, 0);
 
-      const summaryContext = {
+      return {
         totalMaterials: board.length,
         highestImpact,
         lowCarbonSystems,
@@ -1904,7 +1910,10 @@ IMPORTANT:
         landscapePresent: board.some((material) => isLandscapeMaterial(material)),
         lowConfidenceCount
       };
+    };
 
+    const buildPaletteSummaryPrompt = () => {
+      const summaryContext = buildPaletteSummaryContext();
       return `You are a UK architecture sustainability assistant writing a single-sentence dashboard summary for a concept-stage material palette. This copy is for the UI only (not the PDF report).
 
 Return ONLY valid JSON. No markdown. No prose outside JSON.
@@ -1924,11 +1933,40 @@ CONTEXT:
 ${JSON.stringify(summaryContext, null, 2)}`;
     };
 
+    const buildPaletteSummaryReviewPrompt = (summaryDraft: string) => {
+      const summaryContext = buildPaletteSummaryContext();
+      return `You are a QA reviewer checking a concept-stage sustainability summary against a provided context. Fix inaccuracies or contradictions.
+
+Return ONLY valid JSON. No markdown. No prose outside JSON.
+
+Output schema:
+{
+  "status": "ok|revise",
+  "revisedSummary": "string (max 200 chars, empty if status=ok)",
+  "issues": ["string"]
+}
+
+Rules:
+- Only use material names listed in highestImpact or lowCarbonSystems.
+- Summary must mention at least one lifecycle stage from driverStages.
+- Do not introduce numbers, rankings, or compliance claims.
+- If the draft is accurate, return status "ok" and empty revisedSummary.
+- If not, return status "revise" with a corrected summary.
+
+SUMMARY DRAFT:
+${summaryDraft}
+
+CONTEXT:
+${JSON.stringify(summaryContext, null, 2)}`;
+    };
+
     const prompt =
       mode === 'sustainability'
         ? buildSustainabilityPrompt()
         : mode === 'summary'
         ? buildPaletteSummaryPrompt()
+        : mode === 'summary-review'
+        ? buildPaletteSummaryReviewPrompt(options?.summaryDraft || paletteSummaryRef.current || '')
         : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
@@ -2009,9 +2047,14 @@ ${JSON.stringify(summaryContext, null, 2)}`;
         temperature: 0.45
       }
     };
-    const promptType = mode === 'summary' ? 'summary' : 'sustainability';
+    const promptType =
+      mode === 'summary'
+        ? 'summary'
+        : mode === 'summary-review'
+        ? 'summary-review'
+        : 'sustainability';
     console.log('[Gemini prompt]', { mode, promptType, prompt });
-    if (mode === 'sustainability' || mode === 'summary') {
+    if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review') {
       console.log('[Gemini prompt text]', prompt);
     }
 
@@ -2020,7 +2063,7 @@ ${JSON.stringify(summaryContext, null, 2)}`;
       console.log('[Gemini response]', { mode, data });
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
-      if (mode === 'sustainability' || mode === 'summary') {
+      if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review') {
         console.log('[Gemini response text]', text);
       }
       const cleaned = text.replace(/```json|```/g, '').trim();
@@ -2145,9 +2188,11 @@ ${JSON.stringify(summaryContext, null, 2)}`;
             throw new Error('Invalid summary sentence');
           }
           setPaletteSummary(summary);
+          paletteSummaryRef.current = summary;
           if (retryAttempt) setError(null);
         } catch (parseError) {
           setPaletteSummary(null);
+          paletteSummaryRef.current = null;
           const message = 'Gemini returned malformed summary JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
@@ -2157,9 +2202,25 @@ ${JSON.stringify(summaryContext, null, 2)}`;
           }
           return;
         }
+      } else if (mode === 'summary-review') {
+        try {
+          const parsed = JSON.parse(cleaned);
+          const status = parsed?.status;
+          const revised = typeof parsed?.revisedSummary === 'string' ? parsed.revisedSummary.trim() : '';
+          if (status === 'revise' && revised) {
+            setPaletteSummary(revised);
+            paletteSummaryRef.current = revised;
+          }
+        } catch (parseError) {
+          console.warn('Gemini returned malformed summary review JSON.', parseError);
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
+      if (mode === 'summary-review') {
+        console.warn('Summary review failed', err);
+      } else {
+        setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
+      }
     } finally {
       setStatus('idle');
     }
@@ -2504,11 +2565,11 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                   <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                     Moodboard Render
                   </div>
-                  <div className="w-full max-h-[80vh] border border-gray-200 bg-gray-50 relative overflow-hidden flex items-center justify-center">
+                  <div className="w-full border border-gray-200 bg-gray-50 relative flex items-center justify-center">
                     <img
                       src={moodboardRenderUrl}
                       alt="Moodboard"
-                      className={`max-h-full max-w-full h-auto w-auto object-contain transition ${
+                      className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition ${
                         isCreatingMoodboard ? 'opacity-40 grayscale' : ''
                       }`}
                     />

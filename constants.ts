@@ -55,6 +55,21 @@ export const PROJECT_IMAGES: ProjectImage[] = [
 
 export const RAL_COLOR_OPTIONS = RAL_COLORS;
 
+const VMZINC_NATURAL_ZINC_TONE = '#9aa0a8';
+const VMZINC_COLOR_OPTIONS = [
+  { label: 'QUARTZ-ZINC', tone: '#7a7b7a' },
+  { label: 'PIGMENTO blue', tone: '#5b686d' },
+  { label: 'PIGMENTO brown', tone: '#4e3b31' },
+  { label: 'PIGMENTO storm grey', tone: '#2e3032' },
+  { label: 'ANTHRA-ZINC', tone: '#2f3234' },
+  { label: 'PIGMENTO red', tone: '#755c48' },
+  { label: 'PIGMENTO grey', tone: '#4c4a44' },
+  { label: 'Natural Zinc by VMZINC', tone: VMZINC_NATURAL_ZINC_TONE },
+  { label: 'AZENGAR', tone: '#a5a8a6' },
+  { label: 'PIGMENTO green', tone: '#7a7669' },
+  { label: 'PIGMENTO charcoal blue', tone: '#383e42' }
+];
+
 export const MATERIAL_PALETTE: MaterialOption[] = [
   {
     id: 'steel-frame',
@@ -1501,13 +1516,13 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   {
     id: 'standing-seam-roof',
     name: 'Zinc Standing Seam Roof',
-    tone: '#9aa0a8',
-    finish: 'ZM zinc or prefinished steel standing seam — select RAL colour',
-    description:
-      'Standing seam zinc or prefinished steel roof; long life, recyclable, and available in many RAL colours.',
+    tone: VMZINC_NATURAL_ZINC_TONE,
+    finish: 'VMZINC zinc standing seam — select finish',
+    description: 'Standing seam zinc roof; long life, recyclable, and available in the VMZINC finish range.',
     keywords: ['roof', 'metal', 'standing seam', 'zinc', 'prefinished'],
     category: 'roof',
     supportsColor: true,
+    colorOptions: VMZINC_COLOR_OPTIONS,
     carbonIntensity: 'high'
   },
   {
@@ -2152,11 +2167,12 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   {
     id: 'zinc-cladding',
     name: 'Zinc Cladding',
-    tone: '#7a8a8f',
-    finish: 'Standing seam or flat-lock zinc',
-    description: 'Standing seam or flat-lock zinc; self-patinating and long-life.',
+    tone: VMZINC_NATURAL_ZINC_TONE,
+    finish: 'Standing seam or flat-lock zinc — select VMZINC finish',
+    description: 'Standing seam or flat-lock zinc; self-patinating, long-life, and offered in VMZINC finishes.',
     keywords: ['facade', 'zinc', 'cladding', 'metal', 'standing-seam', 'external'],
     supportsColor: true,
+    colorOptions: VMZINC_COLOR_OPTIONS,
     category: 'external',
     treePaths: ['Envelope>Façade'],
     carbonIntensity: 'medium'

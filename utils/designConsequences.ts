@@ -248,9 +248,33 @@ const MATERIAL_CONSEQUENCES: Array<{
     },
   },
 
+  // LINOLEUM (BIO-BASED RESILIENT)
+  {
+    pattern: /linoleum/i,
+    categories: ['floor'],
+    stages: {
+      manufacturing: {
+        risk: 'Bio-based binders and pigments still drive manufacturing impact',
+        response: 'Specify verified bio-based linoleum with low-impact pigments',
+      },
+      maintenance: {
+        risk: 'Short replacement cycles multiply lifecycle impact',
+        response: 'Specify protective finish and maintenance plan to reach 30–40 year life',
+      },
+      endOfLife: {
+        risk: 'End-of-life pathways vary by supplier',
+        response: 'Require manufacturer take-back or verified recovery route',
+      },
+    },
+    default: {
+      risk: 'Bio-based flooring still needs durability and recovery planning',
+      response: 'Confirm long-life performance and take-back before specification',
+    },
+  },
+
   // VINYL / RESILIENT FLOORING
   {
-    pattern: /vinyl|lvt|linoleum|rubber floor/i,
+    pattern: /vinyl|lvt|rubber floor/i,
     categories: ['floor'],
     stages: {
       manufacturing: {

@@ -157,8 +157,19 @@
       }
     },
     {
+      "id": "linoleum",
+      "pattern": "linoleum",
+      "patternFlags": "i",
+      "categories": ["floor"],
+      "duration": {
+        "serviceLife": 30,
+        "replacementCycle": 25,
+        "notes": "Bio-based resilient flooring; typical 20-40 year service life"
+      }
+    },
+    {
       "id": "vinyl-lvt",
-      "pattern": "vinyl|lvt|linoleum",
+      "pattern": "vinyl|lvt",
       "patternFlags": "i",
       "categories": ["floor"],
       "duration": {
