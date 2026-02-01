@@ -1000,25 +1000,19 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const highestImpactIds = embodiedFallback.slice(0, 3).map(([id]) => id);
     const highestImpact = highestImpactIds.map(labelFor);
 
+    // Conservative threshold: only genuinely low embodied materials qualify as "low-carbon".
+    const LOW_CARBON_EMBODIED_MAX = 2.2;
+
     const lowCarbonCandidates = [...metrics.entries()]
       .filter(([id, metric]) => {
         const material = materialById.get(id);
         if (!material) return false;
         if (highestImpactIds.includes(id)) return false;
-        return (
-          metric.traffic_light === 'green' ||
-          metric.environmental_benefit_score >= 2 ||
-          isLandscapeMaterial(material)
-        );
+        return metric.traffic_light === 'green' || metric.embodied_proxy <= LOW_CARBON_EMBODIED_MAX;
       })
       .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
 
-    const lowCarbonSystems = (lowCarbonCandidates.length > 0
-      ? lowCarbonCandidates
-      : [...metrics.entries()].filter(([id]) => !highestImpactIds.includes(id))
-    )
-      .slice(0, 3)
-      .map(([id]) => labelFor(id));
+    const lowCarbonSystems = lowCarbonCandidates.slice(0, 3).map(([id]) => labelFor(id));
 
     const actionPriorities = uniqueList(
       highestImpactIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))

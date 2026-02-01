@@ -15,7 +15,7 @@ import type {
 } from '../types/sustainability';
 import type { MaterialOption } from '../types';
 import { STAGE_LABELS } from './designConsequences';
-import { getCircularityIndicator, formatScore, LANDSCAPE_CARBON_CAP_HARD } from './sustainabilityScoring';
+import { getCircularityIndicator, formatScore } from './sustainabilityScoring';
 import { isLandscapeMaterial, isHardLandscapeMaterial } from './lifecycleDurations';
 import { getMaterialIconId } from './materialIconMapping';
 
@@ -388,51 +388,50 @@ export function renderSpecifiersSnapshot(
   materials: MaterialOption[],
   metrics: Map<string, MaterialMetrics>
 ): void {
-  const headerHeight = 40;
+  const headerHeight = 30;
   ctx.doc.setFillColor(243, 244, 246);
   ctx.doc.rect(0, 0, ctx.pageWidth, headerHeight, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(18);
   ctx.doc.setTextColor(0);
-  ctx.doc.text('Sustainability Snapshot', ctx.margin, 25);
+  ctx.doc.text('Sustainability Snapshot', ctx.margin, 19);
 
   ctx.doc.setFontSize(9);
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setTextColor(102, 102, 102);
   const dateStr = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
   const metaX = ctx.pageWidth - ctx.margin;
-  ctx.doc.text(`DATE: ${dateStr}`, metaX, 16, { align: 'right' });
-  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 25, { align: 'right' });
-  ctx.doc.text('LOCATION: UK Context', metaX, 34, { align: 'right' });
+  ctx.doc.text(`DATE: ${dateStr}`, metaX, 12, { align: 'right' });
+  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 20, { align: 'right' });
+  ctx.doc.text('LOCATION: UK Context', metaX, 28, { align: 'right' });
 
-  ctx.cursorY = headerHeight + 15;
-
-  const imgSize = 120;
+  const imgSize = Math.min(140, ctx.pageWidth * 0.7);
   const imgX = (ctx.pageWidth - imgSize) / 2;
+  const imgY = headerHeight + 20;
 
   if (moodboardImage) {
     try {
-      ctx.doc.addImage(moodboardImage, 'PNG', imgX, ctx.cursorY, imgSize, imgSize);
+      ctx.doc.addImage(moodboardImage, 'PNG', imgX, imgY, imgSize, imgSize);
     } catch (error) {
       ctx.doc.setFillColor(240);
-      ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize, 'F');
+      ctx.doc.rect(imgX, imgY, imgSize, imgSize, 'F');
       ctx.doc.setFontSize(10);
       ctx.doc.setTextColor(150);
-      ctx.doc.text('Moodboard Image', ctx.pageWidth / 2, ctx.cursorY + 60, { align: 'center' });
+      ctx.doc.text('Moodboard Image', ctx.pageWidth / 2, imgY + imgSize / 2, { align: 'center' });
     }
   } else {
     ctx.doc.setFillColor(240);
-    ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize, 'F');
+    ctx.doc.rect(imgX, imgY, imgSize, imgSize, 'F');
     ctx.doc.setFontSize(10);
     ctx.doc.setTextColor(150);
-    ctx.doc.text('No Image Available', ctx.pageWidth / 2, ctx.cursorY + 60, { align: 'center' });
+    ctx.doc.text('No Image Available', ctx.pageWidth / 2, imgY + imgSize / 2, { align: 'center' });
   }
   ctx.doc.setDrawColor(229, 231, 235);
   ctx.doc.setLineWidth(0.5);
-  ctx.doc.rect(imgX, ctx.cursorY, imgSize, imgSize);
+  ctx.doc.rect(imgX, imgY, imgSize, imgSize);
 
-  ctx.cursorY += imgSize + 12;
+  ctx.cursorY = imgY + imgSize + 10;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(10);
   ctx.doc.setTextColor(0);
@@ -455,12 +454,12 @@ export function renderSpecifiersSnapshot(
 
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(0);
+    ctx.doc.setTextColor(156, 163, 175);
     ctx.doc.text(`${num}.`, x, y);
 
     const numWidth = ctx.doc.getTextWidth(`${num}.`);
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setTextColor(51, 51, 51);
+    ctx.doc.setTextColor(17, 24, 39);
     ctx.doc.text(material.name, x + numWidth + 4, y);
   });
 
@@ -468,21 +467,6 @@ export function renderSpecifiersSnapshot(
   ctx.cursorY += rows * rowHeight + 12;
 
   const calc = calculateProjectMetrics(materials, metrics);
-
-  const insightHeight = 35;
-  ctx.doc.setFillColor(240, 253, 244);
-  ctx.doc.rect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, insightHeight, 'F');
-  ctx.doc.setFillColor(22, 163, 74);
-  ctx.doc.rect(ctx.margin, ctx.cursorY, 4, insightHeight, 'F');
-
-  ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(22, 163, 74);
-  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + 10, ctx.cursorY + 12);
-
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(40);
 
   let insightText = `This configuration represents a ${calc.paletteType}. `;
   if (calc.bioRatio > 0.3) {
@@ -492,8 +476,30 @@ export function renderSpecifiersSnapshot(
   }
   insightText += 'See Page 2 for critical hotspots and detailed strategy.';
 
-  const lines = ctx.doc.splitTextToSize(insightText, ctx.pageWidth - ctx.margin * 2 - 20);
-  ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY + 22);
+  const boxWidth = ctx.pageWidth - ctx.margin * 2;
+  const padding = 10;
+  const textWidth = boxWidth - padding * 2;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  const lines = ctx.doc.splitTextToSize(insightText, textWidth);
+  const labelHeight = 10;
+  const lineHeight = 10;
+  const boxHeight = Math.max(32, padding * 2 + labelHeight + lines.length * lineHeight);
+
+  ctx.doc.setFillColor(240, 253, 244);
+  ctx.doc.rect(ctx.margin, ctx.cursorY, boxWidth, boxHeight, 'F');
+  ctx.doc.setFillColor(22, 163, 74);
+  ctx.doc.rect(ctx.margin, ctx.cursorY, 4, boxHeight, 'F');
+
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(22, 163, 74);
+  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + padding, ctx.cursorY + padding + 8);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(9);
+  ctx.doc.setTextColor(40);
+  ctx.doc.text(lines, ctx.margin + padding, ctx.cursorY + padding + labelHeight + 6);
 }
 
 export function renderStrategicOverview(
@@ -513,7 +519,7 @@ export function renderStrategicOverview(
   const dialWidth = (ctx.pageWidth - ctx.margin * 2 - dialGap * 2) / 3;
   const calc = calculateProjectMetrics(materials, metrics);
 
-  const drawDial = (label: string, value: string, subtext: string, x: number, highIsGood = true) => {
+  const drawDial = (label: string, value: string, subtext: string, x: number) => {
     const labelY = dialY;
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setFontSize(8);
@@ -521,22 +527,18 @@ export function renderStrategicOverview(
     ctx.doc.text(label.toUpperCase(), x, labelY);
 
     const valueY = labelY + 14;
-    let circleColor: [number, number, number] = [220, 53, 69];
-    if (highIsGood) {
-      if (value === 'High' || value === 'Good') circleColor = [22, 163, 74];
-      else if (value === 'Medium') circleColor = [255, 191, 0];
-    } else {
-      if (value === 'Low') circleColor = [22, 163, 74];
-      else if (value === 'Medium') circleColor = [255, 191, 0];
-    }
+    let circleColor: [number, number, number] = [16, 185, 129];
+    if (value === 'High') circleColor = [239, 68, 68];
+    else if (value === 'Medium') circleColor = [245, 158, 11];
+    else if (value === 'Low') circleColor = [16, 185, 129];
 
     ctx.doc.setFillColor(...circleColor);
-    ctx.doc.circle(x + 6, valueY - 4, 6, 'F');
+    ctx.doc.circle(x + 4, valueY - 4, 4, 'F');
 
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(14);
     ctx.doc.setTextColor(0);
-    ctx.doc.text(value, x + 16, valueY);
+    ctx.doc.text(value, x + 12, valueY);
 
     ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.setFontSize(8);
@@ -549,14 +551,13 @@ export function renderStrategicOverview(
       ? Array.from(metrics.values()).reduce((a, b) => a + b.embodied_proxy, 0) / materials.length
       : 0;
   let effLabel = 'Medium';
-  if (avgEmbodied < 2.5) effLabel = 'High';
-  if (avgEmbodied > 3.8) effLabel = 'Low';
+  if (avgEmbodied < 2.5) effLabel = 'Low';
+  if (avgEmbodied > 3.8) effLabel = 'High';
   drawDial(
     'Production Impact',
-    effLabel === 'Low' ? 'High' : effLabel === 'High' ? 'Low' : 'Medium',
+    effLabel,
     'A1-A3 Manufacturing',
-    ctx.margin,
-    false
+    ctx.margin
   );
 
   let circLabel = 'Medium';
@@ -569,7 +570,7 @@ export function renderStrategicOverview(
 
   ctx.cursorY += 52;
 
-  const columnGap = 15 * 2.83465;
+  const columnGap = 15;
   const halfWidth = (ctx.pageWidth - ctx.margin * 2 - columnGap) / 2;
   const rightColX = ctx.margin + halfWidth + columnGap;
 
@@ -655,33 +656,29 @@ export function renderStrategicOverview(
   addHeading(ctx, 'Priority Specification Notes', 12);
 
   const tableWidth = ctx.pageWidth - ctx.margin * 2;
-  const col1Width = tableWidth * 0.25;
-  const col2Width = tableWidth * 0.3;
-  const col3Width = tableWidth * 0.45;
+  const col1W = tableWidth * 0.25;
+  const col2W = tableWidth * 0.3;
+  const col3W = tableWidth * 0.45;
   const col1X = ctx.margin;
-  const col2X = ctx.margin + col1Width;
-  const col3X = ctx.margin + col1Width + col2Width;
-  const mmToPt = 2.83465;
-  const cellPadding = 4 * mmToPt;
-  const textInset = cellPadding / 2;
+  const col2X = ctx.margin + col1W;
+  const col3X = ctx.margin + col1W + col2W;
 
   ctx.doc.setFillColor(55, 65, 81);
-  ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, 8, 'F');
-
+  ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, 9, 'F');
   ctx.doc.setTextColor(255, 255, 255);
   ctx.doc.setFontSize(8);
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.text('MATERIAL', col1X + 2, ctx.cursorY + 5);
-  ctx.doc.text('RISK / DRIVER', col2X + 2, ctx.cursorY + 5);
-  ctx.doc.text('RECOMMENDED ACTION', col3X + 2, ctx.cursorY + 5);
+  ctx.doc.text('MATERIAL', col1X + 2, ctx.cursorY + 6);
+  ctx.doc.text('RISK / DRIVER', col2X + 2, ctx.cursorY + 6);
+  ctx.doc.text('RECOMMENDED ACTION', col3X + 2, ctx.cursorY + 6);
 
-  ctx.cursorY += 12;
+  ctx.cursorY += 9;
   ctx.doc.setTextColor(0);
 
   const riskItems = materials
     .map((material) => {
       const metric = metrics.get(material.id);
-      if (!metric) return { material, score: 0, reason: '', action: '' };
+      if (!metric) return { m: material, score: 0, reason: '', action: '' };
 
       let riskScore = 0;
       let reason = '';
@@ -701,42 +698,46 @@ export function renderStrategicOverview(
         action = 'Ensure mechanical fixings to allow material separation.';
       }
 
-      return { material, score: riskScore, reason, action };
+      return { m: material, score: riskScore, reason, action };
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
-  riskItems.forEach((item, index) => {
+  riskItems.forEach((item) => {
     if (item.score === 0) return;
 
-    const nameLines = ctx.doc.splitTextToSize(item.material.name, col1Width - cellPadding);
-    const riskLines = ctx.doc.splitTextToSize(item.reason, col2Width - cellPadding);
-    const actionLines = ctx.doc.splitTextToSize(item.action, col3Width - cellPadding);
-    const maxLines = Math.max(nameLines.length, riskLines.length, actionLines.length);
-    const rowPaddingY = 3;
-    const lineHeight = 9;
-    const rowHeight = maxLines * lineHeight + rowPaddingY * 2;
+    ctx.doc.setFont('helvetica', 'bold');
+    const nameLines = ctx.doc.splitTextToSize(item.m.name, col1W - 4);
 
-    if (index % 2 === 0) {
-      ctx.doc.setFillColor(249, 250, 251);
-      ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
+    ctx.doc.setFont('helvetica', 'normal');
+    const riskLines = ctx.doc.splitTextToSize(item.reason, col2W - 4);
+    const actionLines = ctx.doc.splitTextToSize(item.action, col3W - 4);
+
+    const maxLines = Math.max(nameLines.length, riskLines.length, actionLines.length);
+    const lineHeight = 4;
+    const padding = 6;
+    const rowHeight = maxLines * 4 + padding + 4;
+
+    if (ctx.cursorY + rowHeight > ctx.pageHeight - ctx.margin) {
+      ctx.doc.addPage();
+      ctx.cursorY = ctx.margin;
     }
 
-    const textY = ctx.cursorY + rowPaddingY + 6;
+    const textY = ctx.cursorY + 4;
 
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(8);
-    ctx.doc.text(nameLines, col1X + textInset, textY);
+    ctx.doc.text(nameLines, col1X + 2, textY);
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
-    ctx.doc.text(riskLines, col2X + textInset, textY);
-    ctx.doc.text(actionLines, col3X + textInset, textY);
+    ctx.doc.text(riskLines, col2X + 2, textY);
+    ctx.doc.text(actionLines, col3X + 2, textY);
 
     ctx.doc.setDrawColor(229, 231, 235);
-    ctx.doc.line(ctx.margin, ctx.cursorY + rowHeight - 1, ctx.pageWidth - ctx.margin, ctx.cursorY + rowHeight - 1);
+    ctx.doc.setLineWidth(0.5);
+    ctx.doc.line(ctx.margin, ctx.cursorY + rowHeight, ctx.pageWidth - ctx.margin, ctx.cursorY + rowHeight);
 
-    ctx.cursorY += rowHeight + 2;
+    ctx.cursorY += rowHeight;
   });
 
   const footerHeight = 18;
@@ -769,313 +770,142 @@ export function renderComparativeDashboard(
   addHeading(ctx, 'Material Comparison Dashboard', 16);
   ctx.cursorY += 5;
 
-  // ===== CARBON DOMINANT COMPONENTS CALLOUT =====
-  // Identify materials contributing >15% of total embodied carbon
-  // IMPORTANT: Landscape materials are EXCLUDED from this callout
-  // because they use a different carbon model (regenerative, not industrial)
-  const totalEmbodied = Array.from(metrics.values()).reduce(
-    (sum, m) => sum + m.embodied_proxy,
-    0
-  );
+  // --- RENDER CARBON DISTRIBUTION CHART ---
+  const chartY = ctx.margin + 20;
+  const chartWidth = ctx.pageWidth - ctx.margin * 2;
 
-  // Calculate landscape contribution for capping purposes
-  let landscapeEmbodied = 0;
-  materials.forEach((mat) => {
-    if (isLandscapeMaterial(mat)) {
-      const metric = metrics.get(mat.id);
-      if (metric) landscapeEmbodied += metric.embodied_proxy;
-    }
-  });
-  const landscapePercent = totalEmbodied > 0 ? (landscapeEmbodied / totalEmbodied) * 100 : 0;
-  const landscapeCapped = landscapePercent > LANDSCAPE_CARBON_CAP_HARD * 100;
+  const totalEmbodied = Array.from(metrics.values()).reduce((sum, m) => sum + m.embodied_proxy, 0);
+  const sortedMat = [...materials]
+    .filter((m) => !isLandscapeMaterial(m))
+    .sort((a, b) => {
+      const mA = metrics.get(a.id)?.embodied_proxy || 0;
+      const mB = metrics.get(b.id)?.embodied_proxy || 0;
+      return mB - mA;
+    })
+    .slice(0, 5);
 
-  // Only include INDUSTRIAL materials (not landscape) as carbon dominants
-  const carbonDominants: { material: MaterialOption; percent: number }[] = [];
-  materials.forEach((mat) => {
-    // CRITICAL: Landscape materials cannot be "carbon dominant components"
-    if (isLandscapeMaterial(mat)) return;
+  ctx.doc.setFont('helvetica', 'bold');
+  ctx.doc.setFontSize(10);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text('Estimated Embodied Carbon Distribution (Top 5 Contributors)', ctx.margin, chartY - 5);
 
-    const metric = metrics.get(mat.id);
-    if (metric && totalEmbodied > 0) {
-      const percent = (metric.embodied_proxy / totalEmbodied) * 100;
-      if (percent >= 15) {
-        carbonDominants.push({ material: mat, percent });
-      }
-    }
-  });
+  let currentY = chartY;
+  const maxBarWidth = chartWidth - 60;
 
-  if (carbonDominants.length > 0) {
-    // Draw attention box
-    ctx.doc.setFillColor(255, 245, 238); // Light orange background
-    ctx.doc.setDrawColor(220, 53, 69);
-    ctx.doc.setLineWidth(1);
-    const boxHeight = 15 + carbonDominants.length * 12;
-    ctx.doc.roundedRect(ctx.margin, ctx.cursorY, ctx.pageWidth - ctx.margin * 2, boxHeight, 3, 3, 'FD');
+  sortedMat.forEach((mat) => {
+    const met = metrics.get(mat.id);
+    if (!met) return;
 
-    ctx.cursorY += 12;
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(10);
-    ctx.doc.setTextColor(220, 53, 69);
-    ctx.doc.text('CARBON DOMINANT COMPONENTS (within this palette, early-stage estimate):', ctx.margin + 8, ctx.cursorY);
-    ctx.cursorY += 12;
+    const percentage = totalEmbodied > 0 ? met.embodied_proxy / totalEmbodied : 0;
+    const barW = maxBarWidth * percentage;
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(9);
-    ctx.doc.setTextColor(0);
-    carbonDominants.forEach(({ material, percent }) => {
-      ctx.doc.text(`- ${material.name} (${percent.toFixed(0)}% of palette embodied carbon)`, ctx.margin + 15, ctx.cursorY);
-      ctx.cursorY += 12;
-    });
-    ctx.cursorY += 4;
-    ctx.doc.setFont('helvetica', 'italic');
-    ctx.doc.setFontSize(7);
-    ctx.doc.setTextColor(90);
-    ctx.doc.text(
-      'Percentages reflect normalized early-stage weighting rather than detailed quantity take-offs.',
-      ctx.margin + 15,
-      ctx.cursorY
-    );
-    ctx.cursorY += 8;
-    ctx.doc.text(
-      'High ranking may be driven by frequent replacement over 60 years, not single-application intensity.',
-      ctx.margin + 15,
-      ctx.cursorY
-    );
-    ctx.doc.setTextColor(0);
-    ctx.cursorY += 10;
-  }
-
-  // Show landscape cap note if landscape contribution was significant
-  if (landscapeCapped) {
-    ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.setFontSize(8);
-    ctx.doc.setTextColor(100);
-    ctx.doc.text(
-      `Note: Landscape systems (${landscapePercent.toFixed(0)}% raw) capped at ${LANDSCAPE_CARBON_CAP_HARD * 100}% to prevent distortion without quantities.`,
-      ctx.margin,
-      ctx.cursorY
-    );
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 12;
-  }
+    ctx.doc.text(mat.name, ctx.margin, currentY + 3);
 
-  renderEpdLifecycleMapping(ctx);
+    ctx.doc.setFillColor(55, 65, 81);
+    ctx.doc.roundedRect(ctx.margin + 50, currentY - 2, barW, 6, 1, 1, 'F');
 
-  // ===== TABLE 1: Impact & Rating =====
-  addHeading(ctx, 'Impact Assessment (Grouped by Element)', 12);
-  ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(90);
-  ctx.doc.text(
-    'Grouped to avoid cross-comparing structural necessities with landscape or finish items.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.doc.setTextColor(0);
-  ctx.cursorY += 10;
+    ctx.doc.setTextColor(100);
+    ctx.doc.text(`${(percentage * 100).toFixed(0)}%`, ctx.margin + 50 + barW + 5, currentY + 3);
+    ctx.doc.setTextColor(0);
 
-  const impactColWidths = [120, 55, 50, 45, 45, 45, 45];
-  const impactHeaders = ['Material', 'Embodied', 'In-use', 'EOL', 'Module D*', 'Conf.', 'Rating'];
-  const tableStartX = ctx.margin;
-  const impactTableWidth = impactColWidths.reduce((sum, width) => sum + width, 0);
+    currentY += 10;
+  });
 
-  // Table header
+  ctx.cursorY = currentY + 20;
+
+  // ===== MASTER TABLE: Impact Summary =====
+  addHeading(ctx, 'Element Summary (Grouped by Element)', 12);
+
+  const tableWidth = ctx.pageWidth - ctx.margin * 2;
+  const colMaterialW = tableWidth * 0.25;
+  const colEmbodiedW = tableWidth * 0.3;
+  const colLifeW = tableWidth * 0.18;
+  const colReplW = tableWidth * 0.17;
+  const colRatingW = tableWidth * 0.1;
+
+  const colMaterialX = ctx.margin;
+  const colEmbodiedX = colMaterialX + colMaterialW;
+  const colLifeX = colEmbodiedX + colEmbodiedW;
+  const colReplX = colLifeX + colLifeW;
+  const colRatingX = colReplX + colReplW;
+
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(8);
   ctx.doc.setTextColor(60);
-  let xPos = tableStartX;
-  impactHeaders.forEach((header, i) => {
-    ctx.doc.text(header, xPos, ctx.cursorY);
-    xPos += impactColWidths[i];
-  });
-  ctx.cursorY += 12;
+  ctx.doc.text('Material', colMaterialX + 2, ctx.cursorY);
+  ctx.doc.text('Embodied (A1-A3)', colEmbodiedX + 2, ctx.cursorY);
+  ctx.doc.text('Lifespan', colLifeX + 2, ctx.cursorY);
+  ctx.doc.text('Replacements', colReplX + 2, ctx.cursorY);
+  ctx.doc.text('Rating', colRatingX + 2, ctx.cursorY);
+  ctx.cursorY += 10;
 
-  // Header line
   ctx.doc.setDrawColor(180);
   ctx.doc.setLineWidth(0.5);
   ctx.doc.line(ctx.margin, ctx.cursorY - 5, ctx.pageWidth - ctx.margin, ctx.cursorY - 5);
 
-  // Table rows
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(0);
+  let rowIndex = 0;
 
   groupMaterialsByElement(materials).forEach(({ group, items }) => {
     if (items.length === 0) return;
-    drawGroupHeader(ctx, group.label, tableStartX, impactTableWidth);
+    drawGroupHeader(ctx, group.label, ctx.margin, tableWidth);
     items.forEach((material) => {
-      ensureSpace(ctx, 14);
       const metric = metrics.get(material.id);
       if (!metric) return;
 
-      xPos = tableStartX;
+      const nameLines = ctx.doc.splitTextToSize(material.name, colMaterialW - 4);
+      const maxLines = nameLines.length;
+      const rowPadding = 3;
+      const lineHeight = 9;
+      const rowHeight = maxLines * lineHeight + rowPadding * 2;
 
-      // Material name (truncated)
-      const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
-      ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-      xPos += impactColWidths[0];
+      ensureSpace(ctx, rowHeight + 2);
 
-      // Scores
-      ctx.doc.text(formatScore(metric.embodied_proxy), xPos, ctx.cursorY);
-      xPos += impactColWidths[1];
-
-      ctx.doc.text(formatScore(metric.in_use_proxy), xPos, ctx.cursorY);
-      xPos += impactColWidths[2];
-
-      ctx.doc.text(formatScore(metric.end_of_life_proxy), xPos, ctx.cursorY);
-      xPos += impactColWidths[3];
-
-      ctx.doc.text(formatScore(metric.benefit_score), xPos, ctx.cursorY);
-      xPos += impactColWidths[4];
-
-      // Confidence
-      const confPercent = Math.round(metric.confidence_score * 100);
-      ctx.doc.text(`${confPercent}%`, xPos, ctx.cursorY);
-      xPos += impactColWidths[5];
-
-      // Traffic light
-      drawTrafficLight(ctx, xPos + 12, ctx.cursorY - 3, metric.traffic_light, 4);
-
-      ctx.cursorY += 13;
-    });
-  });
-
-  // ===== TABLE 2: Lifecycle & Durability =====
-  ctx.cursorY += 15;
-  addHeading(ctx, 'Lifecycle & Durability (Grouped by Element)', 12);
-
-  const lifecycleColWidths = [120, 65, 70, 65, 100];
-  const lifecycleHeaders = ['Material', 'Service Life', 'Replacements*', 'Circularity', 'Carbon Payback'];
-  const lifecycleTableWidth = lifecycleColWidths.reduce((sum, width) => sum + width, 0);
-
-  // Table header
-  ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(60);
-  xPos = tableStartX;
-  lifecycleHeaders.forEach((header, i) => {
-    ctx.doc.text(header, xPos, ctx.cursorY);
-    xPos += lifecycleColWidths[i];
-  });
-  ctx.cursorY += 12;
-
-  // Header line
-  ctx.doc.line(ctx.margin, ctx.cursorY - 5, ctx.pageWidth - ctx.margin, ctx.cursorY - 5);
-
-  // Table rows
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(8);
-  ctx.doc.setTextColor(0);
-
-  groupMaterialsByElement(materials).forEach(({ group, items }) => {
-    if (items.length === 0) return;
-    drawGroupHeader(ctx, group.label, tableStartX, lifecycleTableWidth);
-    items.forEach((material) => {
-      ensureSpace(ctx, 14);
-      const metric = metrics.get(material.id);
-      if (!metric) return;
-
-      xPos = tableStartX;
-
-      // Material name
-      const truncatedName = material.name.length > 18 ? material.name.substring(0, 16) + '...' : material.name;
-      ctx.doc.text(truncatedName, xPos, ctx.cursorY);
-      xPos += lifecycleColWidths[0];
-
-      // Service life
-      const lifeText = metric.service_life >= 100 ? '100+ years' : `${metric.service_life} years`;
-      ctx.doc.text(lifeText, xPos, ctx.cursorY);
-      xPos += lifecycleColWidths[1];
-
-      // Replacement cycles (over 60-year building life)
-      // Landscape materials show "establishment + maintenance" not "replacements"
-      const isLandscape = isLandscapeMaterial(material);
-      const isPartial = !Number.isInteger(metric.lifecycle_multiplier);
-      const replValue = metric.lifecycle_multiplier.toString();
-      let replText: string;
-      if (isLandscape) {
-        replText = `${replValue}x (est. + maint.)`; // Landscape: establishment + maintenance
-      } else if (metric.lifecycle_multiplier === 1) {
-        replText = '1x (full life)';
-      } else {
-        replText = `${replValue}x${isPartial ? ' (partial system)' : ''}`;
-      }
-      ctx.doc.text(replText, xPos, ctx.cursorY);
-      xPos += lifecycleColWidths[2];
-
-      // Circularity indicator
-      const circ = getCircularityIndicator(metric.end_of_life_proxy);
-      const circText = circ === 'high' ? 'High' : circ === 'medium' ? 'Medium' : 'Low';
-      ctx.doc.text(circText, xPos, ctx.cursorY);
-      xPos += lifecycleColWidths[3];
-
-      // Carbon payback
-      if (metric.carbon_payback) {
-        const payback = metric.carbon_payback;
-        const paybackText = payback.years === 0
-          ? 'Immediate'
-          : payback.rangeYears
-          ? `~${payback.rangeYears[0]}-${payback.rangeYears[1]} years`
-          : `~${payback.years} years`;
-        // Color code based on payback
-        if (payback.years === 0) {
-          ctx.doc.setTextColor(34, 139, 34); // Green
-        } else if (payback.years <= 5) {
-          ctx.doc.setTextColor(0, 128, 0);
-        }
-        ctx.doc.text(paybackText, xPos, ctx.cursorY);
-        ctx.doc.setTextColor(0);
-      } else {
-        ctx.doc.setTextColor(150);
-        ctx.doc.text('No payback claim', xPos, ctx.cursorY);
-        ctx.doc.setTextColor(0);
+      if (rowIndex % 2 === 1) {
+        ctx.doc.setFillColor(249, 250, 251);
+        ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
       }
 
-      ctx.cursorY += 13;
+      const textY = ctx.cursorY + rowPadding + 6;
+
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(8);
+      ctx.doc.setTextColor(0);
+      ctx.doc.text(nameLines, colMaterialX + 2, textY);
+
+      ctx.doc.setFont('helvetica', 'normal');
+      ctx.doc.setFontSize(8);
+
+      const embodiedValue = formatScore(metric.embodied_proxy);
+      ctx.doc.text(embodiedValue, colEmbodiedX + 2, textY);
+
+      const numberWidth = ctx.doc.getTextWidth(embodiedValue);
+      const barX = colEmbodiedX + 2 + numberWidth + 6;
+      const barMaxW = Math.max(12, colEmbodiedW - (barX - colEmbodiedX) - 6);
+      const barY = textY - 4;
+      ctx.doc.setFillColor(229, 231, 235);
+      ctx.doc.rect(barX, barY, barMaxW, 4, 'F');
+      ctx.doc.setFillColor(156, 163, 175);
+      ctx.doc.rect(barX, barY, barMaxW * Math.min(metric.embodied_proxy / 5, 1), 4, 'F');
+
+      const lifeText = metric.service_life >= 100 ? '100+ yrs' : `${metric.service_life} yrs`;
+      ctx.doc.text(lifeText, colLifeX + 2, textY);
+
+      const replText = `${metric.lifecycle_multiplier}x`;
+      ctx.doc.text(replText, colReplX + 2, textY);
+
+      drawTrafficLight(ctx, colRatingX + colRatingW / 2, textY - 2, metric.traffic_light, 4);
+
+      ctx.doc.setDrawColor(229, 231, 235);
+      ctx.doc.setLineWidth(0.5);
+      ctx.doc.line(ctx.margin, ctx.cursorY + rowHeight, ctx.pageWidth - ctx.margin, ctx.cursorY + rowHeight);
+
+      ctx.cursorY += rowHeight;
+      rowIndex += 1;
     });
   });
-
-  // Legend
-  ctx.cursorY += 12;
-  ctx.doc.setFontSize(7);
-  ctx.doc.setTextColor(80);
-  ctx.doc.text(
-    '* Industrial materials: Replacements = how many times installed over 60-year building life.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.text(
-    '* Landscape materials: "est. + maint." = establishment + maintenance factor (~1.8x), NOT full replacements. Re-seeding ≠ re-manufacturing.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.text(
-    'Carbon Payback: refers to biogenic storage, operational offsets, or ecosystem sequestration (depending on material type). If none, we show "No payback claim".',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.text(
-    'Rating: Green = low impact + env. benefit | Amber = moderate | Red = high embodied impact or repeated replacement burden. Landscape rated on ecosystem benefits.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.text(
-    'Note: Landscape contributions capped at 10% of palette carbon in early-stage mode (without quantities). Ecosystem benefits not captured in embodied metrics.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.cursorY += 10;
-  ctx.doc.text(
-    '*Module D (contextual) shown for context only; does not offset embodied impact in rating calculation for high-carbon materials.',
-    ctx.margin,
-    ctx.cursorY
-  );
-  ctx.doc.setTextColor(0);
 }
 
 /**
