@@ -1164,7 +1164,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       renderComplianceReadinessSummary(ctx, insights, board);
     }
 
-    // ========== PAGES 6+: Material Details (one material per page) ==========
+    // ========== PAGES 6+: Material Details (two materials per page) ==========
     if (board.length > 0) {
       // Calculate palette context for rankings
       const totalEmbodied = Array.from(metrics.values()).reduce(

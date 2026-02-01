@@ -110,6 +110,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upload-4k' | 'edit' | null>(null);
 
   const summaryText = useMemo(() => {
     if (!board.length) return 'No materials selected yet.';
@@ -379,6 +380,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const runApplyRender = async (options?: {
     editPrompt?: string;
     baseImageDataUrl?: string;
+    imageSize?: '1K' | '4K';
+    renderMode?: 'upload-1k' | 'upload-4k' | 'edit';
   }) => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
@@ -391,6 +394,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
 
     setStatus('render');
+    setRenderingMode(options?.renderMode ?? null);
     setError(null);
 
     const materialsByCategory: Record<string, MaterialOption[]> = {};
@@ -436,6 +440,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
     try {
+      const imageSize = options?.imageSize ?? '1K';
       let aspectRatio = '1:1';
       if (uploadedImages.length > 0) {
         const firstImage = uploadedImages[0];
@@ -462,7 +467,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         },
         imageConfig: {
           aspectRatio,
-          imageSize: '1K'
+          imageSize
         }
       };
 
@@ -490,6 +495,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
     } finally {
       setStatus('idle');
+      setRenderingMode(null);
     }
   };
 
@@ -505,7 +511,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
     await runApplyRender({
       editPrompt: trimmed,
-      baseImageDataUrl: appliedRenderUrl
+      baseImageDataUrl: appliedRenderUrl,
+      renderMode: 'edit'
     });
   };
 
@@ -606,23 +613,42 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                         </div>
                       ))}
                     </div>
-                    <button
-                      onClick={() => runApplyRender()}
-                      disabled={status !== 'idle' || !board.length}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {status === 'render' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Rendering with Upload
-                        </>
-                      ) : (
-                        <>
-                          <ImageDown className="w-4 h-4" />
-                          Render with Upload
-                        </>
-                      )}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
+                        disabled={status !== 'idle' || !board.length}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      >
+                        {status === 'render' && renderingMode === 'upload-1k' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Rendering with Upload
+                          </>
+                        ) : (
+                          <>
+                            <ImageDown className="w-4 h-4" />
+                            Render with Upload
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => runApplyRender({ imageSize: '4K', renderMode: 'upload-4k' })}
+                        disabled={status !== 'idle' || !board.length}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-100 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-400"
+                      >
+                        {status === 'render' && renderingMode === 'upload-4k' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Rendering 4K
+                          </>
+                        ) : (
+                          <>
+                            <ImageDown className="w-4 h-4" />
+                            Render 4K
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -634,25 +660,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                       Applied Render
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
-                        disabled={downloadingId === 'applied'}
-                        className="inline-flex items-center gap-2 px-3 py-1 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                      >
-                        {downloadingId === 'applied' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Preparing...
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                            Download
-                          </>
-                        )}
-                      </button>
                     </div>
                   </div>
                   <div className="w-full border border-gray-200 bg-gray-50">
@@ -676,7 +683,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       disabled={status !== 'idle' || !appliedRenderUrl}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
-                      {status === 'render' ? (
+                      {status === 'render' && renderingMode === 'edit' ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Updating render
@@ -689,6 +696,25 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       )}
                     </button>
                   </div>
+                </div>
+                <div className="flex justify-end pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
+                    disabled={downloadingId === 'applied'}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {downloadingId === 'applied' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <ImageDown className="w-4 h-4" />
+                        Download
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             )}
