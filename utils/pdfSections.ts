@@ -472,118 +472,124 @@ export function renderSpecifiersSnapshot(
   materials: MaterialOption[],
   metrics: Map<string, MaterialMetrics>
 ): void {
-  const headerHeight = 30;
+  // 1. Header
+  const headerHeight = 35;
   ctx.doc.setFillColor(243, 244, 246);
   ctx.doc.rect(0, 0, ctx.pageWidth, headerHeight, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(18);
-  ctx.doc.setTextColor(0);
-  ctx.doc.text('Sustainability Snapshot', ctx.margin, 19);
+  ctx.doc.setFontSize(20);
+  ctx.doc.setTextColor(17, 24, 39);
+  ctx.doc.text('Sustainability Snapshot', ctx.margin, 23);
 
+  // Metadata
   ctx.doc.setFontSize(9);
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setTextColor(102, 102, 102);
+  ctx.doc.setTextColor(107, 114, 128);
   const dateStr = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
   const metaX = ctx.pageWidth - ctx.margin;
-  ctx.doc.text(`DATE: ${dateStr}`, metaX, 12, { align: 'right' });
-  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 20, { align: 'right' });
-  ctx.doc.text('LOCATION: UK Context', metaX, 28, { align: 'right' });
+  ctx.doc.text(`DATE: ${dateStr}`, metaX, 14, { align: 'right' });
+  ctx.doc.text('STAGE: Concept / RIBA 2', metaX, 24, { align: 'right' });
 
-  const imgSize = Math.min(140, ctx.pageWidth * 0.7);
+  // 2. HERO IMAGE (Much Larger)
+  const availableWidth = ctx.pageWidth - ctx.margin * 2;
+  const imgSize = 180;
   const imgX = (ctx.pageWidth - imgSize) / 2;
-  const imgY = headerHeight + 20;
+  const imgY = headerHeight + 15;
 
   if (moodboardImage) {
     try {
       ctx.doc.addImage(moodboardImage, 'PNG', imgX, imgY, imgSize, imgSize);
     } catch (error) {
-      ctx.doc.setFillColor(240);
+      ctx.doc.setFillColor(243, 244, 246);
       ctx.doc.rect(imgX, imgY, imgSize, imgSize, 'F');
       ctx.doc.setFontSize(10);
-      ctx.doc.setTextColor(150);
+      ctx.doc.setTextColor(156, 163, 175);
       ctx.doc.text('Moodboard Image', ctx.pageWidth / 2, imgY + imgSize / 2, { align: 'center' });
     }
   } else {
-    ctx.doc.setFillColor(240);
+    ctx.doc.setFillColor(243, 244, 246);
     ctx.doc.rect(imgX, imgY, imgSize, imgSize, 'F');
-    ctx.doc.setFontSize(10);
-    ctx.doc.setTextColor(150);
-    ctx.doc.text('No Image Available', ctx.pageWidth / 2, imgY + imgSize / 2, { align: 'center' });
   }
+
+  // Border for image
   ctx.doc.setDrawColor(229, 231, 235);
   ctx.doc.setLineWidth(0.5);
   ctx.doc.rect(imgX, imgY, imgSize, imgSize);
 
-  ctx.cursorY = imgY + imgSize + 10;
+  // 3. Material List
+  ctx.cursorY = imgY + imgSize + 20;
+
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(11);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Material Palette Composition', ctx.margin, ctx.cursorY);
-  ctx.doc.setDrawColor(229, 231, 235);
-  ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(ctx.margin, ctx.cursorY + 3, ctx.pageWidth - ctx.margin, ctx.cursorY + 3);
-  ctx.cursorY += 10;
 
-  const leftColX = ctx.margin;
-  const rightColX = ctx.pageWidth / 2 + 10;
-  const rowHeight = 10;
+  ctx.doc.setDrawColor(209, 213, 219);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.line(ctx.margin, ctx.cursorY + 4, ctx.pageWidth - ctx.margin, ctx.cursorY + 4);
+
+  ctx.cursorY += 12;
+
+  const colWidth = availableWidth / 2;
+  const rightColX = ctx.margin + colWidth + 5;
+  const rowHeight = 12;
 
   materials.forEach((material, idx) => {
     const col = idx % 2;
     const row = Math.floor(idx / 2);
-    const x = col === 0 ? leftColX : rightColX;
+    const x = col === 0 ? ctx.margin : rightColX;
     const y = ctx.cursorY + row * rowHeight;
     const num = (idx + 1).toString().padStart(2, '0');
 
+    // Number
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(9);
     ctx.doc.setTextColor(156, 163, 175);
     ctx.doc.text(`${num}.`, x, y);
 
+    // Name
     const numWidth = ctx.doc.getTextWidth(`${num}.`);
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setTextColor(17, 24, 39);
-    ctx.doc.text(material.name, x + numWidth + 4, y);
+    ctx.doc.text(material.name, x + numWidth + 6, y);
   });
 
   const rows = Math.ceil(materials.length / 2);
-  ctx.cursorY += rows * rowHeight + 12;
+  ctx.cursorY += rows * rowHeight + 15;
 
+  // 4. Insight Box
   const calc = calculateProjectMetrics(materials, metrics);
 
-  let insightText = `This configuration represents a ${calc.paletteType}. `;
-  if (calc.bioRatio > 0.3) {
-    insightText += 'It relies on bio-based materials, offering high carbon storage potential. ';
-  } else {
-    insightText += 'It relies on industrial finishes which require careful carbon management. ';
-  }
-  insightText += 'See Page 2 for critical hotspots and detailed strategy.';
-
-  const boxWidth = ctx.pageWidth - ctx.margin * 2;
-  const padding = 10;
-  const textWidth = boxWidth - padding * 2;
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
-  const lines = ctx.doc.splitTextToSize(insightText, textWidth);
-  const labelHeight = 10;
-  const lineHeight = 10;
-  const boxHeight = Math.max(32, padding * 2 + labelHeight + lines.length * lineHeight);
-
+  // Box Background
+  const boxHeight = 45;
   ctx.doc.setFillColor(240, 253, 244);
-  ctx.doc.rect(ctx.margin, ctx.cursorY, boxWidth, boxHeight, 'F');
+  ctx.doc.rect(ctx.margin, ctx.cursorY, availableWidth, boxHeight, 'F');
+
+  // Left Green Accent Bar
   ctx.doc.setFillColor(22, 163, 74);
   ctx.doc.rect(ctx.margin, ctx.cursorY, 4, boxHeight, 'F');
 
+  // Text inside box
+  const pad = 10;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(10);
-  ctx.doc.setTextColor(22, 163, 74);
-  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + padding, ctx.cursorY + padding + 8);
+  ctx.doc.setTextColor(21, 128, 61);
+  ctx.doc.text('PALETTE INSIGHT:', ctx.margin + pad, ctx.cursorY + pad + 5);
+
+  let insightText = `This configuration represents a ${calc.paletteType}. `;
+  if (calc.bioRatio > 0.3) {
+    insightText += 'It prioritizes bio-based materials for high carbon storage. ';
+  } else {
+    insightText += 'It relies on industrial finishes requiring careful carbon management. ';
+  }
+  insightText += 'See Page 2 for critical hotspots.';
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(40);
-  ctx.doc.text(lines, ctx.margin + padding, ctx.cursorY + padding + labelHeight + 6);
+  ctx.doc.setTextColor(55, 65, 81);
+  const lines = ctx.doc.splitTextToSize(insightText, availableWidth - pad * 2);
+  ctx.doc.text(lines, ctx.margin + pad, ctx.cursorY + pad + 15);
 }
 
 export function renderStrategicOverview(
@@ -735,28 +741,33 @@ export function renderStrategicOverview(
     ctx.cursorY += lines.length * 10 + 6;
   });
 
-  ctx.cursorY = Math.max(winEndY, ctx.cursorY) + 10;
+  ctx.cursorY = Math.max(winEndY, ctx.cursorY) + 20;
 
   addHeading(ctx, 'Priority Specification Notes', 12);
+  ctx.cursorY += 2;
 
   const tableWidth = ctx.pageWidth - ctx.margin * 2;
   const col1W = tableWidth * 0.25;
   const col2W = tableWidth * 0.3;
   const col3W = tableWidth * 0.45;
+
   const col1X = ctx.margin;
   const col2X = ctx.margin + col1W;
   const col3X = ctx.margin + col1W + col2W;
 
+  const headerH = 10;
   ctx.doc.setFillColor(55, 65, 81);
-  ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, 9, 'F');
+  ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, headerH, 'F');
+
   ctx.doc.setTextColor(255, 255, 255);
   ctx.doc.setFontSize(8);
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.text('MATERIAL', col1X + 2, ctx.cursorY + 6);
-  ctx.doc.text('RISK / DRIVER', col2X + 2, ctx.cursorY + 6);
-  ctx.doc.text('RECOMMENDED ACTION', col3X + 2, ctx.cursorY + 6);
+  const textY = ctx.cursorY + 7;
+  ctx.doc.text('MATERIAL', col1X + 4, textY);
+  ctx.doc.text('RISK / DRIVER', col2X + 4, textY);
+  ctx.doc.text('RECOMMENDED ACTION', col3X + 4, textY);
 
-  ctx.cursorY += 9;
+  ctx.cursorY += headerH;
   ctx.doc.setTextColor(0);
 
   const riskItems = materials
@@ -787,35 +798,44 @@ export function renderStrategicOverview(
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
-  riskItems.forEach((item) => {
+  riskItems.forEach((item, index) => {
     if (item.score === 0) return;
 
     ctx.doc.setFont('helvetica', 'bold');
-    const nameLines = ctx.doc.splitTextToSize(item.m.name, col1W - 4);
+    const nameLines = ctx.doc.splitTextToSize(item.m.name, col1W - 8);
 
     ctx.doc.setFont('helvetica', 'normal');
-    const riskLines = ctx.doc.splitTextToSize(item.reason, col2W - 4);
-    const actionLines = ctx.doc.splitTextToSize(item.action, col3W - 4);
+    const riskLines = ctx.doc.splitTextToSize(item.reason, col2W - 8);
+    const actionLines = ctx.doc.splitTextToSize(item.action, col3W - 8);
 
     const maxLines = Math.max(nameLines.length, riskLines.length, actionLines.length);
     const lineHeight = 4;
-    const padding = 6;
-    const rowHeight = maxLines * 4 + padding + 4;
+    const padding = 8;
+    const rowHeight = maxLines * 4 + padding + 6;
 
     if (ctx.cursorY + rowHeight > ctx.pageHeight - ctx.margin) {
       ctx.doc.addPage();
       ctx.cursorY = ctx.margin;
     }
 
-    const textY = ctx.cursorY + 4;
+    if (index % 2 === 0) {
+      ctx.doc.setFillColor(249, 250, 251);
+      ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
+    }
+
+    const rowTextY = ctx.cursorY + 8;
 
     ctx.doc.setFont('helvetica', 'bold');
     ctx.doc.setFontSize(8);
-    ctx.doc.text(nameLines, col1X + 2, textY);
+    ctx.doc.setTextColor(17, 24, 39);
+    ctx.doc.text(nameLines, col1X + 4, rowTextY);
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.text(riskLines, col2X + 2, textY);
-    ctx.doc.text(actionLines, col3X + 2, textY);
+    ctx.doc.setTextColor(55, 65, 81);
+    ctx.doc.text(riskLines, col2X + 4, rowTextY);
+
+    ctx.doc.setTextColor(0);
+    ctx.doc.text(actionLines, col3X + 4, rowTextY);
 
     ctx.doc.setDrawColor(229, 231, 235);
     ctx.doc.setLineWidth(0.5);
@@ -904,10 +924,10 @@ export function renderComparativeDashboard(
   addHeading(ctx, 'Element Summary (Grouped by Element)', 12);
 
   const tableWidth = ctx.pageWidth - ctx.margin * 2;
-  const colMaterialW = tableWidth * 0.25;
-  const colEmbodiedW = tableWidth * 0.3;
-  const colLifeW = tableWidth * 0.18;
-  const colReplW = tableWidth * 0.17;
+  const colMaterialW = tableWidth * 0.28;
+  const colEmbodiedW = tableWidth * 0.32;
+  const colLifeW = tableWidth * 0.16;
+  const colReplW = tableWidth * 0.14;
   const colRatingW = tableWidth * 0.1;
 
   const colMaterialX = ctx.margin;
@@ -952,7 +972,7 @@ export function renderComparativeDashboard(
         ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
       }
 
-      const textY = ctx.cursorY + rowPadding + 6;
+      const textY = ctx.cursorY + rowPadding + 5;
 
       ctx.doc.setFont('helvetica', 'bold');
       ctx.doc.setFontSize(8);
