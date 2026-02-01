@@ -37,7 +37,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
               Material and moodboard workspace for architects and designers.
             </h1>
             <p className="font-sans text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed">
-              From material intent to convincing visuals in minutes.Curate a material palette, get instant sustainability insight and a concise spec, and generate photorealistic
+              From material intent to convincing visuals in minutes. Curate a material palette, get instant sustainability insight and a concise spec, and generate photorealistic
               moodboard renders. Upload a reference image to see your palette applied, then pass selections into the
               Material Lab for deeper rendering.
             </p>
