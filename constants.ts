@@ -126,7 +126,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Composite structure with timber beams on steel columns for reduced embodied carbon and efficient spans.',
     keywords: ['hybrid', 'timber', 'steel'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'composite',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'metal-working', 'cutting']
   },
   {
     id: 'clt-structure',
@@ -152,7 +156,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Dowel- or nail-laminated timber decks using solid softwood; glue-free, demountable, and fully bio-based.',
     keywords: ['timber', 'dlt', 'nlt', 'bio-based'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'plank'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'cutting']
   },
   {
     id: 'ggbs-concrete',
@@ -163,7 +171,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Concrete with high GGBS/slag replacement to cut embodied carbon; suitable for exposed soffits and thermal mass.',
     keywords: ['concrete', 'ggbs', 'low carbon'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'concrete',
+    materialForm: ['block', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting', 'mixing']
   },
   {
     id: 'rammed-earth-structure',
@@ -179,7 +191,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Natural Ochre', tone: '#b58c63' },
       { label: 'Warm Sand', tone: '#c8a984' },
       { label: 'Deep Clay', tone: '#8f623f' }
-    ]
+    ],
+    materialType: 'mineral',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['pressing', 'mixing']
   },
   {
     id: 'polished-concrete',
@@ -190,7 +206,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Ground, sealed concrete slab with subtle aggregate exposure; durable and low-maintenance.',
     keywords: ['floor', 'polished', 'aggregate'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['casting', 'machining', 'coating']
   },
   {
     id: 'lino-floor',
@@ -216,7 +236,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Composite terrazzo incorporating post-consumer plastic fragments; a colourful, low-carbon alternative.',
     keywords: ['terrazzo', 'recycled', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'composite',
+    materialForm: ['tile', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['casting', 'machining']
   },
   {
     id: 'rubber-floor',
@@ -226,7 +250,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Durable recycled rubber floor with high slip resistance and impact absorption.',
     keywords: ['rubber', 'recycled', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'polymer',
+    materialForm: ['sheet', 'tile'],
+    materialFunction: ['surface', 'acoustic'],
+    manufacturingProcess: ['pressing', 'moulding']
   },
   {
     id: 'timber-flooring',
@@ -257,7 +285,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Modular low-pile tiles in mid-grey, providing acoustic comfort and easy replacement for high-traffic learning environments.',
     keywords: ['carpet', 'acoustic', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'textile',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'acoustic'],
+    manufacturingProcess: ['weaving', 'pressing']
   },
   {
     id: 'bamboo-parquet',
@@ -273,7 +305,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Natural', tone: '#caa36e' },
       { label: 'Carbonised', tone: '#b08451' },
       { label: 'Espresso', tone: '#7a5635' }
-    ]
+    ],
+    materialType: 'bio-based',
+    materialForm: ['plank', 'tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['lamination', 'pressing', 'coating']
   },
   {
     id: 'cork-plank-floor',
@@ -284,7 +320,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Bio-based cork planks with natural binder; warm underfoot, acoustic damping, and carbon negative sourcing.',
     keywords: ['cork', 'bio-based', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['plank', 'tile'],
+    materialFunction: ['surface', 'acoustic'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'reclaimed-timber-floor',
@@ -295,7 +335,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Reclaimed timber boards with visible character marks; circular option with minimal new material demand.',
     keywords: ['reclaimed', 'timber', 'circular'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'board'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'stone-paver',
@@ -327,7 +371,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Luxury vinyl planks with recycled content; durable, water-resistant, and comfortable underfoot.',
     keywords: ['vinyl', 'recycled', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'polymer',
+    materialForm: ['plank', 'tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['extrusion', 'pressing', 'coating']
   },
   {
     id: 'resin-flooring',
@@ -337,7 +385,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Seamless epoxy resin floor for hard-wearing, easy-clean surfaces with customizable finish.',
     keywords: ['resin', 'seamless', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['coating', 'mixing']
   },
   {
     id: 'microcement-floor',
@@ -347,7 +399,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Thin-coat microcement for floors; seamless, industrial aesthetic with sealed finish.',
     keywords: ['microcement', 'seamless', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['coating', 'mixing']
   },
   {
     id: 'ceramic-tiles',
@@ -357,7 +413,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Durable glazed ceramic tiles for wet areas and circulation; wide range of sizes and colors.',
     keywords: ['ceramic', 'tiles', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['kiln-firing', 'pressing', 'coating']
   },
   {
     id: 'epoxy-flooring',
@@ -367,7 +427,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Industrial-grade epoxy coating for high-traffic areas; chemical-resistant and easy to clean.',
     keywords: ['epoxy', 'industrial', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['coating', 'mixing']
   },
   {
     id: 'travertine-tiles',
@@ -377,7 +441,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Natural travertine tiles with characteristic pitting; warm neutral tone for circulation.',
     keywords: ['travertine', 'stone', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'marble-floor',
@@ -387,7 +455,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Polished natural marble tiles with veining; elegant finish for entrance and feature zones.',
     keywords: ['marble', 'stone', 'floor'],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'engineered-oak-floor',
@@ -397,7 +469,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Wide-plank engineered oak with hardwearing finish; stable and suitable for underfloor heating.',
     keywords: ['oak', 'engineered', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['lamination', 'cutting', 'coating']
   },
   {
     id: 'linoleum-tiles',
@@ -407,7 +483,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Modular linoleum tiles with natural mottled pattern; easy to replace and maintain.',
     keywords: ['linoleum', 'tiles', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'cutting', 'coating']
   },
   {
     id: 'aluminum-frame',
@@ -417,7 +497,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Slim thermally-broken aluminum frames with durable powder coat.',
     keywords: ['window', 'aluminum', 'frame'],
     category: 'window',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['extrusion', 'metal-working', 'coating']
   },
   {
     id: 'timber-frame',
@@ -427,7 +511,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Alu-clad timber frames combining warmth inside and weathering outside.',
     keywords: ['window', 'timber', 'alu-clad'],
     category: 'window',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['bar', 'beam'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['cutting', 'machining', 'coating']
   },
   {
     id: 'recycled-aluminum-frame',
@@ -438,7 +526,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Thermally broken aluminum frames using 75%+ recycled billet with durable powder coat.',
     keywords: ['window', 'aluminum', 'recycled'],
     category: 'window',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['extrusion', 'metal-working', 'coating']
   },
   {
     id: 'steel-window-frame',
@@ -448,7 +540,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Slim steel window frames with minimal sightlines; industrial aesthetic and high strength.',
     keywords: ['window', 'steel', 'frame'],
     category: 'window',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'composite-window-frame',
@@ -458,7 +554,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Composite timber-polymer frames combining low maintenance with natural appearance.',
     keywords: ['window', 'composite', 'frame'],
     category: 'window',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'composite',
+    materialForm: ['bar'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['extrusion', 'moulding']
   },
   {
     id: 'upvc-window-frame',
@@ -468,7 +568,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Multi-chamber uPVC frames with thermal efficiency; low maintenance and cost-effective.',
     keywords: ['window', 'upvc', 'frame'],
     category: 'window',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'weatherproofing', 'insulation'],
+    manufacturingProcess: ['extrusion']
   },
   {
     id: 'curtain-wall-system',
@@ -478,7 +582,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Structural glazing curtain wall system for full-height transparency and weatherproofing.',
     keywords: ['window', 'curtain wall', 'glazing'],
     category: 'window',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'bar'],
+    materialFunction: ['structural', 'weatherproofing'],
+    manufacturingProcess: ['extrusion', 'metal-working', 'coating']
   },
   {
     id: 'frameless-glazing',
@@ -488,7 +596,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Minimal-frame or frameless structural glazing for maximum transparency and connection.',
     keywords: ['window', 'frameless', 'glazing'],
     category: 'window',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['weatherproofing', 'decorative'],
+    manufacturingProcess: ['heat-pressing', 'cutting']
   },
   {
     id: 'clay-plaster',
@@ -498,7 +610,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Breathable clay plaster for walls; warm tone and moisture buffering.',
     keywords: ['wall', 'clay', 'breathable'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls', 'Internal>Plaster / Microcement']
+    treePaths: ['Internal>Walls', 'Internal>Plaster / Microcement'],
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'gypsum-wall',
@@ -508,7 +624,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Standard gypsum board walls with low-VOC paint for clean interiors.',
     keywords: ['wall', 'gypsum', 'paint'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls']
+    treePaths: ['Internal>Walls'],
+    materialType: 'mineral',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'plasterboard-wall',
@@ -532,7 +652,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Birch plywood panels with natural grain; warm and tactile interior finish.',
     keywords: ['plywood', 'wall', 'panels'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls', 'Internal>Timber Panels']
+    treePaths: ['Internal>Walls', 'Internal>Timber Panels'],
+    materialType: 'timber',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['lamination', 'pressing', 'cutting']
   },
   {
     id: 'acoustic-panels-wall',
@@ -542,7 +666,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Sound-absorbing acoustic panels for walls; demountable and available in custom colors.',
     keywords: ['acoustic', 'wall', 'panels'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls', 'Internal>Acoustic Panels']
+    treePaths: ['Internal>Walls', 'Internal>Acoustic Panels'],
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['pressing', 'weaving']
   },
   {
     id: 'glass-partitions',
@@ -552,7 +680,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Transparent glass partitions for spatial division with visual connection; single or double-glazed.',
     keywords: ['glass', 'partition', 'wall'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls']
+    treePaths: ['Internal>Walls'],
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['heat-pressing', 'cutting']
   },
   {
     id: 'brick-internal',
@@ -562,7 +694,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Exposed internal brick wall for texture and warmth; can be sealed or painted.',
     keywords: ['brick', 'wall', 'internal'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls']
+    treePaths: ['Internal>Walls'],
+    materialType: 'ceramic',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['kiln-firing']
   },
   {
     id: 'concrete-block-wall',
@@ -572,7 +708,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Concrete block walls with painted or exposed finish; durable and fire-resistant.',
     keywords: ['concrete', 'block', 'wall'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls']
+    treePaths: ['Internal>Walls'],
+    materialType: 'concrete',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['casting', 'mixing']
   },
   {
     id: 'mineral-microcement',
@@ -582,7 +722,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Thin-coat mineral microcement for walls and floors; seamless, tactile, and hard-wearing.',
     keywords: ['microcement', 'seamless', 'plaster'],
     category: 'microcement',
-    treePaths: ['Internal>Plaster / Microcement']
+    treePaths: ['Internal>Plaster / Microcement'],
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'standard-wall-paint',
@@ -594,7 +738,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'paint-wall',
     supportsColor: true,
     finishOptions: ['Matte', 'Satin', 'Gloss'],
-    treePaths: ['Internal>Paint – Standard']
+    treePaths: ['Internal>Paint – Standard'],
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'custom-wall-paint',
@@ -606,7 +754,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'paint-wall',
     supportsColor: true,
     finishOptions: ['Matte', 'Satin', 'Gloss'],
-    treePaths: ['Internal>Paint – Custom Colour']
+    treePaths: ['Internal>Paint – Custom Colour'],
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'standard-ceiling-paint',
@@ -618,7 +770,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'paint-ceiling',
     supportsColor: true,
     finishOptions: ['Matte', 'Satin', 'Gloss'],
-    treePaths: ['Internal>Paint – Standard', 'Internal>Ceilings']
+    treePaths: ['Internal>Paint – Standard', 'Internal>Ceilings'],
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'custom-ceiling-paint',
@@ -630,7 +786,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'paint-ceiling',
     supportsColor: true,
     finishOptions: ['Matte', 'Satin', 'Gloss'],
-    treePaths: ['Internal>Paint – Custom Colour', 'Internal>Ceilings']
+    treePaths: ['Internal>Paint – Custom Colour', 'Internal>Ceilings'],
+    materialType: 'polymer',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'brick-veneer',
@@ -654,7 +814,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Pale Cream', tone: '#e6d4b8' },
       { label: 'Light Grey', tone: '#b6b1a9' },
       { label: 'Reclaimed Mix', tone: '#8c6a52' }
-    ]
+    ],
+    materialType: 'ceramic',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'weatherproofing', 'surface'],
+    manufacturingProcess: ['kiln-firing']
   },
   {
     id: 'acoustic-ceiling-baffles',
@@ -664,7 +828,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Suspended acoustic baffles for noise control and visual rhythm.',
     keywords: ['ceiling', 'acoustic', 'baffles'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'decorative'],
+    manufacturingProcess: ['pressing', 'weaving']
   },
   {
     id: 'perforated-metal-ceiling',
@@ -674,7 +842,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Perforated metal ceiling panels with acoustic fleece for diffusion.',
     keywords: ['ceiling', 'metal', 'perforated'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['metal-working', 'cutting', 'coating']
   },
   {
     id: 'timber-slat-ceiling',
@@ -684,7 +856,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Linear timber slats with acoustic insulation behind for warmth overhead.',
     keywords: ['ceiling', 'timber', 'acoustic'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'bar'],
+    materialFunction: ['acoustic', 'surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'gypsum-ceiling',
@@ -694,7 +870,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Smooth painted gypsum ceiling with recessed lighting provisions.',
     keywords: ['ceiling', 'gypsum', 'flush'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'mineral',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'open-grid-ceiling',
@@ -704,7 +884,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Open cell metal grid ceiling for services access and visual depth.',
     keywords: ['ceiling', 'open cell', 'services'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['metal-working', 'cutting', 'coating']
   },
   {
     id: 'stretch-fabric-ceiling',
@@ -714,7 +898,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Tensioned fabric membrane ceiling with concealed services and lighting; smooth, seamless finish.',
     keywords: ['fabric', 'ceiling', 'stretch'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'textile',
+    materialForm: ['membrane', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['weaving']
   },
   {
     id: 'coffered-ceiling',
@@ -724,7 +912,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Recessed panel coffered ceiling adding architectural depth and rhythm; timber or plaster finish.',
     keywords: ['coffered', 'ceiling', 'architectural'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'moulding']
   },
   {
     id: 'plasterboard-ceiling',
@@ -734,7 +926,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Standard smooth plasterboard ceiling with painted finish; versatile and cost-effective.',
     keywords: ['plasterboard', 'ceiling', 'standard'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'mineral',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'exposed-clt-ceiling',
@@ -744,7 +940,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Exposed cross-laminated timber ceiling panels showcasing structure; warm and natural finish.',
     keywords: ['clt', 'timber', 'ceiling', 'exposed'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'metal-mesh-ceiling',
@@ -754,7 +954,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Expanded or woven metal mesh ceiling for visual transparency with acoustic backing.',
     keywords: ['metal', 'mesh', 'ceiling'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['surface', 'acoustic'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'acoustic-tiles-ceiling',
@@ -764,7 +968,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Suspended mineral fiber acoustic tiles in grid system; high sound absorption and easy access.',
     keywords: ['acoustic', 'tiles', 'ceiling'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'mineral',
+    materialForm: ['tile', 'panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'exposed-concrete-soffit',
@@ -775,7 +983,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Exposed concrete soffit with a light sandblast and clear sealer to celebrate structure and thermal mass.',
     keywords: ['soffit', 'concrete', 'thermal mass'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['panel'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['casting', 'coating']
   },
   {
     id: 'timber-slat-soffit',
@@ -786,7 +998,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Linear timber slats on a dark acoustic backing to soften reverberation while keeping services accessible.',
     keywords: ['soffit', 'timber', 'acoustic'],
     category: 'ceiling',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'bar'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'perforated-metal-soffit',
@@ -797,7 +1013,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Micro-perforated metal soffit panels with acoustic fleece and crisp shadow gaps for a technical expression.',
     keywords: ['soffit', 'metal', 'perforated'],
     category: 'ceiling',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['metal-working', 'cutting', 'coating']
   },
   {
     id: 'timber-linings',
@@ -808,7 +1028,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Rift-sawn oak or FSC-certified softwood slats providing integrated acoustic performance and natural warmth.',
     keywords: ['timber', 'acoustic', 'slats'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'bar'],
+    materialFunction: ['acoustic', 'surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'terracotta-panels',
@@ -833,7 +1057,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Terracotta Orange', tone: '#c85b36' },
       { label: 'Burnt Sienna', tone: '#d46b3d' },
       { label: 'Clay Peach', tone: '#e19a62' }
-    ]
+    ],
+    materialType: 'ceramic',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['kiln-firing', 'pressing']
   },
   {
     id: 'bio-fibre-panels',
@@ -844,7 +1072,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Acoustic and wall-lining panels made from hemp, flax, or agricultural fibre waste. Soft texture, excellent acoustics, very low embodied carbon.',
     keywords: ['bio-based', 'acoustic', 'low carbon'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'timber-wall-panels',
@@ -855,7 +1087,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['timber', 'panel', 'acoustic'],
     category: 'timber-panel',
     treePaths: ['Internal>Timber Panels', 'Internal>Joinery & Furniture'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['lamination', 'pressing', 'coating']
   },
   {
     id: 'porcelain-tiles',
@@ -866,7 +1102,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['tile', 'porcelain', 'internal'],
     category: 'tile',
     treePaths: ['Internal>Tiles'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['kiln-firing', 'pressing']
   },
   {
     id: 'textured-wallpaper',
@@ -877,7 +1117,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['wallpaper', 'feature wall', 'texture'],
     category: 'wallpaper',
     treePaths: ['Internal>Wallpaper'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['roll', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['weaving', 'coating']
   },
   {
     id: 'fabric-acoustic-panels',
@@ -888,7 +1132,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['acoustic', 'panels', 'fabric'],
     category: 'acoustic-panel',
     treePaths: ['Internal>Acoustic Panels'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'textile',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['weaving', 'pressing']
   },
   {
     id: 'oak-timber-slats',
@@ -899,7 +1147,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['timber', 'slats', 'acoustic'],
     category: 'timber-slat',
     treePaths: ['Internal>Timber Slats', 'Internal>Ceilings'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'bar'],
+    materialFunction: ['acoustic', 'surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'cork-panels',
@@ -910,7 +1162,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Natural cork tiles or sheets providing acoustic absorption, tactile warmth, and renewable material sourcing.',
     keywords: ['cork', 'acoustic', 'renewable'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['tile', 'panel', 'sheet'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['pressing', 'cutting']
   },
   {
     id: 'reclaimed-boarding',
@@ -921,7 +1177,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Upcycled timber cladding with visible grain and weathering; ideal for feature walls and sustainable story-telling.',
     keywords: ['reclaimed', 'timber', 'circular'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'board'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'mycelium-tiles',
@@ -932,7 +1192,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Compostable mycelium tiles grown on agricultural waste; high acoustic absorption with minimal embodied carbon.',
     keywords: ['mycelium', 'bio-based', 'acoustic'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['tile', 'panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['moulding']
   },
   {
     id: 'wool-felt-panels',
@@ -948,7 +1212,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Undyed', tone: '#c4c5bc' },
       { label: 'Charcoal', tone: '#565656' },
       { label: 'Moss', tone: '#7a8a6a' }
-    ]
+    ],
+    materialType: 'natural-fibre',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'bamboo-slat-wall',
@@ -964,7 +1232,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Natural', tone: '#c6a26d' },
       { label: 'Caramel', tone: '#b2824b' },
       { label: 'Espresso', tone: '#6f4b31' }
-    ]
+    ],
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['cutting', 'lamination']
   },
   {
     id: 'plywood-panels-finish',
@@ -974,7 +1246,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Structural plywood panels with natural grain; warm, cost-effective interior finish.',
     keywords: ['plywood', 'panels', 'finish'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'marble-panels',
@@ -984,7 +1260,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Polished natural marble panels with distinctive veining; elegant feature wall material.',
     keywords: ['marble', 'stone', 'panels'],
     category: 'finish',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'leather-panels',
@@ -994,7 +1274,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Tactile leather wall tiles or panels; luxurious, warm finish for acoustic and visual softness.',
     keywords: ['leather', 'panels', 'tactile'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['acoustic', 'decorative'],
+    manufacturingProcess: ['cutting', 'pressing']
   },
   {
     id: 'metal-mesh-panels',
@@ -1004,7 +1288,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Architectural metal mesh panels for partitions and feature walls; semi-transparent and industrial.',
     keywords: ['metal', 'mesh', 'panels'],
     category: 'finish',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['metal-working', 'weaving']
   },
   {
     id: 'glass-panels-finish',
@@ -1014,7 +1302,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Back-painted or textured glass panels for feature walls; easy to clean and hygienic.',
     keywords: ['glass', 'panels', 'finish'],
     category: 'finish',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['casting', 'coating']
   },
   {
     id: 'acoustic-plaster',
@@ -1024,7 +1316,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Seamless acoustic plaster for ceilings and walls; combines sound absorption with smooth finish.',
     keywords: ['acoustic', 'plaster', 'seamless'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'lime-plaster',
@@ -1034,7 +1330,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Breathable natural lime plaster with soft, mottled finish; moisture-regulating and low-carbon.',
     keywords: ['lime', 'plaster', 'breathable'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'tadelakt-plaster',
@@ -1044,7 +1344,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Polished waterproof Moroccan lime plaster; smooth, lustrous finish for wet areas.',
     keywords: ['tadelakt', 'plaster', 'waterproof'],
     category: 'finish',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'mineral',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['mixing', 'coating']
   },
   {
     id: 'secondary-steelwork',
@@ -1055,7 +1359,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['secondary', 'structure', 'steel'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar', 'tube'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'composite-metal-deck-slabs',
@@ -1066,7 +1374,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['floor', 'composite', 'steel', 'deck'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'casting']
   },
   {
     id: 'precast-concrete-floor-planks',
@@ -1077,7 +1389,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['precast', 'concrete', 'floor', 'planks'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['panel', 'plank'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting', 'pressing']
   },
   {
     id: 'timber-joists-floor-cassettes',
@@ -1088,7 +1404,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['timber', 'joists', 'floor', 'cassettes'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['cutting', 'lamination']
   },
   {
     id: 'clt-floor-panels',
@@ -1099,7 +1419,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['clt', 'timber', 'floor', 'panels'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'secondary-steel-infill-beams',
@@ -1110,7 +1434,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['steel', 'infill', 'beams', 'secondary'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'raised-access-floor-systems',
@@ -1121,7 +1449,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['raised floor', 'access', 'services', 'modular'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['pressing', 'metal-working']
   },
   {
     id: 'timber-rafters-purlins',
@@ -1132,7 +1464,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['timber', 'rafters', 'purlins', 'roof'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'steel-purlins',
@@ -1143,7 +1479,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['steel', 'purlins', 'roof', 'cold-formed'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'extrusion']
   },
   {
     id: 'glulam-roof-beams',
@@ -1154,7 +1494,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['glulam', 'timber', 'roof', 'beams'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'secondary-trusses',
@@ -1165,7 +1509,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['trusses', 'secondary', 'roof', 'structure'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'clt-roof-panels',
@@ -1176,7 +1524,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['clt', 'timber', 'roof', 'panels'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'lightweight-space-frame-infill',
@@ -1187,7 +1539,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['space frame', 'lightweight', 'steel', 'roof'],
     category: 'structure',
     treePaths: ['Structure>Floors and Roofs'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['tube', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'edge-beams',
@@ -1198,7 +1554,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['edge beam', 'support', 'structure'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'casting']
   },
   {
     id: 'spandrel-beams',
@@ -1209,7 +1569,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['spandrel', 'perimeter', 'beam'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'ring-beams',
@@ -1220,7 +1584,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['ring beam', 'tie', 'structure'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'secondary-lintels',
@@ -1231,7 +1599,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['lintel', 'openings', 'support'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'casting']
   },
   {
     id: 'masonry-shelf-angles',
@@ -1242,7 +1614,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['shelf angle', 'masonry', 'support'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'cross-bracing-steel',
@@ -1253,7 +1629,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['bracing', 'cross', 'steel', 'lateral'],
     category: 'structure',
     treePaths: ['Structure>Stability and Bracing'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'timber-wind-bracing',
@@ -1264,7 +1644,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['timber', 'bracing', 'wind', 'lateral'],
     category: 'structure',
     treePaths: ['Structure>Stability and Bracing'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['bar', 'beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'k-x-bracing-secondary',
@@ -1275,7 +1659,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['k-bracing', 'x-bracing', 'secondary', 'stability'],
     category: 'structure',
     treePaths: ['Structure>Stability and Bracing'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'diaphragm-bracing-elements',
@@ -1286,7 +1674,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['diaphragm', 'bracing', 'lateral'],
     category: 'structure',
     treePaths: ['Structure>Stability and Bracing'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['pressing', 'metal-working']
   },
   {
     id: 'secondary-shear-panels',
@@ -1297,7 +1689,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['shear', 'panel', 'stiffness', 'lateral'],
     category: 'structure',
     treePaths: ['Structure>Stability and Bracing'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['pressing', 'lamination']
   },
   {
     id: 'steel-stair-stringers',
@@ -1308,7 +1704,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['stairs', 'stringer', 'steel', 'circulation'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'sheet'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'timber-stair-carriages',
@@ -1319,7 +1719,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['stairs', 'timber', 'carriage', 'circulation'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'plank'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'stair-landings-trimmers',
@@ -1330,7 +1734,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['stairs', 'landing', 'trimmer', 'support'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'sheet'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'cantilevered-stair-treads',
@@ -1341,7 +1749,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['stairs', 'cantilever', 'treads', 'circulation'],
     category: 'structure',
     treePaths: ['Structure>Secondary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'timber',
+    materialForm: ['plank', 'panel'],
+    materialFunction: ['structural', 'surface'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'facade-support-rails',
@@ -1352,7 +1764,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'rails', 'support', 'cladding'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['extrusion', 'metal-working']
   },
   {
     id: 'rainscreen-carrier-systems',
@@ -1363,7 +1779,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['rainscreen', 'carrier', 'support', 'envelope'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['extrusion', 'metal-working']
   },
   {
     id: 'curtain-wall-mullions-transoms',
@@ -1374,7 +1794,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['curtain wall', 'mullions', 'transoms', 'glazing'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['extrusion', 'metal-working']
   },
   {
     id: 'secondary-facade-brackets',
@@ -1385,7 +1809,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'brackets', 'support', 'adjustable'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'casting']
   },
   {
     id: 'balcony-support-beams',
@@ -1396,7 +1824,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['balcony', 'beams', 'support', 'edge'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'steel-canopy-frames',
@@ -1407,7 +1839,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['canopy', 'steel', 'frame', 'lightweight'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'tube'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'timber-pergola-structures',
@@ -1418,7 +1854,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['pergola', 'timber', 'shade', 'structure'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'tension-rods-tie-members',
@@ -1429,7 +1869,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['tension', 'tie', 'rods', 'stability'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'secondary-cantilever-arms',
@@ -1440,7 +1884,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['cantilever', 'arms', 'support', 'secondary'],
     category: 'structure',
     treePaths: ['Structure>Envelope and Lightweight Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'brick-loadbearing',
@@ -1450,7 +1898,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Traditional solid brick load-bearing construction with lime mortar; thermal mass and durability.',
     keywords: ['brick', 'masonry', 'structure'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['block'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['kiln-firing']
   },
   {
     id: 'hempcrete-structural',
@@ -1460,7 +1912,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Bio-based hempcrete infill within a timber frame; carbon-negative and breathable.',
     keywords: ['hempcrete', 'bio-based', 'structure'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'insulation'],
+    manufacturingProcess: ['mixing', 'casting']
   },
   {
     id: 'steel-concrete-composite',
@@ -1470,7 +1926,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Composite steel decking with concrete topping; efficient long-span solution.',
     keywords: ['composite', 'steel', 'concrete', 'structure'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'casting']
   },
   {
     id: 'precast-concrete',
@@ -1480,7 +1940,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Factory-made precast concrete beams and slabs for rapid, quality-controlled construction.',
     keywords: ['precast', 'concrete', 'structure'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['beam', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'mass-timber-columns',
@@ -1490,7 +1954,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Glulam or CLT columns providing vertical load-bearing with renewable, carbon-storing material.',
     keywords: ['timber', 'mass timber', 'columns', 'structure'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'steel-trusses',
@@ -1500,7 +1968,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Long-span steel trusses for efficient roof and floor structures; painted or exposed finish.',
     keywords: ['steel', 'trusses', 'structure'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting']
   },
   {
     id: 'prestressed-concrete',
@@ -1510,7 +1982,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Prestressed concrete beams for long spans with reduced material use; efficient structural system.',
     keywords: ['prestressed', 'concrete', 'structure'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting', 'pressing']
   },
   {
     id: 'permeable-paving',
@@ -1521,7 +1997,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'paving', 'suds'],
     category: 'landscape',
     treePaths: ['External>External Ground / Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'concrete',
+    materialForm: ['block', 'tile'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['casting', 'pressing']
   },
   {
     id: 'joinery-built-in',
@@ -1532,7 +2012,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['joinery', 'furniture', 'birch'],
     category: 'joinery',
     treePaths: ['Internal>Joinery & Furniture'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining', 'lamination']
   },
   {
     id: 'brass-fixtures',
@@ -1543,7 +2027,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['fixtures', 'brass', 'hardware'],
     category: 'fixture',
     treePaths: ['Internal>Fixtures & Fittings'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['decorative'],
+    manufacturingProcess: ['metal-working', 'machining']
   },
   {
     id: 'standing-seam-roof',
@@ -1555,7 +2043,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'roof',
     supportsColor: true,
     colorOptions: ZINC_COLOR_OPTIONS,
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'aluminium-standing-seam-roof',
@@ -1567,7 +2059,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['roof', 'metal', 'standing seam', 'aluminium', 'prefinished'],
     category: 'roof',
     supportsColor: true,
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'copper-standing-seam-roof',
@@ -1583,7 +2079,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Blackened Copper', tone: '#2f2b2a' }
     ],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'stainless-standing-seam-roof',
@@ -1598,7 +2098,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Blackened Stainless', tone: '#4a4f55' }
     ],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'lead-standing-seam-roof',
@@ -1613,7 +2117,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Dark Patina', tone: '#4b4f54' }
     ],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'green-roof',
@@ -1623,7 +2131,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight sedum green roof for biodiversity, stormwater, and cooling.',
     keywords: ['roof', 'green', 'biodiversity'],
     category: 'roof',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['membrane'],
+    materialFunction: ['weatherproofing', 'insulation'],
+    manufacturingProcess: ['lamination']
   },
   {
     id: 'cool-roof',
@@ -1633,7 +2145,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'High-reflectance membrane roof to reduce heat gain and urban heat island.',
     keywords: ['roof', 'membrane', 'cool roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['membrane'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['extrusion', 'coating']
   },
   {
     id: 'pv-roof',
@@ -1643,7 +2159,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Building-integrated or ballasted PV array sized for onsite renewable generation.',
     keywords: ['roof', 'solar', 'pv', 'renewable'],
     category: 'roof',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['lamination', 'casting']
   },
   {
     id: 'blue-roof',
@@ -1654,7 +2174,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Shallow attenuation layers to slow stormwater discharge; pairs well with green roofs for SuDS performance.',
     keywords: ['roof', 'water', 'suds'],
     category: 'roof',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'polymer',
+    materialForm: ['membrane', 'panel'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['moulding']
   },
   {
     id: 'clay-tiles-roof',
@@ -1664,7 +2188,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Traditional interlocking clay tiles with long lifespan and natural thermal performance.',
     keywords: ['clay', 'tiles', 'roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['kiln-firing', 'moulding']
   },
   {
     id: 'slate-tiles-roof',
