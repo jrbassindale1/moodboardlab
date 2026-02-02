@@ -130,10 +130,18 @@ interface MoodboardProps {
   onMoodboardRenderUrlChange?: (url: string | null) => void;
 }
 
+type MoodboardFlowProgress = {
+  step: number;
+  total: number;
+  label: string;
+  state: 'running' | 'complete' | 'error';
+};
+
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
+const MOODBOARD_FLOW_TOTAL_STEPS = 4;
 const REPORT_PREVIEW_INCLUDES = [
   'Comparative lifecycle dashboard',
   'Carbon dominance ranking',
@@ -373,6 +381,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [steelColor, setSteelColor] = useState('#ffffff');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
+  const [isBuildingFullReport, setIsBuildingFullReport] = useState(false);
+  const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
   const [showDetectionModal, setShowDetectionModal] = useState(false);
@@ -909,13 +919,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const sustainabilityPreview = useMemo(() => {
     if (!summaryReviewed) return null;
-    if (!sustainabilityInsights || sustainabilityInsights.length === 0) return null;
+    const availableInsights = sustainabilityInsights || [];
 
     const materialById = new Map<string, BoardItem>();
     board.forEach((material) => materialById.set(material.id, material));
 
     const insightById = new Map<string, SustainabilityInsight>();
-    sustainabilityInsights.forEach((insight) => {
+    availableInsights.forEach((insight) => {
       if (insight?.id) insightById.set(insight.id, insight);
     });
 
@@ -1455,6 +1465,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return;
     }
     setIsCreatingMoodboard(true);
+    setIsBuildingFullReport(false);
     setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
     setPaletteSummary(null);
@@ -1463,12 +1474,84 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setStatus('all');
     setError(null);
     try {
-      await runGemini('sustainability');
-      await runGemini('summary');
-      await runGemini('summary-review', { summaryDraft: paletteSummaryRef.current || '' });
-      await runGemini('render', { onRender: setMoodboardRenderUrl });
+      setFlowProgress({
+        step: 1,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Generating moodboard image',
+        state: 'running'
+      });
+      const renderOk = await runGemini('render', { onRender: setMoodboardRenderUrl });
+      if (!renderOk) {
+        setFlowProgress({
+          step: 1,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Image generation failed',
+          state: 'error'
+        });
+        return;
+      }
+
+      setFlowProgress({
+        step: 2,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Drafting sustainability summary',
+        state: 'running'
+      });
+      const summaryOk = await runGemini('summary');
+      if (!summaryOk) {
+        setFlowProgress({
+          step: 2,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Summary generation failed',
+          state: 'error'
+        });
+        return;
+      }
+
+      setFlowProgress({
+        step: 3,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Reviewing summary quality',
+        state: 'running'
+      });
+      const summaryReviewOk = await runGemini('summary-review', { summaryDraft: paletteSummaryRef.current || '' });
+      if (!summaryReviewOk) {
+        setFlowProgress({
+          step: 3,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Summary review failed',
+          state: 'error'
+        });
+        return;
+      }
+
+      setIsBuildingFullReport(true);
+      setFlowProgress({
+        step: 4,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Building full sustainability report',
+        state: 'running'
+      });
+      const reportOk = await runGemini('sustainability');
+      if (!reportOk) {
+        setFlowProgress({
+          step: 4,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Full report generation failed',
+          state: 'error'
+        });
+        return;
+      }
+
+      setFlowProgress({
+        step: 4,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Complete',
+        state: 'complete'
+      });
       setMaterialsAccordionOpen(false);
     } finally {
+      setIsBuildingFullReport(false);
       setIsCreatingMoodboard(false);
       setStatus('idle');
     }
@@ -1680,10 +1763,10 @@ IMPORTANT:
       baseImageDataUrl?: string;
       summaryDraft?: string;
     }
-  ) => {
+  ): Promise<boolean> => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
-      return;
+      return false;
     }
     setStatus(mode);
     if (!options?.retryAttempt) setError(null);
@@ -1954,12 +2037,13 @@ ${JSON.stringify(summaryContext, null, 2)}`;
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
         void persistGeneration(newUrl, prompt);
+        return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+        return false;
       } finally {
         setStatus('idle');
       }
-      return;
     }
 
     const payload = {
@@ -2099,11 +2183,11 @@ ${JSON.stringify(summaryContext, null, 2)}`;
           const message = 'Gemini returned malformed sustainability JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
-            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
+            return await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
           } else {
             setError(`${message} Please try again.`);
           }
-          return;
+          return false;
         }
       } else if (mode === 'summary') {
         try {
@@ -2121,11 +2205,11 @@ ${JSON.stringify(summaryContext, null, 2)}`;
           const message = 'Gemini returned malformed summary JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
-            await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
+            return await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
           } else {
             setError(`${message} Please try again.`);
           }
-          return;
+          return false;
         }
       } else if (mode === 'summary-review') {
         try {
@@ -2145,8 +2229,10 @@ ${JSON.stringify(summaryContext, null, 2)}`;
           setSummaryReviewed(false);
           setError('Summary QA failed. Please try again.');
           console.warn('Gemini returned malformed summary review JSON.', parseError);
+          return false;
         }
       }
+      return true;
     } catch (err) {
       if (mode === 'summary-review') {
         setSummaryReviewed(false);
@@ -2155,10 +2241,14 @@ ${JSON.stringify(summaryContext, null, 2)}`;
       } else {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
       }
+      return false;
     } finally {
       setStatus('idle');
     }
   };
+
+  const fullReportReady = hasTextContent();
+  const isRenderInFlight = status === 'render' && isCreatingMoodboard;
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
@@ -2303,24 +2393,42 @@ ${JSON.stringify(summaryContext, null, 2)}`;
             )}
 
             {board.length > 0 && (
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={runMoodboardFlow}
-                  disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
-                  className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                >
-                  {isCreatingMoodboard ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4" />
-                      Create Moodboard
-                    </>
-                  )}
-                </button>
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={runMoodboardFlow}
+                    disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
+                    className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {isCreatingMoodboard ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Creating
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Create Moodboard
+                      </>
+                    )}
+                  </button>
+                </div>
+                {flowProgress && (
+                  <div
+                    className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${
+                      flowProgress.state === 'error'
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : flowProgress.state === 'complete'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {flowProgress.state === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                    <span>
+                      {flowProgress.step}/{flowProgress.total} {flowProgress.label}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </section>
@@ -2332,14 +2440,23 @@ ${JSON.stringify(summaryContext, null, 2)}`;
               </div>
             )}
 
-            {sustainabilityInsights && sustainabilityInsights.length > 0 && sustainabilityPreview && (
+            {isBuildingFullReport && (moodboardRenderUrl || sustainabilityPreview) && (
+              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <AlertCircle className="w-4 h-4 mt-[2px]" />
+                <span>
+                  Moodboard preview is ready. Full sustainability report is still being generated.
+                </span>
+              </div>
+            )}
+
+            {sustainabilityPreview && (
               <div className="border border-gray-200 bg-white">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
                   <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
                     Sustainability Insights (Preview)
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                    Report ready
+                    {isBuildingFullReport ? 'Full report generating…' : fullReportReady ? 'Report ready' : 'Preview only'}
                   </span>
                 </div>
                 <div className="p-4 space-y-6">
@@ -2406,19 +2523,27 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                     </button>
                     {materialFlagsOpen && (
                       <div className="p-4 bg-white border-t border-gray-200 space-y-4">
-                        {sustainabilityPreview.highlights.map((highlight) => (
-                          <div
-                            key={highlight.id}
-                            className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0"
-                          >
-                            <div className="font-display text-sm uppercase tracking-wide text-gray-900">
-                              {highlight.title}
+                        {sustainabilityPreview.highlights.length > 0 ? (
+                          sustainabilityPreview.highlights.map((highlight) => (
+                            <div
+                              key={highlight.id}
+                              className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0"
+                            >
+                              <div className="font-display text-sm uppercase tracking-wide text-gray-900">
+                                {highlight.title}
+                              </div>
+                              <p className="mt-2 font-sans text-sm text-gray-700">
+                                {highlight.line}
+                              </p>
                             </div>
-                            <p className="mt-2 font-sans text-sm text-gray-700">
-                              {highlight.line}
-                            </p>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <p className="font-sans text-sm text-gray-700">
+                            {isBuildingFullReport
+                              ? 'Detailed highlights will appear when the full report finishes.'
+                              : 'Detailed highlights are not available yet.'}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2459,7 +2584,7 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                         </li>
                       ))}
                     </ul>
-                    {hasTextContent() && (
+                    {fullReportReady ? (
                       <div className="flex flex-wrap gap-3">
                         <button
                           onClick={handleDownloadReport}
@@ -2490,6 +2615,12 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                           )}
                         </button>
                       </div>
+                    ) : (
+                      <p className="font-sans text-sm text-gray-700">
+                        {isBuildingFullReport
+                          ? 'Download unlocks automatically once the full report is ready.'
+                          : 'Run full sustainability analysis to unlock report download.'}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -2507,10 +2638,10 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                       src={moodboardRenderUrl}
                       alt="Moodboard"
                       className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition ${
-                        isCreatingMoodboard ? 'opacity-40 grayscale' : ''
+                        isRenderInFlight ? 'opacity-40 grayscale' : ''
                       }`}
                     />
-                    {isCreatingMoodboard && (
+                    {isRenderInFlight && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60">
                         <Loader2 className="w-12 h-12 animate-spin text-gray-700" />
                         <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
@@ -2567,7 +2698,7 @@ ${JSON.stringify(summaryContext, null, 2)}`;
                   />
                   <button
                     onClick={handleMoodboardEdit}
-                    disabled={status !== 'idle' || !moodboardRenderUrl}
+                    disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                   >
                     {status === 'render' && isCreatingMoodboard ? (
