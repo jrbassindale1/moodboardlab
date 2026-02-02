@@ -143,6 +143,7 @@ const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
 const MOODBOARD_FLOW_TOTAL_STEPS = 4;
+const SUMMARY_REVIEW_TIMEOUT_MS = 20000;
 const REPORT_PREVIEW_INCLUDES = [
   'Comparative lifecycle dashboard',
   'Carbon dominance ranking',
@@ -1537,15 +1538,22 @@ const Moodboard: React.FC<MoodboardProps> = ({
         label: 'Reviewing summary quality',
         state: 'running'
       });
-      const summaryReviewOk = await runGemini('summary-review', { summaryDraft: paletteSummaryRef.current || '' });
+      const summaryReviewOk = await runGemini('summary-review', {
+        summaryDraft: paletteSummaryRef.current || '',
+        requestTimeoutMs: SUMMARY_REVIEW_TIMEOUT_MS
+      });
       if (!summaryReviewOk) {
+        if (paletteSummaryRef.current?.trim()) {
+          // Keep flow moving with the draft summary when QA service is slow/unavailable.
+          setSummaryReviewed(true);
+        }
+        setError(null);
         setFlowProgress({
           step: 3,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Summary review failed',
-          state: 'error'
+          label: 'Summary review skipped (using draft)',
+          state: 'running'
         });
-        return;
       }
 
       setIsBuildingFullReport(true);
@@ -1785,6 +1793,7 @@ IMPORTANT:
       editPrompt?: string;
       baseImageDataUrl?: string;
       summaryDraft?: string;
+      requestTimeoutMs?: number;
     }
   ): Promise<boolean> => {
     if (!board.length) {
@@ -1964,8 +1973,20 @@ CONTEXT:
 ${JSON.stringify(summaryContext, null, 2)}`;
     };
 
-    const buildPaletteSummaryReviewPrompt = (summaryDraft: string) => {
+    const buildPaletteSummaryReviewContext = () => {
       const summaryContext = buildPaletteSummaryContext();
+      return {
+        highestImpact: summaryContext.highestImpact,
+        lowCarbonSystems: summaryContext.lowCarbonSystems,
+        driverStages: summaryContext.driverStages.map((driver) => ({
+          name: driver.name,
+          topStages: driver.topStages.map((stage) => stage.stage)
+        }))
+      };
+    };
+
+    const buildPaletteSummaryReviewPrompt = (summaryDraft: string) => {
+      const summaryContext = buildPaletteSummaryReviewContext();
       return `You are a QA reviewer checking a concept-stage sustainability summary against a provided context. Fix inaccuracies or contradictions.
 
 Return ONLY valid JSON. No markdown. No prose outside JSON.
@@ -1988,7 +2009,7 @@ SUMMARY DRAFT:
 ${summaryDraft}
 
 CONTEXT:
-${JSON.stringify(summaryContext, null, 2)}`;
+${JSON.stringify(summaryContext)}`;
     };
 
     const prompt =
@@ -2076,7 +2097,10 @@ ${JSON.stringify(summaryContext, null, 2)}`;
         }
       ],
       generationConfig: {
-        temperature: 0.45
+        temperature: mode === 'summary-review' ? 0.2 : 0.45,
+        ...(mode === 'summary' || mode === 'summary-review'
+          ? { maxOutputTokens: 240 }
+          : {})
       }
     };
     const promptType =
@@ -2091,7 +2115,7 @@ ${JSON.stringify(summaryContext, null, 2)}`;
     }
 
     try {
-      const data = await callGeminiText(payload);
+      const data = await callGeminiText(payload, { timeoutMs: options?.requestTimeoutMs });
       console.log('[Gemini response]', { mode, data });
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
