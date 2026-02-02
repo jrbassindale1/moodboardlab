@@ -11,6 +11,7 @@
       "maintenance": { "impact": 1, "confidence": "high" },
       "endOfLife": { "impact": 1, "confidence": "high" }
     },
+    
     "steel-columns-beams": {
       "raw": { "impact": 5, "confidence": "high" },
       "manufacturing": { "impact": 5, "confidence": "high" },
