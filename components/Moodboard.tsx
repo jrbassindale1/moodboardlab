@@ -316,6 +316,8 @@ Output schema:
       "whyItLooksLikeThis": "string (max 200 chars)",
       "designLevers": ["string", "string"],
       "whatCouldChange": ["string", "string"],
+      "design_risk": "string (max 140 chars, stage-specific, material-specific)",
+      "design_response": "string (max 140 chars, action-oriented, material-specific)",
       "ukChecks": [
         {
           "label": "string",
@@ -344,6 +346,8 @@ Guidance:
 - Use hotspotCandidates as the hotspot list. Copy stage and score, only add the reason.
 - Include 1-3 hotspots per material, focusing on stages with impact >= 3.
 - Include at least 1 design lever per material.
+- design_risk should reference the top hotspot stage and avoid generic wording.
+- design_response should be a concrete spec action tied to that material (verb-first).
 - For benefits: score biodiversity/circularity/durability based on material properties.
 - For landscape materials: always include a biodiversity benefit.
 - For risks: identify supply chain, durability, or regulatory concerns where relevant.
@@ -966,10 +970,39 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return /wildflower|meadow/i.test(material.name);
     };
 
+    const stageLabelMap: Record<LifecycleStageKey, string> = {
+      raw: 'Raw stage',
+      manufacturing: 'Manufacturing stage',
+      transport: 'Transport stage',
+      installation: 'Installation stage',
+      inUse: 'In-use stage',
+      maintenance: 'Maintenance stage',
+      endOfLife: 'End-of-life stage'
+    };
+
+    const cleanSentence = (value?: string) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return '';
+      return trimmed.replace(/[.]+$/, '');
+    };
+
+    const getTopHotspotLine = (insight?: SustainabilityInsight) => {
+      if (!insight?.hotspots?.length) return '';
+      const topHotspot = [...insight.hotspots].sort((a, b) => b.score - a.score)[0];
+      if (!topHotspot) return '';
+      const reason = cleanSentence(topHotspot.reason);
+      if (!reason) return '';
+      return `${stageLabelMap[topHotspot.stage]}: ${reason}`;
+    };
+
     const getRiskLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
       if (material && isWildflowerMeadow(material)) {
         return 'High upfront establishment impact if pre-grown systems are used.';
       }
+      const headline = cleanSentence(insight?.headline);
+      if (headline) return headline;
+      const hotspotLine = getTopHotspotLine(insight);
+      if (hotspotLine) return hotspotLine;
       if (insight?.design_risk) return insight.design_risk;
       const topRisk = insight?.risks?.reduce((best, risk) => {
         if (!best || risk.severity_1to5 > best.severity_1to5) return risk;
@@ -983,6 +1016,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       if (material && isWildflowerMeadow(material)) {
         return 'Long-term ecological, water, and biodiversity benefits dominate lifecycle performance.';
       }
+      const rationale = cleanSentence(insight?.whyItLooksLikeThis);
+      if (rationale) return rationale;
       const benefits = insight?.benefits || [];
       if (benefits.length > 0) {
         const topBenefit = [...benefits].sort((a, b) => b.score_1to5 - a.score_1to5)[0];
@@ -998,6 +1033,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       }
       if (insight?.design_response) return insight.design_response;
       if (insight?.designLevers?.length) return insight.designLevers[0];
+      if (insight?.whatCouldChange?.length) return insight.whatCouldChange[0];
       return 'Validate alternatives and avoid over-specification.';
     };
 
@@ -1101,7 +1137,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
           quality: 0.82,
         })
       : moodboardRenderUrl;
-    renderSpecifiersSnapshot(ctx, optimizedSnapshotImage, board, metrics);
+    renderSpecifiersSnapshot(
+      ctx,
+      optimizedSnapshotImage,
+      board,
+      metrics,
+      paletteSummaryRef.current
+    );
 
     // Detect synergies and conflicts (pass metrics for fallback generation)
     const synergies = detectSynergies(board, metrics);
@@ -1161,7 +1203,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // ========== PAGE 2: Client Summary ==========
     onProgress?.('Generating sustainability summary...', 15);
-    renderStrategicOverview(ctx, clientSummary, board, metrics);
+    renderStrategicOverview(
+      ctx,
+      clientSummary,
+      board,
+      metrics,
+      insights,
+      paletteSummaryRef.current
+    );
 
     // ========== PAGE 3: Comparative Dashboard ==========
     onProgress?.('Building comparative dashboard...', 25);
@@ -1954,19 +2003,21 @@ IMPORTANT:
 
     const buildPaletteSummaryPrompt = () => {
       const summaryContext = buildPaletteSummaryContext();
-      return `You are a UK architecture sustainability assistant writing a single-sentence dashboard summary for a concept-stage material palette. This copy is for the UI only (not the PDF report).
+      return `You are a UK architecture sustainability assistant writing concise dashboard + PDF intro copy for a concept-stage material palette.
 
 Return ONLY valid JSON. No markdown. No prose outside JSON.
 
 Output schema:
 {
-  "summarySentence": "string (max 200 chars)"
+  "summarySentence": "string (max 220 chars)",
+  "summaryParagraph": "string (2-3 sentences, max 420 chars)"
 }
 
 Rules:
 - Mention at least one material name from highestImpact or lowCarbonSystems if provided.
 - Mention at least one lifecycle stage (raw, manufacturing, transport, installation, inUse, maintenance, endOfLife) using the driverStages list.
 - Keep it neutral and early-stage; avoid compliance claims, rankings, percentages, or numbers.
+- summaryParagraph should include: key risk driver, one lower-carbon opportunity, and one clear next action.
 - If highestImpact and lowCarbonSystems are empty, say the palette needs assessment.
 
 CONTEXT:
@@ -1994,13 +2045,14 @@ Return ONLY valid JSON. No markdown. No prose outside JSON.
 Output schema:
 {
   "status": "ok|revise",
-  "revisedSummary": "string (max 200 chars, empty if status=ok)",
+  "revisedSummary": "string (2-3 sentences, max 420 chars, empty if status=ok)",
   "issues": ["string"]
 }
 
 Rules:
 - Only use material names listed in highestImpact or lowCarbonSystems.
 - Summary must mention at least one lifecycle stage from driverStages.
+- Keep revisedSummary as 2-3 concise sentences suitable for dashboard + PDF intro copy.
 - Do not introduce numbers, rankings, or compliance claims.
 - If the draft is accurate, return status "ok" and empty revisedSummary.
 - If not, return status "revise" with a corrected summary.
@@ -2198,9 +2250,33 @@ ${JSON.stringify(summaryContext)}`;
                   }))
                 : [];
 
-              // Generate design consequences from hotspots and material type
-              const design_risk = generateDesignRisk(hotspots, materialForConsequences);
-              const design_response = generateDesignResponse(hotspots, materialForConsequences);
+              const designLevers = Array.isArray(item.designLevers)
+                ? item.designLevers
+                    .map((value: unknown) => String(value || '').trim())
+                    .filter(Boolean)
+                : [];
+              const whatCouldChange = Array.isArray(item.whatCouldChange)
+                ? item.whatCouldChange
+                    .map((value: unknown) => String(value || '').trim())
+                    .filter(Boolean)
+                : [];
+
+              const aiDesignRisk =
+                typeof item.design_risk === 'string' ? item.design_risk.trim() : '';
+              const aiDesignResponse =
+                typeof item.design_response === 'string' ? item.design_response.trim() : '';
+              const topRiskNote = risks.find((risk) => risk.note?.trim())?.note?.trim() || '';
+
+              // Use AI-authored copy when present, then fall back to deterministic templates.
+              const design_risk =
+                aiDesignRisk ||
+                topRiskNote ||
+                generateDesignRisk(hotspots, materialForConsequences);
+              const design_response =
+                aiDesignResponse ||
+                designLevers[0] ||
+                whatCouldChange[0] ||
+                generateDesignResponse(hotspots, materialForConsequences);
 
               return {
                 id: String(item.id || ''),
@@ -2208,8 +2284,8 @@ ${JSON.stringify(summaryContext)}`;
                 headline: String(item.headline || ''),
                 hotspots,
                 whyItLooksLikeThis: String(item.whyItLooksLikeThis || ''),
-                designLevers: Array.isArray(item.designLevers) ? item.designLevers.map(String) : [],
-                whatCouldChange: Array.isArray(item.whatCouldChange) ? item.whatCouldChange.map(String) : [],
+                designLevers,
+                whatCouldChange,
                 ukChecks,
                 benefits,
                 risks,
@@ -2239,9 +2315,11 @@ ${JSON.stringify(summaryContext)}`;
       } else if (mode === 'summary') {
         try {
           const parsed = JSON.parse(cleaned);
-          const summary = typeof parsed?.summarySentence === 'string' ? parsed.summarySentence.trim() : '';
+          const summarySentence = typeof parsed?.summarySentence === 'string' ? parsed.summarySentence.trim() : '';
+          const summaryParagraph = typeof parsed?.summaryParagraph === 'string' ? parsed.summaryParagraph.trim() : '';
+          const summary = summaryParagraph || summarySentence;
           if (!summary) {
-            throw new Error('Invalid summary sentence');
+            throw new Error('Invalid summary content');
           }
           setPaletteSummary(summary);
           paletteSummaryRef.current = summary;

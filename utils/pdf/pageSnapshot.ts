@@ -7,7 +7,8 @@ export function renderSpecifiersSnapshot(
   ctx: PDFContext,
   moodboardImage: string | null,
   materials: MaterialOption[],
-  metrics: Map<string, MaterialMetrics>
+  metrics: Map<string, MaterialMetrics>,
+  aiSummaryText?: string | null
 ): void {
   // 1. Header
   const headerHeight = 35;
@@ -129,9 +130,34 @@ export function renderSpecifiersSnapshot(
 
   // 4. Insight Box
   const calc = calculateProjectMetrics(materials, metrics);
+  const pad = 10;
+
+  const normalizeText = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+  };
+
+  let insightText = normalizeText(aiSummaryText || '');
+  if (!insightText) {
+    insightText = `This configuration represents a ${calc.paletteType}. `;
+    if (calc.bioRatio > 0.3) {
+      insightText += 'It prioritizes bio-based materials for high carbon storage. ';
+    } else {
+      insightText += 'It relies on industrial finishes requiring careful carbon management. ';
+    }
+    insightText += 'See Page 2 for critical hotspots.';
+  }
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
+  const insightLines = ctx.doc
+    .splitTextToSize(insightText, availableWidth - pad * 2)
+    .slice(0, 5);
+  const insightLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const boxHeight = Math.max(45, 24 + insightLines.length * insightLineHeight);
 
   // Box Background
-  const boxHeight = 45;
   ctx.doc.setFillColor(240, 253, 244);
   ctx.doc.rect(ctx.margin, ctx.cursorY, availableWidth, boxHeight, 'F');
 
@@ -140,24 +166,12 @@ export function renderSpecifiersSnapshot(
   ctx.doc.rect(ctx.margin, ctx.cursorY, 4, boxHeight, 'F');
 
   // Text inside box
-  const pad = 10;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(21, 128, 61);
   ctx.doc.text('PALETTE INSIGHT:', ctx.margin + pad, ctx.cursorY + pad + 5);
 
-  let insightText = `This configuration represents a ${calc.paletteType}. `;
-  if (calc.bioRatio > 0.3) {
-    insightText += 'It prioritizes bio-based materials for high carbon storage. ';
-  } else {
-    insightText += 'It relies on industrial finishes requiring careful carbon management. ';
-  }
-  insightText += 'See Page 2 for critical hotspots.';
-
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(55, 65, 81);
-  const lines = ctx.doc.splitTextToSize(insightText, availableWidth - pad * 2);
   const insightStartY = ctx.cursorY + pad + 15;
-  ctx.doc.text(lines, ctx.margin + pad, insightStartY, { lineHeightFactor: 1.35 });
+  ctx.doc.text(insightLines, ctx.margin + pad, insightStartY, { lineHeightFactor: 1.35 });
 }

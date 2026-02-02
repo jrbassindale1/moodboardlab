@@ -508,6 +508,11 @@ function buildMaterialSummaryLine(
   insight: EnhancedSustainabilityInsight | undefined,
   metrics: MaterialMetrics | undefined
 ): string {
+  const aiHeadline = (insight?.headline || '').trim().replace(/[.]+$/, '');
+  if (aiHeadline) {
+    return `${aiHeadline}.`;
+  }
+
   const roleSource = material.finish || material.description || material.name;
   let role = roleSource.split(/[.;]/)[0].trim();
   if (!role) role = material.name;
@@ -536,6 +541,11 @@ function buildLifecycleDrivers(
   insight: EnhancedSustainabilityInsight | undefined,
   metrics: MaterialMetrics | undefined
 ): string[] {
+  const rationale = (insight?.whyItLooksLikeThis || '').trim().replace(/[.]+$/, '');
+  if (rationale) {
+    return [`${rationale}.`];
+  }
+
   const primaryDriver = insight?.hotspots?.length ? formatHotspotDriver(insight.hotspots[0]) : '';
   let replacementClause = '';
 
@@ -917,8 +927,13 @@ export function renderEnhancedMaterialSection(
   }
 
   const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
-  const actions = (insight?.designLevers || [])
-    .filter((lever) => !compliancePhrase.test(lever))
+  const actionCandidates = [
+    insight?.design_response || '',
+    ...(insight?.designLevers || []),
+    ...(insight?.whatCouldChange || [])
+  ];
+  const actions = actionCandidates
+    .filter((lever) => lever && !compliancePhrase.test(lever))
     .map((lever) => normalizeDesignAction(lever))
     .slice(0, 2);
   if (actions.length === 0) {

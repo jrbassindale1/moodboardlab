@@ -24,6 +24,12 @@ export function generateDesignRecommendations(
   metrics: Map<string, MaterialMetrics>,
   insights: EnhancedSustainabilityInsight[]
 ): DesignRecommendation[] {
+  const cleanGuidance = (value?: string) => {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return '';
+    return trimmed.replace(/[.;]+$/, '');
+  };
+
   const recommendations: DesignRecommendation[] = [];
   const totalEmbodied = Array.from(metrics.values()).reduce(
     (sum, m) => sum + m.embodied_proxy,
@@ -46,6 +52,10 @@ export function generateDesignRecommendations(
   sortedByEmbodied.forEach((mat, idx) => {
     rankMap.set(mat.id, idx + 1);
   });
+  const insightById = new Map<string, EnhancedSustainabilityInsight>();
+  insights.forEach((insight) => {
+    if (insight?.id) insightById.set(insight.id, insight);
+  });
 
   const buildDriver = (materialIds?: string[]): string => {
     if (!materialIds || materialIds.length === 0) {
@@ -66,6 +76,31 @@ export function generateDesignRecommendations(
     const circularityText = `${circularity} circularity`;
     return `Driver: ${rankText} + ${replacementText} + ${circularityText}`;
   };
+
+  // Seed recommendations with AI-authored guidance from material insights.
+  sortedByEmbodied.slice(0, 4).forEach((mat) => {
+    const metric = metrics.get(mat.id);
+    const insight = insightById.get(mat.id);
+    if (!metric || !insight) return;
+
+    const aiAction = cleanGuidance(
+      insight.design_response || insight.designLevers?.[0] || insight.whatCouldChange?.[0]
+    );
+    const aiRationale = cleanGuidance(
+      insight.design_risk || insight.headline || insight.hotspots?.[0]?.reason
+    );
+    if (!aiAction || !aiRationale) return;
+
+    recommendations.push({
+      priority: metric.embodied_proxy >= 3.5 || metric.lifecycle_multiplier >= 3 ? 'high' : 'medium',
+      category: metric.embodied_proxy >= 3.5 ? 'replace' : 'specify',
+      recommendationId: `ai-guidance-${mat.id}`,
+      action: aiAction,
+      rationale: aiRationale,
+      driver: buildDriver([mat.id]),
+      materialIds: [mat.id],
+    });
+  });
 
   // Check for carbon dominant components (>15%)
   sortedByEmbodied.forEach((mat) => {
