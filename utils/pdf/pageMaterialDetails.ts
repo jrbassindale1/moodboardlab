@@ -1,4 +1,4 @@
-import type { MaterialOption } from '../../types';
+import type { MaterialOption, MaterialType, MaterialForm, MaterialFunction, ManufacturingProcess } from '../../types';
 import type {
   EnhancedSustainabilityInsight,
   Hotspot,
@@ -8,6 +8,78 @@ import type {
   PDFContext,
   TrafficLight,
 } from '../../types/sustainability';
+
+/** Format material type for display */
+function formatMaterialType(type: MaterialType): string {
+  const typeLabels: Record<MaterialType, string> = {
+    'metal': 'Metal',
+    'timber': 'Timber',
+    'stone': 'Stone',
+    'ceramic': 'Ceramic',
+    'composite': 'Composite',
+    'glass': 'Glass',
+    'polymer': 'Polymer',
+    'mineral': 'Mineral',
+    'natural-fibre': 'Natural Fibre',
+    'bio-based': 'Bio-based',
+    'concrete': 'Concrete',
+    'textile': 'Textile',
+  };
+  return typeLabels[type] || type;
+}
+
+/** Format material form for display */
+function formatMaterialForm(forms: MaterialForm[]): string {
+  const formLabels: Record<MaterialForm, string> = {
+    'board': 'Board',
+    'sheet': 'Sheet',
+    'panel': 'Panel',
+    'plank': 'Plank',
+    'tile': 'Tile',
+    'block': 'Block',
+    'bar': 'Bar',
+    'tube': 'Tube',
+    'beam': 'Beam',
+    'roll': 'Roll',
+    'liquid': 'Liquid',
+    'granular': 'Granular',
+    'membrane': 'Membrane',
+  };
+  return forms.map(f => formLabels[f] || f).join(', ');
+}
+
+/** Format material function for display */
+function formatMaterialFunction(functions: MaterialFunction[]): string {
+  const funcLabels: Record<MaterialFunction, string> = {
+    'structural': 'Structural',
+    'surface': 'Surface',
+    'insulation': 'Insulation',
+    'weatherproofing': 'Weatherproofing',
+    'acoustic': 'Acoustic',
+    'decorative': 'Decorative',
+  };
+  return functions.map(f => funcLabels[f] || f).join(', ');
+}
+
+/** Format manufacturing process for display */
+function formatManufacturingProcess(processes: ManufacturingProcess[]): string {
+  const procLabels: Record<ManufacturingProcess, string> = {
+    'casting': 'Casting',
+    'pressing': 'Pressing',
+    'heat-pressing': 'Heat Pressing',
+    'cutting': 'Cutting',
+    'metal-working': 'Metal Working',
+    'extrusion': 'Extrusion',
+    'lamination': 'Lamination',
+    'kiln-firing': 'Kiln Firing',
+    'weaving': 'Weaving',
+    'moulding': 'Moulding',
+    'machining': 'Machining',
+    'coating': 'Coating',
+    'mixing': 'Mixing',
+  };
+  return processes.map(p => procLabels[p] || p).join(', ');
+}
 import type { jsPDF } from 'jspdf';
 import { STAGE_LABELS } from '../designConsequences';
 import { isLandscapeMaterial } from '../lifecycleDurations';
@@ -711,10 +783,10 @@ export function renderEnhancedMaterialSection(
     });
   }
 
-  // Left column: thumbnail + mini lifecycle chart.
-  let leftY = headerY + 14;
-  // Fixed thumbnail size requested for consistent print/output sizing.
-  const imgSize = 64;
+  // Left column: thumbnail + lifecycle chart.
+  let leftY = headerY + 18;
+  // Fixed thumbnail size for consistent print/output sizing.
+  const imgSize = 68;
   ctx.doc.setFillColor(240, 240, 240);
   ctx.doc.setDrawColor(220, 220, 220);
   ctx.doc.setLineWidth(0.5);
@@ -739,46 +811,60 @@ export function renderEnhancedMaterialSection(
     }
   }
 
-  leftY += imgSize + 8;
+  leftY += imgSize + 12;
 
   if (profile) {
     const stageKeys: Array<keyof LifecycleProfile> = ['raw', 'manufacturing', 'transport', 'inUse', 'endOfLife'];
     const labels = ['RAW', 'MFG', 'TRN', 'USE', 'EOL'];
-    const barW = 8;
-    const barGap = 10;
-    const maxBarH = 18;
+    const barW = 12;
+    const barGap = 6;
+    const maxBarH = 40;
+    const chartBaseY = leftY + maxBarH;
 
     stageKeys.forEach((key, i) => {
       const impact = profile[key].impact;
-      const barH = (impact / 5) * maxBarH;
+      const barH = Math.max(2, (impact / 5) * maxBarH);
       const x = col1X + i * (barW + barGap);
-      const y = leftY + maxBarH - barH;
+      const y = chartBaseY - barH;
 
       if (impact >= 4) {
         ctx.doc.setFillColor(220, 53, 69);
       } else if (impact >= 3) {
         ctx.doc.setFillColor(255, 191, 0);
       } else {
-        ctx.doc.setFillColor(120, 120, 120);
+        ctx.doc.setFillColor(34, 139, 34);
       }
       ctx.doc.rect(x, y, barW, barH, 'F');
 
+      // Impact score on bar
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(7);
+      ctx.doc.setTextColor(255);
+      if (barH >= 10) {
+        ctx.doc.text(String(impact), x + barW / 2, y + barH - 3, { align: 'center' });
+      }
+
+      // Stage label below
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+      ctx.doc.setFontSize(7);
       ctx.doc.setTextColor(90);
-      ctx.doc.text(labels[i], x + barW / 2, leftY + maxBarH + 4, { align: 'center' });
+      ctx.doc.text(labels[i], x + barW / 2, chartBaseY + 8, { align: 'center' });
       ctx.doc.setTextColor(0);
     });
+
+    // Update leftY to account for larger chart
+    leftY = chartBaseY + 16;
   } else {
     ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(140);
-    ctx.doc.text('No fingerprint data', col1X, leftY + 8);
+    ctx.doc.text('No lifecycle data available', col1X, leftY + 10);
     ctx.doc.setTextColor(0);
+    leftY += 24;
   }
 
-  // Right column: summary + compact actions.
-  let rightY = headerY + 12;
+  // Right column: summary + lifecycle drivers + compact actions.
+  let rightY = headerY + 16;
   const summaryFontSize = PDF_TYPE_SCALE.body;
   const summaryLineHeight = lineHeightFor(summaryFontSize);
   const summaryLine = `In this palette: ${buildMaterialSummaryLine(material, insight, metrics)}`;
@@ -786,8 +872,49 @@ export function renderEnhancedMaterialSection(
   ctx.doc.setFontSize(summaryFontSize);
   ctx.doc.setTextColor(45);
   const summaryLines = ctx.doc.splitTextToSize(summaryLine, col2W).slice(0, 3);
-  ctx.doc.text(summaryLines, col2X, rightY, { lineHeightFactor: 1.35 });
-  rightY += summaryLines.length * summaryLineHeight + 7;
+  ctx.doc.text(summaryLines, col2X, rightY, { lineHeightFactor: 1.4 });
+  rightY += summaryLines.length * summaryLineHeight + 10;
+
+  // Add lifecycle drivers for more context
+  const lifecycleDrivers = buildLifecycleDrivers(material, insight, metrics);
+  if (lifecycleDrivers.length > 0) {
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+    ctx.doc.setTextColor(80);
+    const driverText = lifecycleDrivers[0];
+    const driverLines = ctx.doc.splitTextToSize(driverText, col2W).slice(0, 2);
+    ctx.doc.text(driverLines, col2X, rightY, { lineHeightFactor: 1.3 });
+    rightY += driverLines.length * lineHeightFor(PDF_TYPE_SCALE.small) + 8;
+    ctx.doc.setTextColor(0);
+  }
+
+  // Display material classification attributes
+  const hasAttributes = material.materialType || material.materialForm || material.materialFunction || material.manufacturingProcess;
+  if (hasAttributes) {
+    ctx.doc.setFont('helvetica', 'normal');
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+    ctx.doc.setTextColor(70);
+
+    const attrParts: string[] = [];
+    if (material.materialType) {
+      attrParts.push(formatMaterialType(material.materialType));
+    }
+    if (material.materialForm && material.materialForm.length > 0) {
+      attrParts.push(formatMaterialForm(material.materialForm));
+    }
+    if (material.materialFunction && material.materialFunction.length > 0) {
+      attrParts.push(formatMaterialFunction(material.materialFunction));
+    }
+    if (material.manufacturingProcess && material.manufacturingProcess.length > 0) {
+      attrParts.push(formatManufacturingProcess(material.manufacturingProcess));
+    }
+
+    const attrText = attrParts.join(' · ');
+    const attrLines = ctx.doc.splitTextToSize(attrText, col2W).slice(0, 2);
+    ctx.doc.text(attrLines, col2X, rightY, { lineHeightFactor: 1.3 });
+    rightY += attrLines.length * lineHeightFor(PDF_TYPE_SCALE.small) + 6;
+    ctx.doc.setTextColor(0);
+  }
 
   const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
   const actions = (insight?.designLevers || [])
@@ -798,11 +925,11 @@ export function renderEnhancedMaterialSection(
     actions.push('Review product evidence for the highest-impact lifecycle stages');
   }
 
-  const footerY = cardBottom - 8;
+  const footerY = cardBottom - 12;
   const actionTitleSize = PDF_TYPE_SCALE.small;
   const actionTextSize = PDF_TYPE_SCALE.small;
-  const actionLineHeight = lineHeightFor(actionTextSize, 'tight');
-  const actionsBoxHeight = Math.min(60, Math.max(34, footerY - rightY - 8));
+  const actionLineHeight = lineHeightFor(actionTextSize, 'normal');
+  const actionsBoxHeight = Math.min(70, Math.max(40, footerY - rightY - 10));
   ctx.doc.setFillColor(248, 248, 248);
   ctx.doc.setDrawColor(230, 230, 230);
   ctx.doc.roundedRect(col2X, rightY, col2W, actionsBoxHeight, 2, 2, 'FD');
@@ -810,27 +937,26 @@ export function renderEnhancedMaterialSection(
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(actionTitleSize);
   ctx.doc.setTextColor(0);
-  const actionsTitleY = rightY + 7;
-  ctx.doc.text('DESIGN ACTIONS:', col2X + 4, actionsTitleY);
+  const actionsTitleY = rightY + 10;
+  ctx.doc.text('DESIGN ACTIONS:', col2X + 6, actionsTitleY);
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(actionTextSize);
   ctx.doc.setTextColor(65);
-  let actionY = actionsTitleY + 6;
-  const maxActionTextWidth = col2W - 8;
-  actions.forEach((action, index) => {
-    if (actionY > rightY + actionsBoxHeight - 4) return;
-    const prefix = index === 0 ? '-' : '-';
-    const actionLines = ctx.doc.splitTextToSize(`${prefix} ${action}`, maxActionTextWidth).slice(0, 2);
-    ctx.doc.text(actionLines, col2X + 4, actionY, { lineHeightFactor: 1.3 });
-    actionY += actionLines.length * actionLineHeight + 2;
+  let actionY = actionsTitleY + 10;
+  const maxActionTextWidth = col2W - 12;
+  actions.forEach((action) => {
+    if (actionY > rightY + actionsBoxHeight - 6) return;
+    const actionLines = ctx.doc.splitTextToSize(`- ${action}`, maxActionTextWidth).slice(0, 2);
+    ctx.doc.text(actionLines, col2X + 6, actionY, { lineHeightFactor: 1.4 });
+    actionY += actionLines.length * actionLineHeight + 4;
   });
   ctx.doc.setTextColor(0);
 
   // Footer
-  ctx.doc.setDrawColor(230, 230, 230);
+  ctx.doc.setDrawColor(210, 210, 210);
   ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(col1X, footerY - 4, ctx.pageWidth - ctx.margin, footerY - 4);
+  ctx.doc.line(col1X, footerY - 2, ctx.pageWidth - ctx.margin - cardPadding, footerY - 2);
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
@@ -839,11 +965,14 @@ export function renderEnhancedMaterialSection(
   const rankText = paletteContext
     ? `Carbon rank: #${paletteContext.rank} of ${paletteContext.totalMaterials}`
     : 'Carbon rank: n/a';
-  const metricText = metrics
-    ? `Lifespan: ${metrics.service_life} yrs | Confidence: ${(metrics.confidence_score * 100).toFixed(0)}%`
-    : 'Lifespan: n/a | Confidence: low';
-  const footerText = fitSingleLineText(ctx.doc, `${rankText} | ${metricText}`, contentWidth - cardPadding * 2);
-  ctx.doc.text(footerText, col1X, footerY + 1);
+  const lifespanText = metrics
+    ? metrics.service_life >= 100 ? '100+ yrs' : `${metrics.service_life} yrs`
+    : 'n/a';
+  const confidenceText = metrics
+    ? `${(metrics.confidence_score * 100).toFixed(0)}%`
+    : 'low';
+  const footerText = fitSingleLineText(ctx.doc, `${rankText} | Lifespan: ${lifespanText} | Confidence: ${confidenceText}`, contentWidth - cardPadding * 2);
+  ctx.doc.text(footerText, col1X, footerY + 4);
   ctx.doc.setTextColor(0);
 
   // Move cursor to the next slot.

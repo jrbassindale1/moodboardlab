@@ -81,7 +81,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['steel', 'painted', 'expressed joints'],
     category: 'structure',
     supportsColor: true,
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar', 'sheet'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'glulam-structure',
@@ -92,7 +96,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Laminated timber beams and posts forming a renewable, visually warm structural system with long-span capability.',
     keywords: ['timber', 'glulam', 'warm'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing', 'cutting']
   },
   {
     id: 'concrete-frame',
@@ -103,7 +111,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Cast-in-place concrete slabs and columns with exposed soffits providing thermal mass and long-term durability.',
     keywords: ['concrete', 'soffit', 'durability'],
     category: 'structure',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['block', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting', 'mixing']
   },
   {
     id: 'hybrid-structure',
@@ -125,7 +137,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Mass timber CLT slabs and walls, prefabricated for rapid build, carbon storage, and excellent airtightness.',
     keywords: ['timber', 'clt', 'mass timber', 'low carbon'],
     category: 'structure',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing', 'cutting']
   },
   {
     id: 'nlt-structure',
@@ -185,7 +201,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       'Natural linoleum sheet with a subtle mottled grain; resilient, low-maintenance, and comfortable underfoot.',
     keywords: ['linoleum', 'resilient', 'floor'],
     category: 'floor',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['sheet', 'roll'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'recycled-terrazzo',
@@ -222,7 +242,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Natural Oak', tone: '#d8b185' },
       { label: 'Pale Ash', tone: '#e5d5be' },
       { label: 'Smoked Oak', tone: '#8a6b4f' }
-    ]
+    ],
+    materialType: 'timber',
+    materialForm: ['plank', 'board'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['lamination', 'cutting', 'coating']
   },
   {
     id: 'grey-carpet',
@@ -289,7 +313,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
       { label: 'Cotswold Stone', tone: '#d2b48c' }
     ],
     category: 'floor',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['tile', 'block'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'vinyl-planks',
@@ -490,7 +518,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Standard plasterboard walls with smooth skim finish; versatile base for paint or wallpaper.',
     keywords: ['plasterboard', 'wall', 'internal'],
     category: 'wall-internal',
-    treePaths: ['Internal>Walls']
+    treePaths: ['Internal>Walls'],
+    materialType: 'mineral',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'plywood-panels-wall',
@@ -2175,7 +2207,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     colorOptions: ZINC_COLOR_OPTIONS,
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'aluminium-cladding',

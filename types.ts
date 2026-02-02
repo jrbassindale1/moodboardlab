@@ -42,6 +42,62 @@ export type MaterialCategory =
   | 'external-ground'
   | 'furniture';
 
+/** Classification of the base material composition */
+export type MaterialType =
+  | 'metal'
+  | 'timber'
+  | 'stone'
+  | 'ceramic'
+  | 'composite'
+  | 'glass'
+  | 'polymer'
+  | 'mineral'
+  | 'natural-fibre'
+  | 'bio-based'
+  | 'concrete'
+  | 'textile';
+
+/** Physical form the material takes */
+export type MaterialForm =
+  | 'board'
+  | 'sheet'
+  | 'panel'
+  | 'plank'
+  | 'tile'
+  | 'block'
+  | 'bar'
+  | 'tube'
+  | 'beam'
+  | 'roll'
+  | 'liquid'
+  | 'granular'
+  | 'membrane';
+
+/** Primary function of the material in the building */
+export type MaterialFunction =
+  | 'structural'
+  | 'surface'
+  | 'insulation'
+  | 'weatherproofing'
+  | 'acoustic'
+  | 'decorative';
+
+/** Manufacturing/processing methods used */
+export type ManufacturingProcess =
+  | 'casting'
+  | 'pressing'
+  | 'heat-pressing'
+  | 'cutting'
+  | 'metal-working'
+  | 'extrusion'
+  | 'lamination'
+  | 'kiln-firing'
+  | 'weaving'
+  | 'moulding'
+  | 'machining'
+  | 'coating'
+  | 'mixing';
+
 export interface MaterialOption {
   id: string;
   name: string;
@@ -62,6 +118,11 @@ export interface MaterialOption {
   colorVariantId?: string; // ID for colored variant (e.g., 'steel-yellow') used to load colored icons
   colorLabel?: string; // Label for the color variant (e.g., 'Yellow')
   coloredIconBlobUrl?: string; // Azure Blob Storage URL for colored icon (server-side storage)
+  // Material classification attributes
+  materialType?: MaterialType; // Base material composition (e.g., metal, timber, composite)
+  materialForm?: MaterialForm[]; // Physical forms available (e.g., sheet, board, tube)
+  materialFunction?: MaterialFunction[]; // Primary functions (e.g., structural, surface)
+  manufacturingProcess?: ManufacturingProcess[]; // How the material is processed
 }
 
 export interface UploadedImage {
