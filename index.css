@@ -56,3 +56,122 @@ body {
 .animate-fade-out {
   animation: fade-out 0.4s ease-out forwards;
 }
+
+/* Print styles for Sustainability Briefing A4 export */
+@media print {
+  /* Hide everything except the report */
+  body * {
+    visibility: hidden;
+  }
+
+  #sustainability-report,
+  #sustainability-report * {
+    visibility: visible;
+  }
+
+  #sustainability-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 15mm 20mm;
+    margin: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  /* Ensure backgrounds print */
+  .sustainability-briefing {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure colors print correctly */
+  .bg-green-50,
+  .bg-green-100,
+  .bg-orange-50,
+  .bg-orange-100,
+  .bg-amber-50,
+  .bg-blue-50,
+  .bg-gray-50 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Text colors for print */
+  .text-green-600,
+  .text-green-700,
+  .text-green-800,
+  .text-orange-500,
+  .text-orange-700,
+  .text-orange-800,
+  .text-amber-500,
+  .text-blue-600 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Border colors for print */
+  .border-green-200,
+  .border-orange-200,
+  .border-amber-200,
+  .border-blue-200,
+  .border-blue-400 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Prevent content from breaking awkwardly */
+  section {
+    break-inside: avoid;
+  }
+
+  /* Ensure tables don't break across pages */
+  table {
+    break-inside: avoid;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  /* Card elements shouldn't break */
+  .rounded-xl,
+  .rounded-lg {
+    break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  button {
+    display: none !important;
+  }
+
+  /* Recharts adjustments for print */
+  .recharts-wrapper {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .recharts-polar-grid-angle line,
+  .recharts-polar-grid-concentric path {
+    stroke: #e5e7eb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .recharts-radar-polygon {
+    fill: #10b981 !important;
+    fill-opacity: 0.4 !important;
+    stroke: #059669 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

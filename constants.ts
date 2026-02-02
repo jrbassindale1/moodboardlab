@@ -2202,7 +2202,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Natural slate roofing tiles; durable, low-maintenance, and highly weather-resistant.',
     keywords: ['slate', 'tiles', 'roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['tile'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'metal-tiles-roof',
@@ -2212,7 +2216,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight profiled metal tiles mimicking traditional forms; durable and recyclable.',
     keywords: ['metal', 'tiles', 'roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['tile', 'sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'epdm-membrane',
@@ -2222,7 +2230,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Single-ply EPDM rubber membrane for flat roofs; durable, flexible, and UV-resistant.',
     keywords: ['epdm', 'membrane', 'roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['membrane', 'roll'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['extrusion']
   },
   {
     id: 'tpo-membrane',
@@ -2232,7 +2244,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'White TPO single-ply membrane with high reflectivity for cool roof performance.',
     keywords: ['tpo', 'membrane', 'roof', 'cool roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['membrane', 'roll'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['extrusion']
   },
   {
     id: 'built-up-roofing',
@@ -2242,7 +2258,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Traditional built-up bituminous roofing with multiple layers; proven durability for flat roofs.',
     keywords: ['bitumen', 'built-up', 'roof'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['membrane', 'roll'],
+    materialFunction: ['weatherproofing'],
+    manufacturingProcess: ['lamination', 'coating']
   },
   {
     id: 'polycarbonate-roof',
@@ -2252,7 +2272,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight multi-wall polycarbonate panels for daylighting; insulating and impact-resistant.',
     keywords: ['polycarbonate', 'panels', 'roof', 'daylighting'],
     category: 'roof',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['extrusion']
   },
   {
     id: 'wood-fiber-insulation',
@@ -2262,7 +2286,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Bio-based rigid wood fiber insulation boards; breathable, high thermal mass, and carbon-storing.',
     keywords: ['insulation', 'wood fiber', 'bio-based'],
     category: 'insulation',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'hemp-insulation',
@@ -2272,7 +2300,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Natural hemp fiber insulation batts; breathable, renewable, and excellent moisture management.',
     keywords: ['insulation', 'hemp', 'bio-based'],
     category: 'insulation',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['roll', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'sheep-wool-insulation',
@@ -2282,7 +2314,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Natural sheep wool insulation batts; renewable, moisture-buffering, and non-toxic.',
     keywords: ['insulation', 'wool', 'natural'],
     category: 'insulation',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['roll', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'cork-insulation',
@@ -2292,7 +2328,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Expanded cork insulation boards; bio-based, naturally fire-resistant, and carbon-negative.',
     keywords: ['insulation', 'cork', 'bio-based'],
     category: 'insulation',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['heat-pressing']
   },
   {
     id: 'cellulose-insulation',
@@ -2302,7 +2342,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Blown or batt cellulose from recycled paper; high recycled content and good thermal performance.',
     keywords: ['insulation', 'cellulose', 'recycled'],
     category: 'insulation',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['granular', 'roll'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'mineral-wool',
@@ -2312,7 +2356,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Stone wool insulation batts with excellent fire resistance and acoustic performance.',
     keywords: ['insulation', 'mineral wool', 'fire-resistant'],
     category: 'insulation',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'mineral',
+    materialForm: ['roll', 'board'],
+    materialFunction: ['insulation', 'acoustic'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'pir-insulation',
@@ -2322,7 +2370,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'High-performance rigid foam insulation boards; thin profile with high R-value.',
     keywords: ['insulation', 'pir', 'foam'],
     category: 'insulation',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['moulding']
   },
   {
     id: 'aerogel-insulation',
@@ -2332,7 +2384,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Ultra-high-performance aerogel insulation blankets; extreme R-value in minimal thickness.',
     keywords: ['insulation', 'aerogel', 'high-performance'],
     category: 'insulation',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'mineral',
+    materialForm: ['roll', 'panel'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing']
   },
   {
     id: 'timber-door',
@@ -2342,7 +2398,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Solid or engineered timber doors with various finishes; warm, natural, and customizable.',
     keywords: ['door', 'timber', 'wood'],
     category: 'door',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'steel-door',
@@ -2352,7 +2412,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Robust steel doors with powder-coat finish; high security and fire-rating options.',
     keywords: ['door', 'steel', 'security'],
     category: 'door',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'aluminum-door',
@@ -2362,7 +2426,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Lightweight aluminum doors with slim profiles; durable and low-maintenance.',
     keywords: ['door', 'aluminum', 'lightweight'],
     category: 'door',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'bar'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['extrusion', 'coating']
   },
   {
     id: 'glass-door',
@@ -2372,7 +2440,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Transparent glass doors for maximum light transmission; frameless or minimal framing.',
     keywords: ['door', 'glass', 'transparent'],
     category: 'door',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'composite-door',
@@ -2382,7 +2454,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Glass-reinforced plastic composite doors with insulated core; low-maintenance and thermally efficient.',
     keywords: ['door', 'composite', 'insulated'],
     category: 'door',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'insulation'],
+    manufacturingProcess: ['moulding', 'lamination']
   },
   {
     id: 'fire-rated-door',
@@ -2392,7 +2468,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Fire-rated doors with certified performance; timber or steel construction with intumescent seals.',
     keywords: ['door', 'fire-rated', 'safety'],
     category: 'door',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'glass-balustrade',
@@ -2402,7 +2482,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Frameless or channel-mounted glass balustrade; transparent, safe, and minimal visual obstruction.',
     keywords: ['balustrade', 'glass', 'transparent'],
     category: 'balustrade',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'steel-railing',
@@ -2412,7 +2496,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Powder-coated steel railings with various infill options; durable and customizable.',
     keywords: ['balustrade', 'steel', 'railing'],
     category: 'balustrade',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'timber-railing',
@@ -2422,7 +2510,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Natural timber railings with warm aesthetic; suitable for interior and sheltered exterior use.',
     keywords: ['balustrade', 'timber', 'railing'],
     category: 'balustrade',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['bar', 'beam'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'cable-railing',
@@ -2432,7 +2524,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Minimal stainless steel cable railings; modern aesthetic with unobstructed views.',
     keywords: ['balustrade', 'cable', 'minimal'],
     category: 'balustrade',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'mesh-railing',
@@ -2442,7 +2538,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Metal mesh infill railings; industrial aesthetic with safety and semi-transparency.',
     keywords: ['balustrade', 'mesh', 'industrial'],
     category: 'balustrade',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['metal-working', 'weaving']
   },
   {
     id: 'gravel-paving',
@@ -2452,7 +2552,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Loose gravel surface for paths and landscaping; permeable and natural drainage.',
     keywords: ['landscape', 'gravel', 'permeable'],
     category: 'external-ground',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'stone',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'resin-bound-gravel',
@@ -2462,7 +2566,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Smooth resin-bound gravel surface; permeable, durable, and low-maintenance.',
     keywords: ['landscape', 'resin', 'gravel'],
     category: 'external-ground',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['mixing']
   },
   {
     id: 'concrete-paving',
@@ -2472,7 +2580,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Durable concrete paving for paths and hard standing; versatile and cost-effective.',
     keywords: ['landscape', 'concrete', 'paving'],
     category: 'external-ground',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['panel', 'block'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'block-paving',
@@ -2482,7 +2594,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Interlocking concrete or clay block pavers; durable and repairable surface.',
     keywords: ['landscape', 'block', 'paving'],
     category: 'external-ground',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['block'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['pressing', 'casting']
   },
   {
     id: 'grass-reinforcement',
@@ -2492,7 +2608,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Plastic or concrete grid system for reinforced grass areas; permeable and green appearance.',
     keywords: ['landscape', 'grass', 'reinforcement'],
     category: 'external-ground',
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'polymer',
+    materialForm: ['panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['moulding']
   },
   {
     id: 'decking-external',
@@ -2502,7 +2622,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Timber or composite decking for terraces and paths; warm finish with good drainage.',
     keywords: ['landscape', 'decking', 'timber'],
     category: 'external-ground',
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'board'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   // === STRUCTURE > PRIMARY STRUCTURE ===
   {
@@ -2514,7 +2638,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['structure', 'concrete', 'columns', 'beams', 'primary'],
     category: 'structure',
     treePaths: ['Structure>Primary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['beam', 'block'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'steel-columns-beams',
@@ -2525,7 +2653,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['structure', 'steel', 'columns', 'beams', 'primary'],
     category: 'structure',
     treePaths: ['Structure>Primary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'glulam-columns-beams',
@@ -2536,7 +2668,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['structure', 'timber', 'glulam', 'columns', 'beams', 'primary'],
     category: 'structure',
     treePaths: ['Structure>Primary Structure'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'clt-loadbearing-walls',
@@ -2547,7 +2683,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['structure', 'clt', 'timber', 'walls', 'primary'],
     category: 'structure',
     treePaths: ['Structure>Primary Structure'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['lamination', 'pressing']
   },
   {
     id: 'masonry-loadbearing',
@@ -2558,7 +2698,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['structure', 'masonry', 'brick', 'walls', 'primary'],
     category: 'structure',
     treePaths: ['Structure>Primary Structure'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['block'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['kiln-firing']
   },
   // === ENVELOPE > FAÇADE — Masonry and Mineral-Based ===
   {
@@ -2570,7 +2714,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'brick', 'slip', 'rainscreen', 'lightweight', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['kiln-firing', 'cutting']
   },
   {
     id: 'stone-facade',
@@ -2589,7 +2737,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'stone-rainscreen',
@@ -2608,7 +2760,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'stone',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'precast-concrete-panels',
@@ -2619,7 +2775,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'concrete', 'precast', 'panels', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'concrete',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'gfrc-grc-panels',
@@ -2630,7 +2790,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'gfrc', 'grc', 'concrete', 'lightweight', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['casting', 'moulding']
   },
   {
     id: 'slate-cladding',
@@ -2641,7 +2805,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'slate', 'cladding', 'natural', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'stone',
+    materialForm: ['panel', 'tile'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['cutting']
   },
   // === ENVELOPE > FAÇADE — Bio-Based and Low-Carbon ===
   {
@@ -2653,7 +2821,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'hemp', 'lime', 'bio-based', 'carbon-storage', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['block'],
+    materialFunction: ['insulation', 'weatherproofing'],
+    manufacturingProcess: ['mixing', 'casting']
   },
   {
     id: 'timber-rainscreen',
@@ -2664,7 +2836,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'timber', 'rainscreen', 'fsc', 'renewable', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['board', 'plank'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'charred-timber-cladding',
@@ -2675,7 +2851,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'timber', 'charred', 'shou-sugi-ban', 'cladding', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['board', 'plank'],
+    materialFunction: ['surface', 'weatherproofing'],
+    manufacturingProcess: ['cutting', 'coating']
   },
   {
     id: 'cork-rainscreen',
@@ -2686,7 +2866,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'cork', 'rainscreen', 'bio-based', 'insulating', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['insulation', 'weatherproofing'],
+    manufacturingProcess: ['heat-pressing']
   },
   {
     id: 'wood-fibre-lime-render',
@@ -2697,7 +2881,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'wood-fibre', 'lime', 'render', 'bio-based', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['insulation', 'surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'insulated-render-system',
@@ -2710,7 +2898,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     category: 'external',
     treePaths: ['Envelope>Façade'],
     supportsColor: true,
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['insulation', 'surface'],
+    manufacturingProcess: ['lamination', 'coating']
   },
   {
     id: 'living-green-wall',
@@ -2721,7 +2913,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'green-wall', 'living', 'biodiversity', 'planted', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'insulation'],
+    manufacturingProcess: ['moulding']
   },
   // === ENVELOPE > FAÇADE — Metal and Industrial Systems ===
   {
@@ -2752,7 +2948,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     supportsColor: true,
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'copper-cladding',
@@ -2769,7 +2969,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'stainless-cladding',
@@ -2785,7 +2989,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'lead-cladding',
@@ -2801,7 +3009,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     ],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'weathering-steel-cladding',
@@ -2812,7 +3024,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'corten', 'steel', 'weathering', 'cladding', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['metal-working']
   },
   {
     id: 'insulated-metal-panels',
@@ -2823,7 +3039,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'metal', 'insulated', 'panels', 'composite', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['weatherproofing', 'insulation'],
+    manufacturingProcess: ['lamination', 'metal-working']
   },
   {
     id: 'fibre-cement-panels',
@@ -2834,7 +3054,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'fibre-cement', 'rainscreen', 'panels', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['pressing', 'coating']
   },
   {
     id: 'metal-composite-panels',
@@ -2845,7 +3069,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'aluminium', 'composite', 'panels', 'metal', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['lamination', 'metal-working']
   },
   // === ENVELOPE > FAÇADE — Lightweight and Transparent ===
   {
@@ -2857,7 +3085,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'glass', 'curtain-wall', 'glazing', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['casting']
   },
   {
     id: 'etfe-tensile-facade',
@@ -2868,7 +3100,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['facade', 'etfe', 'tensile', 'membrane', 'lightweight', 'external'],
     category: 'external',
     treePaths: ['Envelope>Façade'],
-    carbonIntensity: 'medium'
+    carbonIntensity: 'medium',
+    materialType: 'polymer',
+    materialForm: ['membrane'],
+    materialFunction: ['weatherproofing', 'surface'],
+    manufacturingProcess: ['extrusion']
   },
   // === LANDSCAPE > LANDSCAPING ===
   {
@@ -2880,7 +3116,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'planting', 'native', 'biodiversity'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'wildflower-meadow',
@@ -2891,7 +3131,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'wildflower', 'meadow', 'biodiversity'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'rain-garden',
@@ -2902,7 +3146,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'rain garden', 'suds', 'drainage'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['mixing']
   },
   {
     id: 'living-wall-external',
@@ -2913,7 +3161,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'living wall', 'vertical', 'planting'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'insulation'],
+    manufacturingProcess: ['moulding']
   },
   {
     id: 'ornamental-planting',
@@ -2924,7 +3176,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'ornamental', 'planting', 'garden'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['granular'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['cutting']
   },
   {
     id: 'tree-planting',
@@ -2935,7 +3191,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['landscape', 'trees', 'planting', 'carbon'],
     category: 'landscape',
     treePaths: ['Landscape>Landscaping'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['beam'],
+    materialFunction: ['decorative'],
+    manufacturingProcess: ['cutting']
   },
   // === ELEMENTS > FURNITURE ===
   {
@@ -2947,7 +3207,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'oak', 'table', 'dining'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'plank'],
+    materialFunction: ['decorative', 'surface'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'upholstered-seating',
@@ -2958,7 +3222,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'seating', 'upholstered', 'chair'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'textile',
+    materialForm: ['panel'],
+    materialFunction: ['decorative', 'surface'],
+    manufacturingProcess: ['weaving', 'cutting']
   },
   {
     id: 'metal-chair',
@@ -2969,7 +3237,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'metal', 'chair', 'seating'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['metal-working', 'coating']
   },
   {
     id: 'plywood-furniture',
@@ -2980,7 +3252,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'plywood', 'birch', 'sustainable'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['lamination', 'cutting']
   },
   {
     id: 'reclaimed-timber-furniture',
@@ -2991,7 +3267,11 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'reclaimed', 'timber', 'salvaged'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'low'
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['plank', 'board'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining']
   },
   {
     id: 'modular-shelving',
@@ -3002,6 +3282,10 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['furniture', 'shelving', 'modular', 'storage'],
     category: 'furniture',
     treePaths: ['Elements>Furniture'],
-    carbonIntensity: 'high'
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel', 'bar'],
+    materialFunction: ['structural', 'decorative'],
+    manufacturingProcess: ['metal-working', 'cutting']
   }
 ];

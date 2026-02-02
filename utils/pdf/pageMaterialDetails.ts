@@ -475,7 +475,7 @@ function getContextFocus(material: MaterialOption, metrics?: MaterialMetrics): s
 
 function buildContextLine(material: MaterialOption, metrics?: MaterialMetrics): string {
   const focus = getContextFocus(material, metrics);
-  return `In this palette, this material primarily affects: ${focus}.`;
+  return `This material primarily affects: ${focus}.`;
 }
 
 function getComparativeCueLine(paletteContext?: MaterialPaletteContext): string | null {
@@ -877,7 +877,7 @@ export function renderEnhancedMaterialSection(
   let rightY = headerY + 16;
   const summaryFontSize = PDF_TYPE_SCALE.body;
   const summaryLineHeight = lineHeightFor(summaryFontSize);
-  const summaryLine = `In this palette: ${buildMaterialSummaryLine(material, insight, metrics)}`;
+  const summaryLine = buildMaterialSummaryLine(material, insight, metrics);
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(summaryFontSize);
   ctx.doc.setTextColor(45);

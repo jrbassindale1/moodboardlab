@@ -127,3 +127,32 @@ export async function saveColoredIcon(payload: {
 
   return res.json();
 }
+
+/**
+ * Generate a sustainability briefing using Gemini API
+ * Uses the 'text' mode with a specialized system instruction
+ */
+export async function generateSustainabilityBriefing(payload: {
+  systemInstruction: string;
+  materials: unknown[];
+  averageScores: unknown;
+  projectName?: string;
+}, options?: RequestOptions): Promise<unknown> {
+  const prompt = `Analyze these ${(payload.materials as unknown[]).length} materials for a sustainability briefing${payload.projectName ? ` for project "${payload.projectName}"` : ''}:
+
+Materials Data:
+${JSON.stringify(payload.materials, null, 2)}
+
+Average Lifecycle Scores (1-5 scale, higher = more impact):
+${JSON.stringify(payload.averageScores, null, 2)}
+
+Respond with ONLY valid JSON matching the required structure.`;
+
+  const geminiPayload = {
+    systemInstruction: payload.systemInstruction,
+    prompt,
+    responseType: 'json',
+  };
+
+  return callGeminiText(geminiPayload, { timeoutMs: options?.timeoutMs ?? 60000 });
+}

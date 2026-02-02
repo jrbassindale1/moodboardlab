@@ -1,13 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart } from 'lucide-react';
+import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart, Leaf, Download, Lightbulb, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+} from 'recharts';
 import { MATERIAL_PALETTE } from '../constants';
 import {
   MATERIAL_LIFECYCLE_PROFILES,
   LifecycleProfile,
   LifecycleStageKey,
 } from '../lifecycleProfiles';
-import { callGeminiImage, callGeminiText, saveGeneration } from '../api';
+import { callGeminiImage, callGeminiText, saveGeneration, generateSustainabilityBriefing } from '../api';
 import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
 import { generateMaterialIcon, loadMaterialIcons } from '../utils/materialIconGenerator';
 
@@ -32,6 +40,7 @@ import { isLandscapeMaterial } from '../utils/lifecycleDurations';
 import { getMaterialIconId } from '../utils/materialIconMapping';
 import {
   createPDFContext,
+  calculateProjectMetrics,
   renderSpecifiersSnapshot,
   renderStrategicOverview,
   renderComparativeDashboard,
@@ -44,6 +53,12 @@ import {
   prefetchMaterialIcons,
   optimizeImageDataUriForPdf,
 } from '../utils/pdfSections';
+import {
+  prepareBriefingPayload,
+  getSustainabilityBriefingSystemInstruction,
+  type SustainabilityBriefingResponse,
+  type SustainabilityBriefingPayload,
+} from '../utils/sustainabilityBriefing';
 
 type BoardItem = MaterialOption;
 
@@ -426,6 +441,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
   const [showDetectionModal, setShowDetectionModal] = useState(false);
   const [addedDetectedIds, setAddedDetectedIds] = useState<Set<string>>(new Set());
+  const [sustainabilityBriefing, setSustainabilityBriefing] = useState<SustainabilityBriefingResponse | null>(null);
+  const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
+  const [isBriefingLoading, setIsBriefingLoading] = useState(false);
 
   useEffect(() => {
     if (initialBoard) {
@@ -1855,6 +1873,57 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
+  // Helper to generate sustainability briefing
+  const generateBriefing = async (): Promise<boolean> => {
+    try {
+      setIsBriefingLoading(true);
+      const payload = prepareBriefingPayload(board, 'Material Palette');
+      setBriefingPayload(payload);
+
+      const response = await generateSustainabilityBriefing({
+        systemInstruction: getSustainabilityBriefingSystemInstruction(),
+        materials: payload.materials,
+        averageScores: payload.averageScores,
+        projectName: 'Material Palette',
+      });
+
+      // Parse the response
+      let parsed: SustainabilityBriefingResponse;
+      if (typeof response === 'string') {
+        const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[1].trim());
+        } else {
+          parsed = JSON.parse(response);
+        }
+      } else if (response && typeof response === 'object') {
+        const textContent = (response as Record<string, unknown>).text ||
+          (response as Record<string, unknown>).result ||
+          (response as Record<string, unknown>).response;
+        if (typeof textContent === 'string') {
+          const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+          if (jsonMatch) {
+            parsed = JSON.parse(jsonMatch[1].trim());
+          } else {
+            parsed = JSON.parse(textContent);
+          }
+        } else {
+          parsed = response as SustainabilityBriefingResponse;
+        }
+      } else {
+        throw new Error('Unexpected response format');
+      }
+
+      setSustainabilityBriefing(parsed);
+      return true;
+    } catch (err) {
+      console.error('Sustainability briefing generation failed:', err);
+      return false;
+    } finally {
+      setIsBriefingLoading(false);
+    }
+  };
+
   const runMoodboardFlow = async () => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
@@ -1869,6 +1938,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setReportProse(null);
     reportProseRef.current = null;
     setSummaryReviewed(false);
+    setSustainabilityBriefing(null);
+    setBriefingPayload(null);
     setStatus('all');
     setError(null);
     try {
@@ -1878,7 +1949,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
         label: 'Generating moodboard image',
         state: 'running'
       });
-      const renderOk = await runGemini('render', { onRender: setMoodboardRenderUrl });
+
+      // Run image generation and briefing in parallel
+      const [renderOk] = await Promise.all([
+        runGemini('render', { onRender: setMoodboardRenderUrl }),
+        generateBriefing(), // Briefing runs in parallel, non-blocking
+      ]);
+
       if (!renderOk) {
         setFlowProgress({
           step: 1,
@@ -2349,6 +2426,7 @@ Rules:
 - Keep it neutral and early-stage; avoid compliance claims, rankings, percentages, or numbers.
 - summaryParagraph should include: key risk driver, one lower-carbon opportunity, and one clear next action.
 - If highestImpact and lowCarbonSystems are empty, say the palette needs assessment.
+- Keep the response compact and close the JSON object fully.
 
 CONTEXT:
 ${JSON.stringify(summaryContext, null, 2)}`;
@@ -2373,7 +2451,7 @@ ${JSON.stringify(summaryContext, null, 2)}`;
       return `This concept-stage palette indicates ${anchorMaterial} as a key ${stageLabel} driver. Next, confirm specification choices with supplier evidence and right-sized detailing.`;
     };
 
-    const extractSummaryField = (raw: string, field: 'summarySentence' | 'summaryParagraph') => {
+    const extractJsonStringField = (raw: string, field: string) => {
       const completeMatch = raw.match(
         new RegExp(`"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`)
       );
@@ -2391,6 +2469,16 @@ ${JSON.stringify(summaryContext, null, 2)}`;
         .replace(/["}]*\s*$/, '')
         .replace(/\s+/g, ' ')
         .trim();
+    };
+
+    const extractSummaryField = (raw: string, field: 'summarySentence' | 'summaryParagraph') =>
+      extractJsonStringField(raw, field);
+
+    const isUsableSummaryText = (value?: string) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return false;
+      const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+      return wordCount >= 8 || trimmed.length >= 70;
     };
 
     const buildPaletteSummaryReviewContext = () => {
@@ -2423,6 +2511,7 @@ Rules:
 - Summary must mention at least one lifecycle stage from driverStages.
 - Keep revisedSummary as 2-3 concise sentences suitable for dashboard + PDF intro copy.
 - Do not introduce numbers, rankings, or compliance claims.
+- Keep issues to a maximum of 2 short items.
 - If the draft is accurate, return status "ok" and empty revisedSummary.
 - If not, return status "revise" with a corrected summary.
 
@@ -2438,6 +2527,11 @@ ${JSON.stringify(summaryContext)}`;
       const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
       const materialById = new Map<string, BoardItem>();
       board.forEach((material) => materialById.set(material.id, material));
+      const compact = (value: string, maxChars: number) => {
+        const cleaned = (value || '').replace(/\s+/g, ' ').trim();
+        if (!cleaned) return '';
+        return cleaned.length > maxChars ? `${cleaned.slice(0, maxChars - 3)}...` : cleaned;
+      };
 
       const materialHighlights = insights
         .map((insight) => {
@@ -2446,20 +2540,20 @@ ${JSON.stringify(summaryContext)}`;
           return {
             name: material?.name || insight.title || '',
             category: material?.category || '',
-            headline: insight.headline || '',
-            whyItLooksLikeThis: insight.whyItLooksLikeThis || '',
-            designRisk: insight.design_risk || '',
-            designResponse: insight.design_response || '',
+            headline: compact(insight.headline || '', 120),
+            whyItLooksLikeThis: compact(insight.whyItLooksLikeThis || '', 180),
+            designRisk: compact(insight.design_risk || '', 160),
+            designResponse: compact(insight.design_response || '', 160),
             topHotspot: hotspot
               ? {
                   stage: hotspot.stage,
                   score: hotspot.score,
-                  reason: hotspot.reason
+                  reason: compact(hotspot.reason, 90)
                 }
               : null,
             ukChecks: (insight.ukChecks || []).map((check) => check.label).slice(0, 3),
             riskNotes: (insight.risks || [])
-              .map((risk) => risk.note || '')
+              .map((risk) => compact(risk.note || '', 90))
               .filter(Boolean)
               .slice(0, 2)
           };
@@ -2510,6 +2604,7 @@ Rules:
 - Mention at least one lifecycle stage from driverStages across the output.
 - Avoid rankings, percentages, and compliance guarantees.
 - Keep wording UK-appropriate and concept-stage cautious.
+- Keep wording concise and ensure valid, fully closed JSON.
 
 CONTEXT:
 ${JSON.stringify(proseContext)}`;
@@ -2604,9 +2699,9 @@ ${JSON.stringify(proseContext)}`;
       generationConfig: {
         temperature: mode === 'summary-review' ? 0.2 : mode === 'report-prose' ? 0.28 : 0.45,
         ...(mode === 'summary' || mode === 'summary-review'
-          ? { maxOutputTokens: 320 }
+          ? { maxOutputTokens: 512 }
           : mode === 'report-prose'
-          ? { maxOutputTokens: 520 }
+          ? { maxOutputTokens: 720 }
           : {})
       }
     };
@@ -2776,7 +2871,10 @@ ${JSON.stringify(proseContext)}`;
           const parsed = JSON.parse(cleaned);
           const summarySentence = typeof parsed?.summarySentence === 'string' ? parsed.summarySentence.trim() : '';
           const summaryParagraph = typeof parsed?.summaryParagraph === 'string' ? parsed.summaryParagraph.trim() : '';
-          const summary = summaryParagraph || summarySentence;
+          const summaryCandidate = summaryParagraph || summarySentence;
+          const summary = isUsableSummaryText(summaryCandidate)
+            ? summaryCandidate
+            : buildFallbackPaletteSummary();
           if (!summary) {
             throw new Error('Invalid summary content');
           }
@@ -2789,10 +2887,12 @@ ${JSON.stringify(proseContext)}`;
             setError(`${message} Retrying once...`);
             return await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
           } else {
-            const recoveredSummary =
+            const recoveredCandidate =
               extractSummaryField(cleaned, 'summaryParagraph') ||
-              extractSummaryField(cleaned, 'summarySentence') ||
-              buildFallbackPaletteSummary();
+              extractSummaryField(cleaned, 'summarySentence');
+            const recoveredSummary = isUsableSummaryText(recoveredCandidate)
+              ? recoveredCandidate
+              : buildFallbackPaletteSummary();
 
             if (recoveredSummary) {
               setPaletteSummary(recoveredSummary);
@@ -2813,16 +2913,36 @@ ${JSON.stringify(proseContext)}`;
           const parsed = JSON.parse(cleaned);
           const status = parsed?.status;
           const revised = typeof parsed?.revisedSummary === 'string' ? parsed.revisedSummary.trim() : '';
-          if (status === 'revise' && revised) {
+          if (status === 'revise' && isUsableSummaryText(revised)) {
             setPaletteSummary(revised);
             paletteSummaryRef.current = revised;
           }
-          if (status === 'ok' || (status === 'revise' && revised)) {
+          if (status === 'ok' || (status === 'revise' && isUsableSummaryText(revised))) {
             setSummaryReviewed(true);
           } else {
             throw new Error('Invalid summary review response');
           }
         } catch (parseError) {
+          const recoveredStatusMatch = cleaned.match(/"status"\s*:\s*"(ok|revise)"/i);
+          const recoveredStatus = recoveredStatusMatch?.[1]?.toLowerCase();
+          const recoveredRevised = extractJsonStringField(cleaned, 'revisedSummary');
+
+          if (recoveredStatus === 'ok') {
+            setSummaryReviewed(true);
+            setError(null);
+            console.warn('Malformed summary review JSON; using recovered status=ok.', parseError);
+            return true;
+          }
+
+          if (recoveredStatus === 'revise' && isUsableSummaryText(recoveredRevised)) {
+            setPaletteSummary(recoveredRevised);
+            paletteSummaryRef.current = recoveredRevised;
+            setSummaryReviewed(true);
+            setError(null);
+            console.warn('Malformed summary review JSON; using recovered revised summary.', parseError);
+            return true;
+          }
+
           setSummaryReviewed(false);
           setError('Summary QA failed. Please try again.');
           console.warn('Gemini returned malformed summary review JSON.', parseError);
@@ -2869,6 +2989,37 @@ ${JSON.stringify(proseContext)}`;
           setReportProse(prose);
           reportProseRef.current = prose;
         } catch (parseError) {
+          const recoveredProse: ReportProse = {
+            strategicOverview: {
+              narrative: extractJsonStringField(cleaned, 'narrative'),
+              strengthsLead: extractJsonStringField(cleaned, 'strengthsLead'),
+              watchoutsLead: extractJsonStringField(cleaned, 'watchoutsLead'),
+              specNotesLead: extractJsonStringField(cleaned, 'specNotesLead')
+            },
+            complianceReadiness: {
+              intro: extractJsonStringField(cleaned, 'intro'),
+              evidencePriorityNote: extractJsonStringField(cleaned, 'evidencePriorityNote'),
+              deferNote: extractJsonStringField(cleaned, 'deferNote')
+            }
+          };
+
+          const hasRecoveredCopy = Boolean(
+            recoveredProse.strategicOverview.narrative ||
+            recoveredProse.complianceReadiness.intro ||
+            recoveredProse.strategicOverview.strengthsLead ||
+            recoveredProse.strategicOverview.watchoutsLead ||
+            recoveredProse.strategicOverview.specNotesLead ||
+            recoveredProse.complianceReadiness.evidencePriorityNote ||
+            recoveredProse.complianceReadiness.deferNote
+          );
+
+          if (hasRecoveredCopy) {
+            setReportProse(recoveredProse);
+            reportProseRef.current = recoveredProse;
+            console.warn('Malformed report prose JSON; using recovered text fields.', parseError);
+            return true;
+          }
+
           setReportProse(null);
           reportProseRef.current = null;
           console.warn('Gemini returned malformed report prose JSON.', parseError);
@@ -3407,8 +3558,221 @@ ${JSON.stringify(proseContext)}`;
                 </div>
               </div>
             )}
+
+            {/* Sustainability Briefing Section */}
+            {(sustainabilityBriefing || isBriefingLoading) && (
+              <div id="sustainability-report" className="sustainability-briefing border border-gray-200 bg-white">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                  <div className="flex items-center gap-2">
+                    <Leaf className="w-4 h-4 text-green-600" />
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
+                      Sustainability Briefing
+                    </span>
+                  </div>
+                  {sustainabilityBriefing && (
+                    <button
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors print:hidden"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download PDF
+                    </button>
+                  )}
+                </div>
+
+                {isBriefingLoading && !sustainabilityBriefing ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-green-600 animate-spin" />
+                    <span className="ml-3 text-sm text-gray-600">Generating sustainability briefing...</span>
+                  </div>
+                ) : sustainabilityBriefing && briefingPayload ? (
+                  <div className="p-6 space-y-8">
+                    {/* Executive Summary */}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-5">
+                      <h2 className="text-lg font-bold text-gray-900 mb-1">
+                        {sustainabilityBriefing.headline}
+                      </h2>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {sustainabilityBriefing.summary}
+                      </p>
+                    </div>
+
+                    {/* Radar Chart */}
+                    <div>
+                      <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3">
+                        Lifecycle Impact Profile
+                      </h3>
+                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart
+                              data={[
+                                { stage: 'Raw Materials', score: briefingPayload.averageScores.raw, fullMark: 5 },
+                                { stage: 'Manufacturing', score: briefingPayload.averageScores.manufacturing, fullMark: 5 },
+                                { stage: 'Transport', score: briefingPayload.averageScores.transport, fullMark: 5 },
+                                { stage: 'Installation', score: briefingPayload.averageScores.installation, fullMark: 5 },
+                                { stage: 'In Use', score: briefingPayload.averageScores.inUse, fullMark: 5 },
+                                { stage: 'Maintenance', score: briefingPayload.averageScores.maintenance, fullMark: 5 },
+                                { stage: 'End of Life', score: briefingPayload.averageScores.endOfLife, fullMark: 5 },
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              outerRadius="70%"
+                            >
+                              <PolarGrid stroke="#e5e7eb" />
+                              <PolarAngleAxis dataKey="stage" tick={{ fontSize: 10, fill: '#4b5563' }} />
+                              <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
+                              <Radar name="Impact" dataKey="score" stroke="#059669" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <p className="text-[10px] text-gray-500 text-center mt-2">
+                          Lower scores = lower environmental impact (1 = minimal, 5 = significant)
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Heroes and Challenges Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Heroes */}
+                      <div>
+                        <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3 flex items-center gap-2">
+                          <Leaf className="w-4 h-4 text-green-600" />
+                          Hero Materials
+                        </h3>
+                        <div className="space-y-3">
+                          {sustainabilityBriefing.heroes.map((hero, idx) => (
+                            <div key={hero.id || idx} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                              <div className="flex items-start justify-between mb-1">
+                                <span className="font-medium text-sm text-gray-900">{hero.name}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                  hero.carbonIntensity === 'low' ? 'bg-green-100 text-green-800' :
+                                  hero.carbonIntensity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {hero.carbonIntensity === 'low' ? 'Low Carbon' : hero.carbonIntensity === 'high' ? 'High Carbon' : 'Medium'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-700">
+                                <span className="font-medium text-green-700">Strategic Value:</span> {hero.strategicValue}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Challenges */}
+                      <div>
+                        <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                          Challenge Materials
+                        </h3>
+                        <div className="space-y-3">
+                          {sustainabilityBriefing.challenges.map((challenge, idx) => (
+                            <div key={challenge.id || idx} className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                              <div className="flex items-start justify-between mb-1">
+                                <span className="font-medium text-sm text-gray-900">{challenge.name}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                  challenge.carbonIntensity === 'low' ? 'bg-green-100 text-green-800' :
+                                  challenge.carbonIntensity === 'high' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {challenge.carbonIntensity === 'low' ? 'Low Carbon' : challenge.carbonIntensity === 'high' ? 'High Carbon' : 'Medium'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-700">
+                                <span className="font-medium text-orange-700">Mitigation Tip:</span> {challenge.mitigationTip}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Strategic Synergies */}
+                    {sustainabilityBriefing.synergies && sustainabilityBriefing.synergies.length > 0 && (
+                      <div>
+                        <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3 flex items-center gap-2">
+                          <Lightbulb className="w-4 h-4 text-amber-500" />
+                          Strategic Synergies
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {sustainabilityBriefing.synergies.map((synergy, idx) => {
+                            const mat1 = board.find(m => m.id === synergy.pair[0]);
+                            const mat2 = board.find(m => m.id === synergy.pair[1]);
+                            return (
+                              <div key={idx} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium text-xs text-gray-900">{mat1?.name || synergy.pair[0]}</span>
+                                  <ArrowRight className="w-3 h-3 text-amber-600" />
+                                  <span className="font-medium text-xs text-gray-900">{mat2?.name || synergy.pair[1]}</span>
+                                </div>
+                                <p className="text-xs text-gray-700">{synergy.explanation}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Specifier Checklist */}
+                    <div>
+                      <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                        Specifier Checklist
+                      </h3>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <ul className="space-y-2">
+                          {(() => {
+                            const checklist: string[] = [];
+                            const materialTypes = new Set(board.map(m => m.materialType).filter(Boolean));
+                            const categories = new Set(board.map(m => m.category));
+
+                            if (materialTypes.has('metal') || board.some(m => m.id.includes('steel'))) {
+                              checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
+                            }
+                            if (materialTypes.has('timber') || board.some(m => m.id.includes('timber') || m.id.includes('wood'))) {
+                              checklist.push('Confirm FSC or PEFC certification for all timber products');
+                            }
+                            if (materialTypes.has('concrete') || board.some(m => m.id.includes('concrete'))) {
+                              checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
+                            }
+                            if (materialTypes.has('glass') || categories.has('window')) {
+                              checklist.push('Verify glazing U-values meet or exceed building regs');
+                            }
+                            if (categories.has('insulation')) {
+                              checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
+                            }
+                            checklist.push('Collect EPDs for all major material categories');
+                            checklist.push('Calculate transport distances for main structure materials');
+
+                            return checklist.slice(0, 5).map((item, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <div className="flex-shrink-0 w-4 h-4 rounded border-2 border-blue-400 bg-white mt-0.5" />
+                                <span className="text-xs text-gray-700">{item}</span>
+                              </li>
+                            ));
+                          })()}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="border-t border-gray-200 pt-4 text-center">
+                      <p className="text-[10px] text-gray-500">
+                        Generated by MoodboardLab | {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-[9px] text-gray-400 mt-1">
+                        This briefing provides indicative guidance only. Verify all data with material-specific EPDs and certifications.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
         </div>
       </div>
+
     </div>
   );
 };
