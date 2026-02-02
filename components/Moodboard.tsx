@@ -1189,28 +1189,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
       // Also check localStorage for AI-generated icons as fallback
       const storedIcons = loadMaterialIcons();
 
-      // Render each material on its own page
+      // Start material detail pages (two cards per page).
+      doc.addPage();
+      ctx.cursorY = ctx.margin;
+
       board.forEach((material) => {
-        doc.addPage();
-        ctx.cursorY = ctx.margin;
-
-        // Page header
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(0);
-        doc.text('Material Detail', ctx.margin, ctx.cursorY);
-        ctx.cursorY += 20;
-
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(80);
-        doc.text(
-          'Impact scale: 1 (very low) to 5 (very high). "?" marks lower confidence.',
-          ctx.margin,
-          ctx.cursorY
-        );
-        doc.setTextColor(0);
-        ctx.cursorY += 16;
 
         const insight = insights.find((i) => i.id === material.id);
         const metric = metrics.get(material.id);

@@ -110,7 +110,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upload-4k' | 'edit' | null>(null);
+  const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
 
   const summaryText = useMemo(() => {
     if (!board.length) return 'No materials selected yet.';
@@ -163,41 +163,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
-  const wrapText = (
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    x: number,
-    y: number,
-    maxWidth: number,
-    lineHeight: number
-  ) => {
-    const words = text.split(' ');
-    let line = '';
-    let cursorY = y;
-    for (const word of words) {
-      const testLine = line ? `${line} ${word}` : word;
-      if (ctx.measureText(testLine).width > maxWidth && line) {
-        ctx.fillText(line, x, cursorY);
-        line = word;
-        cursorY += lineHeight;
-      } else {
-        line = testLine;
-      }
-    }
-    if (line) ctx.fillText(line, x, cursorY);
-    return cursorY;
-  };
-
-  const formatCategoryLabel = (category: string) => {
-    if (category === 'external') return 'External Envelope';
-    return category
-      ? category
-          .split('-')
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join(' ')
-      : '';
-  };
-
   const loadImage = (src: string) =>
     new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
@@ -207,131 +172,33 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       img.src = src;
     });
 
-  const handleDownloadBoard = async (url: string, renderId?: string) => {
+  const inferAspectRatioFromDataUrl = async (dataUrl: string): Promise<string | null> => {
+    try {
+      const image = await loadImage(dataUrl);
+      if (!image.width || !image.height) return null;
+      return calculateAspectRatio(image.width, image.height);
+    } catch {
+      return null;
+    }
+  };
+
+  const handleDownloadImage = async (url: string, renderId?: string) => {
     if (!url) return;
     setDownloadingId(renderId || null);
     try {
-      const image = await loadImage(url);
-      const padding = 32;
-      const minPanelWidth = 400;
-      const targetWidth = Math.max(
-        Math.round(image.height * 1.414),
-        image.width + minPanelWidth + padding * 3
-      );
-      const height = image.height + padding * 2;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = targetWidth;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas not supported in this browser.');
-
-      ctx.fillStyle = '#f9fafb';
-      ctx.fillRect(0, 0, targetWidth, height);
-
-      const imageX = padding;
-      const imageY = (height - image.height) / 2;
-      ctx.drawImage(image, imageX, imageY, image.width, image.height);
-
-      const brand = 'created by moodboard-lab.com';
-      ctx.font = '600 13px "Helvetica Neue", Arial, sans-serif';
-      const brandMetrics = ctx.measureText(brand);
-      const brandPadding = 8;
-      const brandMargin = 16;
-      const brandTextHeight =
-        (brandMetrics.actualBoundingBoxAscent || 0) +
-          (brandMetrics.actualBoundingBoxDescent || 0) ||
-        14;
-      const brandBoxWidth = brandMetrics.width + brandPadding * 2;
-      const brandBoxHeight = brandTextHeight + brandPadding * 2;
-      const brandX = imageX + brandMargin;
-      const brandY = imageY + image.height - brandMargin - brandBoxHeight;
-      ctx.fillStyle = 'rgba(17, 24, 39, 0.7)';
-      ctx.fillRect(brandX, brandY, brandBoxWidth, brandBoxHeight);
-      ctx.fillStyle = '#f9fafb';
-      ctx.textBaseline = 'top';
-      ctx.fillText(brand, brandX + brandPadding, brandY + brandPadding);
-      ctx.textBaseline = 'alphabetic';
-
-      const panelX = imageX + image.width + padding;
-      const panelY = padding;
-      const panelWidth = targetWidth - panelX - padding;
-      const panelHeight = height - padding * 2;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-      ctx.strokeStyle = '#e5e7eb';
-      ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-
-      ctx.fillStyle = '#111827';
-      ctx.font = '700 22px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText('MOODBOARD-LAB.COM', panelX + 20, panelY + 36);
-
-      ctx.fillStyle = '#111827';
-      ctx.font = '600 18px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText('Material Key', panelX + 20, panelY + 68);
-
-      const list = board.length
-        ? board
-        : buildMaterialKey()
-            .split('\n')
-            .filter(Boolean)
-            .map((line, idx) => {
-              const cleaned = line.replace(/^[0-9]+\\.\\s*/, '');
-              const [rawName, rawFinish] = cleaned.split(' — ');
-              return {
-                id: `fallback-${idx}`,
-                name: (rawName || cleaned).trim(),
-                finish: (rawFinish || '').trim(),
-                tone: '#e5e7eb',
-                description: cleaned,
-                keywords: [],
-                category: 'finish' as MaterialOption['category']
-              };
-            });
-
-      let cursorY = panelY + 96;
-      const swatchX = panelX + 20;
-      const swatchSize = 18;
-      const textX = swatchX + swatchSize + 12;
-      const textWidth = panelWidth - (textX - panelX) - 20;
-
-      list.forEach((item) => {
-        const centerY = cursorY - 6;
-        ctx.fillStyle = item.tone;
-        ctx.beginPath();
-        ctx.arc(swatchX + swatchSize / 2, centerY, swatchSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.fillStyle = '#111827';
-        ctx.font = '600 14px "Helvetica Neue", Arial, sans-serif';
-        ctx.fillText(item.name, textX, cursorY);
-
-        const sublineParts = [];
-        if (item.finish) sublineParts.push(item.finish);
-        if (item.category) sublineParts.push(formatCategoryLabel(item.category));
-        const subline = sublineParts.join(' • ');
-
-        if (subline) {
-          ctx.fillStyle = '#4b5563';
-          ctx.font = '12px "Helvetica Neue", Arial, sans-serif';
-          const lastY = wrapText(ctx, subline, textX, cursorY + 16, textWidth, 16);
-          cursorY = lastY + 28;
-        } else {
-          cursorY += 36;
-        }
-      });
-
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Could not download the rendered image.');
+      const blob = await response.blob();
+      const extension =
+        blob.type === 'image/jpeg' ? 'jpg' : blob.type === 'image/webp' ? 'webp' : 'png';
+      const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = 'moodboard-sheet.png';
+      link.href = objectUrl;
+      link.download = `applied-render-${Date.now()}.${extension}`;
       link.click();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create download.');
+      setError(err instanceof Error ? err.message : 'Could not download the rendered image.');
     } finally {
       setDownloadingId(null);
     }
@@ -381,7 +248,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     editPrompt?: string;
     baseImageDataUrl?: string;
     imageSize?: '1K' | '4K';
-    renderMode?: 'upload-1k' | 'upload-4k' | 'edit';
+    renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
   }) => {
     if (!board.length) {
       setError('Add materials to the moodboard first.');
@@ -442,7 +309,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     try {
       const imageSize = options?.imageSize ?? '1K';
       let aspectRatio = '1:1';
-      if (uploadedImages.length > 0) {
+      if (isEditingRender && options?.baseImageDataUrl) {
+        const inferredRatio = await inferAspectRatioFromDataUrl(options.baseImageDataUrl);
+        if (inferredRatio) {
+          aspectRatio = inferredRatio;
+        }
+      } else if (uploadedImages.length > 0) {
         const firstImage = uploadedImages[0];
         if (firstImage.width && firstImage.height) {
           aspectRatio = calculateAspectRatio(firstImage.width, firstImage.height);
@@ -513,6 +385,20 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
       renderMode: 'edit'
+    });
+  };
+
+  const handleRender4KFromCurrent = async () => {
+    if (!appliedRenderUrl) {
+      setError('Render with an upload first.');
+      return;
+    }
+    await runApplyRender({
+      editPrompt:
+        'Re-render this exact image in higher resolution with more detail and texture fidelity while preserving composition, geometry, material assignments, and lighting.',
+      baseImageDataUrl: appliedRenderUrl,
+      imageSize: '4K',
+      renderMode: 'upscale-4k'
     });
   };
 
@@ -613,42 +499,23 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                         </div>
                       ))}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-                        disabled={status !== 'idle' || !board.length}
-                        className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                      >
-                        {status === 'render' && renderingMode === 'upload-1k' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Rendering with Upload
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                            Render with Upload
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => runApplyRender({ imageSize: '4K', renderMode: 'upload-4k' })}
-                        disabled={status !== 'idle' || !board.length}
-                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-100 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-400"
-                      >
-                        {status === 'render' && renderingMode === 'upload-4k' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Rendering 4K
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                            Render 4K
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
+                      disabled={status !== 'idle' || !board.length}
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                    >
+                      {status === 'render' && renderingMode === 'upload-1k' ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Rendering with Upload
+                        </>
+                      ) : (
+                        <>
+                          <ImageDown className="w-4 h-4" />
+                          Render with Upload
+                        </>
+                      )}
+                    </button>
                   </>
                 )}
               </div>
@@ -662,8 +529,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       Applied Render
                     </div>
                   </div>
-                  <div className="w-full border border-gray-200 bg-gray-50">
-                    <img src={appliedRenderUrl} alt="Applied render" className="w-full h-auto object-contain" />
+                  <div className="w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
+                    <img
+                      src={appliedRenderUrl}
+                      alt="Applied render"
+                      className="max-h-[75vh] max-w-full h-auto w-auto object-contain"
+                    />
                   </div>
                   <div className="space-y-2">
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
@@ -697,21 +568,38 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-end pt-4 border-t border-gray-200">
+                <div className="flex flex-wrap justify-end items-center gap-2 pt-4 border-t border-gray-200">
                   <button
-                    onClick={() => handleDownloadBoard(appliedRenderUrl, 'applied')}
-                    disabled={downloadingId === 'applied'}
+                    onClick={handleRender4KFromCurrent}
+                    disabled={status !== 'idle' || !appliedRenderUrl}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-100 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-400"
+                  >
+                    {status === 'render' && renderingMode === 'upscale-4k' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Rendering 4K
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Render 4K
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDownloadImage(appliedRenderUrl, 'applied')}
+                    disabled={downloadingId === 'applied' || status !== 'idle'}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                   >
                     {downloadingId === 'applied' ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Preparing...
+                        Downloading...
                       </>
                     ) : (
                       <>
                         <ImageDown className="w-4 h-4" />
-                        Download
+                        Download Render
                       </>
                     )}
                   </button>

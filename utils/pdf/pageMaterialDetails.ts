@@ -1,12 +1,14 @@
 import type { MaterialOption } from '../../types';
 import type {
   EnhancedSustainabilityInsight,
+  Hotspot,
+  LifecycleProfile,
+  LifecycleStageKey,
   MaterialMetrics,
   PDFContext,
-  LifecycleStageKey,
-  LifecycleProfile,
   TrafficLight,
 } from '../../types/sustainability';
+import type { jsPDF } from 'jspdf';
 import { STAGE_LABELS } from '../designConsequences';
 import { isLandscapeMaterial } from '../lifecycleDurations';
 import { TRAFFIC_LIGHT_COLORS, ensureSpace } from './layout';
@@ -607,6 +609,25 @@ function renderComplianceBadges(
 /**
  * Render enhanced material section with design consequences
  */
+function getMaterialCardLayout(ctx: PDFContext): { startY: number; cardHeight: number; isTopSlot: boolean } {
+  const cardHeight = (ctx.pageHeight - ctx.margin * 2) / 2;
+  const topSlotY = ctx.margin;
+  const bottomSlotY = ctx.margin + cardHeight;
+  const tolerance = 1.5;
+
+  if (Math.abs(ctx.cursorY - topSlotY) <= tolerance) {
+    return { startY: topSlotY, cardHeight, isTopSlot: true };
+  }
+
+  if (Math.abs(ctx.cursorY - bottomSlotY) <= tolerance) {
+    return { startY: bottomSlotY, cardHeight, isTopSlot: false };
+  }
+
+  ctx.doc.addPage();
+  ctx.cursorY = topSlotY;
+  return { startY: topSlotY, cardHeight, isTopSlot: true };
+}
+
 export function renderEnhancedMaterialSection(
   ctx: PDFContext,
   material: MaterialOption,
@@ -615,306 +636,216 @@ export function renderEnhancedMaterialSection(
   profile: LifecycleProfile | null,
   paletteContext?: MaterialPaletteContext
 ): void {
-  const slotHeight = (ctx.pageHeight - ctx.margin * 2) / 2;
-  const topSlotY = ctx.margin;
-  const bottomSlotY = ctx.margin + slotHeight;
-  const isNear = (a: number, b: number) => Math.abs(a - b) < 2;
-
-  if (!isNear(ctx.cursorY, topSlotY) && !isNear(ctx.cursorY, bottomSlotY)) {
-    ctx.doc.addPage();
-    ctx.cursorY = topSlotY;
-  }
-
-  const slotTop = isNear(ctx.cursorY, bottomSlotY) ? bottomSlotY : topSlotY;
-  const slotBottom = slotTop + slotHeight;
-
-  // Dashed separator between the two halves
-  const midY = bottomSlotY;
-  ctx.doc.setDrawColor(210);
-  ctx.doc.setLineWidth(0.5);
-  const docAny = ctx.doc as unknown as { setLineDash?: (dash: number[], phase: number) => void };
-  if (docAny.setLineDash) {
-    docAny.setLineDash([2, 2], 0);
-  }
-  ctx.doc.line(ctx.margin, midY, ctx.pageWidth - ctx.margin, midY);
-  if (docAny.setLineDash) {
-    docAny.setLineDash([], 0);
-  }
-
+  const { startY, cardHeight, isTopSlot } = getMaterialCardLayout(ctx);
   const contentWidth = ctx.pageWidth - ctx.margin * 2;
-  const leftWidth = contentWidth * 0.3;
-  const gutter = 8;
-  const rightWidth = contentWidth - leftWidth - gutter;
-  const leftX = ctx.margin;
-  const rightX = ctx.margin + leftWidth + gutter;
 
-  const headerY = slotTop + 12;
+  // Draw the page title once at the top slot.
+  if (isTopSlot) {
+    ctx.doc.setFont('helvetica', 'bold');
+    ctx.doc.setFontSize(14);
+    ctx.doc.setTextColor(0);
+    ctx.doc.text('Material Details', ctx.margin, startY + 10);
+  }
 
-  // Header: material name + badges
+  // Dashed line separator between top and bottom cards.
+  const splitY = ctx.margin + cardHeight;
+  ctx.doc.setDrawColor(220);
+  ctx.doc.setLineWidth(0.5);
+  const docWithDash = ctx.doc as unknown as { setLineDash?: (dashArray: number[], dashPhase: number) => void };
+  if (docWithDash.setLineDash) {
+    docWithDash.setLineDash([2, 2], 0);
+  }
+  ctx.doc.line(ctx.margin, splitY, ctx.pageWidth - ctx.margin, splitY);
+  if (docWithDash.setLineDash) {
+    docWithDash.setLineDash([], 0);
+  }
+
+  const cardPadding = 10;
+  const topInset = isTopSlot ? 18 : 6;
+  const cardTop = startY + topInset;
+  const cardBottom = startY + cardHeight - 6;
+  const innerWidth = contentWidth - cardPadding * 2;
+  const col1W = innerWidth * 0.25;
+  const col2W = innerWidth * 0.75;
+  const col1X = ctx.margin + cardPadding;
+  const col2X = col1X + col1W + 10;
+  const maxCardContentHeight = cardBottom - cardTop;
+
+  // Header row
+  const headerY = cardTop + 4;
   ctx.doc.setFont('helvetica', 'bold');
   ctx.doc.setFontSize(11);
   ctx.doc.setTextColor(0);
-  ctx.doc.text(material.name, leftX, headerY);
+  const titleMaxWidth = col2X - col1X - 10;
+  const titleText = fitSingleLineText(ctx.doc, material.name, titleMaxWidth);
+  ctx.doc.text(titleText, col1X, headerY);
 
-  const isLandscape = material.category === 'landscape' || material.category === 'external-ground';
-  const badgeRadius = 3.5;
-  const badgeGap = 4;
-  const badgesWidth =
-    COMPLIANCE_BADGE_KEY.length * badgeRadius * 2 + (COMPLIANCE_BADGE_KEY.length - 1) * badgeGap;
-  const badgeStartX = ctx.pageWidth - ctx.margin - badgesWidth;
-  const badgeCenterY = headerY - 2;
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(7);
+  ctx.doc.setTextColor(100);
+  ctx.doc.text(`[${material.category}]`, col1X, headerY + 9);
+  ctx.doc.setTextColor(0);
 
-  COMPLIANCE_BADGE_KEY.forEach(({ key, code }, idx) => {
-    const x = badgeStartX + idx * (badgeRadius * 2 + badgeGap) + badgeRadius;
-    let status: TrafficLight | 'na' = 'amber';
-    if (key === 'biodiversity' && !isLandscape) {
-      status = 'na';
-    } else if (insight) {
-      status = getComplianceStatus(insight, material, key);
-    }
+  // Badges (top right)
+  if (insight) {
+    const badgeSize = 3.5;
+    const badgeGap = 5;
+    let badgeX = ctx.pageWidth - ctx.margin - 8;
+    const isLandscape = material.category === 'landscape' || material.category === 'external-ground';
 
-    if (status === 'na') {
-      ctx.doc.setFillColor(230, 230, 230);
-      ctx.doc.circle(x, badgeCenterY, badgeRadius, 'F');
-      ctx.doc.setTextColor(150);
-    } else {
+    COMPLIANCE_BADGE_KEY.slice().reverse().forEach(({ key, code }) => {
+      if (key === 'biodiversity' && !isLandscape) return;
+
+      const status = getComplianceStatus(insight, material, key);
       const [r, g, b] = TRAFFIC_LIGHT_COLORS[status];
       ctx.doc.setFillColor(r, g, b);
-      ctx.doc.circle(x, badgeCenterY, badgeRadius, 'F');
+      ctx.doc.circle(badgeX, headerY - 1, badgeSize, 'F');
+
+      ctx.doc.setFont('helvetica', 'bold');
+      ctx.doc.setFontSize(6);
       ctx.doc.setTextColor(status === 'amber' ? 0 : 255);
-    }
+      ctx.doc.text(code, badgeX, headerY + 1, { align: 'center' });
+      ctx.doc.setTextColor(0);
 
-    ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(6);
-    ctx.doc.text(code, x, badgeCenterY + 2, { align: 'center' });
-    ctx.doc.setTextColor(0);
-  });
+      badgeX -= badgeSize * 2 + badgeGap;
+    });
+  }
 
-  const contentTop = headerY + 8;
-  const thumbnailSize = 40;
-  let thumbnailRendered = false;
+  // Left column: fixed thumbnail + mini lifecycle chart.
+  let leftY = headerY + 14;
+  const imgSize = 30;
+  ctx.doc.setFillColor(240, 240, 240);
+  ctx.doc.setDrawColor(220, 220, 220);
+  ctx.doc.setLineWidth(0.5);
+  ctx.doc.rect(col1X, leftY, imgSize, imgSize, 'FD');
 
   if (paletteContext?.thumbnailDataUri) {
     try {
-      ctx.doc.addImage(
-        paletteContext.thumbnailDataUri,
-        'PNG',
-        leftX,
-        contentTop,
-        thumbnailSize,
-        thumbnailSize
-      );
-      thumbnailRendered = true;
+      ctx.doc.addImage(paletteContext.thumbnailDataUri, 'PNG', col1X, leftY, imgSize, imgSize);
     } catch (e) {
       console.warn('Failed to add material thumbnail to PDF:', e);
     }
-  }
-
-  if (!thumbnailRendered && material.tone) {
+  } else if (material.tone) {
     try {
       const hex = material.tone.replace('#', '');
       const r = parseInt(hex.substring(0, 2), 16);
       const g = parseInt(hex.substring(2, 4), 16);
       const b = parseInt(hex.substring(4, 6), 16);
       ctx.doc.setFillColor(r, g, b);
-      ctx.doc.setDrawColor(220, 220, 220);
-      ctx.doc.setLineWidth(0.5);
-      ctx.doc.rect(leftX, contentTop, thumbnailSize, thumbnailSize, 'FD');
-      thumbnailRendered = true;
+      ctx.doc.rect(col1X, leftY, imgSize, imgSize, 'F');
     } catch (e) {
-      console.warn('Failed to draw color swatch:', e);
+      console.warn('Failed to draw fallback swatch:', e);
     }
   }
 
-  if (!thumbnailRendered) {
-    ctx.doc.setFillColor(243, 244, 246);
-    ctx.doc.setDrawColor(220, 220, 220);
-    ctx.doc.setLineWidth(0.5);
-    ctx.doc.rect(leftX, contentTop, thumbnailSize, thumbnailSize, 'FD');
-  }
+  leftY += imgSize + 10;
 
-  // Compact fingerprint (left column)
-  const fingerprintTop = contentTop + thumbnailSize + 6;
-  const stageKeys: Array<keyof LifecycleProfile> = [
-    'raw',
-    'manufacturing',
-    'transport',
-    'installation',
-    'inUse',
-    'maintenance',
-    'endOfLife',
-  ];
-  const lineHeight = 7;
-  const dotSize = 2.8;
-  const dotGap = 1.4;
-  const labelWidth = 18;
-  const dotsStartX = leftX + labelWidth;
+  if (profile) {
+    const stageKeys: Array<keyof LifecycleProfile> = ['raw', 'manufacturing', 'transport', 'inUse', 'endOfLife'];
+    const labels = ['RAW', 'MFG', 'TRN', 'USE', 'EOL'];
+    const barW = 4;
+    const barGap = 2;
+    const maxBarH = 15;
 
-  if (!profile) {
-    ctx.doc.setFont('helvetica', 'italic');
-    ctx.doc.setFontSize(6);
-    ctx.doc.setTextColor(150);
-    ctx.doc.text('Fingerprint unavailable', leftX, fingerprintTop + 6);
-    ctx.doc.setTextColor(0);
-  } else {
-    stageKeys.forEach((key, stageIndex) => {
-      const stageData = profile[key];
-      const lineY = fingerprintTop + stageIndex * lineHeight;
+    stageKeys.forEach((key, i) => {
+      const impact = profile[key].impact;
+      const barH = (impact / 5) * maxBarH;
+      const x = col1X + i * (barW + barGap);
+      const y = leftY + maxBarH - barH;
+
+      if (impact >= 4) {
+        ctx.doc.setFillColor(220, 53, 69);
+      } else if (impact >= 3) {
+        ctx.doc.setFillColor(255, 191, 0);
+      } else {
+        ctx.doc.setFillColor(120, 120, 120);
+      }
+      ctx.doc.rect(x, y, barW, barH, 'F');
 
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(6);
-      ctx.doc.setTextColor(120);
-      ctx.doc.text(STAGE_LABELS[key], leftX, lineY);
+      ctx.doc.setFontSize(5);
+      ctx.doc.setTextColor(90);
+      ctx.doc.text(labels[i], x + barW / 2, leftY + maxBarH + 4, { align: 'center' });
       ctx.doc.setTextColor(0);
-
-      for (let i = 1; i <= 5; i++) {
-        const dotX = dotsStartX + (i - 1) * (dotSize + dotGap);
-        const dotY = lineY - dotSize + 2;
-        const isFilled = i <= stageData.impact;
-
-        if (isFilled) {
-          if (metrics?.low_confidence_flag) {
-            ctx.doc.setFillColor(200, 200, 200);
-            ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
-          } else if (stageData.confidence === 'low') {
-            ctx.doc.setDrawColor(170);
-            ctx.doc.setFillColor(245, 245, 245);
-            ctx.doc.setLineWidth(0.5);
-            ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
-          } else if (stageData.confidence === 'medium') {
-            ctx.doc.setFillColor(140, 140, 140);
-            ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
-          } else {
-            ctx.doc.setFillColor(70, 70, 70);
-            ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'F');
-          }
-        } else {
-          ctx.doc.setDrawColor(220, 220, 220);
-          ctx.doc.setFillColor(255, 255, 255);
-          ctx.doc.setLineWidth(0.5);
-          ctx.doc.rect(dotX, dotY, dotSize, dotSize, 'FD');
-        }
-      }
-
-      if (stageData.confidence === 'low' || stageData.confidence === 'medium') {
-        ctx.doc.setFontSize(5);
-        ctx.doc.setTextColor(140);
-        ctx.doc.text('?', dotsStartX + 5 * (dotSize + dotGap) + 2, lineY);
-        ctx.doc.setTextColor(0);
-      }
     });
+  } else {
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(6);
+    ctx.doc.setTextColor(140);
+    ctx.doc.text('No fingerprint data', col1X, leftY + 8);
+    ctx.doc.setTextColor(0);
   }
 
-  // Right column: summary + design actions
-  let rightY = contentTop;
-  const summaryText = `In this palette: ${buildMaterialSummaryLine(material, insight, metrics)}`;
+  // Right column: summary + compact actions.
+  let rightY = headerY + 12;
+  const summaryLine = `In this palette: ${buildMaterialSummaryLine(material, insight, metrics)}`;
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(9);
-  ctx.doc.setTextColor(40);
-  let summaryLines = ctx.doc.splitTextToSize(summaryText, rightWidth);
-  if (summaryLines.length > 2) {
-    summaryLines = summaryLines.slice(0, 2);
-    summaryLines[1] = fitSingleLineText(ctx.doc, summaryLines[1], rightWidth);
-  }
-  summaryLines.forEach((line: string) => {
-    ctx.doc.text(line, rightX, rightY);
-    rightY += 10;
-  });
-  ctx.doc.setTextColor(0);
-  rightY += 2;
+  ctx.doc.setTextColor(45);
+  const summaryLines = ctx.doc.splitTextToSize(summaryLine, col2W).slice(0, 3);
+  ctx.doc.text(summaryLines, col2X, rightY);
+  rightY += summaryLines.length * 5 + 6;
 
   const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
-  const filteredLevers = insight?.designLevers
-    ? insight.designLevers.filter((lever) => !compliancePhrase.test(lever))
-    : [];
-  let actions = filteredLevers.map((lever) => normalizeDesignAction(lever)).slice(0, 2);
-
-  const actionHeaderSize = 8;
-  const actionBodySize = 8;
-  const actionPad = 6;
-  const actionIndent = 6;
-  const actionWidth = rightWidth - actionPad * 2 - actionIndent;
-  const lineHeightAction = 9;
-  let actionLinesPerItem = actions.map((action) =>
-    ctx.doc.splitTextToSize(action, actionWidth).slice(0, 2)
-  );
-
-  const computeActionBoxHeight = (linesPerItem: string[][]) => {
-    const bodyLineCount = linesPerItem.reduce((sum, lines) => sum + lines.length, 0);
-    const bodyHeight =
-      actions.length === 0
-        ? lineHeightAction
-        : bodyLineCount * lineHeightAction + (actions.length - 1) * 2;
-    return actionPad + actionHeaderSize + 4 + bodyHeight + actionPad;
-  };
-
-  const footerTextY = slotBottom - 6;
-  const maxBoxHeight = footerTextY - 8 - rightY;
-  let actionBoxHeight = computeActionBoxHeight(actionLinesPerItem);
-
-  if (actionBoxHeight > maxBoxHeight && actions.length > 1) {
-    actions = actions.slice(0, 1);
-    actionLinesPerItem = actions.map((action) =>
-      ctx.doc.splitTextToSize(action, actionWidth).slice(0, 1)
-    );
-    actionBoxHeight = computeActionBoxHeight(actionLinesPerItem);
+  const actions = (insight?.designLevers || [])
+    .filter((lever) => !compliancePhrase.test(lever))
+    .map((lever) => normalizeDesignAction(lever))
+    .slice(0, 2);
+  if (actions.length === 0) {
+    actions.push('Review product evidence for the highest-impact lifecycle stages');
   }
 
-  if (actionBoxHeight > maxBoxHeight && actions.length === 1) {
-    actionLinesPerItem = actions.map((action) => [fitSingleLineText(ctx.doc, action, actionWidth)]);
-    actionBoxHeight = computeActionBoxHeight(actionLinesPerItem);
-  }
-
-  ctx.doc.setFillColor(243, 244, 246);
-  ctx.doc.roundedRect(rightX, rightY, rightWidth, actionBoxHeight, 2, 2, 'F');
+  const footerY = cardBottom - 8;
+  const actionsBoxHeight = Math.min(28, Math.max(20, footerY - rightY - 8));
+  ctx.doc.setFillColor(248, 248, 248);
+  ctx.doc.setDrawColor(230, 230, 230);
+  ctx.doc.roundedRect(col2X, rightY, col2W, actionsBoxHeight, 2, 2, 'FD');
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(actionHeaderSize);
-  ctx.doc.setTextColor(80);
-  ctx.doc.text('Design actions', rightX + actionPad, rightY + actionPad + actionHeaderSize);
+  ctx.doc.setFontSize(8);
+  ctx.doc.setTextColor(0);
+  ctx.doc.text('DESIGN ACTIONS:', col2X + 4, rightY + 6);
 
-  let actionTextY = rightY + actionPad + actionHeaderSize + 4;
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(actionBodySize);
-  ctx.doc.setTextColor(60);
-
-  if (actions.length === 0) {
-    ctx.doc.text('No actions yet', rightX + actionPad, actionTextY);
-    actionTextY += lineHeightAction;
-  } else {
-    actions.forEach((action, idx) => {
-      const lines = actionLinesPerItem[idx] || [];
-      ctx.doc.text('-', rightX + actionPad, actionTextY);
-      lines.forEach((line: string, lineIndex: number) => {
-        ctx.doc.text(line, rightX + actionPad + actionIndent, actionTextY + lineIndex * lineHeightAction);
-      });
-      actionTextY += lines.length * lineHeightAction + 2;
-    });
-  }
+  ctx.doc.setFontSize(7);
+  ctx.doc.setTextColor(65);
+  let actionY = rightY + 11;
+  const maxActionTextWidth = col2W - 8;
+  actions.forEach((action, index) => {
+    if (actionY > rightY + actionsBoxHeight - 3) return;
+    const prefix = index === 0 ? '-' : '-';
+    const actionLines = ctx.doc.splitTextToSize(`${prefix} ${action}`, maxActionTextWidth).slice(0, 2);
+    ctx.doc.text(actionLines, col2X + 4, actionY);
+    actionY += actionLines.length * 4 + 2;
+  });
   ctx.doc.setTextColor(0);
 
-  // Footer line and metadata
-  ctx.doc.setDrawColor(229, 231, 235);
+  // Footer
+  ctx.doc.setDrawColor(230, 230, 230);
   ctx.doc.setLineWidth(0.5);
-  ctx.doc.line(ctx.margin, footerTextY - 4, ctx.pageWidth - ctx.margin, footerTextY - 4);
+  ctx.doc.line(col1X, footerY - 4, ctx.pageWidth - ctx.margin, footerY - 4);
+
+  ctx.doc.setFont('helvetica', 'normal');
+  ctx.doc.setFontSize(7);
+  ctx.doc.setTextColor(100);
 
   const rankText = paletteContext
     ? `Carbon rank: #${paletteContext.rank} of ${paletteContext.totalMaterials}`
     : 'Carbon rank: n/a';
-  const deliveryComplexity = getDeliveryComplexityLabel(estimatePracticalityBands(material));
-  const practicalityText = `Practicality: ${deliveryComplexity}`;
-
-  ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(7);
-  ctx.doc.setTextColor(110);
-  ctx.doc.text(rankText, ctx.margin, footerTextY);
-  ctx.doc.text(practicalityText, ctx.pageWidth - ctx.margin, footerTextY, { align: 'right' });
+  const metricText = metrics
+    ? `Lifespan: ${metrics.service_life} yrs | Confidence: ${(metrics.confidence_score * 100).toFixed(0)}%`
+    : 'Lifespan: n/a | Confidence: low';
+  const footerText = fitSingleLineText(ctx.doc, `${rankText} | ${metricText}`, contentWidth - cardPadding * 2);
+  ctx.doc.text(footerText, col1X, footerY + 1);
   ctx.doc.setTextColor(0);
 
-  ctx.cursorY = slotTop === topSlotY ? bottomSlotY : topSlotY;
-  if (slotTop === bottomSlotY) {
+  // Move cursor to the next slot.
+  ctx.cursorY = startY + cardHeight;
+
+  // Safety reset if card content ever overflows reserved space.
+  if (maxCardContentHeight < 60) {
     ctx.doc.addPage();
-    ctx.cursorY = topSlotY;
+    ctx.cursorY = ctx.margin;
   }
 }
 
