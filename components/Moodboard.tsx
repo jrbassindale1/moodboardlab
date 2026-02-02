@@ -1876,9 +1876,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Helper to generate sustainability briefing
   const generateBriefing = async (): Promise<boolean> => {
     try {
+      console.log('[Sustainability Briefing] Starting generation...');
       setIsBriefingLoading(true);
       const payload = prepareBriefingPayload(board, 'Material Palette');
       setBriefingPayload(payload);
+      console.log('[Sustainability Briefing] Payload prepared:', payload);
 
       const response = await generateSustainabilityBriefing({
         systemInstruction: getSustainabilityBriefingSystemInstruction(),
@@ -1887,37 +1889,54 @@ const Moodboard: React.FC<MoodboardProps> = ({
         projectName: 'Material Palette',
       });
 
-      // Parse the response
-      let parsed: SustainabilityBriefingResponse;
-      if (typeof response === 'string') {
-        const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (jsonMatch) {
-          parsed = JSON.parse(jsonMatch[1].trim());
-        } else {
-          parsed = JSON.parse(response);
-        }
-      } else if (response && typeof response === 'object') {
-        const textContent = (response as Record<string, unknown>).text ||
-          (response as Record<string, unknown>).result ||
-          (response as Record<string, unknown>).response;
-        if (typeof textContent === 'string') {
-          const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-          if (jsonMatch) {
-            parsed = JSON.parse(jsonMatch[1].trim());
-          } else {
-            parsed = JSON.parse(textContent);
+      console.log('[Sustainability Briefing] Raw response:', response);
+
+      // Extract text from Gemini response structure
+      let textContent = '';
+      if (response && typeof response === 'object') {
+        // Handle Gemini API response structure: {candidates: [{content: {parts: [{text: "..."}]}}]}
+        const geminiResponse = response as Record<string, unknown>;
+        if (geminiResponse.candidates && Array.isArray(geminiResponse.candidates)) {
+          const firstCandidate = (geminiResponse.candidates as unknown[])[0] as Record<string, unknown> | undefined;
+          if (firstCandidate?.content) {
+            const content = firstCandidate.content as Record<string, unknown>;
+            if (content.parts && Array.isArray(content.parts)) {
+              const firstPart = (content.parts as unknown[])[0] as Record<string, unknown> | undefined;
+              if (firstPart?.text && typeof firstPart.text === 'string') {
+                textContent = firstPart.text;
+              }
+            }
           }
-        } else {
-          parsed = response as SustainabilityBriefingResponse;
         }
-      } else {
-        throw new Error('Unexpected response format');
+        // Fallback to other possible structures
+        if (!textContent) {
+          textContent = (geminiResponse.text || geminiResponse.result || geminiResponse.response || '') as string;
+        }
+      } else if (typeof response === 'string') {
+        textContent = response;
       }
+
+      console.log('[Sustainability Briefing] Extracted text:', textContent);
+
+      if (!textContent) {
+        throw new Error('No text content in response');
+      }
+
+      // Clean up markdown code blocks if present
+      let jsonText = textContent;
+      const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim();
+      }
+
+      // Parse the JSON
+      const parsed: SustainabilityBriefingResponse = JSON.parse(jsonText);
+      console.log('[Sustainability Briefing] Parsed response:', parsed);
 
       setSustainabilityBriefing(parsed);
       return true;
     } catch (err) {
-      console.error('Sustainability briefing generation failed:', err);
+      console.error('[Sustainability Briefing] Generation failed:', err);
       return false;
     } finally {
       setIsBriefingLoading(false);
