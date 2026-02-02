@@ -158,6 +158,21 @@ export interface ClientSummary {
   confidence_statement: string; // Overall confidence note
 }
 
+// AI-authored page-level prose for PDF sections
+export interface ReportProse {
+  strategicOverview: {
+    narrative: string;
+    strengthsLead?: string;
+    watchoutsLead?: string;
+    specNotesLead?: string;
+  };
+  complianceReadiness: {
+    intro: string;
+    evidencePriorityNote?: string;
+    deferNote?: string;
+  };
+}
+
 // QA validation result before PDF export
 export interface QAValidationResult {
   valid: boolean;

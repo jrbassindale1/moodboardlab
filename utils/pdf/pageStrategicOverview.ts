@@ -3,7 +3,8 @@ import type {
   EnhancedSustainabilityInsight,
   LifecycleStageKey,
   MaterialMetrics,
-  PDFContext
+  PDFContext,
+  ReportProse
 } from '../../types/sustainability';
 import type { MaterialOption } from '../../types';
 import { addHeading, lineHeightFor, PDF_TYPE_SCALE } from './layout';
@@ -54,7 +55,8 @@ export function renderStrategicOverview(
   materials: MaterialOption[],
   metrics: Map<string, MaterialMetrics>,
   insights: EnhancedSustainabilityInsight[] = [],
-  aiSummaryText?: string | null
+  aiSummaryText?: string | null,
+  reportProse?: ReportProse | null
 ): void {
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
@@ -72,6 +74,8 @@ export function renderStrategicOverview(
   const dialWidth = (ctx.pageWidth - ctx.margin * 2 - dialGap * 2) / 3;
   const calc = calculateProjectMetrics(materials, metrics);
   const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const smallLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
+  const strategicCopy = reportProse?.strategicOverview;
 
   const drawDial = (label: string, value: string, subtext: string, x: number) => {
     const labelY = dialY;
@@ -119,7 +123,7 @@ export function renderStrategicOverview(
 
   ctx.cursorY += 52;
 
-  const normalizedAiSummary = cleanText(aiSummaryText || undefined);
+  const normalizedAiSummary = cleanText(strategicCopy?.narrative || aiSummaryText || undefined);
   if (normalizedAiSummary) {
     const boxWidth = ctx.pageWidth - ctx.margin * 2;
     const boxX = ctx.margin;
@@ -162,6 +166,16 @@ export function renderStrategicOverview(
   ctx.doc.text('Project Strengths', ctx.margin, ctx.cursorY);
   ctx.doc.setTextColor(0);
   ctx.cursorY += lineHeightFor(PDF_TYPE_SCALE.subheading, 'tight');
+  const strengthsLead = sentence(strategicCopy?.strengthsLead);
+  if (strengthsLead) {
+    const leadLines = ctx.doc.splitTextToSize(strengthsLead, halfWidth - 12);
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(leadLines, ctx.margin, ctx.cursorY, { lineHeightFactor: 1.3 });
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += leadLines.length * smallLineHeight + 3;
+  }
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
@@ -219,6 +233,16 @@ export function renderStrategicOverview(
   ctx.doc.text('Project Watch-outs', rightColX, ctx.cursorY);
   ctx.doc.setTextColor(0);
   ctx.cursorY += lineHeightFor(PDF_TYPE_SCALE.subheading, 'tight');
+  const watchoutsLead = sentence(strategicCopy?.watchoutsLead);
+  if (watchoutsLead) {
+    const leadLines = ctx.doc.splitTextToSize(watchoutsLead, halfWidth - 12);
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(leadLines, rightColX, ctx.cursorY, { lineHeightFactor: 1.3 });
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += leadLines.length * smallLineHeight + 3;
+  }
 
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
@@ -281,6 +305,16 @@ export function renderStrategicOverview(
 
   addHeading(ctx, 'Priority Specification Notes', 12);
   ctx.cursorY += 2;
+  const specNotesLead = sentence(strategicCopy?.specNotesLead);
+  if (specNotesLead) {
+    const leadLines = ctx.doc.splitTextToSize(specNotesLead, ctx.pageWidth - ctx.margin * 2);
+    ctx.doc.setFont('helvetica', 'italic');
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
+    ctx.doc.setTextColor(80);
+    ctx.doc.text(leadLines, ctx.margin, ctx.cursorY, { lineHeightFactor: 1.3 });
+    ctx.doc.setTextColor(0);
+    ctx.cursorY += leadLines.length * smallLineHeight + 4;
+  }
 
   const tableWidth = ctx.pageWidth - ctx.margin * 2;
   const col1W = tableWidth * 0.25;

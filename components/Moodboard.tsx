@@ -17,6 +17,7 @@ import type {
   MaterialMetrics,
   SystemLevelSummary,
   ClientSummary,
+  ReportProse,
   Hotspot,
   UKCheck,
   Benefit,
@@ -144,6 +145,7 @@ const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
 const MOODBOARD_FLOW_TOTAL_STEPS = 4;
 const SUMMARY_REVIEW_TIMEOUT_MS = 20000;
+const REPORT_PROSE_TIMEOUT_MS = 25000;
 const REPORT_PREVIEW_INCLUDES = [
   'Comparative lifecycle dashboard',
   'Carbon dominance ranking',
@@ -370,6 +372,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
   const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
   const paletteSummaryRef = useRef<string | null>(null);
+  const [reportProse, setReportProse] = useState<ReportProse | null>(null);
+  const reportProseRef = useRef<ReportProse | null>(null);
   const [summaryReviewed, setSummaryReviewed] = useState(false);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
@@ -377,7 +381,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   );
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
   const [status, setStatus] = useState<
-    'idle' | 'sustainability' | 'summary' | 'summary-review' | 'render' | 'all' | 'detecting'
+    'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
   const [exportingReport, setExportingReport] = useState(false);
   const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
@@ -1209,7 +1213,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       board,
       metrics,
       insights,
-      paletteSummaryRef.current
+      paletteSummaryRef.current,
+      reportProseRef.current
     );
 
     // ========== PAGE 3: Comparative Dashboard ==========
@@ -1231,7 +1236,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     // ========== PAGE 6: Compliance Readiness Summary ==========
     onProgress?.('Checking compliance readiness...', 55);
     if (insights.length > 0) {
-      renderComplianceReadinessSummary(ctx, insights, board);
+      renderComplianceReadinessSummary(ctx, insights, board, reportProseRef.current);
     }
 
     // ========== PAGES 6+: Material Details (two materials per page) ==========
@@ -1543,6 +1548,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setSustainabilityInsights(null);
     setPaletteSummary(null);
     paletteSummaryRef.current = null;
+    setReportProse(null);
+    reportProseRef.current = null;
     setSummaryReviewed(false);
     setStatus('all');
     setError(null);
@@ -1621,6 +1628,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
           state: 'error'
         });
         return;
+      }
+
+      const proseOk = await runGemini('report-prose', { requestTimeoutMs: REPORT_PROSE_TIMEOUT_MS });
+      if (!proseOk) {
+        console.warn('Report prose generation skipped; using deterministic PDF copy.');
       }
 
       setFlowProgress({
@@ -1835,7 +1847,7 @@ IMPORTANT:
   };
 
   const runGemini = async (
-    mode: 'sustainability' | 'summary' | 'summary-review' | 'render',
+    mode: 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render',
     options?: {
       onRender?: (url: string) => void;
       retryAttempt?: number;
@@ -2064,14 +2076,98 @@ CONTEXT:
 ${JSON.stringify(summaryContext)}`;
     };
 
+    const buildReportProseContext = () => {
+      const summaryContext = buildPaletteSummaryContext();
+      const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
+      const materialById = new Map<string, BoardItem>();
+      board.forEach((material) => materialById.set(material.id, material));
+
+      const materialHighlights = insights
+        .map((insight) => {
+          const material = materialById.get(insight.id);
+          const hotspot = (insight.hotspots || []).slice().sort((a, b) => b.score - a.score)[0];
+          return {
+            name: material?.name || insight.title || '',
+            category: material?.category || '',
+            headline: insight.headline || '',
+            whyItLooksLikeThis: insight.whyItLooksLikeThis || '',
+            designRisk: insight.design_risk || '',
+            designResponse: insight.design_response || '',
+            topHotspot: hotspot
+              ? {
+                  stage: hotspot.stage,
+                  score: hotspot.score,
+                  reason: hotspot.reason
+                }
+              : null,
+            ukChecks: (insight.ukChecks || []).map((check) => check.label).slice(0, 3),
+            riskNotes: (insight.risks || [])
+              .map((risk) => risk.note || '')
+              .filter(Boolean)
+              .slice(0, 2)
+          };
+        })
+        .filter((item) => item.name)
+        .slice(0, 6);
+
+      return {
+        totalMaterials: summaryContext.totalMaterials,
+        highestImpact: summaryContext.highestImpact,
+        lowCarbonSystems: summaryContext.lowCarbonSystems,
+        driverStages: summaryContext.driverStages.map((driver) => ({
+          name: driver.name,
+          category: driver.category,
+          topStages: driver.topStages.map((stage) => stage.stage)
+        })),
+        materialHighlights
+      };
+    };
+
+    const buildReportProsePrompt = () => {
+      const proseContext = buildReportProseContext();
+      return `You are writing page-level prose for a UK concept-stage architecture sustainability PDF.
+
+Return ONLY valid JSON. No markdown. No prose outside JSON.
+
+Output schema:
+{
+  "strategicOverview": {
+    "narrative": "string (2-3 sentences, max 420 chars)",
+    "strengthsLead": "string (1 sentence, max 160 chars)",
+    "watchoutsLead": "string (1 sentence, max 160 chars)",
+    "specNotesLead": "string (1 sentence, max 160 chars)"
+  },
+  "complianceReadiness": {
+    "intro": "string (2 sentences, max 320 chars)",
+    "evidencePriorityNote": "string (1 sentence, max 180 chars)",
+    "deferNote": "string (1 sentence, max 180 chars)"
+  }
+}
+
+Tone requirements:
+- strategicOverview: architect-to-client tone, design-led, concise, concrete trade-offs.
+- complianceReadiness: evidence-first procurement/compliance tone, plain language, no legal claims.
+
+Rules:
+- Mention at least one material from highestImpact or lowCarbonSystems across the output.
+- Mention at least one lifecycle stage from driverStages across the output.
+- Avoid rankings, percentages, and compliance guarantees.
+- Keep wording UK-appropriate and concept-stage cautious.
+
+CONTEXT:
+${JSON.stringify(proseContext)}`;
+    };
+
     const prompt =
       mode === 'sustainability'
         ? buildSustainabilityPrompt()
-        : mode === 'summary'
+      : mode === 'summary'
         ? buildPaletteSummaryPrompt()
-        : mode === 'summary-review'
+      : mode === 'summary-review'
         ? buildPaletteSummaryReviewPrompt(options?.summaryDraft || paletteSummaryRef.current || '')
-        : isEditingRender
+      : mode === 'report-prose'
+      ? buildReportProsePrompt()
+      : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
@@ -2149,9 +2245,11 @@ ${JSON.stringify(summaryContext)}`;
         }
       ],
       generationConfig: {
-        temperature: mode === 'summary-review' ? 0.2 : 0.45,
+        temperature: mode === 'summary-review' ? 0.2 : mode === 'report-prose' ? 0.28 : 0.45,
         ...(mode === 'summary' || mode === 'summary-review'
-          ? { maxOutputTokens: 240 }
+          ? { maxOutputTokens: 320 }
+          : mode === 'report-prose'
+          ? { maxOutputTokens: 520 }
           : {})
       }
     };
@@ -2160,9 +2258,11 @@ ${JSON.stringify(summaryContext)}`;
         ? 'summary'
         : mode === 'summary-review'
         ? 'summary-review'
+        : mode === 'report-prose'
+        ? 'report-prose'
         : 'sustainability';
     console.log('[Gemini prompt]', { mode, promptType, prompt });
-    if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review') {
+    if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review' || mode === 'report-prose') {
       console.log('[Gemini prompt text]', prompt);
     }
 
@@ -2171,7 +2271,7 @@ ${JSON.stringify(summaryContext)}`;
       console.log('[Gemini response]', { mode, data });
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
-      if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review') {
+      if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review' || mode === 'report-prose') {
         console.log('[Gemini response text]', text);
       }
       const cleaned = text.replace(/```json|```/g, '').trim();
@@ -2303,6 +2403,8 @@ ${JSON.stringify(summaryContext)}`;
           setSustainabilityInsights(null);
           sustainabilityInsightsRef.current = null;
           setPaletteSummary(null);
+          setReportProse(null);
+          reportProseRef.current = null;
           const message = 'Gemini returned malformed sustainability JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
@@ -2356,6 +2458,52 @@ ${JSON.stringify(summaryContext)}`;
           console.warn('Gemini returned malformed summary review JSON.', parseError);
           return false;
         }
+      } else if (mode === 'report-prose') {
+        try {
+          const parsed = JSON.parse(cleaned);
+          const strategicSource = parsed?.strategicOverview || {};
+          const complianceSource = parsed?.complianceReadiness || {};
+          const prose: ReportProse = {
+            strategicOverview: {
+              narrative:
+                typeof strategicSource?.narrative === 'string' ? strategicSource.narrative.trim() : '',
+              strengthsLead:
+                typeof strategicSource?.strengthsLead === 'string'
+                  ? strategicSource.strengthsLead.trim()
+                  : '',
+              watchoutsLead:
+                typeof strategicSource?.watchoutsLead === 'string'
+                  ? strategicSource.watchoutsLead.trim()
+                  : '',
+              specNotesLead:
+                typeof strategicSource?.specNotesLead === 'string'
+                  ? strategicSource.specNotesLead.trim()
+                  : ''
+            },
+            complianceReadiness: {
+              intro:
+                typeof complianceSource?.intro === 'string' ? complianceSource.intro.trim() : '',
+              evidencePriorityNote:
+                typeof complianceSource?.evidencePriorityNote === 'string'
+                  ? complianceSource.evidencePriorityNote.trim()
+                  : '',
+              deferNote:
+                typeof complianceSource?.deferNote === 'string'
+                  ? complianceSource.deferNote.trim()
+                  : ''
+            }
+          };
+          if (!prose.strategicOverview.narrative && !prose.complianceReadiness.intro) {
+            throw new Error('Invalid report prose response');
+          }
+          setReportProse(prose);
+          reportProseRef.current = prose;
+        } catch (parseError) {
+          setReportProse(null);
+          reportProseRef.current = null;
+          console.warn('Gemini returned malformed report prose JSON.', parseError);
+          return false;
+        }
       }
       return true;
     } catch (err) {
@@ -2363,6 +2511,8 @@ ${JSON.stringify(summaryContext)}`;
         setSummaryReviewed(false);
         setError('Summary QA failed. Please try again.');
         console.warn('Summary review failed', err);
+      } else if (mode === 'report-prose') {
+        console.warn('Report prose generation failed', err);
       } else {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
       }

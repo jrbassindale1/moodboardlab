@@ -1,5 +1,10 @@
 import type { MaterialOption } from '../../types';
-import type { EnhancedSustainabilityInsight, PDFContext, TrafficLight } from '../../types/sustainability';
+import type {
+  EnhancedSustainabilityInsight,
+  PDFContext,
+  ReportProse,
+  TrafficLight
+} from '../../types/sustainability';
 import { addHeading, ensureSpace, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 
 export type ComplianceKey = 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification';
@@ -130,7 +135,8 @@ export function getComplianceStatus(
 export function renderComplianceReadinessSummary(
   ctx: PDFContext,
   insights: EnhancedSustainabilityInsight[],
-  materials: MaterialOption[]
+  materials: MaterialOption[],
+  reportProse?: ReportProse | null
 ): void {
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
@@ -140,25 +146,29 @@ export function renderComplianceReadinessSummary(
 
   addHeading(ctx, 'Compliance Readiness Summary (UK)', 16);
   ctx.cursorY += 4;
+  const complianceCopy = reportProse?.complianceReadiness;
+  const cleanSentence = (value?: string) => {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return '';
+    return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+  };
 
   // Intro (concept-stage framing)
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(80);
-  const introLines = ctx.doc.splitTextToSize(
-    'Compliance readiness = whether standard supplier evidence (environmental product declarations, certificates, recycled-content declarations) is likely to be available at this stage. Concept-stage view: highlights real risk items, evidence priorities, and what can safely wait.',
-    ctx.pageWidth - ctx.margin * 2
-  );
+  const introText =
+    cleanSentence(complianceCopy?.intro) ||
+    'Compliance readiness indicates whether standard supplier evidence (EPDs, certificates, recycled-content declarations) is likely to be available at concept stage.';
+  const introLines = ctx.doc.splitTextToSize(introText, ctx.pageWidth - ctx.margin * 2);
   introLines.forEach((line: string) => {
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
     ctx.cursorY += bodyLineHeight;
   });
   ctx.cursorY += 2;
-  ctx.doc.text(
-    'At concept stage, most materials require standard evidence rather than presenting unique compliance risks.',
-    ctx.margin,
-    ctx.cursorY
-  );
+  const introFollowUp =
+    'At concept stage, most materials require standard evidence collection rather than indicating non-compliance.';
+  ctx.doc.text(introFollowUp, ctx.margin, ctx.cursorY);
   ctx.doc.setTextColor(0);
   ctx.cursorY += bodyLineHeight;
 
@@ -226,9 +236,13 @@ export function renderComplianceReadinessSummary(
   ctx.doc.setFont('helvetica', 'italic');
   ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(100);
-  ctx.doc.text('This is typical at concept stage and does not indicate non-compliance.', ctx.margin, ctx.cursorY);
+  const evidenceLead =
+    cleanSentence(complianceCopy?.evidencePriorityNote) ||
+    'This is typical at concept stage and does not indicate non-compliance.';
+  const evidenceLeadLines = ctx.doc.splitTextToSize(evidenceLead, ctx.pageWidth - ctx.margin * 2).slice(0, 3);
+  ctx.doc.text(evidenceLeadLines, ctx.margin, ctx.cursorY, { lineHeightFactor: 1.3 });
   ctx.doc.setTextColor(0);
-  ctx.cursorY += bodyLineHeight;
+  ctx.cursorY += evidenceLeadLines.length * bodyLineHeight;
 
   const priority = COMPLIANCE_BADGE_KEY.map(({ key, code }) => {
     const bucket = stats.get(key);
@@ -273,9 +287,13 @@ export function renderComplianceReadinessSummary(
     ctx.cursorY += bodyLineHeight;
   } else {
     ctx.doc.setTextColor(100);
-    ctx.doc.text('Defer supplier-specific certificates and test reports to detailed specification.', ctx.margin, ctx.cursorY);
+    const deferText =
+      cleanSentence(complianceCopy?.deferNote) ||
+      'Defer supplier-specific certificates and test reports to detailed specification.';
+    const deferLines = ctx.doc.splitTextToSize(deferText, ctx.pageWidth - ctx.margin * 2).slice(0, 2);
+    ctx.doc.text(deferLines, ctx.margin, ctx.cursorY, { lineHeightFactor: 1.3 });
     ctx.doc.setTextColor(0);
-    ctx.cursorY += bodyLineHeight;
+    ctx.cursorY += deferLines.length * bodyLineHeight;
   }
 
   ctx.cursorY += 6;
