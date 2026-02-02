@@ -169,6 +169,34 @@ const BENEFIT_LABELS: Record<Benefit['type'], string> = {
   sequestration: 'Biogenic carbon storage potential'
 };
 
+const SUMMARY_STRIP_GROUPS: Array<{ label: string; categories: MaterialCategory[] }> = [
+  { label: 'Structure', categories: ['structure', 'exposed-structure'] },
+  {
+    label: 'Envelope',
+    categories: [
+      'external',
+      'wall-internal',
+      'finish',
+      'ceiling',
+      'soffit',
+      'paint-wall',
+      'paint-ceiling',
+      'plaster',
+      'microcement',
+      'timber-panel',
+      'tile',
+      'wallpaper',
+      'acoustic-panel',
+      'timber-slat',
+      'landscape',
+      'external-ground'
+    ]
+  },
+  { label: 'Openings', categories: ['window', 'door', 'balustrade'] },
+  { label: 'Roof', categories: ['roof'] },
+  { label: 'Insulation', categories: ['insulation'] }
+];
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -384,6 +412,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
   const [exportingReport, setExportingReport] = useState(false);
+  const [exportingSummaryReport, setExportingSummaryReport] = useState(false);
   const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -1114,6 +1143,255 @@ const Moodboard: React.FC<MoodboardProps> = ({
     };
   }, [board, sustainabilityInsights, paletteSummary, summaryReviewed]);
 
+  const generateSummaryPdf = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const ctx = createPDFContext(doc);
+
+    const insightById = new Map<string, SustainabilityInsight>();
+    const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
+    insights.forEach((insight) => {
+      if (insight?.id) insightById.set(insight.id, insight);
+    });
+
+    const metrics = new Map<string, MaterialMetrics>();
+    board.forEach((material) => {
+      const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+      if (!profile) return;
+      const benefits = insightById.get(material.id)?.benefits || [];
+      metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
+    });
+
+    const projectMetrics = calculateProjectMetrics(board, metrics);
+    const metricValues = Array.from(metrics.values());
+    const avgEmbodied =
+      metricValues.length > 0
+        ? metricValues.reduce((sum, metric) => sum + metric.embodied_proxy, 0) / metricValues.length
+        : 0;
+
+    const toBadgeRating = (value: number, lowMax: number, highMin: number): 'Low' | 'Med' | 'High' => {
+      if (value >= highMin) return 'High';
+      if (value <= lowMax) return 'Low';
+      return 'Med';
+    };
+
+    const productionImpact = toBadgeRating(avgEmbodied, 2.5, 3.8);
+    const circularity = toBadgeRating(projectMetrics.circularRatio, 0.3, 0.6);
+    const biogenicStorage = toBadgeRating(projectMetrics.bioRatio, 0.1, 0.3);
+
+    const materialById = new Map<string, BoardItem>();
+    board.forEach((material) => materialById.set(material.id, material));
+    const labelFor = (id: string) =>
+      materialById.get(id)?.name || insightById.get(id)?.title || 'Material';
+
+    const nonLandscapeEmbodied = [...metrics.entries()]
+      .filter(([id]) => {
+        const material = materialById.get(id);
+        return material ? !isLandscapeMaterial(material) : true;
+      })
+      .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
+    const allEmbodiedSorted = [...metrics.entries()].sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
+    const embodiedFallback = nonLandscapeEmbodied.length > 0 ? nonLandscapeEmbodied : allEmbodiedSorted;
+    const fallbackHotspots = embodiedFallback.slice(0, 3).map(([id]) => labelFor(id));
+    const hotspotItems =
+      sustainabilityPreview?.snapshot.highestImpact?.slice(0, 3) && sustainabilityPreview.snapshot.highestImpact.length > 0
+        ? sustainabilityPreview.snapshot.highestImpact.slice(0, 3)
+        : fallbackHotspots;
+
+    const truncateWords = (value: string, maxWords = 10) =>
+      value
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, maxWords)
+        .join(' ');
+
+    const defaultActions = [
+      'Reduce high-impact components before layout is fixed',
+      'Specify verified evidence requirements in procurement schedules',
+      'Detail reversible connections for future disassembly'
+    ];
+    const actionCandidates = [
+      ...(sustainabilityPreview?.snapshot.actionPriorities || []),
+      ...defaultActions
+    ];
+    const actionSet = new Set<string>();
+    const quickActions: string[] = [];
+    actionCandidates.forEach((candidate) => {
+      const trimmed = truncateWords(candidate, 10).trim();
+      if (!trimmed || actionSet.has(trimmed)) return;
+      actionSet.add(trimmed);
+      quickActions.push(trimmed);
+    });
+    while (quickActions.length < 3) {
+      const fallback = truncateWords(defaultActions[quickActions.length], 10);
+      if (!actionSet.has(fallback)) {
+        actionSet.add(fallback);
+        quickActions.push(fallback);
+      } else {
+        break;
+      }
+    }
+
+    const stageOrder: LifecycleStageKey[] = [
+      'raw',
+      'manufacturing',
+      'transport',
+      'installation',
+      'inUse',
+      'maintenance',
+      'endOfLife'
+    ];
+    const lowConfidenceCount = board.reduce((count, material) => {
+      const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
+      if (!profile) return count;
+      const hasLowConfidence = stageOrder.some((stage) => profile[stage]?.confidence === 'low');
+      return count + (hasLowConfidence ? 1 : 0);
+    }, 0);
+    const lowConfidenceRatio = board.length > 0 ? lowConfidenceCount / board.length : 1;
+    const confidence: 'Low' | 'Med' | 'High' = lowConfidenceRatio > 0.5 ? 'Low' : lowConfidenceRatio > 0.2 ? 'Med' : 'High';
+
+    const toRgb = (hexColor: string): [number, number, number] => {
+      const raw = (hexColor || '').trim();
+      const normalized = /^#[0-9a-fA-F]{3}$/.test(raw)
+        ? `#${raw[1]}${raw[1]}${raw[2]}${raw[2]}${raw[3]}${raw[3]}`
+        : raw;
+      if (!/^#[0-9a-fA-F]{6}$/.test(normalized)) return [209, 213, 219];
+      return [
+        Number.parseInt(normalized.slice(1, 3), 16),
+        Number.parseInt(normalized.slice(3, 5), 16),
+        Number.parseInt(normalized.slice(5, 7), 16)
+      ];
+    };
+
+    const truncateLabel = (value: string, maxChars = 20) =>
+      value.length > maxChars ? `${value.slice(0, Math.max(0, maxChars - 3))}...` : value;
+
+    const maxWidth = ctx.pageWidth - ctx.margin * 2;
+    const dateLabel = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+    const baseOptionName = board.length
+      ? `${board[0].name}${board.length > 1 ? ` + ${board.length - 1} more` : ''}`
+      : 'Palette Option';
+    let optionName = baseOptionName;
+    let headerLine = `Sustainability Snapshot | ${optionName} | ${dateLabel} | Concept / RIBA 2`;
+    while (doc.getTextWidth(headerLine) > maxWidth && optionName.length > 14) {
+      optionName = `${optionName.slice(0, Math.max(0, optionName.length - 4))}...`;
+      headerLine = `Sustainability Snapshot | ${optionName} | ${dateLabel} | Concept / RIBA 2`;
+    }
+
+    let y = ctx.margin;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text(headerLine, ctx.margin, y);
+    y += 12;
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(ctx.margin, y, ctx.pageWidth - ctx.margin, y);
+    y += 14;
+
+    const badges = [
+      { label: 'Production impact (A1-A3)', rating: productionImpact },
+      { label: 'Circularity', rating: circularity },
+      { label: 'Biogenic storage', rating: biogenicStorage }
+    ];
+    const badgeGap = 10;
+    const badgeWidth = (maxWidth - badgeGap * 2) / 3;
+    const badgeHeight = 50;
+    badges.forEach((badge, index) => {
+      const x = ctx.margin + index * (badgeWidth + badgeGap);
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(x, y, badgeWidth, badgeHeight, 3, 3, 'FD');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(badge.label, x + 7, y + 13);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      doc.setTextColor(15, 23, 42);
+      doc.text(badge.rating, x + 7, y + 35);
+    });
+    y += badgeHeight + 18;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(17, 24, 39);
+    doc.text('Top 3 carbon-dominant components', ctx.margin, y);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    hotspotItems.slice(0, 3).forEach((item, index) => {
+      doc.text(`${index + 1}) ${item}`, ctx.margin, y);
+      y += 13;
+    });
+    y += 5;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Do next (highest leverage)', ctx.margin, y);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    quickActions.slice(0, 3).forEach((action) => {
+      doc.text(`- ${action}`, ctx.margin, y);
+      y += 13;
+    });
+    y += 6;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Palette strip', ctx.margin, y);
+    y += 10;
+
+    const stripHeight = 58;
+    const stripY = y;
+    const stripColWidth = maxWidth / SUMMARY_STRIP_GROUPS.length;
+    SUMMARY_STRIP_GROUPS.forEach((group, index) => {
+      const groupX = ctx.margin + index * stripColWidth;
+      const swatches = board.filter((material) => group.categories.includes(material.category)).slice(0, 2);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(71, 85, 105);
+      doc.text(group.label.toUpperCase(), groupX + 2, stripY + 10);
+
+      if (swatches.length === 0) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text('-', groupX + 2, stripY + 24);
+        return;
+      }
+
+      swatches.forEach((material, swatchIndex) => {
+        const rowY = stripY + 22 + swatchIndex * 14;
+        const [r, g, b] = toRgb(material.tone);
+        doc.setFillColor(r, g, b);
+        doc.setDrawColor(203, 213, 225);
+        doc.roundedRect(groupX + 2, rowY - 7, 8, 8, 1.5, 1.5, 'FD');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(51, 65, 85);
+        doc.text(truncateLabel(material.name, 17), groupX + 14, rowY);
+      });
+    });
+    y += stripHeight;
+
+    const footerY = Math.max(y + 12, ctx.pageHeight - ctx.margin - 16);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(ctx.margin, footerY - 14, ctx.pageWidth - ctx.margin, footerY - 14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`Confidence: ${confidence}`, ctx.margin, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Scope: Early-stage comparative guidance, not a full LCA/EPD calculation.', ctx.margin, footerY + 12);
+
+    return doc;
+  };
+
   const generateReportPdf = async (
     onProgress?: (step: string, percent: number) => void
   ) => {
@@ -1328,6 +1606,46 @@ const Moodboard: React.FC<MoodboardProps> = ({
     addDisclaimer(ctx);
 
     return doc;
+  };
+
+  const handleDownloadSummaryReport = async () => {
+    if (!sustainabilityPreview) {
+      setError('Generate the sustainability summary first.');
+      return;
+    }
+    setExportingSummaryReport(true);
+    try {
+      const doc = generateSummaryPdf();
+      doc.save('moodboard-summary.pdf');
+    } catch (err) {
+      console.error('Could not create summary PDF', err);
+      setError('Could not create the summary download.');
+    } finally {
+      setExportingSummaryReport(false);
+    }
+  };
+
+  const handleMobileSaveSummaryReport = async () => {
+    if (!sustainabilityPreview) {
+      setError('Generate the sustainability summary first.');
+      return;
+    }
+    setExportingSummaryReport(true);
+    try {
+      const doc = generateSummaryPdf();
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (!win) {
+        doc.save('moodboard-summary.pdf');
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      console.error('Could not create summary PDF', err);
+      setError('Could not create the mobile summary.');
+    } finally {
+      setExportingSummaryReport(false);
+    }
   };
 
   const handleDownloadReport = async () => {
@@ -2036,6 +2354,45 @@ CONTEXT:
 ${JSON.stringify(summaryContext, null, 2)}`;
     };
 
+    const buildFallbackPaletteSummary = () => {
+      const summaryContext = buildPaletteSummaryContext();
+      const primaryRiskMaterial = summaryContext.highestImpact[0] || '';
+      const lowerCarbonMaterial = summaryContext.lowCarbonSystems[0] || '';
+      const topStage = summaryContext.driverStages[0]?.topStages?.[0]?.stage || '';
+      const stageLabel = topStage ? `${topStage} stage` : 'lifecycle profile';
+
+      if (!primaryRiskMaterial && !lowerCarbonMaterial) {
+        return 'This concept-stage palette needs assessment to identify key lifecycle drivers and next actions.';
+      }
+
+      if (primaryRiskMaterial && lowerCarbonMaterial && primaryRiskMaterial !== lowerCarbonMaterial) {
+        return `This concept-stage palette indicates ${primaryRiskMaterial} as a key ${stageLabel} driver, while ${lowerCarbonMaterial} offers a lower-carbon direction. Next, confirm specification choices with supplier evidence and right-sized detailing.`;
+      }
+
+      const anchorMaterial = primaryRiskMaterial || lowerCarbonMaterial;
+      return `This concept-stage palette indicates ${anchorMaterial} as a key ${stageLabel} driver. Next, confirm specification choices with supplier evidence and right-sized detailing.`;
+    };
+
+    const extractSummaryField = (raw: string, field: 'summarySentence' | 'summaryParagraph') => {
+      const completeMatch = raw.match(
+        new RegExp(`"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`)
+      );
+      if (completeMatch?.[1]) {
+        return completeMatch[1].replace(/\\"/g, '"').replace(/\s+/g, ' ').trim();
+      }
+
+      const partialMatch = raw.match(new RegExp(`"${field}"\\s*:\\s*"([\\s\\S]*)$`));
+      if (!partialMatch?.[1]) return '';
+
+      return partialMatch[1]
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, ' ')
+        .replace(/[\r\n]+/g, ' ')
+        .replace(/["}]*\s*$/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
     const buildPaletteSummaryReviewContext = () => {
       const summaryContext = buildPaletteSummaryContext();
       return {
@@ -2427,13 +2784,26 @@ ${JSON.stringify(proseContext)}`;
           paletteSummaryRef.current = summary;
           if (retryAttempt) setError(null);
         } catch (parseError) {
-          setPaletteSummary(null);
-          paletteSummaryRef.current = null;
           const message = 'Gemini returned malformed summary JSON.';
           if (canRetry) {
             setError(`${message} Retrying once...`);
             return await runGemini(mode, { ...options, retryAttempt: retryAttempt + 1 });
           } else {
+            const recoveredSummary =
+              extractSummaryField(cleaned, 'summaryParagraph') ||
+              extractSummaryField(cleaned, 'summarySentence') ||
+              buildFallbackPaletteSummary();
+
+            if (recoveredSummary) {
+              setPaletteSummary(recoveredSummary);
+              paletteSummaryRef.current = recoveredSummary;
+              setError(null);
+              console.warn('Malformed summary JSON; using recovered/fallback summary.', parseError);
+              return true;
+            }
+
+            setPaletteSummary(null);
+            paletteSummaryRef.current = null;
             setError(`${message} Please try again.`);
           }
           return false;
@@ -2514,6 +2884,16 @@ ${JSON.stringify(proseContext)}`;
       } else if (mode === 'report-prose') {
         console.warn('Report prose generation failed', err);
       } else {
+        if (mode === 'summary') {
+          const fallbackSummary = buildFallbackPaletteSummary();
+          if (fallbackSummary) {
+            setPaletteSummary(fallbackSummary);
+            paletteSummaryRef.current = fallbackSummary;
+            setError(null);
+            console.warn('Summary request failed; using fallback summary.', err);
+            return true;
+          }
+        }
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini backend.');
       }
       return false;
@@ -2523,6 +2903,7 @@ ${JSON.stringify(proseContext)}`;
   };
 
   const fullReportReady = hasTextContent();
+  const summaryReportReady = Boolean(sustainabilityPreview);
   const isRenderInFlight = status === 'render' && isCreatingMoodboard;
 
   return (
@@ -2859,42 +3240,69 @@ ${JSON.stringify(proseContext)}`;
                         </li>
                       ))}
                     </ul>
-                    {fullReportReady ? (
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          onClick={handleDownloadReport}
-                          disabled={exportingReport}
-                          className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                        >
-                          {exportingReport ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Building report…
-                            </>
-                          ) : (
-                            'Download full report (PDF)'
-                          )}
-                        </button>
-                        <button
-                          onClick={handleMobileSaveReport}
-                          disabled={exportingReport}
-                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-                        >
-                          {exportingReport ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Saving…
-                            </>
-                          ) : (
-                            'Save report (PDF)'
-                          )}
-                        </button>
-                      </div>
-                    ) : (
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={handleDownloadSummaryReport}
+                        disabled={!summaryReportReady || exportingSummaryReport}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      >
+                        {exportingSummaryReport ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Building summary...
+                          </>
+                        ) : (
+                          'Download summary (1-page PDF)'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDownloadReport}
+                        disabled={!fullReportReady || exportingReport}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                      >
+                        {exportingReport ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Building report...
+                          </>
+                        ) : (
+                          'Download full report (PDF)'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleMobileSaveSummaryReport}
+                        disabled={!summaryReportReady || exportingSummaryReport}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                      >
+                        {exportingSummaryReport ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save summary (PDF)'
+                        )}
+                      </button>
+                      <button
+                        onClick={handleMobileSaveReport}
+                        disabled={!fullReportReady || exportingReport}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                      >
+                        {exportingReport ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save full report (PDF)'
+                        )}
+                      </button>
+                    </div>
+                    {!fullReportReady && (
                       <p className="font-sans text-sm text-gray-700">
                         {isBuildingFullReport
-                          ? 'Download unlocks automatically once the full report is ready.'
-                          : 'Run full sustainability analysis to unlock report download.'}
+                          ? 'Full report download unlocks automatically when generation completes.'
+                          : 'Run full sustainability analysis to unlock the full report download.'}
                       </p>
                     )}
                   </div>
@@ -2952,10 +3360,18 @@ ${JSON.stringify(proseContext)}`;
                     Apply your materials
                   </button>
                   <button
-                    onClick={handleMobileSaveReport}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden"
+                    onClick={handleMobileSaveSummaryReport}
+                    disabled={!summaryReportReady || exportingSummaryReport}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
                   >
-                    Save report (PDF)
+                    Save summary (PDF)
+                  </button>
+                  <button
+                    onClick={handleMobileSaveReport}
+                    disabled={!fullReportReady || exportingReport}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                  >
+                    Save full report (PDF)
                   </button>
                 </div>
                 <div className="border border-gray-200 p-4 bg-white space-y-2">
