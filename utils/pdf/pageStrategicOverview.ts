@@ -1,6 +1,6 @@
 import type { ClientSummary, MaterialMetrics, PDFContext } from '../../types/sustainability';
 import type { MaterialOption } from '../../types';
-import { addHeading } from './layout';
+import { addHeading, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 import { calculateProjectMetrics } from './paletteMetrics';
 
 export function renderStrategicOverview(
@@ -19,11 +19,12 @@ export function renderStrategicOverview(
   const dialGap = 12;
   const dialWidth = (ctx.pageWidth - ctx.margin * 2 - dialGap * 2) / 3;
   const calc = calculateProjectMetrics(materials, metrics);
+  const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
 
   const drawDial = (label: string, value: string, subtext: string, x: number) => {
     const labelY = dialY;
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(102, 102, 102);
     ctx.doc.text(label.toUpperCase(), x, labelY);
 
@@ -37,12 +38,12 @@ export function renderStrategicOverview(
     ctx.doc.circle(x + 4, valueY - 4, 4, 'F');
 
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(14);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.sectionTitle);
     ctx.doc.setTextColor(0);
     ctx.doc.text(value, x + 12, valueY);
 
     ctx.doc.setFont('helvetica', 'italic');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(136, 136, 136);
     ctx.doc.text(subtext, x, valueY + 12);
   };
@@ -71,14 +72,14 @@ export function renderStrategicOverview(
   const rightColX = ctx.margin + halfWidth + columnGap;
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(34, 139, 34);
   ctx.doc.text('Project Strengths', ctx.margin, ctx.cursorY);
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 8;
+  ctx.cursorY += lineHeightFor(PDF_TYPE_SCALE.subheading, 'tight');
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
 
   const strengths: string[] = [];
   if (calc.bioRatio > 0.3)
@@ -98,21 +99,21 @@ export function renderStrategicOverview(
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setTextColor(0);
     ctx.doc.text(lines, ctx.margin + 10, ctx.cursorY);
-    ctx.cursorY += lines.length * 10 + 6;
+    ctx.cursorY += lines.length * bodyLineHeight + 6;
   });
 
   const winEndY = ctx.cursorY;
   ctx.cursorY = dialY + 52;
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(220, 53, 69);
   ctx.doc.text('Project Watch-outs', rightColX, ctx.cursorY);
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 8;
+  ctx.cursorY += lineHeightFor(PDF_TYPE_SCALE.subheading, 'tight');
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
 
   const watchouts: string[] = [];
   const highReplacementItems = materials.filter((material) => {
@@ -144,7 +145,7 @@ export function renderStrategicOverview(
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.setTextColor(0);
     ctx.doc.text(lines, rightColX + 10, ctx.cursorY);
-    ctx.cursorY += lines.length * 10 + 6;
+    ctx.cursorY += lines.length * bodyLineHeight + 6;
   });
 
   ctx.cursorY = Math.max(winEndY, ctx.cursorY) + 20;
@@ -161,14 +162,14 @@ export function renderStrategicOverview(
   const col2X = ctx.margin + col1W;
   const col3X = ctx.margin + col1W + col2W;
 
-  const headerH = 10;
+  const headerH = 12;
   ctx.doc.setFillColor(55, 65, 81);
   ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, headerH, 'F');
 
   ctx.doc.setTextColor(255, 255, 255);
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setFont('helvetica', 'bold');
-  const textY = ctx.cursorY + 7;
+  const textY = ctx.cursorY + 8;
   ctx.doc.text('MATERIAL', col1X + 4, textY);
   ctx.doc.text('RISK / DRIVER', col2X + 4, textY);
   ctx.doc.text('RECOMMENDED ACTION', col3X + 4, textY);
@@ -215,9 +216,9 @@ export function renderStrategicOverview(
     const actionLines = ctx.doc.splitTextToSize(item.action, col3W - 8);
 
     const maxLines = Math.max(nameLines.length, riskLines.length, actionLines.length);
-    const lineHeight = 4;
-    const padding = 8;
-    const rowHeight = maxLines * 4 + padding + 6;
+    const rowLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
+    const padding = 7;
+    const rowHeight = maxLines * rowLineHeight + padding * 2;
 
     if (ctx.cursorY + rowHeight > ctx.pageHeight - ctx.margin) {
       ctx.doc.addPage();
@@ -229,10 +230,10 @@ export function renderStrategicOverview(
       ctx.doc.rect(ctx.margin, ctx.cursorY, tableWidth, rowHeight, 'F');
     }
 
-    const rowTextY = ctx.cursorY + 8;
+    const rowTextY = ctx.cursorY + padding + 1;
 
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(17, 24, 39);
     ctx.doc.text(nameLines, col1X + 4, rowTextY);
 
@@ -259,8 +260,8 @@ export function renderStrategicOverview(
   const footerText =
     'Concept stage only: scores (1-5) are relative and may reflect replacement frequency. Landscape items include biodiversity benefits. Abbreviations: A1-A3 Production, B In-Use, C End of Life.';
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(7);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(90);
   const footerLines = ctx.doc.splitTextToSize(footerText, ctx.pageWidth - ctx.margin * 2);
-  ctx.doc.text(footerLines, ctx.margin, footerY);
+  ctx.doc.text(footerLines, ctx.margin, footerY, { lineHeightFactor: 1.35 });
 }

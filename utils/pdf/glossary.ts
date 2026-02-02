@@ -1,4 +1,5 @@
 import type { PDFContext } from '../../types/sustainability';
+import { PDF_TYPE_SCALE, lineHeightFor } from './layout';
 
 /**
  * Add disclaimer footer
@@ -6,13 +7,14 @@ import type { PDFContext } from '../../types/sustainability';
 export function addDisclaimer(ctx: PDFContext): void {
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
+  const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
 
   // Glossary
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(14);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.pageTitle);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Glossary', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 16;
+  ctx.cursorY += lineHeightFor(PDF_TYPE_SCALE.pageTitle);
 
   const glossaryItems: Array<{ term: string; description: string }> = [
     {
@@ -60,14 +62,14 @@ export function addDisclaimer(ctx: PDFContext): void {
   ];
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(80);
   glossaryItems.forEach((item) => {
     const line = `${item.term}: ${item.description}`;
     const lines = ctx.doc.splitTextToSize(line, ctx.pageWidth - ctx.margin * 2);
     lines.forEach((textLine: string) => {
       ctx.doc.text(textLine, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 11;
+      ctx.cursorY += bodyLineHeight;
     });
     ctx.cursorY += 2;
   });
@@ -76,7 +78,7 @@ export function addDisclaimer(ctx: PDFContext): void {
   ctx.cursorY = ctx.pageHeight - ctx.margin - 55;
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(100);
 
   const disclaimerText =
@@ -87,12 +89,12 @@ export function addDisclaimer(ctx: PDFContext): void {
   );
   disclaimerLines.forEach((line: string) => {
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 11;
+    ctx.cursorY += bodyLineHeight;
   });
 
   ctx.cursorY += 5;
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Generated with Moodboard-Lab', ctx.margin, ctx.cursorY);
 }

@@ -1,6 +1,7 @@
 import type { MaterialOption } from '../../types';
 import type { MaterialMetrics, PDFContext } from '../../types/sustainability';
 import { calculateProjectMetrics } from './paletteMetrics';
+import { lineHeightFor, PDF_TYPE_SCALE } from './layout';
 
 export function renderSpecifiersSnapshot(
   ctx: PDFContext,
@@ -14,12 +15,12 @@ export function renderSpecifiersSnapshot(
   ctx.doc.rect(0, 0, ctx.pageWidth, headerHeight, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(20);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.pageTitle);
   ctx.doc.setTextColor(17, 24, 39);
   ctx.doc.text('Sustainability Snapshot', ctx.margin, 23);
 
   // Metadata
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setFont('helvetica', 'normal');
   ctx.doc.setTextColor(107, 114, 128);
   const dateStr = new Date().toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
@@ -29,17 +30,17 @@ export function renderSpecifiersSnapshot(
 
   // 2. HERO IMAGE (Much Larger)
   const availableWidth = ctx.pageWidth - ctx.margin * 2;
-  const imgSize = 180;
+  const imgSize = Math.max(190, Math.min(230, Math.round(availableWidth * 0.44)));
   const imgX = (ctx.pageWidth - imgSize) / 2;
   const imgY = headerHeight + 15;
 
   if (moodboardImage) {
     try {
-      ctx.doc.addImage(moodboardImage, 'PNG', imgX, imgY, imgSize, imgSize);
+      ctx.doc.addImage(moodboardImage, imgX, imgY, imgSize, imgSize);
     } catch (error) {
       ctx.doc.setFillColor(243, 244, 246);
       ctx.doc.rect(imgX, imgY, imgSize, imgSize, 'F');
-      ctx.doc.setFontSize(10);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
       ctx.doc.setTextColor(156, 163, 175);
       ctx.doc.text('Moodboard Image', ctx.pageWidth / 2, imgY + imgSize / 2, { align: 'center' });
     }
@@ -57,7 +58,7 @@ export function renderSpecifiersSnapshot(
   ctx.cursorY = imgY + imgSize + 20;
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Material Palette Composition', ctx.margin, ctx.cursorY);
 
@@ -72,6 +73,10 @@ export function renderSpecifiersSnapshot(
   const swatchX = ctx.margin;
   const textX = swatchX + swatchSize + 10;
   const textWidth = availableWidth - (textX - ctx.margin) - 4;
+  const nameFontSize = PDF_TYPE_SCALE.body;
+  const nameLineHeight = lineHeightFor(nameFontSize, 'tight');
+  const detailFontSize = PDF_TYPE_SCALE.small;
+  const detailLineHeight = lineHeightFor(detailFontSize);
 
   materials.forEach((material) => {
     const nameY = ctx.cursorY;
@@ -89,7 +94,7 @@ export function renderSpecifiersSnapshot(
     ctx.doc.circle(swatchX + swatchRadius, centerY, swatchRadius, 'FD');
 
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(10);
+    ctx.doc.setFontSize(nameFontSize);
     ctx.doc.setTextColor(17, 24, 39);
     ctx.doc.text(material.name, textX, nameY);
 
@@ -109,14 +114,14 @@ export function renderSpecifiersSnapshot(
 
     if (subline) {
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(9);
+      ctx.doc.setFontSize(detailFontSize);
       ctx.doc.setTextColor(75, 85, 99);
       const lines = ctx.doc.splitTextToSize(subline, textWidth);
-      const sublineY = nameY + 10;
-      ctx.doc.text(lines, textX, sublineY);
-      ctx.cursorY = sublineY + lines.length * 10 + 6;
+      const sublineY = nameY + nameLineHeight;
+      ctx.doc.text(lines, textX, sublineY, { lineHeightFactor: 1.35 });
+      ctx.cursorY = sublineY + lines.length * detailLineHeight + 5;
     } else {
-      ctx.cursorY = nameY + 16;
+      ctx.cursorY = nameY + lineHeightFor(nameFontSize, 'loose');
     }
   });
 
@@ -137,7 +142,7 @@ export function renderSpecifiersSnapshot(
   // Text inside box
   const pad = 10;
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(21, 128, 61);
   ctx.doc.text('PALETTE INSIGHT:', ctx.margin + pad, ctx.cursorY + pad + 5);
 
@@ -150,8 +155,9 @@ export function renderSpecifiersSnapshot(
   insightText += 'See Page 2 for critical hotspots.';
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(55, 65, 81);
   const lines = ctx.doc.splitTextToSize(insightText, availableWidth - pad * 2);
-  ctx.doc.text(lines, ctx.margin + pad, ctx.cursorY + pad + 15);
+  const insightStartY = ctx.cursorY + pad + 15;
+  ctx.doc.text(lines, ctx.margin + pad, insightStartY, { lineHeightFactor: 1.35 });
 }

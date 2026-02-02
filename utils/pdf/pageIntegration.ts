@@ -1,6 +1,6 @@
 import type { MaterialOption } from '../../types';
 import type { MaterialMetrics, PDFContext, SystemLevelSummary } from '../../types/sustainability';
-import { addHeading } from './layout';
+import { addHeading, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 
 type PracticalityLevel = 'low' | 'medium' | 'high';
 
@@ -97,6 +97,8 @@ export function renderSystemSummaryPage(
 
   addHeading(ctx, 'Technical Integration & Feasibility', 16);
   ctx.cursorY += 5;
+  const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const smallLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
 
   const practicality = estimatePracticality(materials);
   const meterStartY = ctx.cursorY + 5;
@@ -114,7 +116,7 @@ export function renderSystemSummaryPage(
 
   const drawMeter = (label: string, level: PracticalityLevel, labelText: string, y: number) => {
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(100);
     ctx.doc.text(label, ctx.margin, y);
 
@@ -122,7 +124,7 @@ export function renderSystemSummaryPage(
     ctx.doc.rect(barX, y - 4, barWidth, 6, 'F');
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(60);
     ctx.doc.text(labelText, textX, y);
   };
@@ -139,13 +141,13 @@ export function renderSystemSummaryPage(
   const rightX = ctx.margin + colWidth + columnGap;
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(22, 163, 74);
   ctx.doc.text('INTEGRATION OPPORTUNITIES', leftX, ctx.cursorY);
   ctx.doc.setTextColor(220, 53, 69);
   ctx.doc.text('SYSTEM CONFLICTS', rightX, ctx.cursorY);
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 10;
+  ctx.cursorY += bodyLineHeight;
 
   let leftY = ctx.cursorY;
   let rightY = ctx.cursorY;
@@ -153,45 +155,45 @@ export function renderSystemSummaryPage(
 
   if (summary.synergies.length === 0) {
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(120);
     ctx.doc.text('No integration opportunities detected.', leftX, leftY);
     ctx.doc.setTextColor(0);
-    leftY += 10;
+    leftY += smallLineHeight;
   } else {
     summary.synergies.forEach((synergy) => {
       const lines = ctx.doc.splitTextToSize(synergy.description, colWidth - 12);
       ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(9);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
       ctx.doc.setTextColor(22, 163, 74);
       ctx.doc.text('+', leftX, leftY);
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(8);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
       ctx.doc.setTextColor(0);
-      ctx.doc.text(lines, leftX + 8, leftY);
-      leftY += lines.length * 10 + bulletGap;
+      ctx.doc.text(lines, leftX + 8, leftY, { lineHeightFactor: 1.35 });
+      leftY += lines.length * smallLineHeight + bulletGap;
     });
   }
 
   if (summary.conflicts.length === 0) {
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(120);
     ctx.doc.text('No system conflicts detected.', rightX, rightY);
     ctx.doc.setTextColor(0);
-    rightY += 10;
+    rightY += smallLineHeight;
   } else {
     summary.conflicts.forEach((conflict) => {
       const lines = ctx.doc.splitTextToSize(conflict.description, colWidth - 12);
       ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(9);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
       ctx.doc.setTextColor(220, 53, 69);
       ctx.doc.text('!', rightX, rightY);
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(8);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
       ctx.doc.setTextColor(0);
-      ctx.doc.text(lines, rightX + 8, rightY);
-      rightY += lines.length * 10 + bulletGap;
+      ctx.doc.text(lines, rightX + 8, rightY, { lineHeightFactor: 1.35 });
+      rightY += lines.length * smallLineHeight + bulletGap;
     });
   }
 
@@ -199,7 +201,8 @@ export function renderSystemSummaryPage(
 
   const qs = generateConsultantQuestions(materials);
   let qY = ctx.cursorY + 20;
-  const qHeight = Math.max(50, 24 + qs.length * 7 + 10);
+  const questionLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const qHeight = Math.max(58, 28 + qs.length * questionLineHeight + 10);
 
   if (qY + qHeight > ctx.pageHeight - ctx.margin) {
     ctx.doc.addPage();
@@ -211,13 +214,14 @@ export function renderSystemSummaryPage(
   ctx.doc.roundedRect(ctx.margin, qY, ctx.pageWidth - ctx.margin * 2, qHeight, 2, 2, 'F');
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(0);
-  ctx.doc.text('Questions for your Design Team (RIBA Stage 3)', ctx.margin + 10, qY + 12);
+  const questionTitleY = qY + 14;
+  ctx.doc.text('Questions for your Design Team (RIBA Stage 3)', ctx.margin + 10, questionTitleY);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   qs.forEach((q, i) => {
-    ctx.doc.text(`• ${q}`, ctx.margin + 10, qY + 24 + i * 7);
+    ctx.doc.text(`• ${q}`, ctx.margin + 10, questionTitleY + 12 + i * questionLineHeight);
   });
 }

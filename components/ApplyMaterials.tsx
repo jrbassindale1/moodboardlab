@@ -395,7 +395,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
     await runApplyRender({
       editPrompt:
-        'Re-render this exact image in higher resolution with more detail and texture fidelity while preserving composition, geometry, material assignments, and lighting.',
+        'Re-render this exact image in higher resolution with more detail and texture fidelity while preserving composition, geometry, material assignments, and lighting. If people are present, prioritize highly photorealistic humans: natural faces, accurate hands, realistic anatomy and proportions, believable skin texture, correct clothing folds, and natural poses.',
       baseImageDataUrl: appliedRenderUrl,
       imageSize: '4K',
       renderMode: 'upscale-4k'

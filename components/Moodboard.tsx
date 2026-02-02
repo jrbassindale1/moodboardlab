@@ -41,6 +41,7 @@ import {
   addDisclaimer,
   MaterialPaletteContext,
   prefetchMaterialIcons,
+  optimizeImageDataUriForPdf,
 } from '../utils/pdfSections';
 
 type BoardItem = MaterialOption;
@@ -1078,19 +1079,28 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const ctx = createPDFContext(doc);
     const insights = sustainabilityInsightsRef.current || [];
+    const insightsById = new Map<string, SustainabilityInsight>();
+    insights.forEach((insight) => {
+      if (insight?.id) insightsById.set(insight.id, insight);
+    });
     const metrics = new Map<string, MaterialMetrics>();
     board.forEach((material) => {
       const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
       if (profile) {
-        const insight = insights.find((i) => i.id === material.id);
-        const benefits = insight?.benefits || [];
+        const benefits = insightsById.get(material.id)?.benefits || [];
         metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
       }
     });
 
     // ========== PAGE 1: Specifier's Snapshot ==========
     onProgress?.('Building specifier snapshot...', 5);
-    renderSpecifiersSnapshot(ctx, moodboardRenderUrl, board, metrics);
+    const optimizedSnapshotImage = moodboardRenderUrl
+      ? await optimizeImageDataUriForPdf(moodboardRenderUrl, {
+          maxDimension: 720,
+          quality: 0.82,
+        })
+      : moodboardRenderUrl;
+    renderSpecifiersSnapshot(ctx, optimizedSnapshotImage, board, metrics);
 
     // Detect synergies and conflicts (pass metrics for fallback generation)
     const synergies = detectSynergies(board, metrics);
@@ -1193,11 +1203,27 @@ const Moodboard: React.FC<MoodboardProps> = ({
         rankMap.set(m.id, idx + 1);
       });
 
-      // Prefetch static icons for thumbnails (async)
+      onProgress?.('Preparing material thumbnails...', 60);
+
+      // Prefetch static icons for thumbnails (async + already resized for PDF)
       const materialIconUris = await prefetchMaterialIcons(board.map((m) => m.id));
 
       // Also check localStorage for AI-generated icons as fallback
       const storedIcons = loadMaterialIcons();
+      const fallbackThumbnailUris = new Map<string, string>();
+
+      await Promise.all(
+        board.map(async (material) => {
+          const sourceDataUri = material.customImage || storedIcons.get(material.id)?.dataUri;
+          if (!sourceDataUri) return;
+
+          const optimized = await optimizeImageDataUriForPdf(sourceDataUri, {
+            maxDimension: 96,
+            quality: 0.72,
+          });
+          fallbackThumbnailUris.set(material.id, optimized);
+        })
+      );
 
       // Start material detail pages (two cards per page).
       doc.addPage();
@@ -1205,21 +1231,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       board.forEach((material) => {
 
-        const insight = insights.find((i) => i.id === material.id);
+        const insight = insightsById.get(material.id);
         const metric = metrics.get(material.id);
         const profile = MATERIAL_LIFECYCLE_PROFILES[material.id] || null;
 
         // Get thumbnail - priority: custom image > static icon > stored icon
         let thumbnailDataUri: string | undefined;
         if (material.customImage) {
-          thumbnailDataUri = material.customImage;
+          thumbnailDataUri = fallbackThumbnailUris.get(material.id) || material.customImage;
         } else if (materialIconUris.has(material.id)) {
           thumbnailDataUri = materialIconUris.get(material.id);
         } else {
-          const icon = storedIcons.get(material.id);
-          if (icon?.dataUri) {
-            thumbnailDataUri = icon.dataUri;
-          }
+          thumbnailDataUri = fallbackThumbnailUris.get(material.id);
         }
 
         // Build palette context with thumbnail

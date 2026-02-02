@@ -11,7 +11,7 @@ import type {
 import type { jsPDF } from 'jspdf';
 import { STAGE_LABELS } from '../designConsequences';
 import { isLandscapeMaterial } from '../lifecycleDurations';
-import { TRAFFIC_LIGHT_COLORS, ensureSpace } from './layout';
+import { TRAFFIC_LIGHT_COLORS, ensureSpace, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 import { COMPLIANCE_BADGE_KEY, getComplianceStatus } from './pageCompliance';
 
 export function renderLifecycleFingerprint(
@@ -55,7 +55,7 @@ export function renderLifecycleFingerprint(
     const proxyLine = `Proxy lifecycle scores (very low confidence): RAW ${proxyProfile.raw.impact} | MFG ${proxyProfile.manufacturing.impact} | TRN ${proxyProfile.transport.impact} | INS ${proxyProfile.installation.impact} | USE ${proxyProfile.inUse.impact} | MNT ${proxyProfile.maintenance.impact} | EOL ${proxyProfile.endOfLife.impact}`;
     const cardWidth = ctx.pageWidth - ctx.margin * 2;
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     const scoreLines = ctx.doc.splitTextToSize(proxyLine, cardWidth - 16);
     const requestItems = [
       'Evidence key items: 1, 2, 3',
@@ -84,7 +84,7 @@ export function renderLifecycleFingerprint(
     ctx.doc.setFillColor(255, 240, 220);
     ctx.doc.roundedRect(ctx.margin + 6, y - 5, cardWidth - 12, 8, 2, 2, 'F');
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(160, 90, 0);
     ctx.doc.text('Profile missing: proxy scores used', ctx.margin + 10, y);
     ctx.doc.setTextColor(0);
@@ -92,13 +92,13 @@ export function renderLifecycleFingerprint(
 
     // Typical class
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(9);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
     ctx.doc.text(`Typical class: ${proxyClass}`, ctx.margin + 10, y);
     y += 10;
 
     // Proxy scores
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(90);
     scoreLines.forEach((line: string) => {
       ctx.doc.text(line, ctx.margin + 10, y);
@@ -107,13 +107,13 @@ export function renderLifecycleFingerprint(
 
     // What to request
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(80);
     ctx.doc.text('What to request:', ctx.margin + 10, y);
     y += 9;
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(80);
     requestItems.forEach((item) => {
       ctx.doc.text(`- ${item}`, ctx.margin + 14, y);
@@ -130,7 +130,7 @@ export function renderLifecycleFingerprint(
   // Material name (optional)
   if (materialName) {
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(10);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
     ctx.doc.text(materialName, ctx.margin, ctx.cursorY);
     ctx.cursorY += 14;
   } else {
@@ -159,7 +159,7 @@ export function renderLifecycleFingerprint(
 
     // Stage label
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(7);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(110);
     ctx.doc.text(label, xPos, ctx.cursorY);
     ctx.doc.setTextColor(0);
@@ -197,7 +197,7 @@ export function renderLifecycleFingerprint(
 
     // Confidence indicator
     if (stageData.confidence === 'low' || stageData.confidence === 'medium') {
-      ctx.doc.setFontSize(6);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
       ctx.doc.setTextColor(120);
       ctx.doc.text('?', xPos + 5 * (dotSize + dotGap) + 2, ctx.cursorY + 7);
       ctx.doc.setTextColor(0);
@@ -343,7 +343,7 @@ function renderLowConfidenceIndicator(ctx: PDFContext, metrics: MaterialMetrics)
 
   // Draw subtle advisory note
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(170, 120, 0);
   ctx.doc.text('Note: Indicative only (low data confidence).', ctx.margin, ctx.cursorY);
   ctx.cursorY += 12;
@@ -566,7 +566,7 @@ function renderComplianceBadges(
   ensureSpace(ctx, 20);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(80);
   ctx.doc.text('Compliance badges (see readiness key):', ctx.margin, ctx.cursorY);
   ctx.cursorY += 10;
@@ -598,7 +598,7 @@ function renderComplianceBadges(
     }
 
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(7);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.text(code, x, centerY + 2, { align: 'center' });
     ctx.doc.setTextColor(0);
   });
@@ -642,7 +642,7 @@ export function renderEnhancedMaterialSection(
   // Draw the page title once at the top slot.
   if (isTopSlot) {
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(14);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.pageTitle);
     ctx.doc.setTextColor(0);
     ctx.doc.text('Material Details', ctx.margin, startY + 10);
   }
@@ -674,22 +674,22 @@ export function renderEnhancedMaterialSection(
   // Header row
   const headerY = cardTop + 4;
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.setTextColor(0);
   const titleMaxWidth = col2X - col1X - 10;
   const titleText = fitSingleLineText(ctx.doc, material.name, titleMaxWidth);
   ctx.doc.text(titleText, col1X, headerY);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(7);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.caption);
   ctx.doc.setTextColor(100);
-  ctx.doc.text(`[${material.category}]`, col1X, headerY + 9);
+  ctx.doc.text(`[${material.category}]`, col1X, headerY + lineHeightFor(PDF_TYPE_SCALE.caption, 'loose'));
   ctx.doc.setTextColor(0);
 
   // Badges (top right)
   if (insight) {
-    const badgeSize = 3.5;
-    const badgeGap = 5;
+    const badgeSize = 4.2;
+    const badgeGap = 6;
     let badgeX = ctx.pageWidth - ctx.margin - 8;
     const isLandscape = material.category === 'landscape' || material.category === 'external-ground';
 
@@ -702,7 +702,7 @@ export function renderEnhancedMaterialSection(
       ctx.doc.circle(badgeX, headerY - 1, badgeSize, 'F');
 
       ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(6);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.micro);
       ctx.doc.setTextColor(status === 'amber' ? 0 : 255);
       ctx.doc.text(code, badgeX, headerY + 1, { align: 'center' });
       ctx.doc.setTextColor(0);
@@ -711,9 +711,10 @@ export function renderEnhancedMaterialSection(
     });
   }
 
-  // Left column: fixed thumbnail + mini lifecycle chart.
+  // Left column: thumbnail + mini lifecycle chart.
   let leftY = headerY + 14;
-  const imgSize = 30;
+  // Fixed thumbnail size requested for consistent print/output sizing.
+  const imgSize = 64;
   ctx.doc.setFillColor(240, 240, 240);
   ctx.doc.setDrawColor(220, 220, 220);
   ctx.doc.setLineWidth(0.5);
@@ -721,7 +722,7 @@ export function renderEnhancedMaterialSection(
 
   if (paletteContext?.thumbnailDataUri) {
     try {
-      ctx.doc.addImage(paletteContext.thumbnailDataUri, 'PNG', col1X, leftY, imgSize, imgSize);
+      ctx.doc.addImage(paletteContext.thumbnailDataUri, col1X, leftY, imgSize, imgSize);
     } catch (e) {
       console.warn('Failed to add material thumbnail to PDF:', e);
     }
@@ -738,14 +739,14 @@ export function renderEnhancedMaterialSection(
     }
   }
 
-  leftY += imgSize + 10;
+  leftY += imgSize + 8;
 
   if (profile) {
     const stageKeys: Array<keyof LifecycleProfile> = ['raw', 'manufacturing', 'transport', 'inUse', 'endOfLife'];
     const labels = ['RAW', 'MFG', 'TRN', 'USE', 'EOL'];
-    const barW = 4;
-    const barGap = 2;
-    const maxBarH = 15;
+    const barW = 8;
+    const barGap = 10;
+    const maxBarH = 18;
 
     stageKeys.forEach((key, i) => {
       const impact = profile[key].impact;
@@ -763,14 +764,14 @@ export function renderEnhancedMaterialSection(
       ctx.doc.rect(x, y, barW, barH, 'F');
 
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(5);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
       ctx.doc.setTextColor(90);
       ctx.doc.text(labels[i], x + barW / 2, leftY + maxBarH + 4, { align: 'center' });
       ctx.doc.setTextColor(0);
     });
   } else {
     ctx.doc.setFont('helvetica', 'italic');
-    ctx.doc.setFontSize(6);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(140);
     ctx.doc.text('No fingerprint data', col1X, leftY + 8);
     ctx.doc.setTextColor(0);
@@ -778,13 +779,15 @@ export function renderEnhancedMaterialSection(
 
   // Right column: summary + compact actions.
   let rightY = headerY + 12;
+  const summaryFontSize = PDF_TYPE_SCALE.body;
+  const summaryLineHeight = lineHeightFor(summaryFontSize);
   const summaryLine = `In this palette: ${buildMaterialSummaryLine(material, insight, metrics)}`;
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(summaryFontSize);
   ctx.doc.setTextColor(45);
   const summaryLines = ctx.doc.splitTextToSize(summaryLine, col2W).slice(0, 3);
-  ctx.doc.text(summaryLines, col2X, rightY);
-  rightY += summaryLines.length * 5 + 6;
+  ctx.doc.text(summaryLines, col2X, rightY, { lineHeightFactor: 1.35 });
+  rightY += summaryLines.length * summaryLineHeight + 7;
 
   const compliancePhrase = /(epd|en 15804|iso 14025|fsc|pefc|chain of custody|certification|certificate)/i;
   const actions = (insight?.designLevers || [])
@@ -796,27 +799,31 @@ export function renderEnhancedMaterialSection(
   }
 
   const footerY = cardBottom - 8;
-  const actionsBoxHeight = Math.min(28, Math.max(20, footerY - rightY - 8));
+  const actionTitleSize = PDF_TYPE_SCALE.small;
+  const actionTextSize = PDF_TYPE_SCALE.small;
+  const actionLineHeight = lineHeightFor(actionTextSize, 'tight');
+  const actionsBoxHeight = Math.min(60, Math.max(34, footerY - rightY - 8));
   ctx.doc.setFillColor(248, 248, 248);
   ctx.doc.setDrawColor(230, 230, 230);
   ctx.doc.roundedRect(col2X, rightY, col2W, actionsBoxHeight, 2, 2, 'FD');
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(actionTitleSize);
   ctx.doc.setTextColor(0);
-  ctx.doc.text('DESIGN ACTIONS:', col2X + 4, rightY + 6);
+  const actionsTitleY = rightY + 7;
+  ctx.doc.text('DESIGN ACTIONS:', col2X + 4, actionsTitleY);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(7);
+  ctx.doc.setFontSize(actionTextSize);
   ctx.doc.setTextColor(65);
-  let actionY = rightY + 11;
+  let actionY = actionsTitleY + 6;
   const maxActionTextWidth = col2W - 8;
   actions.forEach((action, index) => {
-    if (actionY > rightY + actionsBoxHeight - 3) return;
+    if (actionY > rightY + actionsBoxHeight - 4) return;
     const prefix = index === 0 ? '-' : '-';
     const actionLines = ctx.doc.splitTextToSize(`${prefix} ${action}`, maxActionTextWidth).slice(0, 2);
-    ctx.doc.text(actionLines, col2X + 4, actionY);
-    actionY += actionLines.length * 4 + 2;
+    ctx.doc.text(actionLines, col2X + 4, actionY, { lineHeightFactor: 1.3 });
+    actionY += actionLines.length * actionLineHeight + 2;
   });
   ctx.doc.setTextColor(0);
 
@@ -826,7 +833,7 @@ export function renderEnhancedMaterialSection(
   ctx.doc.line(col1X, footerY - 4, ctx.pageWidth - ctx.margin, footerY - 4);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(7);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(100);
 
   const rankText = paletteContext

@@ -1,7 +1,7 @@
 import type { MaterialOption } from '../../types';
 import type { PDFContext } from '../../types/sustainability';
 import { isLandscapeMaterial } from '../lifecycleDurations';
-import { ensureSpace } from './layout';
+import { ensureSpace, PDF_TYPE_SCALE } from './layout';
 
 type ElementGroupId = 'structure' | 'enclosure' | 'finishes' | 'landscape';
 
@@ -74,7 +74,7 @@ export function drawGroupHeader(
   ctx.doc.setFillColor(246, 247, 249);
   ctx.doc.rect(tableStartX, ctx.cursorY - 8, tableWidth, 10, 'F');
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(70);
   ctx.doc.text(label, tableStartX + 4, ctx.cursorY);
   ctx.doc.setTextColor(0);

@@ -1,7 +1,7 @@
 import type { MaterialOption } from '../../types';
 import type { EnhancedSustainabilityInsight, MaterialMetrics, PDFContext } from '../../types/sustainability';
 import { getCircularityIndicator } from '../sustainabilityScoring';
-import { addHeading, ensureSpace } from './layout';
+import { addHeading, ensureSpace, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 
 /**
  * Design recommendation for the Design Direction page
@@ -231,16 +231,18 @@ export function renderDesignDirectionPage(
 
   addHeading(ctx, 'Design Direction', 16);
   ctx.cursorY += 5;
+  const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const smallLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
 
   // Introductory text
   ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(80);
   const directionDisclaimer = 'Recommendations are proportional to early-stage impact drivers and should be revisited once quantities and specifications are known.';
   const disclaimerLines = ctx.doc.splitTextToSize(directionDisclaimer, ctx.pageWidth - ctx.margin * 2);
   disclaimerLines.forEach((line: string) => {
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   });
   ctx.cursorY += 6;
   ctx.doc.setTextColor(0);
@@ -250,10 +252,10 @@ export function renderDesignDirectionPage(
 
   if (recommendations.length === 0) {
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(10);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
     ctx.doc.setTextColor(100);
     ctx.doc.text('No specific design adjustments recommended for this palette.', ctx.margin, ctx.cursorY);
-    ctx.cursorY += 15;
+    ctx.cursorY += bodyLineHeight + 4;
     ctx.doc.text('Continue with evidence collection and specification refinement.', ctx.margin, ctx.cursorY);
     ctx.doc.setTextColor(0);
     return;
@@ -269,7 +271,18 @@ export function renderDesignDirectionPage(
 
   // Render recommendations
   recommendations.forEach((rec) => {
-    ensureSpace(ctx, 50);
+    const actionLines = ctx.doc.splitTextToSize(rec.action, ctx.pageWidth - ctx.margin * 2 - 20);
+    const rationaleLines = ctx.doc.splitTextToSize(rec.rationale, ctx.pageWidth - ctx.margin * 2 - 20);
+    const driverLines = ctx.doc.splitTextToSize(rec.driver, ctx.pageWidth - ctx.margin * 2 - 20);
+    const itemHeight =
+      12 + // category row
+      actionLines.length * lineHeightFor(PDF_TYPE_SCALE.body) +
+      4 +
+      rationaleLines.length * bodyLineHeight +
+      3 +
+      driverLines.length * smallLineHeight +
+      8;
+    ensureSpace(ctx, itemHeight);
 
     // Priority indicator
     const priorityColors: Record<string, [number, number, number]> = {
@@ -285,7 +298,7 @@ export function renderDesignDirectionPage(
 
     // Category tag
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(100);
     ctx.doc.text(categoryLabels[rec.category], ctx.margin + 18, ctx.cursorY + 2);
 
@@ -293,34 +306,40 @@ export function renderDesignDirectionPage(
 
     // Action text
     ctx.doc.setFont('helvetica', 'bold');
-    ctx.doc.setFontSize(10);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
     ctx.doc.setTextColor(0);
-    const actionLines = ctx.doc.splitTextToSize(rec.action, ctx.pageWidth - ctx.margin * 2 - 20);
     actionLines.forEach((line: string) => {
       ctx.doc.text(line, ctx.margin + 5, ctx.cursorY);
-      ctx.cursorY += 12;
+      ctx.cursorY += bodyLineHeight;
     });
+    ctx.cursorY += 3;
 
     // Rationale
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(9);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
     ctx.doc.setTextColor(80);
-    ctx.doc.text(rec.rationale, ctx.margin + 5, ctx.cursorY);
-    ctx.cursorY += 12;
+    rationaleLines.forEach((line: string) => {
+      ctx.doc.text(line, ctx.margin + 5, ctx.cursorY);
+      ctx.cursorY += bodyLineHeight;
+    });
+    ctx.cursorY += 2;
 
     // Driver
     ctx.doc.setFont('helvetica', 'italic');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(100);
-    ctx.doc.text(rec.driver, ctx.margin + 5, ctx.cursorY);
-    ctx.cursorY += 14;
+    driverLines.forEach((line: string) => {
+      ctx.doc.text(line, ctx.margin + 5, ctx.cursorY);
+      ctx.cursorY += smallLineHeight;
+    });
+    ctx.cursorY += 4;
 
     ctx.doc.setTextColor(0);
   });
 
   // Legend
   ctx.cursorY += 10;
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(80);
 
   const legendY = ctx.cursorY;

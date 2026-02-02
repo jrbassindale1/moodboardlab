@@ -2,7 +2,7 @@ import type { MaterialOption } from '../../types';
 import type { MaterialMetrics, PDFContext } from '../../types/sustainability';
 import { formatScore } from '../sustainabilityScoring';
 import { isLandscapeMaterial } from '../lifecycleDurations';
-import { addHeading, drawTrafficLight, ensureSpace } from './layout';
+import { addHeading, drawTrafficLight, ensureSpace, PDF_TYPE_SCALE, lineHeightFor } from './layout';
 import { drawGroupHeader, groupMaterialsByElement } from './groups';
 
 export function renderComparativeDashboard(
@@ -16,6 +16,7 @@ export function renderComparativeDashboard(
   // Header
   addHeading(ctx, 'Material Comparison Dashboard', 16);
   ctx.cursorY += 5;
+  const smallLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
 
   // --- RENDER CARBON DISTRIBUTION CHART ---
   const chartY = ctx.margin + 20;
@@ -32,7 +33,7 @@ export function renderComparativeDashboard(
     .slice(0, 5);
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(0);
   ctx.doc.text('Estimated Embodied Carbon Distribution (Top 5 Contributors)', ctx.margin, chartY - 5);
 
@@ -47,7 +48,7 @@ export function renderComparativeDashboard(
     const barW = maxBarWidth * percentage;
 
     ctx.doc.setFont('helvetica', 'normal');
-    ctx.doc.setFontSize(8);
+    ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
     ctx.doc.setTextColor(0);
     ctx.doc.text(mat.name, ctx.margin, currentY + 3);
 
@@ -58,7 +59,7 @@ export function renderComparativeDashboard(
     ctx.doc.text(`${(percentage * 100).toFixed(0)}%`, ctx.margin + 50 + barW + 5, currentY + 3);
     ctx.doc.setTextColor(0);
 
-    currentY += 10;
+    currentY += smallLineHeight;
   });
 
   ctx.cursorY = currentY + 20;
@@ -80,14 +81,14 @@ export function renderComparativeDashboard(
   const colRatingX = colReplX + colReplW;
 
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(60);
   ctx.doc.text('Material', colMaterialX + 2, ctx.cursorY);
   ctx.doc.text('Embodied (A1-A3)', colEmbodiedX + 2, ctx.cursorY);
   ctx.doc.text('Lifespan', colLifeX + 2, ctx.cursorY);
   ctx.doc.text('Replacements', colReplX + 2, ctx.cursorY);
   ctx.doc.text('Rating', colRatingX + 2, ctx.cursorY);
-  ctx.cursorY += 10;
+  ctx.cursorY += smallLineHeight;
 
   ctx.doc.setDrawColor(180);
   ctx.doc.setLineWidth(0.5);
@@ -105,7 +106,7 @@ export function renderComparativeDashboard(
       const nameLines = ctx.doc.splitTextToSize(material.name, colMaterialW - 4);
       const maxLines = nameLines.length;
       const rowPadding = 3;
-      const lineHeight = 9;
+      const lineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
       const rowHeight = maxLines * lineHeight + rowPadding * 2;
 
       ensureSpace(ctx, rowHeight + 2);
@@ -118,12 +119,12 @@ export function renderComparativeDashboard(
       const textY = ctx.cursorY + rowPadding + 5;
 
       ctx.doc.setFont('helvetica', 'bold');
-      ctx.doc.setFontSize(8);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
       ctx.doc.setTextColor(0);
       ctx.doc.text(nameLines, colMaterialX + 2, textY);
 
       ctx.doc.setFont('helvetica', 'normal');
-      ctx.doc.setFontSize(8);
+      ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
 
       const embodiedValue = formatScore(metric.embodied_proxy);
       ctx.doc.text(embodiedValue, colEmbodiedX + 2, textY);

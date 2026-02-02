@@ -1,6 +1,6 @@
 import type { MaterialOption } from '../../types';
 import type { EnhancedSustainabilityInsight, PDFContext, TrafficLight } from '../../types/sustainability';
-import { addHeading, ensureSpace } from './layout';
+import { addHeading, ensureSpace, lineHeightFor, PDF_TYPE_SCALE } from './layout';
 
 export type ComplianceKey = 'epd' | 'recycled' | 'fixings' | 'biodiversity' | 'certification';
 
@@ -134,13 +134,16 @@ export function renderComplianceReadinessSummary(
 ): void {
   ctx.doc.addPage();
   ctx.cursorY = ctx.margin;
+  const bodyLineHeight = lineHeightFor(PDF_TYPE_SCALE.body);
+  const smallLineHeight = lineHeightFor(PDF_TYPE_SCALE.small);
+  const subheadingLineHeight = lineHeightFor(PDF_TYPE_SCALE.subheading, 'tight');
 
   addHeading(ctx, 'Compliance Readiness Summary (UK)', 16);
   ctx.cursorY += 4;
 
   // Intro (concept-stage framing)
   ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(80);
   const introLines = ctx.doc.splitTextToSize(
     'Compliance readiness = whether standard supplier evidence (environmental product declarations, certificates, recycled-content declarations) is likely to be available at this stage. Concept-stage view: highlights real risk items, evidence priorities, and what can safely wait.',
@@ -148,7 +151,7 @@ export function renderComplianceReadinessSummary(
   );
   introLines.forEach((line: string) => {
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 11;
+    ctx.cursorY += bodyLineHeight;
   });
   ctx.cursorY += 2;
   ctx.doc.text(
@@ -157,7 +160,7 @@ export function renderComplianceReadinessSummary(
     ctx.cursorY
   );
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 12;
+  ctx.cursorY += bodyLineHeight;
 
   const stats = new Map<ComplianceKey, { red: number; amber: number; green: number; na: number }>();
   COMPLIANCE_BADGE_KEY.forEach(({ key }) => {
@@ -194,22 +197,22 @@ export function renderComplianceReadinessSummary(
 
   // 1) Real risks
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.text('1) Real risks', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 12;
+  ctx.cursorY += subheadingLineHeight;
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
 
   if (redMaterials.length === 0) {
     ctx.doc.setTextColor(100);
     ctx.doc.text('No red-flag compliance risks identified at concept stage.', ctx.margin, ctx.cursorY);
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   } else {
     redMaterials.slice(0, 4).forEach((item) => {
-      ensureSpace(ctx, 12);
+      ensureSpace(ctx, bodyLineHeight);
       ctx.doc.text(`- ${item.name} (codes ${item.codes.join(', ')})`, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 12;
+      ctx.cursorY += bodyLineHeight;
     });
   }
 
@@ -217,15 +220,15 @@ export function renderComplianceReadinessSummary(
 
   // 2) Evidence to prioritise next
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.text('2) Evidence to prioritise next', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 12;
+  ctx.cursorY += subheadingLineHeight;
   ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.setTextColor(100);
   ctx.doc.text('This is typical at concept stage and does not indicate non-compliance.', ctx.margin, ctx.cursorY);
   ctx.doc.setTextColor(0);
-  ctx.cursorY += 12;
+  ctx.cursorY += bodyLineHeight;
 
   const priority = COMPLIANCE_BADGE_KEY.map(({ key, code }) => {
     const bucket = stats.get(key);
@@ -236,16 +239,16 @@ export function renderComplianceReadinessSummary(
     .sort((a, b) => b.total - a.total);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   if (priority.length === 0) {
     ctx.doc.setTextColor(100);
     ctx.doc.text('No evidence gaps flagged across the palette.', ctx.margin, ctx.cursorY);
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   } else {
     priority.slice(0, 3).forEach((item) => {
       ctx.doc.text(`- Code ${item.code}: ${item.total} material${item.total > 1 ? 's' : ''} flagged`, ctx.margin, ctx.cursorY);
-      ctx.cursorY += 12;
+      ctx.cursorY += bodyLineHeight;
     });
   }
 
@@ -253,9 +256,9 @@ export function renderComplianceReadinessSummary(
 
   // 3) What can safely wait
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(11);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.subheading);
   ctx.doc.text('3) Can safely wait (concept stage)', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 12;
+  ctx.cursorY += subheadingLineHeight;
 
   const deferCodes = COMPLIANCE_BADGE_KEY.filter(({ key }) => {
     const bucket = stats.get(key);
@@ -264,22 +267,22 @@ export function renderComplianceReadinessSummary(
   }).map(({ code }) => code);
 
   ctx.doc.setFont('helvetica', 'normal');
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   if (deferCodes.length > 0) {
     ctx.doc.text(`- Codes ${deferCodes.join(', ')} show no current gaps across the palette`, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   } else {
     ctx.doc.setTextColor(100);
     ctx.doc.text('Defer supplier-specific certificates and test reports to detailed specification.', ctx.margin, ctx.cursorY);
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   }
 
   ctx.cursorY += 6;
 
   // Out of scope note
   ctx.doc.setFont('helvetica', 'italic');
-  ctx.doc.setFontSize(8);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.small);
   ctx.doc.setTextColor(100);
   const outScopeLines = ctx.doc.splitTextToSize(
     'Out of scope at concept stage: supplier test reports, product-level verification of claims, construction-phase method statements, commissioning evidence.',
@@ -287,26 +290,26 @@ export function renderComplianceReadinessSummary(
   );
   outScopeLines.forEach((line: string) => {
     ctx.doc.text(line, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 10;
+    ctx.cursorY += smallLineHeight;
   });
   ctx.doc.setTextColor(0);
   ctx.cursorY += 6;
 
   // Badge key (listed once)
   ctx.doc.setFont('helvetica', 'bold');
-  ctx.doc.setFontSize(10);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   ctx.doc.text('Badge key (used on material pages):', ctx.margin, ctx.cursorY);
-  ctx.cursorY += 12;
+  ctx.cursorY += bodyLineHeight;
 
-  ctx.doc.setFontSize(9);
+  ctx.doc.setFontSize(PDF_TYPE_SCALE.body);
   COMPLIANCE_BADGE_KEY.forEach(({ code, label, explanation }) => {
     ctx.doc.setFont('helvetica', 'normal');
     ctx.doc.text(`${code}. ${label}`, ctx.margin, ctx.cursorY);
-    ctx.cursorY += 10;
+    ctx.cursorY += bodyLineHeight;
     ctx.doc.setFont('helvetica', 'italic');
     ctx.doc.setTextColor(80);
     ctx.doc.text(`   ${explanation}`, ctx.margin, ctx.cursorY);
     ctx.doc.setTextColor(0);
-    ctx.cursorY += 12;
+    ctx.cursorY += bodyLineHeight;
   });
 }
