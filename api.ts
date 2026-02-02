@@ -4,23 +4,18 @@ type RequestOptions = {
   timeoutMs?: number;
 };
 
-function getIsProduction() {
-  return (
-    (typeof process !== 'undefined' && process.env?.USE_PRODUCTION_API === 'true') ||
-    (typeof import.meta !== 'undefined' && import.meta.env?.PROD)
-  );
-}
-
 function getApiBase() {
-  return getIsProduction()
-    ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net"
-    : "http://localhost:7071";
+  // Always use production API - local Azure Functions not typically available
+  // To use local backend, set VITE_USE_LOCAL_API=true in .env.local
+  const useLocalApi = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_LOCAL_API === 'true';
+  if (useLocalApi) {
+    return "http://localhost:7071";
+  }
+  return "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net";
 }
 
 function getSaveUrl() {
-  return getIsProduction()
-    ? "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net/api/save-generation"
-    : "http://localhost:7071/api/save-generation";
+  return `${getApiBase()}/api/save-generation`;
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
