@@ -1728,7 +1728,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const marginX = 34;
+    const marginX = 28;
     const topMargin = 28;
     const bottomMargin = 30;
     const contentW = pageW - marginX * 2;
@@ -1781,8 +1781,58 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.lines(segments, points[0].x, points[0].y, [1, 1], style, true);
     };
 
+    const drawPolyline = (points: Array<{ x: number; y: number }>) => {
+      if (points.length < 2) return;
+      const segments = points.slice(1).map((point, index) => [
+        point.x - points[index].x,
+        point.y - points[index].y,
+      ]);
+      doc.lines(segments, points[0].x, points[0].y, [1, 1], 'S', false);
+    };
+
+    const sampleSvgPath = (pathD: string, samples: number) => {
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', pathD);
+      const totalLength = path.getTotalLength();
+      if (!Number.isFinite(totalLength) || totalLength <= 0) return [];
+
+      const points: Array<{ x: number; y: number }> = [];
+      for (let index = 0; index <= samples; index += 1) {
+        const point = path.getPointAtLength((totalLength * index) / samples);
+        points.push({ x: point.x, y: point.y });
+      }
+      return points;
+    };
+
+    const drawLeafIcon = (centerX: number, centerY: number, size: number) => {
+      const leafOutlinePath =
+        'M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z';
+      const leafVeinPath = 'M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12';
+      const iconViewBox = 24;
+      const scale = size / iconViewBox;
+      const originX = centerX - (iconViewBox * scale) / 2;
+      const originY = centerY - (iconViewBox * scale) / 2;
+      const toDocPoint = (point: { x: number; y: number }) => ({
+        x: originX + point.x * scale,
+        y: originY + point.y * scale,
+      });
+      const outlinePoints = sampleSvgPath(leafOutlinePath, 52).map(toDocPoint);
+      const veinPoints = sampleSvgPath(leafVeinPath, 28).map(toDocPoint);
+
+      doc.setDrawColor(22, 163, 74);
+      doc.setLineCap('round');
+      doc.setLineJoin('round');
+      doc.setLineWidth(Math.max(1.1, size * 0.1));
+      drawPolygon(outlinePoints, 'S');
+      drawPolyline(veinPoints);
+      doc.setLineCap('butt');
+      doc.setLineJoin('miter');
+      doc.setLineWidth(0.5);
+    };
+
     const drawSmallSectionHeading = (label: string, color: RGB = [75, 85, 99]) => {
-      doc.setFont('courier', 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.25);
       doc.setTextColor(color[0], color[1], color[2]);
       doc.text(label.toUpperCase(), marginX, y);
@@ -1849,8 +1899,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       const radarPoints = stageScores.map((stage, index) => pointFor(index, stage.score));
       doc.setDrawColor(5, 150, 105);
-      doc.setFillColor(110, 231, 183);
-      drawPolygon(radarPoints, 'FD');
+      doc.setLineWidth(1.2);
+      drawPolygon(radarPoints, 'S');
+      doc.setLineWidth(0.5);
 
       doc.setFillColor(5, 150, 105);
       radarPoints.forEach((point) => {
@@ -1892,19 +1943,20 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // Header row (DOM: green gradient bar)
     ensureSpace(52 + sectionGap);
+    const headerHeight = 52;
+    const headerCenterY = y + headerHeight / 2;
     doc.setFillColor(240, 253, 244);
-    doc.roundedRect(marginX, y, contentW, 52, 8, 8, 'F');
+    doc.roundedRect(marginX, y, contentW, headerHeight, 8, 8, 'F');
     doc.setFillColor(236, 253, 245);
-    doc.roundedRect(marginX + contentW * 0.45, y, contentW * 0.55, 52, 8, 8, 'F');
+    doc.roundedRect(marginX + contentW * 0.45, y, contentW * 0.55, headerHeight, 8, 8, 'F');
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(marginX, y, contentW, 52, 8, 8, 'S');
-    doc.setFillColor(22, 163, 74);
-    doc.circle(marginX + 14, y + 18, 3.5, 'F');
-    doc.setFont('courier', 'bold');
-    doc.setFontSize(8.25);
+    doc.roundedRect(marginX, y, contentW, headerHeight, 8, 8, 'S');
+    drawLeafIcon(marginX + 20, headerCenterY, 13.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
     doc.setTextColor(55, 65, 81);
-    doc.text('SUSTAINABILITY BRIEFING', marginX + 24, y + 20);
-    y += 52 + sectionGap;
+    doc.text('SUSTAINABILITY BRIEFING', marginX + 34, headerCenterY + 3.8);
+    y += headerHeight + sectionGap;
 
     // Summary
     doc.setFont('helvetica', 'bold');
@@ -1913,18 +1965,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.text('Summary', marginX, y);
     y += 14;
 
-    const summaryPadding = 15;
+    const summaryPadding = 12;
     const summaryLines = splitLines(sustainabilityBriefing.summary, contentW - summaryPadding * 2);
-    const summaryLineHeight = 11;
+    const summaryLineHeight = 10.5;
     const summaryHeight = Math.max(56, summaryPadding + summaryLines.length * summaryLineHeight + 6);
     ensureSpace(summaryHeight + sectionGap);
     doc.setFillColor(240, 253, 244);
     doc.setDrawColor(209, 250, 229);
     doc.roundedRect(marginX, y, contentW, summaryHeight, 8, 8, 'FD');
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10.5);
+    doc.setFontSize(9);
     doc.setTextColor(55, 65, 81);
-    doc.text(summaryLines, marginX + summaryPadding, y + 17);
+    doc.text(summaryLines, marginX + summaryPadding, y + 16);
     y += summaryHeight + sectionGap;
 
     // Lifecycle section
@@ -1957,7 +2009,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const analysisX = marginX + lifecycleColW + lifecycleGap + 12;
     let analysisY = lifecycleY + 16;
 
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(234, 88, 12);
     doc.text('MAJOR CONTRIBUTORS', analysisX, analysisY);
@@ -1980,7 +2032,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       analysisY += 8;
     }
 
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(22, 163, 74);
     doc.text('STRONGEST STAGES', analysisX, analysisY);
@@ -1999,13 +2051,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
         ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
         : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
 
-    const insightLines = splitLines(insightText, lifecycleColW - 30);
+    const insightLines = splitLines(insightText, lifecycleColW - 24);
     const insightHeight = Math.max(44, 12 + insightLines.length * 8);
     const insightY = Math.max(analysisY + 4, lifecycleY + lifecycleCardHeight - insightHeight - 10);
 
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 24, insightHeight, 4, 4, 'FD');
+    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 16, insightHeight, 4, 4, 'FD');
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.25);
     doc.setTextColor(75, 85, 99);
@@ -2017,11 +2069,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const heroItems = sustainabilityBriefing.heroes || [];
     const challengeItems = sustainabilityBriefing.challenges || [];
 
-    const materialGridGap = 12;
+    const materialGridGap = 10;
     const materialColW = (contentW - materialGridGap) / 2;
 
     const materialCardHeight = (bodyText: string) => {
-      const lines = splitLines(bodyText, materialColW - 24);
+      const lines = splitLines(bodyText, materialColW - 18);
       return Math.max(58, 34 + lines.length * 9);
     };
 
@@ -2068,14 +2120,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       doc.setFillColor(headingColor[0], headingColor[1], headingColor[2]);
       doc.circle(x + 4, localY - 2, 3, 'F');
-      doc.setFont('courier', 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.25);
       doc.setTextColor(75, 85, 99);
       doc.text(heading.toUpperCase(), x + 12, localY);
       localY += 12;
 
       items.forEach((item, index) => {
-        const bodyLines = splitLines(item.body, materialColW - 24);
+        const bodyLines = splitLines(item.body, materialColW - 18);
         const cardH = Math.max(58, 34 + bodyLines.length * 9);
 
         doc.setFillColor(cardBg[0], cardBg[1], cardBg[2]);
@@ -2086,7 +2138,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
         doc.setTextColor(17, 24, 39);
-        const fittedName = fitSingleLine(item.name, materialColW - 120);
+        const fittedName = fitSingleLine(item.name, materialColW - 112);
         doc.text(fittedName, x + 10, localY + 15);
 
         const badgeW = doc.getTextWidth(badge.label) + 10;
@@ -2147,7 +2199,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       const synergyColW = (contentW - synergyGap) / 2;
 
       const synergyCardHeight = (explanation: string) => {
-        const lines = splitLines(explanation, synergyColW - 24);
+        const lines = splitLines(explanation, synergyColW - 18);
         return Math.max(52, 32 + lines.length * 9);
       };
 
@@ -2155,7 +2207,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         const mat1 = board.find((material) => material.id === synergy.pair[0]);
         const mat2 = board.find((material) => material.id === synergy.pair[1]);
         const pairLabel = `${mat1?.name || synergy.pair[0]} -> ${mat2?.name || synergy.pair[1]}`;
-        const detailLines = splitLines(synergy.explanation, synergyColW - 24);
+        const detailLines = splitLines(synergy.explanation, synergyColW - 18);
         const cardH = Math.max(52, 32 + detailLines.length * 9);
 
         doc.setFillColor(255, 251, 235);
@@ -2165,7 +2217,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
         doc.setTextColor(17, 24, 39);
-        doc.text(fitSingleLine(pairLabel, synergyColW - 24), x + 10, top + 15);
+        doc.text(fitSingleLine(pairLabel, synergyColW - 18), x + 10, top + 15);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
@@ -2222,7 +2274,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     })();
 
     const checklistItemHeight = (item: string) => {
-      const lines = splitLines(item, contentW - 52);
+      const lines = splitLines(item, contentW - 44);
       return Math.max(13, lines.length * 8.5 + 4);
     };
 
@@ -2240,7 +2292,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     let checklistY = y + 18;
     checklistItems.forEach((item, index) => {
-      const lines = splitLines(item, contentW - 52);
+      const lines = splitLines(item, contentW - 44);
       const itemHeight = Math.max(13, lines.length * 8.5 + 4);
 
       doc.setDrawColor(96, 165, 250);
@@ -2250,7 +2302,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
       doc.setTextColor(55, 65, 81);
-      doc.text(lines, marginX + 28, checklistY);
+      doc.text(lines, marginX + 26, checklistY);
 
       checklistY += itemHeight;
       if (index < checklistItems.length - 1) checklistY += 6;
