@@ -2136,19 +2136,46 @@ const Moodboard: React.FC<MoodboardProps> = ({
         ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
         : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
 
-    // Match wrapping metrics to final rendered text style to prevent overflow.
+    // Anchor the insight box directly below the last lifecycle row ("End of Life").
+    const insightY = analysisY + 8;
+    const insightBottom = lifecycleY + lifecycleCardHeight - 10;
+    const insightBoxWidth = lifecycleColW - 18;
+    const insightTextWidth = insightBoxWidth - 14;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    const insightLineHeight = 9;
-    const insightLines = splitLines(insightText, lifecycleColW - 36);
-    const insightHeight = Math.max(46, 14 + insightLines.length * insightLineHeight);
-    const insightY = Math.max(analysisY + 8, lifecycleY + lifecycleCardHeight - insightHeight - 14);
+
+    let insightFontSize = 8;
+    let insightLineHeight = 9;
+    let insightLines: string[] = [];
+    let insightHeight = 0;
+
+    const recalcInsightLayout = () => {
+      doc.setFontSize(insightFontSize);
+      insightLineHeight = insightFontSize + 1;
+      insightLines = splitLines(insightText, insightTextWidth);
+      insightHeight = Math.max(42, 12 + insightLines.length * insightLineHeight);
+    };
+
+    recalcInsightLayout();
+
+    while (insightY + insightHeight > insightBottom && insightFontSize > 7) {
+      insightFontSize -= 0.5;
+      recalcInsightLayout();
+    }
+
+    // Final guard: trim lines if the box would still overflow.
+    const maxLines = Math.max(2, Math.floor((insightBottom - insightY - 12) / insightLineHeight));
+    if (insightLines.length > maxLines) {
+      insightLines = insightLines.slice(0, maxLines);
+      const lastLine = insightLines[insightLines.length - 1] || '';
+      insightLines[insightLines.length - 1] = `${lastLine.replace(/\s+$/, '')}...`;
+      insightHeight = Math.max(42, 12 + insightLines.length * insightLineHeight);
+    }
 
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 18, insightHeight, 4, 4, 'FD');
+    doc.roundedRect(analysisX - 2, insightY, insightBoxWidth, insightHeight, 4, 4, 'FD');
     doc.setTextColor(75, 85, 99);
-    doc.text(insightLines, analysisX + 6, insightY + 10.5);
+    doc.text(insightLines, analysisX + 6, insightY + 10);
 
     y = lifecycleY + lifecycleCardHeight + sectionGap;
 
