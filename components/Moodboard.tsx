@@ -1709,15 +1709,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const generateBriefingPdf = () => {
     if (!sustainabilityBriefing || !briefingPayload) return null;
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const margin = 34;
-    const contentW = pageW - margin * 2;
-    const bottomY = pageH - margin - 10;
-    const sectionGap = 22;
-    let y = margin;
-
+    type RGB = [number, number, number];
     type StageKey =
       | 'raw'
       | 'manufacturing'
@@ -1726,27 +1718,33 @@ const Moodboard: React.FC<MoodboardProps> = ({
       | 'inUse'
       | 'maintenance'
       | 'endOfLife';
-
-    type StageMeta = {
+    type StageScore = {
       key: StageKey;
       label: string;
       chartLabel: string[];
+      score: number;
     };
 
-    const stageMeta: StageMeta[] = [
-      { key: 'raw', label: 'Raw Materials', chartLabel: ['Raw', 'Materials'] },
-      { key: 'manufacturing', label: 'Manufacturing', chartLabel: ['Manufacturing'] },
-      { key: 'transport', label: 'Transport', chartLabel: ['Transport'] },
-      { key: 'installation', label: 'Installation', chartLabel: ['Installation'] },
-      { key: 'inUse', label: 'In Use', chartLabel: ['In Use'] },
-      { key: 'maintenance', label: 'Maintenance', chartLabel: ['Maintenance'] },
-      { key: 'endOfLife', label: 'End of Life', chartLabel: ['End of', 'Life'] },
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const marginX = 34;
+    const topMargin = 28;
+    const bottomMargin = 30;
+    const contentW = pageW - marginX * 2;
+    const sectionGap = 24;
+    let y = topMargin;
+
+    const stageScores: StageScore[] = [
+      { key: 'raw', label: 'Raw Materials', chartLabel: ['Raw', 'Materials'], score: briefingPayload.averageScores.raw },
+      { key: 'manufacturing', label: 'Manufacturing', chartLabel: ['Manufacturing'], score: briefingPayload.averageScores.manufacturing },
+      { key: 'transport', label: 'Transport', chartLabel: ['Transport'], score: briefingPayload.averageScores.transport },
+      { key: 'installation', label: 'Installation', chartLabel: ['Installation'], score: briefingPayload.averageScores.installation },
+      { key: 'inUse', label: 'In Use', chartLabel: ['In Use'], score: briefingPayload.averageScores.inUse },
+      { key: 'maintenance', label: 'Maintenance', chartLabel: ['Maintenance'], score: briefingPayload.averageScores.maintenance },
+      { key: 'endOfLife', label: 'End of Life', chartLabel: ['End of', 'Life'], score: briefingPayload.averageScores.endOfLife },
     ];
 
-    const stageScores = stageMeta.map((stage) => ({
-      ...stage,
-      score: briefingPayload.averageScores[stage.key],
-    }));
     const contributors = [...stageScores].sort((a, b) => b.score - a.score).slice(0, 3);
     const opportunities = [...stageScores].sort((a, b) => a.score - b.score).slice(0, 3);
     const topStage = contributors[0]?.key;
@@ -1757,13 +1755,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
           .slice(0, 3)
       : [];
 
-    const ensureSpace = (requiredHeight: number) => {
-      if (y + requiredHeight <= bottomY) return;
-      doc.addPage();
-      y = margin;
-    };
-
-    const splitLines = (text: string, width: number) => doc.splitTextToSize(text || '', width) as string[];
+    const splitLines = (value: string, maxWidth: number) => doc.splitTextToSize(value || '', maxWidth) as string[];
 
     const fitSingleLine = (value: string, maxWidth: number) => {
       if (!value) return '';
@@ -1772,6 +1764,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
         fitted = `${fitted.slice(0, Math.max(0, fitted.length - 4))}...`;
       }
       return fitted;
+    };
+
+    const ensureSpace = (requiredHeight: number) => {
+      if (y + requiredHeight <= pageH - bottomMargin) return;
+      doc.addPage();
+      y = topMargin;
     };
 
     const drawPolygon = (points: Array<{ x: number; y: number }>, style: 'S' | 'F' | 'FD') => {
@@ -1783,10 +1781,40 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.lines(segments, points[0].x, points[0].y, [1, 1], style, true);
     };
 
-    const drawRadarChart = (x: number, chartY: number, width: number, height: number) => {
+    const drawSmallSectionHeading = (label: string, color: RGB = [75, 85, 99]) => {
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(8.25);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.text(label.toUpperCase(), marginX, y);
+      y += 12;
+    };
+
+    const intensityBadge = (intensity: 'low' | 'medium' | 'high') => {
+      if (intensity === 'low') {
+        return {
+          label: 'Low Carbon',
+          bg: [220, 252, 231] as RGB,
+          text: [22, 101, 52] as RGB,
+        };
+      }
+      if (intensity === 'high') {
+        return {
+          label: 'High Carbon',
+          bg: [255, 237, 213] as RGB,
+          text: [154, 52, 18] as RGB,
+        };
+      }
+      return {
+        label: 'Medium',
+        bg: [254, 249, 195] as RGB,
+        text: [133, 77, 14] as RGB,
+      };
+    };
+
+    const drawRadarChart = (x: number, top: number, width: number, height: number) => {
       const centerX = x + width / 2;
-      const centerY = chartY + height / 2 + 4;
-      const radius = Math.min(width, height) * 0.3;
+      const centerY = top + height / 2;
+      const radius = Math.min(width, height) * 0.34;
       const stageCount = stageScores.length;
 
       const pointFor = (stageIndex: number, valueOutOfFive: number) => {
@@ -1801,7 +1829,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       doc.setLineWidth(0.5);
       doc.setDrawColor(229, 231, 235);
-
       for (let level = 1; level <= 5; level += 1) {
         const ring = stageScores.map((_, index) => pointFor(index, level));
         drawPolygon(ring, 'S');
@@ -1816,431 +1843,446 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.setFontSize(7);
       doc.setTextColor(156, 163, 175);
       for (let level = 1; level <= 5; level += 1) {
-        const labelPoint = pointFor(0, level);
-        doc.text(String(level), centerX + 4, labelPoint.y + 2);
+        const levelPoint = pointFor(0, level);
+        doc.text(String(level), centerX + 4, levelPoint.y + 2);
       }
 
       const radarPoints = stageScores.map((stage, index) => pointFor(index, stage.score));
       doc.setDrawColor(5, 150, 105);
-      doc.setFillColor(167, 243, 208);
+      doc.setFillColor(110, 231, 183);
       drawPolygon(radarPoints, 'FD');
 
       doc.setFillColor(5, 150, 105);
       radarPoints.forEach((point) => {
-        doc.circle(point.x, point.y, 2, 'F');
+        doc.circle(point.x, point.y, 1.8, 'F');
       });
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(75, 85, 99);
       stageScores.forEach((stage, index) => {
-        const labelPoint = pointFor(index, 5.9);
+        const labelPoint = pointFor(index, 5.85);
         const cosVal = Math.cos(labelPoint.angle);
         const align: 'left' | 'center' | 'right' =
           cosVal > 0.35 ? 'left' : cosVal < -0.35 ? 'right' : 'center';
         stage.chartLabel.forEach((line, lineIndex) => {
-          doc.text(line, labelPoint.x, labelPoint.y + lineIndex * 8, { align });
+          doc.text(line, labelPoint.x, labelPoint.y + lineIndex * 7, { align });
         });
       });
     };
 
-    const drawScoreRow = (
-      rowX: number,
-      rowY: number,
-      label: string,
-      score: number,
-      color: [number, number, number]
-    ) => {
+    const drawScoreRow = (x: number, rowY: number, label: string, score: number, color: RGB) => {
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(8.5);
       doc.setTextColor(55, 65, 81);
-      doc.text(label, rowX, rowY);
-      const barX = rowX + 88;
-      const barW = 64;
-      const barH = 6;
+      doc.text(label, x, rowY);
+
+      const barX = x + 88;
+      const barW = 48;
+      const barH = 4.5;
       doc.setFillColor(229, 231, 235);
-      doc.roundedRect(barX, rowY - 5, barW, barH, 2, 2, 'F');
+      doc.roundedRect(barX, rowY - 3.4, barW, barH, 2, 2, 'F');
       doc.setFillColor(color[0], color[1], color[2]);
-      doc.roundedRect(barX, rowY - 5, Math.max(2, (score / 5) * barW), barH, 2, 2, 'F');
-      doc.setFontSize(7);
+      doc.roundedRect(barX, rowY - 3.4, Math.max(2, (score / 5) * barW), barH, 2, 2, 'F');
+
+      doc.setFontSize(7.5);
       doc.setTextColor(107, 114, 128);
       doc.text(score.toFixed(1), barX + barW + 6, rowY);
     };
 
-    const intensityBadge = (intensity: 'low' | 'medium' | 'high') => {
-      if (intensity === 'low') {
-        return {
-          label: 'Low Carbon',
-          bg: [220, 252, 231] as [number, number, number],
-          text: [22, 101, 52] as [number, number, number],
-        };
-      }
-      if (intensity === 'high') {
-        return {
-          label: 'High Carbon',
-          bg: [255, 237, 213] as [number, number, number],
-          text: [154, 52, 18] as [number, number, number],
-        };
-      }
-      return {
-        label: 'Medium',
-        bg: [254, 249, 195] as [number, number, number],
-        text: [133, 77, 14] as [number, number, number],
-      };
-    };
-
-    const drawSmallSectionHeading = (label: string, color: [number, number, number] = [75, 85, 99]) => {
-      doc.setFont('courier', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(color[0], color[1], color[2]);
-      doc.text(label.toUpperCase(), margin, y);
-      y += 12;
-    };
-
-    // Header row (mirrors DOM banner)
-    ensureSpace(56);
+    // Header row (DOM: green gradient bar)
+    ensureSpace(52 + sectionGap);
     doc.setFillColor(240, 253, 244);
+    doc.roundedRect(marginX, y, contentW, 52, 8, 8, 'F');
+    doc.setFillColor(236, 253, 245);
+    doc.roundedRect(marginX + contentW * 0.45, y, contentW * 0.55, 52, 8, 8, 'F');
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(margin, y, contentW, 52, 8, 8, 'FD');
+    doc.roundedRect(marginX, y, contentW, 52, 8, 8, 'S');
     doc.setFillColor(22, 163, 74);
-    doc.circle(margin + 14, y + 18, 3.5, 'F');
+    doc.circle(marginX + 14, y + 18, 3.5, 'F');
     doc.setFont('courier', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8.25);
     doc.setTextColor(55, 65, 81);
-    doc.text('SUSTAINABILITY BRIEFING', margin + 24, y + 20);
+    doc.text('SUSTAINABILITY BRIEFING', marginX + 24, y + 20);
     y += 52 + sectionGap;
 
     // Summary
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
+    doc.setFontSize(13.5);
     doc.setTextColor(17, 24, 39);
-    doc.text('Summary', margin, y);
+    doc.text('Summary', marginX, y);
     y += 14;
-    const summaryLines = splitLines(sustainabilityBriefing.summary, contentW - 24);
-    const summaryHeight = Math.max(56, 20 + summaryLines.length * 13);
+
+    const summaryPadding = 15;
+    const summaryLines = splitLines(sustainabilityBriefing.summary, contentW - summaryPadding * 2);
+    const summaryLineHeight = 11;
+    const summaryHeight = Math.max(56, summaryPadding + summaryLines.length * summaryLineHeight + 6);
     ensureSpace(summaryHeight + sectionGap);
     doc.setFillColor(240, 253, 244);
     doc.setDrawColor(209, 250, 229);
-    doc.roundedRect(margin, y, contentW, summaryHeight, 8, 8, 'FD');
+    doc.roundedRect(marginX, y, contentW, summaryHeight, 8, 8, 'FD');
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(10.5);
     doc.setTextColor(55, 65, 81);
-    doc.text(summaryLines, margin + 12, y + 18);
+    doc.text(summaryLines, marginX + summaryPadding, y + 17);
     y += summaryHeight + sectionGap;
 
-    // Lifecycle profile
+    // Lifecycle section
+    const lifecycleCardHeight = 244;
+    ensureSpace(12 + lifecycleCardHeight + sectionGap);
     drawSmallSectionHeading('Lifecycle Impact Profile');
-    const lifecycleSectionHeight = 238;
-    ensureSpace(lifecycleSectionHeight + sectionGap);
-    const colGap = 14;
-    const colW = (contentW - colGap) / 2;
-    const sectionBoxY = y;
-    const sectionBoxHeight = lifecycleSectionHeight;
+
+    const lifecycleGap = 12;
+    const lifecycleColW = (contentW - lifecycleGap) / 2;
+    const lifecycleY = y;
+
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(margin, sectionBoxY, colW, sectionBoxHeight, 8, 8, 'FD');
+    doc.roundedRect(marginX, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
+
     doc.setFillColor(249, 250, 251);
-    doc.roundedRect(margin + colW + colGap, sectionBoxY, colW, sectionBoxHeight, 8, 8, 'FD');
+    doc.roundedRect(marginX + lifecycleColW + lifecycleGap, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
 
-    drawRadarChart(margin + 12, sectionBoxY + 10, colW - 24, 180);
+    drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 166);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(107, 114, 128);
-    doc.text('Lower score = lower environmental impact (1 to 5 scale).', margin + 12, sectionBoxY + 216);
+    doc.text(
+      'Lower scores = lower environmental impact (1 = minimal, 5 = significant)',
+      marginX + lifecycleColW / 2,
+      lifecycleY + lifecycleCardHeight - 12,
+      { align: 'center' }
+    );
 
-    const analysisX = margin + colW + colGap + 12;
-    let analysisY = sectionBoxY + 18;
+    const analysisX = marginX + lifecycleColW + lifecycleGap + 12;
+    let analysisY = lifecycleY + 16;
+
     doc.setFont('courier', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(234, 88, 12);
     doc.text('MAJOR CONTRIBUTORS', analysisX, analysisY);
     analysisY += 12;
+
     contributors.forEach((stage) => {
-      drawScoreRow(analysisX, analysisY, stage.label, stage.score, [249, 115, 22]);
-      analysisY += 14;
+      const scoreColor: RGB = stage.score >= 3 ? [249, 115, 22] : stage.score >= 2 ? [234, 179, 8] : [34, 197, 94];
+      drawScoreRow(analysisX, analysisY, stage.label, stage.score, scoreColor);
+      analysisY += 13;
     });
 
     if (topDrivers.length > 0) {
-      const driversLines = splitLines(`Driven by: ${topDrivers.join(', ')}`, colW - 26);
+      const driverLines = splitLines(`Driven by: ${topDrivers.join(', ')}`, lifecycleColW - 28);
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
+      doc.setFontSize(7.5);
       doc.setTextColor(107, 114, 128);
-      doc.text(driversLines, analysisX, analysisY + 1);
-      analysisY += driversLines.length * 10 + 8;
+      doc.text(driverLines, analysisX, analysisY);
+      analysisY += driverLines.length * 8 + 7;
     } else {
       analysisY += 8;
     }
 
     doc.setFont('courier', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(7.5);
     doc.setTextColor(22, 163, 74);
     doc.text('STRONGEST STAGES', analysisX, analysisY);
     analysisY += 12;
+
     opportunities.forEach((stage) => {
       drawScoreRow(analysisX, analysisY, stage.label, stage.score, [34, 197, 94]);
-      analysisY += 14;
+      analysisY += 13;
     });
 
     const insightText =
-      contributors[0] && contributors[0].score >= 3
-        ? `The ${contributors[0].label.toLowerCase()} stage is the palette's largest hotspot at ${contributors[0].score.toFixed(1)}/5. Focus procurement actions here first.`
-        : 'No single lifecycle stage dominates. Keep balancing embodied reductions with practical specification controls.';
-    const insightLines = splitLines(insightText, colW - 26);
-    doc.setFillColor(249, 250, 251);
+      (contributors[0] && contributors[0].score >= 3
+        ? `The ${contributors[0].label.toLowerCase()} stage is the palette's largest carbon hotspot at ${contributors[0].score.toFixed(1)}/5. `
+        : 'No single stage dominates — the palette has a balanced impact profile. ') +
+      (opportunities[0] && opportunities[0].score <= 2
+        ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
+        : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
+
+    const insightLines = splitLines(insightText, lifecycleColW - 30);
+    const insightHeight = Math.max(44, 12 + insightLines.length * 8);
+    const insightY = Math.max(analysisY + 4, lifecycleY + lifecycleCardHeight - insightHeight - 10);
+
+    doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    const insightBoxY = Math.max(sectionBoxY + 166, analysisY + 4);
-    const insightBoxH = Math.max(42, 14 + insightLines.length * 10);
-    doc.roundedRect(analysisX - 2, insightBoxY, colW - 24, insightBoxH, 4, 4, 'FD');
+    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 24, insightHeight, 4, 4, 'FD');
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.25);
     doc.setTextColor(75, 85, 99);
-    doc.text(insightLines, analysisX + 6, insightBoxY + 12);
+    doc.text(insightLines, analysisX + 6, insightY + 11);
 
-    y = sectionBoxY + sectionBoxHeight + sectionGap;
+    y = lifecycleY + lifecycleCardHeight + sectionGap;
 
-    // Heroes + challenges two-column grid
-    const gridGap = 14;
-    const gridColW = (contentW - gridGap) / 2;
-    const heroItems = sustainabilityBriefing.heroes;
-    const challengeItems = sustainabilityBriefing.challenges;
+    // Hero + challenge columns
+    const heroItems = sustainabilityBriefing.heroes || [];
+    const challengeItems = sustainabilityBriefing.challenges || [];
 
-    const cardBodyWidth = gridColW - 24;
+    const materialGridGap = 12;
+    const materialColW = (contentW - materialGridGap) / 2;
+
     const materialCardHeight = (bodyText: string) => {
-      const lines = splitLines(bodyText, cardBodyWidth);
-      return Math.max(58, 34 + lines.length * 10);
+      const lines = splitLines(bodyText, materialColW - 24);
+      return Math.max(58, 34 + lines.length * 9);
     };
 
-    const drawMaterialCard = (
+    const materialColumnHeight = (items: Array<{ body: string }>) => {
+      if (items.length === 0) return 12;
+      let height = 12;
+      items.forEach((item, index) => {
+        height += materialCardHeight(item.body);
+        if (index < items.length - 1) height += 9;
+      });
+      return height;
+    };
+
+    const heroColumnData = heroItems.map((hero) => ({
+      name: hero.name,
+      intensity: hero.carbonIntensity,
+      body: hero.strategicValue,
+      label: 'Strategic Value',
+    }));
+
+    const challengeColumnData = challengeItems.map((challenge) => ({
+      name: challenge.name,
+      intensity: challenge.carbonIntensity,
+      body: challenge.mitigationTip,
+      label: 'Mitigation Tip',
+    }));
+
+    const heroColumnHeight = materialColumnHeight(heroColumnData);
+    const challengeColumnHeight = materialColumnHeight(challengeColumnData);
+    const materialSectionHeight = Math.max(heroColumnHeight, challengeColumnHeight);
+
+    ensureSpace(materialSectionHeight + sectionGap);
+
+    const drawMaterialColumn = (
       x: number,
-      cardY: number,
-      width: number,
-      title: string,
-      bodyText: string,
-      bodyLabel: string,
-      intensity: 'low' | 'medium' | 'high',
-      colors: {
-        bg: [number, number, number];
-        border: [number, number, number];
-        label: [number, number, number];
-      }
+      heading: string,
+      headingColor: RGB,
+      cardBg: RGB,
+      cardBorder: RGB,
+      labelColor: RGB,
+      items: Array<{ name: string; intensity: 'low' | 'medium' | 'high'; body: string; label: string }>
     ) => {
-      const lines = splitLines(bodyText, width - 24);
-      const cardHeight = Math.max(58, 34 + lines.length * 10);
-      doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
-      doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
-      doc.roundedRect(x, cardY, width, cardHeight, 8, 8, 'FD');
+      let localY = y;
 
-      const badge = intensityBadge(intensity);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(17, 24, 39);
-      const name = fitSingleLine(title, width - 120);
-      doc.text(name, x + 10, cardY + 15);
+      doc.setFillColor(headingColor[0], headingColor[1], headingColor[2]);
+      doc.circle(x + 4, localY - 2, 3, 'F');
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(8.25);
+      doc.setTextColor(75, 85, 99);
+      doc.text(heading.toUpperCase(), x + 12, localY);
+      localY += 12;
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
-      const badgeW = doc.getTextWidth(badge.label) + 10;
-      const badgeX = x + width - badgeW - 10;
-      doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
-      doc.roundedRect(badgeX, cardY + 6, badgeW, 11, 5.5, 5.5, 'F');
-      doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
-      doc.text(badge.label, badgeX + 5, cardY + 13.5);
+      items.forEach((item, index) => {
+        const bodyLines = splitLines(item.body, materialColW - 24);
+        const cardH = Math.max(58, 34 + bodyLines.length * 9);
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(colors.label[0], colors.label[1], colors.label[2]);
-      doc.text(`${bodyLabel}:`, x + 10, cardY + 29);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(55, 65, 81);
-      doc.text(lines, x + 10, cardY + 40);
+        doc.setFillColor(cardBg[0], cardBg[1], cardBg[2]);
+        doc.setDrawColor(cardBorder[0], cardBorder[1], cardBorder[2]);
+        doc.roundedRect(x, localY, materialColW, cardH, 8, 8, 'FD');
 
-      return cardHeight;
-    };
-
-    ensureSpace(26);
-    doc.setFillColor(22, 163, 74);
-    doc.circle(margin + 4, y - 2.5, 3, 'F');
-    doc.setFont('courier', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(75, 85, 99);
-    doc.text('HERO MATERIALS', margin + 12, y);
-    doc.setFillColor(249, 115, 22);
-    doc.circle(margin + gridColW + gridGap + 4, y - 2.5, 3, 'F');
-    doc.text('CHALLENGE MATERIALS', margin + gridColW + gridGap + 12, y);
-    y += 12;
-
-    const materialRowCount = Math.max(heroItems.length, challengeItems.length);
-    for (let index = 0; index < materialRowCount; index += 1) {
-      const hero = heroItems[index];
-      const challenge = challengeItems[index];
-
-      const heroH = hero
-        ? materialCardHeight(`Strategic Value: ${hero.strategicValue}`)
-        : 0;
-      const challengeH = challenge
-        ? materialCardHeight(`Mitigation Tip: ${challenge.mitigationTip}`)
-        : 0;
-      const rowH = Math.max(56, heroH, challengeH);
-      ensureSpace(rowH + 8);
-
-      if (hero) {
-        drawMaterialCard(
-          margin,
-          y,
-          gridColW,
-          hero.name,
-          hero.strategicValue,
-          'Strategic Value',
-          hero.carbonIntensity,
-          {
-            bg: [240, 253, 244],
-            border: [187, 247, 208],
-            label: [21, 128, 61],
-          }
-        );
-      }
-      if (challenge) {
-        drawMaterialCard(
-          margin + gridColW + gridGap,
-          y,
-          gridColW,
-          challenge.name,
-          challenge.mitigationTip,
-          'Mitigation Tip',
-          challenge.carbonIntensity,
-          {
-            bg: [255, 247, 237],
-            border: [254, 215, 170],
-            label: [194, 65, 12],
-          }
-        );
-      }
-
-      y += rowH + 8;
-    }
-    y += sectionGap - 8;
-
-    if (sustainabilityBriefing.synergies && sustainabilityBriefing.synergies.length > 0) {
-      drawSmallSectionHeading('Strategic Synergies');
-      const synergyColW = (contentW - 12) / 2;
-
-      const synergyCardHeight = (description: string) => {
-        const lines = splitLines(description, synergyColW - 24);
-        return Math.max(50, 30 + lines.length * 10);
-      };
-
-      const drawSynergyCard = (x: number, cardY: number, width: number, synergy: { pair: [string, string]; explanation: string }) => {
-        const mat1 = board.find((material) => material.id === synergy.pair[0]);
-        const mat2 = board.find((material) => material.id === synergy.pair[1]);
-        const pairTitle = `${mat1?.name || synergy.pair[0]} -> ${mat2?.name || synergy.pair[1]}`;
-        const titleLine = fitSingleLine(pairTitle, width - 24);
-        const detailLines = splitLines(synergy.explanation, width - 24);
-        const cardHeight = Math.max(50, 30 + detailLines.length * 10);
-
-        doc.setFillColor(255, 251, 235);
-        doc.setDrawColor(253, 230, 138);
-        doc.roundedRect(x, cardY, width, cardHeight, 8, 8, 'FD');
+        const badge = intensityBadge(item.intensity);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
+        doc.setFontSize(9);
         doc.setTextColor(17, 24, 39);
-        doc.text(titleLine, x + 10, cardY + 15);
+        const fittedName = fitSingleLine(item.name, materialColW - 120);
+        doc.text(fittedName, x + 10, localY + 15);
+
+        const badgeW = doc.getTextWidth(badge.label) + 10;
+        const badgeX = x + materialColW - badgeW - 10;
+        doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
+        doc.roundedRect(badgeX, localY + 6, badgeW, 11, 5.5, 5.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
+        doc.text(badge.label, badgeX + 5, localY + 13.5);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
+        doc.text(`${item.label}:`, x + 10, localY + 28);
+
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(55, 65, 81);
-        doc.text(detailLines, x + 10, cardY + 28);
-        return cardHeight;
+        doc.text(bodyLines, x + 10, localY + 39);
+
+        localY += cardH;
+        if (index < items.length - 1) localY += 9;
+      });
+
+      return localY - y;
+    };
+
+    const heroUsed = drawMaterialColumn(
+      marginX,
+      'Hero Materials',
+      [22, 163, 74],
+      [240, 253, 244],
+      [187, 247, 208],
+      [21, 128, 61],
+      heroColumnData
+    );
+
+    const challengeUsed = drawMaterialColumn(
+      marginX + materialColW + materialGridGap,
+      'Challenge Materials',
+      [249, 115, 22],
+      [255, 247, 237],
+      [254, 215, 170],
+      [194, 65, 12],
+      challengeColumnData
+    );
+
+    y += Math.max(heroUsed, challengeUsed) + sectionGap;
+
+    // Synergies
+    const synergies = sustainabilityBriefing.synergies || [];
+    if (synergies.length > 0) {
+      ensureSpace(12 + 52 + sectionGap);
+      drawSmallSectionHeading('Strategic Synergies');
+
+      const synergyGap = 9;
+      const synergyColW = (contentW - synergyGap) / 2;
+
+      const synergyCardHeight = (explanation: string) => {
+        const lines = splitLines(explanation, synergyColW - 24);
+        return Math.max(52, 32 + lines.length * 9);
       };
 
-      for (let index = 0; index < sustainabilityBriefing.synergies.length; index += 2) {
-        const left = sustainabilityBriefing.synergies[index];
-        const right = sustainabilityBriefing.synergies[index + 1];
+      const drawSynergyCard = (x: number, top: number, synergy: { pair: [string, string]; explanation: string }) => {
+        const mat1 = board.find((material) => material.id === synergy.pair[0]);
+        const mat2 = board.find((material) => material.id === synergy.pair[1]);
+        const pairLabel = `${mat1?.name || synergy.pair[0]} -> ${mat2?.name || synergy.pair[1]}`;
+        const detailLines = splitLines(synergy.explanation, synergyColW - 24);
+        const cardH = Math.max(52, 32 + detailLines.length * 9);
+
+        doc.setFillColor(255, 251, 235);
+        doc.setDrawColor(253, 230, 138);
+        doc.roundedRect(x, top, synergyColW, cardH, 8, 8, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text(fitSingleLine(pairLabel, synergyColW - 24), x + 10, top + 15);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(55, 65, 81);
+        doc.text(detailLines, x + 10, top + 28);
+
+        return cardH;
+      };
+
+      for (let index = 0; index < synergies.length; index += 2) {
+        const left = synergies[index];
+        const right = synergies[index + 1];
         const leftH = left ? synergyCardHeight(left.explanation) : 0;
         const rightH = right ? synergyCardHeight(right.explanation) : 0;
-        const rowH = Math.max(50, leftH, rightH);
+        const rowH = Math.max(52, leftH, rightH);
 
-        ensureSpace(rowH + 8);
-        if (left) {
-          drawSynergyCard(margin, y, synergyColW, left);
-        }
-        if (right) {
-          drawSynergyCard(margin + synergyColW + 12, y, synergyColW, right);
-        }
-        y += rowH + 8;
+        ensureSpace(rowH + synergyGap);
+        if (left) drawSynergyCard(marginX, y, left);
+        if (right) drawSynergyCard(marginX + synergyColW + synergyGap, y, right);
+        y += rowH + synergyGap;
       }
-      y += sectionGap - 8;
+
+      y += sectionGap - synergyGap;
     }
 
     // Specifier checklist
+    ensureSpace(12 + 88 + sectionGap);
     drawSmallSectionHeading('Specifier Checklist');
 
-    const materialTypes = new Set(board.map((material) => material.materialType).filter(Boolean));
-    const categories = new Set(board.map((material) => material.category));
-    const checklist: string[] = [];
-    if (materialTypes.has('metal') || board.some((material) => material.id.includes('steel'))) {
-      checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
-    }
-    if (materialTypes.has('timber') || board.some((material) => material.id.includes('timber') || material.id.includes('wood'))) {
-      checklist.push('Confirm FSC or PEFC certification for all timber products');
-    }
-    if (materialTypes.has('concrete') || board.some((material) => material.id.includes('concrete'))) {
-      checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
-    }
-    if (materialTypes.has('glass') || categories.has('window')) {
-      checklist.push('Verify glazing U-values meet or exceed building regs');
-    }
-    if (categories.has('insulation')) {
-      checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
-    }
-    checklist.push('Collect EPDs for all major material categories');
-    checklist.push('Calculate transport distances for main structure materials');
+    const checklistItems = (() => {
+      const checklist: string[] = [];
+      const materialTypes = new Set(board.map((material) => material.materialType).filter(Boolean));
+      const categories = new Set(board.map((material) => material.category));
 
-    const checklistItems = checklist.slice(0, 5);
-    const checklistLines = checklistItems.reduce((acc, item) => {
-      const lines = splitLines(item, contentW - 44);
-      return acc + Math.max(16, lines.length * 11 + 4);
+      if (materialTypes.has('metal') || board.some((material) => material.id.includes('steel'))) {
+        checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
+      }
+      if (materialTypes.has('timber') || board.some((material) => material.id.includes('timber') || material.id.includes('wood'))) {
+        checklist.push('Confirm FSC or PEFC certification for all timber products');
+      }
+      if (materialTypes.has('concrete') || board.some((material) => material.id.includes('concrete'))) {
+        checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
+      }
+      if (materialTypes.has('glass') || categories.has('window')) {
+        checklist.push('Verify glazing U-values meet or exceed building regs');
+      }
+      if (categories.has('insulation')) {
+        checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
+      }
+      checklist.push('Collect EPDs for all major material categories');
+      checklist.push('Calculate transport distances for main structure materials');
+
+      return checklist.slice(0, 5);
+    })();
+
+    const checklistItemHeight = (item: string) => {
+      const lines = splitLines(item, contentW - 52);
+      return Math.max(13, lines.length * 8.5 + 4);
+    };
+
+    const checklistTotalHeight = checklistItems.reduce((sum, item, index) => {
+      const spacing = index < checklistItems.length - 1 ? 6 : 0;
+      return sum + checklistItemHeight(item) + spacing;
     }, 0);
-    const checklistBoxHeight = Math.max(80, checklistLines + 12);
+
+    const checklistBoxHeight = Math.max(82, 14 + checklistTotalHeight + 10);
     ensureSpace(checklistBoxHeight + sectionGap);
+
     doc.setFillColor(239, 246, 255);
     doc.setDrawColor(191, 219, 254);
-    doc.roundedRect(margin, y, contentW, checklistBoxHeight, 8, 8, 'FD');
+    doc.roundedRect(marginX, y, contentW, checklistBoxHeight, 8, 8, 'FD');
 
-    let listY = y + 18;
-    checklistItems.forEach((item) => {
-      const itemLines = splitLines(item, contentW - 44);
+    let checklistY = y + 18;
+    checklistItems.forEach((item, index) => {
+      const lines = splitLines(item, contentW - 52);
+      const itemHeight = Math.max(13, lines.length * 8.5 + 4);
+
       doc.setDrawColor(96, 165, 250);
-      doc.rect(margin + 12, listY - 8, 9, 9);
+      doc.setLineWidth(1.4);
+      doc.roundedRect(marginX + 12, checklistY - 7, 10, 10, 2, 2, 'S');
+
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(55, 65, 81);
-      doc.text(itemLines, margin + 28, listY);
-      listY += Math.max(16, itemLines.length * 11 + 4);
+      doc.text(lines, marginX + 28, checklistY);
+
+      checklistY += itemHeight;
+      if (index < checklistItems.length - 1) checklistY += 6;
     });
+
     y += checklistBoxHeight + sectionGap;
 
-    // Footer (inside content flow like DOM)
-    ensureSpace(36);
+    // Footer
+    ensureSpace(34);
     doc.setDrawColor(229, 231, 235);
-    doc.line(margin, y, pageW - margin, y);
-    y += 13;
-    const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.line(marginX, y, pageW - marginX, y);
+    y += 12;
+
+    const dateLabel = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(107, 114, 128);
     doc.text(`Generated by MoodboardLab | ${dateLabel}`, pageW / 2, y, { align: 'center' });
-    y += 11;
-    const footerDisclaimer = splitLines(
+    y += 10;
+
+    const disclaimerLines = splitLines(
       'This briefing provides indicative guidance only. Verify all data with material-specific EPDs and certifications.',
-      contentW - 40
+      contentW - 44
     );
-    doc.setFontSize(7);
+    doc.setFontSize(6.75);
     doc.setTextColor(156, 163, 175);
-    doc.text(
-      footerDisclaimer,
-      pageW / 2,
-      y,
-      { align: 'center' }
-    );
+    doc.text(disclaimerLines, pageW / 2, y, { align: 'center' });
 
     return doc;
   };
