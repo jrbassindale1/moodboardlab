@@ -2142,13 +2142,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const insightLineHeight = 9;
     const insightLines = splitLines(insightText, lifecycleColW - 36);
     const insightHeight = Math.max(46, 14 + insightLines.length * insightLineHeight);
-    const insightY = Math.max(analysisY + 10, lifecycleY + lifecycleCardHeight - insightHeight - 10);
+    const insightY = Math.max(analysisY + 8, lifecycleY + lifecycleCardHeight - insightHeight - 14);
 
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
     doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 18, insightHeight, 4, 4, 'FD');
     doc.setTextColor(75, 85, 99);
-    doc.text(insightLines, analysisX + 6, insightY + 12);
+    doc.text(insightLines, analysisX + 6, insightY + 10.5);
 
     y = lifecycleY + lifecycleCardHeight + sectionGap;
 
