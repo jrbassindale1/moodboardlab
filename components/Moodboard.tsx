@@ -1728,9 +1728,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const marginX = 28;
-    const topMargin = 28;
-    const bottomMargin = 30;
+    const marginX = 20;
+    const topMargin = 20;
+    const bottomMargin = 20;
     const contentW = pageW - marginX * 2;
     const sectionGap = 24;
     let y = topMargin;
@@ -2062,10 +2062,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.setFontSize(9);
     doc.setTextColor(55, 65, 81);
     doc.text(summaryInlineLines, marginX + 12, y + 38);
-    y += headerHeight + sectionGap;
+    y += headerHeight + sectionGap - 5;
 
     // Lifecycle section
-    const lifecycleCardHeight = 208;
+    const lifecycleCardHeight = 198;
     ensureSpace(12 + lifecycleCardHeight + sectionGap);
     drawSmallSectionHeading('Lifecycle Impact Profile');
 
@@ -2080,7 +2080,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.setFillColor(249, 250, 251);
     doc.roundedRect(marginX + lifecycleColW + lifecycleGap, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
 
-    drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 150);
+    drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 140);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(107, 114, 128);
@@ -2136,16 +2136,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
         ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
         : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
 
+    // Match wrapping metrics to final rendered text style to prevent overflow.
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.25);
     const insightLineHeight = 9;
-    const insightLines = splitLines(insightText, lifecycleColW - 30);
+    const insightLines = splitLines(insightText, lifecycleColW - 36);
     const insightHeight = Math.max(46, 14 + insightLines.length * insightLineHeight);
     const insightY = Math.max(analysisY + 10, lifecycleY + lifecycleCardHeight - insightHeight - 10);
 
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 14, insightHeight, 4, 4, 'FD');
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.25);
+    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 18, insightHeight, 4, 4, 'FD');
     doc.setTextColor(75, 85, 99);
     doc.text(insightLines, analysisX + 6, insightY + 12);
 
