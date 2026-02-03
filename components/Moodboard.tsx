@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart, Leaf, Download, Lightbulb, CheckCircle2, AlertTriangle, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart, Leaf, Download, Lightbulb, CheckCircle2, AlertTriangle, ArrowRight, ChevronDown, ChevronUp, Instagram } from 'lucide-react';
 import {
   Radar,
   RadarChart,
@@ -2614,19 +2614,23 @@ const Moodboard: React.FC<MoodboardProps> = ({
     else opened.focus?.();
   };
 
+  const createImageBlobFromDataUrl = (dataUrl: string) => {
+    const [meta, content] = dataUrl.split(',');
+    if (!meta || !content) throw new Error('Invalid image data.');
+    const mimeMatch = meta.match(/data:(.*);base64/);
+    const mimeType = mimeMatch?.[1] || 'image/png';
+    const byteCharacters = atob(content);
+    const byteArrays = new Uint8Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i += 1) {
+      byteArrays[i] = byteCharacters.charCodeAt(i);
+    }
+    return new Blob([byteArrays], { type: mimeType });
+  };
+
   const handleSaveImage = (dataUrl: string, filename: string) => {
     if (!dataUrl) return;
     try {
-      const [meta, content] = dataUrl.split(',');
-      if (!meta || !content) throw new Error('Invalid image data.');
-      const mimeMatch = meta.match(/data:(.*);base64/);
-      const mimeType = mimeMatch?.[1] || 'image/png';
-      const byteCharacters = atob(content);
-      const byteArrays = new Uint8Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i += 1) {
-        byteArrays[i] = byteCharacters.charCodeAt(i);
-      }
-      const blob = new Blob([byteArrays], { type: mimeType });
+      const blob = createImageBlobFromDataUrl(dataUrl);
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = filename;
@@ -2637,6 +2641,35 @@ const Moodboard: React.FC<MoodboardProps> = ({
     } catch (err) {
       console.error('Save image failed, opening instead', err);
       handleOpenImage(dataUrl);
+    }
+  };
+
+  const handleInstagramShare = async (url: string) => {
+    if (!url) return;
+    setDownloadingId('instagram');
+    try {
+      const blob = url.startsWith('data:')
+        ? createImageBlobFromDataUrl(url)
+        : await fetch(url).then(response => response.blob());
+      const file = new File([blob], 'moodboard.png', { type: blob.type || 'image/png' });
+      if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+        await navigator.share({
+          files: [file],
+          title: 'Moodboard',
+          text: 'Created with Moodboard Lab'
+        });
+        return;
+      }
+      handleSaveImage(url, 'moodboard.png');
+      const opened = window.open('https://www.instagram.com/', '_blank');
+      if (!opened) {
+        setError('Image downloaded. Open Instagram to upload your moodboard.');
+      }
+    } catch (err) {
+      console.error('Instagram share failed', err);
+      setError('Could not prepare the image for Instagram sharing.');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -4593,6 +4626,23 @@ ${JSON.stringify(proseContext)}`;
                     )}
                   </button>
                   <button
+                    onClick={() => handleInstagramShare(moodboardRenderUrl)}
+                    disabled={downloadingId === 'instagram'}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                  >
+                    {downloadingId === 'instagram' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <Instagram className="w-4 h-4" />
+                        Share to Instagram
+                      </>
+                    )}
+                  </button>
+                  <button
                     onClick={() => onNavigate?.('apply')}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
                   >
@@ -4614,6 +4664,9 @@ ${JSON.stringify(proseContext)}`;
                     Save full report (PDF)
                   </button>
                 </div>
+                <p className="text-xs text-gray-500">
+                  Instagram only allows direct posting from mobile. On desktop this will download the image so you can upload it in Instagram.
+                </p>
                 <div className="border border-gray-200 p-4 bg-white space-y-2">
                   <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
                     Edit moodboard render (multi-turn)
