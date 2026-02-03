@@ -125,7 +125,7 @@ export async function saveColoredIcon(payload: {
 
 /**
  * Generate a sustainability briefing using Gemini API
- * Uses the 'text' mode with a specialized system instruction
+ * Uses the 'text' mode with the system instruction embedded in the prompt
  */
 export async function generateSustainabilityBriefing(payload: {
   systemInstruction: string;
@@ -133,7 +133,9 @@ export async function generateSustainabilityBriefing(payload: {
   averageScores: unknown;
   projectName?: string;
 }, options?: RequestOptions): Promise<unknown> {
-  const prompt = `Analyze these ${(payload.materials as unknown[]).length} materials for a sustainability briefing${payload.projectName ? ` for project "${payload.projectName}"` : ''}:
+  const prompt = `${payload.systemInstruction}
+
+Analyze these ${(payload.materials as unknown[]).length} materials for a sustainability briefing${payload.projectName ? ` for project "${payload.projectName}"` : ''}:
 
 Materials Data:
 ${JSON.stringify(payload.materials, null, 2)}
@@ -144,9 +146,16 @@ ${JSON.stringify(payload.averageScores, null, 2)}
 Respond with ONLY valid JSON matching the required structure.`;
 
   const geminiPayload = {
-    systemInstruction: payload.systemInstruction,
-    prompt,
-    responseType: 'json',
+    contents: [
+      {
+        parts: [{ text: prompt }]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.4,
+      topP: 0.95,
+      topK: 40,
+    },
   };
 
   return callGeminiText(geminiPayload, { timeoutMs: options?.timeoutMs ?? 60000 });

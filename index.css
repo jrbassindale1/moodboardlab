@@ -160,6 +160,17 @@ body {
     print-color-adjust: exact;
   }
 
+  .recharts-responsive-container {
+    width: 100% !important;
+    height: 220px !important;
+  }
+
+  .recharts-wrapper svg {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+  }
+
   .recharts-polar-grid-angle line,
   .recharts-polar-grid-concentric path {
     stroke: #e5e7eb !important;
@@ -171,6 +182,11 @@ body {
     fill: #10b981 !important;
     fill-opacity: 0.4 !important;
     stroke: #059669 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .recharts-text {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
