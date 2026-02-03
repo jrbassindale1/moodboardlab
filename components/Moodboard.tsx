@@ -1941,9 +1941,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.text(score.toFixed(1), barX + barW + 6, rowY);
     };
 
-    // Header row (DOM: green gradient bar)
-    ensureSpace(52 + sectionGap);
-    const headerHeight = 52;
+    // Header row + summary text in one compact green box
+    const summaryInlineWidth = contentW - 24;
+    const summaryInlineLines = splitLines(sustainabilityBriefing.summary, summaryInlineWidth);
+    const summaryInlineHeight = Math.max(36, summaryInlineLines.length * 9.5 + 8);
+    const headerHeight = 30 + summaryInlineHeight + 10;
+    ensureSpace(headerHeight + sectionGap);
     const headerCenterY = y + headerHeight / 2;
     doc.setFillColor(240, 253, 244);
     doc.roundedRect(marginX, y, contentW, headerHeight, 8, 8, 'F');
@@ -1955,32 +1958,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(55, 65, 81);
-    doc.text('SUSTAINABILITY BRIEFING', marginX + 34, headerCenterY + 3.8);
-    y += headerHeight + sectionGap;
-
-    // Summary
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13.5);
-    doc.setTextColor(17, 24, 39);
-    doc.text('Summary', marginX, y);
-    y += 14;
-
-    const summaryPadding = 12;
-    const summaryLines = splitLines(sustainabilityBriefing.summary, contentW - summaryPadding * 2);
-    const summaryLineHeight = 10.5;
-    const summaryHeight = Math.max(56, summaryPadding + summaryLines.length * summaryLineHeight + 6);
-    ensureSpace(summaryHeight + sectionGap);
-    doc.setFillColor(240, 253, 244);
-    doc.setDrawColor(209, 250, 229);
-    doc.roundedRect(marginX, y, contentW, summaryHeight, 8, 8, 'FD');
+    doc.text('SUSTAINABILITY BRIEFING', marginX + 34, y + 19.5);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(55, 65, 81);
-    doc.text(summaryLines, marginX + summaryPadding, y + 16);
-    y += summaryHeight + sectionGap;
+    doc.text(summaryInlineLines, marginX + 12, y + 38);
+    y += headerHeight + sectionGap;
 
     // Lifecycle section
-    const lifecycleCardHeight = 244;
+    const lifecycleCardHeight = 228;
     ensureSpace(12 + lifecycleCardHeight + sectionGap);
     drawSmallSectionHeading('Lifecycle Impact Profile');
 
@@ -2074,7 +2060,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     const materialCardHeight = (bodyText: string) => {
       const lines = splitLines(bodyText, materialColW - 18);
-      return Math.max(58, 34 + lines.length * 9);
+      return Math.max(64, 38 + lines.length * 9);
     };
 
     const materialColumnHeight = (items: Array<{ body: string }>) => {
@@ -2128,7 +2114,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       items.forEach((item, index) => {
         const bodyLines = splitLines(item.body, materialColW - 18);
-        const cardH = Math.max(58, 34 + bodyLines.length * 9);
+        const cardH = Math.max(64, 38 + bodyLines.length * 9);
 
         doc.setFillColor(cardBg[0], cardBg[1], cardBg[2]);
         doc.setDrawColor(cardBorder[0], cardBorder[1], cardBorder[2]);
@@ -2200,7 +2186,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       const synergyCardHeight = (explanation: string) => {
         const lines = splitLines(explanation, synergyColW - 18);
-        return Math.max(52, 32 + lines.length * 9);
+        return Math.max(58, 36 + lines.length * 9);
       };
 
       const drawSynergyCard = (x: number, top: number, synergy: { pair: [string, string]; explanation: string }) => {
@@ -2208,7 +2194,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         const mat2 = board.find((material) => material.id === synergy.pair[1]);
         const pairLabel = `${mat1?.name || synergy.pair[0]} -> ${mat2?.name || synergy.pair[1]}`;
         const detailLines = splitLines(synergy.explanation, synergyColW - 18);
-        const cardH = Math.max(52, 32 + detailLines.length * 9);
+        const cardH = Math.max(58, 36 + detailLines.length * 9);
 
         doc.setFillColor(255, 251, 235);
         doc.setDrawColor(253, 230, 138);
