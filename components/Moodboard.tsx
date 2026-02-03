@@ -2035,7 +2035,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // Header row + summary text in one compact green box
     const summaryInlineWidth = contentW - 24;
-    const summaryInlineLines = splitLines(sustainabilityBriefing.summary, summaryInlineWidth);
+    const summaryInlineText = (sustainabilityBriefing.summary || '')
+      .replace(/\s*\n+\s*/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    const summaryInlineLines = splitLines(summaryInlineText, summaryInlineWidth);
     const summaryInlineHeight = Math.max(36, summaryInlineLines.length * 9.5 + 8);
     const headerHeight = 30 + summaryInlineHeight + 10;
     ensureSpace(headerHeight + sectionGap);
