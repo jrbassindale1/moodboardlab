@@ -1831,11 +1831,103 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.setLineWidth(0.5);
     };
 
-    const drawSmallSectionHeading = (label: string, color: RGB = [75, 85, 99]) => {
+    const drawTriangleAlertIcon = (centerX: number, centerY: number, size: number, color: RGB = [249, 115, 22]) => {
+      const iconViewBox = 24;
+      const scale = size / iconViewBox;
+      const originX = centerX - (iconViewBox * scale) / 2;
+      const originY = centerY - (iconViewBox * scale) / 2;
+      const toDocPoint = (point: { x: number; y: number }) => ({
+        x: originX + point.x * scale,
+        y: originY + point.y * scale,
+      });
+
+      const trianglePath = 'm21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3';
+      const exclamationPath = 'M12 9v4';
+      const trianglePoints = sampleSvgPath(trianglePath, 46).map(toDocPoint);
+      const exclamationPoints = sampleSvgPath(exclamationPath, 12).map(toDocPoint);
+
+      doc.setDrawColor(color[0], color[1], color[2]);
+      doc.setLineCap('round');
+      doc.setLineJoin('round');
+      doc.setLineWidth(Math.max(0.95, size * 0.09));
+      drawPolygon(trianglePoints, 'S');
+      drawPolyline(exclamationPoints);
+      doc.circle(originX + 12 * scale, originY + 17 * scale, Math.max(0.45, size * 0.05), 'S');
+      doc.setLineCap('butt');
+      doc.setLineJoin('miter');
+      doc.setLineWidth(0.5);
+    };
+
+    const drawLightbulbIcon = (centerX: number, centerY: number, size: number, color: RGB = [245, 158, 11]) => {
+      const iconViewBox = 24;
+      const scale = size / iconViewBox;
+      const originX = centerX - (iconViewBox * scale) / 2;
+      const originY = centerY - (iconViewBox * scale) / 2;
+      const toDocPoint = (point: { x: number; y: number }) => ({
+        x: originX + point.x * scale,
+        y: originY + point.y * scale,
+      });
+
+      const bulbOutlinePath =
+        'M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5';
+      const baseTopPath = 'M9 18h6';
+      const baseBottomPath = 'M10 22h4';
+
+      const outlinePoints = sampleSvgPath(bulbOutlinePath, 28).map(toDocPoint);
+      const baseTopPoints = sampleSvgPath(baseTopPath, 8).map(toDocPoint);
+      const baseBottomPoints = sampleSvgPath(baseBottomPath, 8).map(toDocPoint);
+
+      doc.setDrawColor(color[0], color[1], color[2]);
+      doc.setLineCap('round');
+      doc.setLineJoin('round');
+      doc.setLineWidth(Math.max(0.95, size * 0.09));
+      drawPolyline(outlinePoints);
+      drawPolyline(baseTopPoints);
+      drawPolyline(baseBottomPoints);
+      doc.setLineCap('butt');
+      doc.setLineJoin('miter');
+      doc.setLineWidth(0.5);
+    };
+
+    const drawCheckCircleIcon = (centerX: number, centerY: number, size: number, color: RGB = [37, 99, 235]) => {
+      const iconViewBox = 24;
+      const scale = size / iconViewBox;
+      const originX = centerX - (iconViewBox * scale) / 2;
+      const originY = centerY - (iconViewBox * scale) / 2;
+      const toDocPoint = (point: { x: number; y: number }) => ({
+        x: originX + point.x * scale,
+        y: originY + point.y * scale,
+      });
+
+      const checkPath = 'm9 12 2 2 4-4';
+      const checkPoints = sampleSvgPath(checkPath, 12).map(toDocPoint);
+
+      doc.setDrawColor(color[0], color[1], color[2]);
+      doc.setLineCap('round');
+      doc.setLineJoin('round');
+      doc.setLineWidth(Math.max(0.95, size * 0.09));
+      doc.circle(centerX, centerY, (10 * scale), 'S');
+      drawPolyline(checkPoints);
+      doc.setLineCap('butt');
+      doc.setLineJoin('miter');
+      doc.setLineWidth(0.5);
+    };
+
+    const drawSmallSectionHeading = (
+      label: string,
+      color: RGB = [75, 85, 99],
+      iconDrawer?: (centerX: number, centerY: number, size: number, color?: RGB) => void,
+      iconColor?: RGB
+    ) => {
+      let textX = marginX;
+      if (iconDrawer) {
+        iconDrawer(marginX + 5, y - 2.6, 10, iconColor || color);
+        textX = marginX + 15;
+      }
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.25);
       doc.setTextColor(color[0], color[1], color[2]);
-      doc.text(label.toUpperCase(), marginX, y);
+      doc.text(label.toUpperCase(), textX, y);
       y += 12;
     };
 
@@ -2100,16 +2192,21 @@ const Moodboard: React.FC<MoodboardProps> = ({
       cardBg: RGB,
       cardBorder: RGB,
       labelColor: RGB,
+      headingIcon?: (centerX: number, centerY: number, size: number, color?: RGB) => void,
       items: Array<{ name: string; intensity: 'low' | 'medium' | 'high'; body: string; label: string }>
     ) => {
       let localY = y;
 
-      doc.setFillColor(headingColor[0], headingColor[1], headingColor[2]);
-      doc.circle(x + 4, localY - 2, 3, 'F');
+      if (headingIcon) {
+        headingIcon(x + 5, localY - 2.6, 10, headingColor);
+      } else {
+        doc.setFillColor(headingColor[0], headingColor[1], headingColor[2]);
+        doc.circle(x + 4, localY - 2, 3, 'F');
+      }
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.25);
       doc.setTextColor(75, 85, 99);
-      doc.text(heading.toUpperCase(), x + 12, localY);
+      doc.text(heading.toUpperCase(), x + 15, localY);
       localY += 12;
 
       items.forEach((item, index) => {
@@ -2160,6 +2257,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       [240, 253, 244],
       [187, 247, 208],
       [21, 128, 61],
+      drawLeafIcon,
       heroColumnData
     );
 
@@ -2170,6 +2268,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       [255, 247, 237],
       [254, 215, 170],
       [194, 65, 12],
+      drawTriangleAlertIcon,
       challengeColumnData
     );
 
@@ -2179,7 +2278,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const synergies = sustainabilityBriefing.synergies || [];
     if (synergies.length > 0) {
       ensureSpace(12 + 52 + sectionGap);
-      drawSmallSectionHeading('Strategic Synergies');
+      drawSmallSectionHeading('Strategic Synergies', [75, 85, 99], drawLightbulbIcon, [245, 158, 11]);
 
       const synergyGap = 9;
       const synergyColW = (contentW - synergyGap) / 2;
@@ -2231,7 +2330,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // Specifier checklist
     ensureSpace(12 + 88 + sectionGap);
-    drawSmallSectionHeading('Specifier Checklist');
+    drawSmallSectionHeading('Specifier Checklist', [75, 85, 99], drawCheckCircleIcon, [37, 99, 235]);
 
     const checklistItems = (() => {
       const checklist: string[] = [];
