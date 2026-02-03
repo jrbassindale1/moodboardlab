@@ -2064,22 +2064,60 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.text(summaryInlineLines, marginX + 12, y + 38);
     y += headerHeight + sectionGap - 5;
 
-    // Lifecycle section
-    const lifecycleCardHeight = 188;
-    ensureSpace(12 + lifecycleCardHeight + sectionGap);
-    drawSmallSectionHeading('Lifecycle Impact Profile');
-
+    // Lifecycle section — measure first, then draw once at the correct height.
     const lifecycleGap = 12;
     const lifecycleColW = (contentW - lifecycleGap) / 2;
+    const rightColX = marginX + lifecycleColW + lifecycleGap;
+    const analysisX = rightColX + 12;
+
+    // Pre-calculate analysis column height to determine card size.
+    let measuredH = 16; // top padding
+    measuredH += 12; // "MAJOR CONTRIBUTORS" heading
+    measuredH += contributors.length * 13; // contributor rows
+    if (topDrivers.length > 0) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      const driverLines = splitLines(`Driven by: ${topDrivers.join(', ')}`, lifecycleColW - 28);
+      measuredH += driverLines.length * 8 + 14;
+    } else {
+      measuredH += 8;
+    }
+    measuredH += 12; // "STRONGEST STAGES" heading
+    measuredH += opportunities.length * 13; // opportunity rows
+    measuredH += 8; // gap before insight box
+
+    const insightText =
+      (contributors[0] && contributors[0].score >= 3
+        ? `The ${contributors[0].label.toLowerCase()} stage is the palette's largest carbon hotspot at ${contributors[0].score.toFixed(1)}/5. `
+        : 'No single stage dominates — the palette has a balanced impact profile. ') +
+      (opportunities[0] && opportunities[0].score <= 2
+        ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
+        : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
+
+    const insightBoxPadding = 10;
+    const insightBoxWidth = lifecycleColW - insightBoxPadding * 2;
+    const insightTextWidth = insightBoxWidth - 14;
+    const insightFontSize = 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(insightFontSize);
+    const insightLineHeight = insightFontSize + 1;
+    const insightLines = splitLines(insightText, insightTextWidth);
+    const insightHeight = Math.max(36, 12 + insightLines.length * insightLineHeight);
+
+    const finalCardHeight = Math.max(188, measuredH + insightHeight + 10);
+
+    ensureSpace(12 + finalCardHeight + sectionGap);
+    drawSmallSectionHeading('Lifecycle Impact Profile');
     const lifecycleY = y;
 
+    // Draw column backgrounds.
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(marginX, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
-
+    doc.roundedRect(marginX, lifecycleY, lifecycleColW, finalCardHeight, 8, 8, 'FD');
     doc.setFillColor(249, 250, 251);
-    doc.roundedRect(marginX + lifecycleColW + lifecycleGap, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
+    doc.roundedRect(rightColX, lifecycleY, lifecycleColW, finalCardHeight, 8, 8, 'FD');
 
+    // Left column: radar chart.
     drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 140);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
@@ -2087,11 +2125,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.text(
       'Lower scores = lower environmental impact (1 = minimal, 5 = significant)',
       marginX + lifecycleColW / 2,
-      lifecycleY + lifecycleCardHeight - 10,
+      lifecycleY + finalCardHeight - 10,
       { align: 'center' }
     );
 
-    const analysisX = marginX + lifecycleColW + lifecycleGap + 12;
+    // Right column: analysis.
     let analysisY = lifecycleY + 16;
 
     doc.setFont('helvetica', 'bold');
@@ -2128,56 +2166,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
       analysisY += 13;
     });
 
-    const insightText =
-      (contributors[0] && contributors[0].score >= 3
-        ? `The ${contributors[0].label.toLowerCase()} stage is the palette's largest carbon hotspot at ${contributors[0].score.toFixed(1)}/5. `
-        : 'No single stage dominates — the palette has a balanced impact profile. ') +
-      (opportunities[0] && opportunities[0].score <= 2
-        ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
-        : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
-
-    // Anchor the insight box directly below the last lifecycle row ("End of Life").
+    // Insight box — anchored within the right column.
     const insightY = analysisY + 8;
-    const insightBottom = lifecycleY + lifecycleCardHeight - 10;
-    const insightBoxWidth = lifecycleColW - 18;
-    const insightTextWidth = insightBoxWidth - 14;
     doc.setFont('helvetica', 'normal');
-
-    let insightFontSize = 8;
-    let insightLineHeight = 9;
-    let insightLines: string[] = [];
-    let insightHeight = 0;
-
-    const recalcInsightLayout = () => {
-      doc.setFontSize(insightFontSize);
-      insightLineHeight = insightFontSize + 1;
-      insightLines = splitLines(insightText, insightTextWidth);
-      insightHeight = Math.max(42, 12 + insightLines.length * insightLineHeight);
-    };
-
-    recalcInsightLayout();
-
-    while (insightY + insightHeight > insightBottom && insightFontSize > 7) {
-      insightFontSize -= 0.5;
-      recalcInsightLayout();
-    }
-
-    // Final guard: trim lines if the box would still overflow.
-    const maxLines = Math.max(2, Math.floor((insightBottom - insightY - 12) / insightLineHeight));
-    if (insightLines.length > maxLines) {
-      insightLines = insightLines.slice(0, maxLines);
-      const lastLine = insightLines[insightLines.length - 1] || '';
-      insightLines[insightLines.length - 1] = `${lastLine.replace(/\s+$/, '')}...`;
-      insightHeight = Math.max(42, 12 + insightLines.length * insightLineHeight);
-    }
-
+    doc.setFontSize(insightFontSize);
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(analysisX - 2, insightY, insightBoxWidth, insightHeight, 4, 4, 'FD');
+    doc.roundedRect(rightColX + insightBoxPadding, insightY, insightBoxWidth, insightHeight, 4, 4, 'FD');
     doc.setTextColor(75, 85, 99);
-    doc.text(insightLines, analysisX + 6, insightY + 10);
+    doc.text(insightLines, rightColX + insightBoxPadding + 7, insightY + 10);
 
-    y = lifecycleY + lifecycleCardHeight + sectionGap;
+    y = lifecycleY + finalCardHeight + sectionGap;
 
     // Hero + challenge columns
     const heroItems = sustainabilityBriefing.heroes || [];
