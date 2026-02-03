@@ -1730,9 +1730,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const pageH = doc.internal.pageSize.getHeight();
     const marginX = 20;
     const topMargin = 20;
-    const bottomMargin = 20;
+    const bottomMargin = 10;
     const contentW = pageW - marginX * 2;
-    const sectionGap = 24;
+    const sectionGap = 20;
     let y = topMargin;
 
     const stageScores: StageScore[] = [
