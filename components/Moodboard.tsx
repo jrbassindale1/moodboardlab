@@ -2004,12 +2004,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.setFontSize(7);
       doc.setTextColor(75, 85, 99);
       stageScores.forEach((stage, index) => {
-        const labelPoint = pointFor(index, 5.85);
+        const labelPoint = pointFor(index, 6.15);
         const cosVal = Math.cos(labelPoint.angle);
         const align: 'left' | 'center' | 'right' =
           cosVal > 0.35 ? 'left' : cosVal < -0.35 ? 'right' : 'center';
+        const topOffset = index === 0 ? -5 : 0;
         stage.chartLabel.forEach((line, lineIndex) => {
-          doc.text(line, labelPoint.x, labelPoint.y + lineIndex * 7, { align });
+          doc.text(line, labelPoint.x, labelPoint.y + topOffset + lineIndex * 7, { align });
         });
       });
     };
@@ -2035,6 +2036,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
      
     // Header row + summary text in one compact green box
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
     const summaryInlineWidth = contentW - 24;
     const summaryInlineText = (sustainabilityBriefing.summary || '')
       .replace(/\s*\n+\s*/g, ' ')
@@ -2044,14 +2047,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const summaryInlineHeight = Math.max(36, summaryInlineLines.length * 9.5 + 8);
     const headerHeight = 30 + summaryInlineHeight + 10;
     ensureSpace(headerHeight + sectionGap);
-    const headerCenterY = y + headerHeight / 2;
     doc.setFillColor(240, 253, 244);
     doc.roundedRect(marginX, y, contentW, headerHeight, 8, 8, 'F');
     doc.setFillColor(236, 253, 245);
     doc.roundedRect(marginX + contentW * 0.45, y, contentW * 0.55, headerHeight, 8, 8, 'F');
     doc.setDrawColor(229, 231, 235);
     doc.roundedRect(marginX, y, contentW, headerHeight, 8, 8, 'S');
-    drawLeafIcon(marginX + 20, headerCenterY, 13.5);
+    drawLeafIcon(marginX + 18, y + 16.2, 10.5);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(55, 65, 81);
@@ -2063,7 +2065,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     y += headerHeight + sectionGap;
 
     // Lifecycle section
-    const lifecycleCardHeight = 228;
+    const lifecycleCardHeight = 208;
     ensureSpace(12 + lifecycleCardHeight + sectionGap);
     drawSmallSectionHeading('Lifecycle Impact Profile');
 
@@ -2078,14 +2080,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
     doc.setFillColor(249, 250, 251);
     doc.roundedRect(marginX + lifecycleColW + lifecycleGap, lifecycleY, lifecycleColW, lifecycleCardHeight, 8, 8, 'FD');
 
-    drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 166);
+    drawRadarChart(marginX + 12, lifecycleY + 16, lifecycleColW - 24, 150);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     doc.setTextColor(107, 114, 128);
     doc.text(
       'Lower scores = lower environmental impact (1 = minimal, 5 = significant)',
       marginX + lifecycleColW / 2,
-      lifecycleY + lifecycleCardHeight - 12,
+      lifecycleY + lifecycleCardHeight - 10,
       { align: 'center' }
     );
 
@@ -2110,7 +2112,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.setFontSize(7.5);
       doc.setTextColor(107, 114, 128);
       doc.text(driverLines, analysisX, analysisY);
-      analysisY += driverLines.length * 8 + 7;
+      analysisY += driverLines.length * 8 + 14;
     } else {
       analysisY += 8;
     }
@@ -2134,17 +2136,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
         ? `${opportunities[0].label} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
         : 'Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.');
 
-    const insightLines = splitLines(insightText, lifecycleColW - 24);
-    const insightHeight = Math.max(44, 12 + insightLines.length * 8);
-    const insightY = Math.max(analysisY + 4, lifecycleY + lifecycleCardHeight - insightHeight - 10);
+    const insightLineHeight = 9;
+    const insightLines = splitLines(insightText, lifecycleColW - 30);
+    const insightHeight = Math.max(46, 14 + insightLines.length * insightLineHeight);
+    const insightY = Math.max(analysisY + 10, lifecycleY + lifecycleCardHeight - insightHeight - 10);
 
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(229, 231, 235);
-    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 16, insightHeight, 4, 4, 'FD');
+    doc.roundedRect(analysisX - 2, insightY, lifecycleColW - 14, insightHeight, 4, 4, 'FD');
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.25);
     doc.setTextColor(75, 85, 99);
-    doc.text(insightLines, analysisX + 6, insightY + 11);
+    doc.text(insightLines, analysisX + 6, insightY + 12);
 
     y = lifecycleY + lifecycleCardHeight + sectionGap;
 
