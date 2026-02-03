@@ -1925,7 +1925,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         textX = marginX + 15;
       }
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.25);
+      doc.setFontSize(8);
       doc.setTextColor(color[0], color[1], color[2]);
       doc.text(label.toUpperCase(), textX, y);
       y += 12;
@@ -2017,7 +2017,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     const drawScoreRow = (x: number, rowY: number, label: string, score: number, color: RGB) => {
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setTextColor(55, 65, 81);
       doc.text(label, x, rowY);
 
@@ -2138,7 +2138,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     // Match wrapping metrics to final rendered text style to prevent overflow.
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.25);
+    doc.setFontSize(8);
     const insightLineHeight = 9;
     const insightLines = splitLines(insightText, lifecycleColW - 36);
     const insightHeight = Math.max(46, 14 + insightLines.length * insightLineHeight);
@@ -2248,7 +2248,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.text(`${item.label}:`, x + 10, localY + 28);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         doc.setTextColor(55, 65, 81);
         doc.text(bodyLines, x + 10, localY + 39);
 
@@ -2309,12 +2309,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
         doc.roundedRect(x, top, synergyColW, cardH, 8, 8, 'FD');
 
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         doc.setTextColor(17, 24, 39);
         doc.text(fitSingleLine(pairLabel, synergyColW - 18), x + 10, top + 15);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
+        doc.setFontSize(8);
         doc.setTextColor(55, 65, 81);
         doc.text(detailLines, x + 10, top + 28);
 
@@ -2369,7 +2369,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     const checklistItemHeight = (item: string) => {
       const lines = splitLines(item, contentW - 44);
-      return Math.max(13, lines.length * 8.5 + 4);
+      return Math.max(13, lines.length * 8 + 4);
     };
 
     const checklistTotalHeight = checklistItems.reduce((sum, item, index) => {
@@ -2387,14 +2387,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
     let checklistY = y + 18;
     checklistItems.forEach((item, index) => {
       const lines = splitLines(item, contentW - 44);
-      const itemHeight = Math.max(13, lines.length * 8.5 + 4);
+      const itemHeight = Math.max(13, lines.length * 8 + 4);
 
       doc.setDrawColor(96, 165, 250);
       doc.setLineWidth(1.4);
       doc.roundedRect(marginX + 12, checklistY - 7, 10, 10, 2, 2, 'S');
 
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setTextColor(55, 65, 81);
       doc.text(lines, marginX + 26, checklistY);
 
