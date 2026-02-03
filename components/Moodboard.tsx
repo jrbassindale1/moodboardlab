@@ -2033,6 +2033,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       doc.text(score.toFixed(1), barX + barW + 6, rowY);
     };
 
+     
     // Header row + summary text in one compact green box
     const summaryInlineWidth = contentW - 24;
     const summaryInlineText = (sustainabilityBriefing.summary || '')
