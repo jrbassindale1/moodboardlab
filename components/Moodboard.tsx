@@ -2065,7 +2065,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     y += headerHeight + sectionGap - 5;
 
     // Lifecycle section
-    const lifecycleCardHeight = 198;
+    const lifecycleCardHeight = 188;
     ensureSpace(12 + lifecycleCardHeight + sectionGap);
     drawSmallSectionHeading('Lifecycle Impact Profile');
 
