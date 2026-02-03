@@ -1706,103 +1706,550 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
-  const generateBriefingPdf = async () => {
+  const generateBriefingPdf = () => {
     if (!sustainabilityBriefing || !briefingPayload) return null;
-    const reportElement = document.getElementById('sustainability-report');
-    if (!reportElement) {
-      throw new Error('Sustainability briefing element not found.');
-    }
-
-    const { default: html2canvas } = await import('html2canvas');
-
-    if ('fonts' in document) {
-      try {
-        await (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
-      } catch {
-        // Continue even if the browser font API fails.
-      }
-    }
-
-    // Let chart and layout calculations settle before capture.
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-    });
-
-    const captureCanvas = await html2canvas(reportElement, {
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      scale: Math.min(2, window.devicePixelRatio || 1.5),
-      scrollX: 0,
-      scrollY: -window.scrollY,
-      onclone: (clonedDocument) => {
-        const clonedReport = clonedDocument.getElementById('sustainability-report') as HTMLElement | null;
-        if (clonedReport) {
-          clonedReport.style.boxShadow = 'none';
-        }
-      },
-    });
 
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 24;
-    const renderWidth = pageWidth - margin * 2;
-    const renderHeight = pageHeight - margin * 2;
-    const pxPerPt = captureCanvas.width / renderWidth;
-    const pageSliceHeightPx = Math.max(1, Math.floor(renderHeight * pxPerPt));
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 34;
+    const contentW = pageW - margin * 2;
+    const bottomY = pageH - margin - 10;
+    const sectionGap = 22;
+    let y = margin;
 
-    let offsetY = 0;
-    let pageIndex = 0;
+    type StageKey =
+      | 'raw'
+      | 'manufacturing'
+      | 'transport'
+      | 'installation'
+      | 'inUse'
+      | 'maintenance'
+      | 'endOfLife';
 
-    while (offsetY < captureCanvas.height) {
-      const sliceHeightPx = Math.min(pageSliceHeightPx, captureCanvas.height - offsetY);
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = captureCanvas.width;
-      pageCanvas.height = sliceHeightPx;
-      const pageCtx = pageCanvas.getContext('2d');
-      if (!pageCtx) {
-        throw new Error('Canvas not supported in this browser.');
+    type StageMeta = {
+      key: StageKey;
+      label: string;
+      chartLabel: string[];
+    };
+
+    const stageMeta: StageMeta[] = [
+      { key: 'raw', label: 'Raw Materials', chartLabel: ['Raw', 'Materials'] },
+      { key: 'manufacturing', label: 'Manufacturing', chartLabel: ['Manufacturing'] },
+      { key: 'transport', label: 'Transport', chartLabel: ['Transport'] },
+      { key: 'installation', label: 'Installation', chartLabel: ['Installation'] },
+      { key: 'inUse', label: 'In Use', chartLabel: ['In Use'] },
+      { key: 'maintenance', label: 'Maintenance', chartLabel: ['Maintenance'] },
+      { key: 'endOfLife', label: 'End of Life', chartLabel: ['End of', 'Life'] },
+    ];
+
+    const stageScores = stageMeta.map((stage) => ({
+      ...stage,
+      score: briefingPayload.averageScores[stage.key],
+    }));
+    const contributors = [...stageScores].sort((a, b) => b.score - a.score).slice(0, 3);
+    const opportunities = [...stageScores].sort((a, b) => a.score - b.score).slice(0, 3);
+    const topStage = contributors[0]?.key;
+    const topDrivers = topStage
+      ? briefingPayload.materials
+          .filter((material) => (material.lifecycleScores[topStage] ?? 0) >= 4)
+          .map((material) => material.name)
+          .slice(0, 3)
+      : [];
+
+    const ensureSpace = (requiredHeight: number) => {
+      if (y + requiredHeight <= bottomY) return;
+      doc.addPage();
+      y = margin;
+    };
+
+    const splitLines = (text: string, width: number) => doc.splitTextToSize(text || '', width) as string[];
+
+    const fitSingleLine = (value: string, maxWidth: number) => {
+      if (!value) return '';
+      let fitted = value;
+      while (fitted.length > 3 && doc.getTextWidth(fitted) > maxWidth) {
+        fitted = `${fitted.slice(0, Math.max(0, fitted.length - 4))}...`;
+      }
+      return fitted;
+    };
+
+    const drawPolygon = (points: Array<{ x: number; y: number }>, style: 'S' | 'F' | 'FD') => {
+      if (points.length < 2) return;
+      const segments = points.slice(1).map((point, index) => [
+        point.x - points[index].x,
+        point.y - points[index].y,
+      ]);
+      doc.lines(segments, points[0].x, points[0].y, [1, 1], style, true);
+    };
+
+    const drawRadarChart = (x: number, chartY: number, width: number, height: number) => {
+      const centerX = x + width / 2;
+      const centerY = chartY + height / 2 + 4;
+      const radius = Math.min(width, height) * 0.3;
+      const stageCount = stageScores.length;
+
+      const pointFor = (stageIndex: number, valueOutOfFive: number) => {
+        const angle = -Math.PI / 2 + (stageIndex * Math.PI * 2) / stageCount;
+        const distance = radius * (valueOutOfFive / 5);
+        return {
+          x: centerX + Math.cos(angle) * distance,
+          y: centerY + Math.sin(angle) * distance,
+          angle,
+        };
+      };
+
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(229, 231, 235);
+
+      for (let level = 1; level <= 5; level += 1) {
+        const ring = stageScores.map((_, index) => pointFor(index, level));
+        drawPolygon(ring, 'S');
       }
 
-      pageCtx.fillStyle = '#ffffff';
-      pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      pageCtx.drawImage(
-        captureCanvas,
-        0,
-        offsetY,
-        captureCanvas.width,
-        sliceHeightPx,
-        0,
-        0,
-        pageCanvas.width,
-        pageCanvas.height
-      );
+      stageScores.forEach((_, index) => {
+        const end = pointFor(index, 5);
+        doc.line(centerX, centerY, end.x, end.y);
+      });
 
-      if (pageIndex > 0) doc.addPage();
-      const sliceHeightPt = sliceHeightPx / pxPerPt;
-      doc.addImage(
-        pageCanvas.toDataURL('image/png'),
-        'PNG',
-        margin,
-        margin,
-        renderWidth,
-        sliceHeightPt,
-        undefined,
-        'FAST'
-      );
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(156, 163, 175);
+      for (let level = 1; level <= 5; level += 1) {
+        const labelPoint = pointFor(0, level);
+        doc.text(String(level), centerX + 4, labelPoint.y + 2);
+      }
 
-      offsetY += sliceHeightPx;
-      pageIndex += 1;
+      const radarPoints = stageScores.map((stage, index) => pointFor(index, stage.score));
+      doc.setDrawColor(5, 150, 105);
+      doc.setFillColor(167, 243, 208);
+      drawPolygon(radarPoints, 'FD');
+
+      doc.setFillColor(5, 150, 105);
+      radarPoints.forEach((point) => {
+        doc.circle(point.x, point.y, 2, 'F');
+      });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(75, 85, 99);
+      stageScores.forEach((stage, index) => {
+        const labelPoint = pointFor(index, 5.9);
+        const cosVal = Math.cos(labelPoint.angle);
+        const align: 'left' | 'center' | 'right' =
+          cosVal > 0.35 ? 'left' : cosVal < -0.35 ? 'right' : 'center';
+        stage.chartLabel.forEach((line, lineIndex) => {
+          doc.text(line, labelPoint.x, labelPoint.y + lineIndex * 8, { align });
+        });
+      });
+    };
+
+    const drawScoreRow = (
+      rowX: number,
+      rowY: number,
+      label: string,
+      score: number,
+      color: [number, number, number]
+    ) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(55, 65, 81);
+      doc.text(label, rowX, rowY);
+      const barX = rowX + 88;
+      const barW = 64;
+      const barH = 6;
+      doc.setFillColor(229, 231, 235);
+      doc.roundedRect(barX, rowY - 5, barW, barH, 2, 2, 'F');
+      doc.setFillColor(color[0], color[1], color[2]);
+      doc.roundedRect(barX, rowY - 5, Math.max(2, (score / 5) * barW), barH, 2, 2, 'F');
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(score.toFixed(1), barX + barW + 6, rowY);
+    };
+
+    const intensityBadge = (intensity: 'low' | 'medium' | 'high') => {
+      if (intensity === 'low') {
+        return {
+          label: 'Low Carbon',
+          bg: [220, 252, 231] as [number, number, number],
+          text: [22, 101, 52] as [number, number, number],
+        };
+      }
+      if (intensity === 'high') {
+        return {
+          label: 'High Carbon',
+          bg: [255, 237, 213] as [number, number, number],
+          text: [154, 52, 18] as [number, number, number],
+        };
+      }
+      return {
+        label: 'Medium',
+        bg: [254, 249, 195] as [number, number, number],
+        text: [133, 77, 14] as [number, number, number],
+      };
+    };
+
+    const drawSmallSectionHeading = (label: string, color: [number, number, number] = [75, 85, 99]) => {
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.text(label.toUpperCase(), margin, y);
+      y += 12;
+    };
+
+    // Header row (mirrors DOM banner)
+    ensureSpace(56);
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(margin, y, contentW, 52, 8, 8, 'FD');
+    doc.setFillColor(22, 163, 74);
+    doc.circle(margin + 14, y + 18, 3.5, 'F');
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(55, 65, 81);
+    doc.text('SUSTAINABILITY BRIEFING', margin + 24, y + 20);
+    y += 52 + sectionGap;
+
+    // Summary
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(17, 24, 39);
+    doc.text('Summary', margin, y);
+    y += 14;
+    const summaryLines = splitLines(sustainabilityBriefing.summary, contentW - 24);
+    const summaryHeight = Math.max(56, 20 + summaryLines.length * 13);
+    ensureSpace(summaryHeight + sectionGap);
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(209, 250, 229);
+    doc.roundedRect(margin, y, contentW, summaryHeight, 8, 8, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(55, 65, 81);
+    doc.text(summaryLines, margin + 12, y + 18);
+    y += summaryHeight + sectionGap;
+
+    // Lifecycle profile
+    drawSmallSectionHeading('Lifecycle Impact Profile');
+    const lifecycleSectionHeight = 238;
+    ensureSpace(lifecycleSectionHeight + sectionGap);
+    const colGap = 14;
+    const colW = (contentW - colGap) / 2;
+    const sectionBoxY = y;
+    const sectionBoxHeight = lifecycleSectionHeight;
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(margin, sectionBoxY, colW, sectionBoxHeight, 8, 8, 'FD');
+    doc.setFillColor(249, 250, 251);
+    doc.roundedRect(margin + colW + colGap, sectionBoxY, colW, sectionBoxHeight, 8, 8, 'FD');
+
+    drawRadarChart(margin + 12, sectionBoxY + 10, colW - 24, 180);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text('Lower score = lower environmental impact (1 to 5 scale).', margin + 12, sectionBoxY + 216);
+
+    const analysisX = margin + colW + colGap + 12;
+    let analysisY = sectionBoxY + 18;
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(234, 88, 12);
+    doc.text('MAJOR CONTRIBUTORS', analysisX, analysisY);
+    analysisY += 12;
+    contributors.forEach((stage) => {
+      drawScoreRow(analysisX, analysisY, stage.label, stage.score, [249, 115, 22]);
+      analysisY += 14;
+    });
+
+    if (topDrivers.length > 0) {
+      const driversLines = splitLines(`Driven by: ${topDrivers.join(', ')}`, colW - 26);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(107, 114, 128);
+      doc.text(driversLines, analysisX, analysisY + 1);
+      analysisY += driversLines.length * 10 + 8;
+    } else {
+      analysisY += 8;
     }
+
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(22, 163, 74);
+    doc.text('STRONGEST STAGES', analysisX, analysisY);
+    analysisY += 12;
+    opportunities.forEach((stage) => {
+      drawScoreRow(analysisX, analysisY, stage.label, stage.score, [34, 197, 94]);
+      analysisY += 14;
+    });
+
+    const insightText =
+      contributors[0] && contributors[0].score >= 3
+        ? `The ${contributors[0].label.toLowerCase()} stage is the palette's largest hotspot at ${contributors[0].score.toFixed(1)}/5. Focus procurement actions here first.`
+        : 'No single lifecycle stage dominates. Keep balancing embodied reductions with practical specification controls.';
+    const insightLines = splitLines(insightText, colW - 26);
+    doc.setFillColor(249, 250, 251);
+    doc.setDrawColor(229, 231, 235);
+    const insightBoxY = Math.max(sectionBoxY + 166, analysisY + 4);
+    const insightBoxH = Math.max(42, 14 + insightLines.length * 10);
+    doc.roundedRect(analysisX - 2, insightBoxY, colW - 24, insightBoxH, 4, 4, 'FD');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(75, 85, 99);
+    doc.text(insightLines, analysisX + 6, insightBoxY + 12);
+
+    y = sectionBoxY + sectionBoxHeight + sectionGap;
+
+    // Heroes + challenges two-column grid
+    const gridGap = 14;
+    const gridColW = (contentW - gridGap) / 2;
+    const heroItems = sustainabilityBriefing.heroes;
+    const challengeItems = sustainabilityBriefing.challenges;
+
+    const cardBodyWidth = gridColW - 24;
+    const materialCardHeight = (bodyText: string) => {
+      const lines = splitLines(bodyText, cardBodyWidth);
+      return Math.max(58, 34 + lines.length * 10);
+    };
+
+    const drawMaterialCard = (
+      x: number,
+      cardY: number,
+      width: number,
+      title: string,
+      bodyText: string,
+      bodyLabel: string,
+      intensity: 'low' | 'medium' | 'high',
+      colors: {
+        bg: [number, number, number];
+        border: [number, number, number];
+        label: [number, number, number];
+      }
+    ) => {
+      const lines = splitLines(bodyText, width - 24);
+      const cardHeight = Math.max(58, 34 + lines.length * 10);
+      doc.setFillColor(colors.bg[0], colors.bg[1], colors.bg[2]);
+      doc.setDrawColor(colors.border[0], colors.border[1], colors.border[2]);
+      doc.roundedRect(x, cardY, width, cardHeight, 8, 8, 'FD');
+
+      const badge = intensityBadge(intensity);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(17, 24, 39);
+      const name = fitSingleLine(title, width - 120);
+      doc.text(name, x + 10, cardY + 15);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      const badgeW = doc.getTextWidth(badge.label) + 10;
+      const badgeX = x + width - badgeW - 10;
+      doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
+      doc.roundedRect(badgeX, cardY + 6, badgeW, 11, 5.5, 5.5, 'F');
+      doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
+      doc.text(badge.label, badgeX + 5, cardY + 13.5);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(colors.label[0], colors.label[1], colors.label[2]);
+      doc.text(`${bodyLabel}:`, x + 10, cardY + 29);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      doc.text(lines, x + 10, cardY + 40);
+
+      return cardHeight;
+    };
+
+    ensureSpace(26);
+    doc.setFillColor(22, 163, 74);
+    doc.circle(margin + 4, y - 2.5, 3, 'F');
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(75, 85, 99);
+    doc.text('HERO MATERIALS', margin + 12, y);
+    doc.setFillColor(249, 115, 22);
+    doc.circle(margin + gridColW + gridGap + 4, y - 2.5, 3, 'F');
+    doc.text('CHALLENGE MATERIALS', margin + gridColW + gridGap + 12, y);
+    y += 12;
+
+    const materialRowCount = Math.max(heroItems.length, challengeItems.length);
+    for (let index = 0; index < materialRowCount; index += 1) {
+      const hero = heroItems[index];
+      const challenge = challengeItems[index];
+
+      const heroH = hero
+        ? materialCardHeight(`Strategic Value: ${hero.strategicValue}`)
+        : 0;
+      const challengeH = challenge
+        ? materialCardHeight(`Mitigation Tip: ${challenge.mitigationTip}`)
+        : 0;
+      const rowH = Math.max(56, heroH, challengeH);
+      ensureSpace(rowH + 8);
+
+      if (hero) {
+        drawMaterialCard(
+          margin,
+          y,
+          gridColW,
+          hero.name,
+          hero.strategicValue,
+          'Strategic Value',
+          hero.carbonIntensity,
+          {
+            bg: [240, 253, 244],
+            border: [187, 247, 208],
+            label: [21, 128, 61],
+          }
+        );
+      }
+      if (challenge) {
+        drawMaterialCard(
+          margin + gridColW + gridGap,
+          y,
+          gridColW,
+          challenge.name,
+          challenge.mitigationTip,
+          'Mitigation Tip',
+          challenge.carbonIntensity,
+          {
+            bg: [255, 247, 237],
+            border: [254, 215, 170],
+            label: [194, 65, 12],
+          }
+        );
+      }
+
+      y += rowH + 8;
+    }
+    y += sectionGap - 8;
+
+    if (sustainabilityBriefing.synergies && sustainabilityBriefing.synergies.length > 0) {
+      drawSmallSectionHeading('Strategic Synergies');
+      const synergyColW = (contentW - 12) / 2;
+
+      const synergyCardHeight = (description: string) => {
+        const lines = splitLines(description, synergyColW - 24);
+        return Math.max(50, 30 + lines.length * 10);
+      };
+
+      const drawSynergyCard = (x: number, cardY: number, width: number, synergy: { pair: [string, string]; explanation: string }) => {
+        const mat1 = board.find((material) => material.id === synergy.pair[0]);
+        const mat2 = board.find((material) => material.id === synergy.pair[1]);
+        const pairTitle = `${mat1?.name || synergy.pair[0]} -> ${mat2?.name || synergy.pair[1]}`;
+        const titleLine = fitSingleLine(pairTitle, width - 24);
+        const detailLines = splitLines(synergy.explanation, width - 24);
+        const cardHeight = Math.max(50, 30 + detailLines.length * 10);
+
+        doc.setFillColor(255, 251, 235);
+        doc.setDrawColor(253, 230, 138);
+        doc.roundedRect(x, cardY, width, cardHeight, 8, 8, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text(titleLine, x + 10, cardY + 15);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(55, 65, 81);
+        doc.text(detailLines, x + 10, cardY + 28);
+        return cardHeight;
+      };
+
+      for (let index = 0; index < sustainabilityBriefing.synergies.length; index += 2) {
+        const left = sustainabilityBriefing.synergies[index];
+        const right = sustainabilityBriefing.synergies[index + 1];
+        const leftH = left ? synergyCardHeight(left.explanation) : 0;
+        const rightH = right ? synergyCardHeight(right.explanation) : 0;
+        const rowH = Math.max(50, leftH, rightH);
+
+        ensureSpace(rowH + 8);
+        if (left) {
+          drawSynergyCard(margin, y, synergyColW, left);
+        }
+        if (right) {
+          drawSynergyCard(margin + synergyColW + 12, y, synergyColW, right);
+        }
+        y += rowH + 8;
+      }
+      y += sectionGap - 8;
+    }
+
+    // Specifier checklist
+    drawSmallSectionHeading('Specifier Checklist');
+
+    const materialTypes = new Set(board.map((material) => material.materialType).filter(Boolean));
+    const categories = new Set(board.map((material) => material.category));
+    const checklist: string[] = [];
+    if (materialTypes.has('metal') || board.some((material) => material.id.includes('steel'))) {
+      checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
+    }
+    if (materialTypes.has('timber') || board.some((material) => material.id.includes('timber') || material.id.includes('wood'))) {
+      checklist.push('Confirm FSC or PEFC certification for all timber products');
+    }
+    if (materialTypes.has('concrete') || board.some((material) => material.id.includes('concrete'))) {
+      checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
+    }
+    if (materialTypes.has('glass') || categories.has('window')) {
+      checklist.push('Verify glazing U-values meet or exceed building regs');
+    }
+    if (categories.has('insulation')) {
+      checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
+    }
+    checklist.push('Collect EPDs for all major material categories');
+    checklist.push('Calculate transport distances for main structure materials');
+
+    const checklistItems = checklist.slice(0, 5);
+    const checklistLines = checklistItems.reduce((acc, item) => {
+      const lines = splitLines(item, contentW - 44);
+      return acc + Math.max(16, lines.length * 11 + 4);
+    }, 0);
+    const checklistBoxHeight = Math.max(80, checklistLines + 12);
+    ensureSpace(checklistBoxHeight + sectionGap);
+    doc.setFillColor(239, 246, 255);
+    doc.setDrawColor(191, 219, 254);
+    doc.roundedRect(margin, y, contentW, checklistBoxHeight, 8, 8, 'FD');
+
+    let listY = y + 18;
+    checklistItems.forEach((item) => {
+      const itemLines = splitLines(item, contentW - 44);
+      doc.setDrawColor(96, 165, 250);
+      doc.rect(margin + 12, listY - 8, 9, 9);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(55, 65, 81);
+      doc.text(itemLines, margin + 28, listY);
+      listY += Math.max(16, itemLines.length * 11 + 4);
+    });
+    y += checklistBoxHeight + sectionGap;
+
+    // Footer (inside content flow like DOM)
+    ensureSpace(36);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(margin, y, pageW - margin, y);
+    y += 13;
+    const dateLabel = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`Generated by MoodboardLab | ${dateLabel}`, pageW / 2, y, { align: 'center' });
+    y += 11;
+    const footerDisclaimer = splitLines(
+      'This briefing provides indicative guidance only. Verify all data with material-specific EPDs and certifications.',
+      contentW - 40
+    );
+    doc.setFontSize(7);
+    doc.setTextColor(156, 163, 175);
+    doc.text(
+      footerDisclaimer,
+      pageW / 2,
+      y,
+      { align: 'center' }
+    );
 
     return doc;
   };
 
-  const handleDownloadBriefingPdf = async () => {
+  const handleDownloadBriefingPdf = () => {
     if (!sustainabilityBriefing || !briefingPayload) return;
     setExportingBriefingPdf(true);
     try {
-      const doc = await generateBriefingPdf();
+      const doc = generateBriefingPdf();
       if (doc) doc.save('sustainability-briefing.pdf');
     } catch (err) {
       console.error('Could not create briefing PDF', err);
@@ -3584,7 +4031,6 @@ ${JSON.stringify(proseContext)}`;
                     <button
                       onClick={handleDownloadBriefingPdf}
                       disabled={exportingBriefingPdf}
-                      data-html2canvas-ignore="true"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
                     >
                       {exportingBriefingPdf ? (
