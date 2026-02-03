@@ -158,8 +158,7 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
-const MOODBOARD_FLOW_TOTAL_STEPS = 4;
-const SUMMARY_REVIEW_TIMEOUT_MS = 20000;
+const MOODBOARD_FLOW_TOTAL_STEPS = 3;
 const REPORT_PROSE_TIMEOUT_MS = 25000;
 const REPORT_PREVIEW_INCLUDES = [
   'Comparative lifecycle dashboard',
@@ -1962,17 +1961,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setStatus('all');
     setError(null);
     try {
+      // Step 1: Generate moodboard image + sustainability briefing in parallel
       setFlowProgress({
         step: 1,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Generating moodboard image',
+        label: 'Generating moodboard image + briefing',
         state: 'running'
       });
 
-      // Run image generation and briefing in parallel
       const [renderOk] = await Promise.all([
         runGemini('render', { onRender: setMoodboardRenderUrl }),
-        generateBriefing(), // Briefing runs in parallel, non-blocking
+        generateBriefing(),
       ]);
 
       if (!renderOk) {
@@ -1985,50 +1984,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
         return;
       }
 
-      setFlowProgress({
-        step: 2,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Drafting sustainability summary',
-        state: 'running'
-      });
-      const summaryOk = await runGemini('summary');
-      if (!summaryOk) {
-        setFlowProgress({
-          step: 2,
-          total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Summary generation failed',
-          state: 'error'
-        });
-        return;
-      }
-
-      setFlowProgress({
-        step: 3,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Reviewing summary quality',
-        state: 'running'
-      });
-      const summaryReviewOk = await runGemini('summary-review', {
-        summaryDraft: paletteSummaryRef.current || '',
-        requestTimeoutMs: SUMMARY_REVIEW_TIMEOUT_MS
-      });
-      if (!summaryReviewOk) {
-        if (paletteSummaryRef.current?.trim()) {
-          // Keep flow moving with the draft summary when QA service is slow/unavailable.
-          setSummaryReviewed(true);
-        }
-        setError(null);
-        setFlowProgress({
-          step: 3,
-          total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Summary review skipped (using draft)',
-          state: 'running'
-        });
-      }
-
+      // Step 2: Build full sustainability report (per-material deep dive)
       setIsBuildingFullReport(true);
       setFlowProgress({
-        step: 4,
+        step: 2,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
         label: 'Building full sustainability report',
         state: 'running'
@@ -2036,7 +1995,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       const reportOk = await runGemini('sustainability');
       if (!reportOk) {
         setFlowProgress({
-          step: 4,
+          step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
           label: 'Full report generation failed',
           state: 'error'
@@ -2044,13 +2003,20 @@ const Moodboard: React.FC<MoodboardProps> = ({
         return;
       }
 
+      // Step 3: Generate report prose for PDF
+      setFlowProgress({
+        step: 3,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Writing report prose',
+        state: 'running'
+      });
       const proseOk = await runGemini('report-prose', { requestTimeoutMs: REPORT_PROSE_TIMEOUT_MS });
       if (!proseOk) {
         console.warn('Report prose generation skipped; using deterministic PDF copy.');
       }
 
       setFlowProgress({
-        step: 4,
+        step: 3,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
         label: 'Complete',
         state: 'complete'
@@ -3616,38 +3582,140 @@ ${JSON.stringify(proseContext)}`;
                       </p>
                     </div>
 
-                    {/* Radar Chart */}
+                    {/* Radar Chart + Explanation */}
                     <div>
                       <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3">
                         Lifecycle Impact Profile
                       </h3>
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="h-64">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart
-                              data={[
-                                { stage: 'Raw Materials', score: briefingPayload.averageScores.raw, fullMark: 5 },
-                                { stage: 'Manufacturing', score: briefingPayload.averageScores.manufacturing, fullMark: 5 },
-                                { stage: 'Transport', score: briefingPayload.averageScores.transport, fullMark: 5 },
-                                { stage: 'Installation', score: briefingPayload.averageScores.installation, fullMark: 5 },
-                                { stage: 'In Use', score: briefingPayload.averageScores.inUse, fullMark: 5 },
-                                { stage: 'Maintenance', score: briefingPayload.averageScores.maintenance, fullMark: 5 },
-                                { stage: 'End of Life', score: briefingPayload.averageScores.endOfLife, fullMark: 5 },
-                              ]}
-                              cx="50%"
-                              cy="50%"
-                              outerRadius="70%"
-                            >
-                              <PolarGrid stroke="#e5e7eb" />
-                              <PolarAngleAxis dataKey="stage" tick={{ fontSize: 10, fill: '#4b5563' }} />
-                              <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
-                              <Radar name="Impact" dataKey="score" stroke="#059669" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
-                            </RadarChart>
-                          </ResponsiveContainer>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Chart */}
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RadarChart
+                                data={[
+                                  { stage: 'Raw Materials', score: briefingPayload.averageScores.raw, fullMark: 5 },
+                                  { stage: 'Manufacturing', score: briefingPayload.averageScores.manufacturing, fullMark: 5 },
+                                  { stage: 'Transport', score: briefingPayload.averageScores.transport, fullMark: 5 },
+                                  { stage: 'Installation', score: briefingPayload.averageScores.installation, fullMark: 5 },
+                                  { stage: 'In Use', score: briefingPayload.averageScores.inUse, fullMark: 5 },
+                                  { stage: 'Maintenance', score: briefingPayload.averageScores.maintenance, fullMark: 5 },
+                                  { stage: 'End of Life', score: briefingPayload.averageScores.endOfLife, fullMark: 5 },
+                                ]}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius="70%"
+                              >
+                                <PolarGrid stroke="#e5e7eb" />
+                                <PolarAngleAxis dataKey="stage" tick={{ fontSize: 10, fill: '#4b5563' }} />
+                                <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fontSize: 9, fill: '#9ca3af' }} tickCount={6} />
+                                <Radar name="Impact" dataKey="score" stroke="#059669" fill="#10b981" fillOpacity={0.4} strokeWidth={2} />
+                              </RadarChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <p className="text-[10px] text-gray-500 text-center mt-2">
+                            Lower scores = lower environmental impact (1 = minimal, 5 = significant)
+                          </p>
                         </div>
-                        <p className="text-[10px] text-gray-500 text-center mt-2">
-                          Lower scores = lower environmental impact (1 = minimal, 5 = significant)
-                        </p>
+
+                        {/* Explanation */}
+                        {(() => {
+                          const stageLabels: Record<string, string> = {
+                            raw: 'Raw Materials', manufacturing: 'Manufacturing', transport: 'Transport',
+                            installation: 'Installation', inUse: 'In Use', maintenance: 'Maintenance', endOfLife: 'End of Life',
+                          };
+                          const scores = briefingPayload.averageScores;
+                          type StageKey = 'raw' | 'manufacturing' | 'transport' | 'installation' | 'inUse' | 'maintenance' | 'endOfLife';
+                          const stageKeys: StageKey[] = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'];
+                          const sorted = stageKeys
+                            .map((key) => ({ key, label: stageLabels[key] || key, score: scores[key] }))
+                            .sort((a, b) => b.score - a.score);
+                          const contributors = sorted.slice(0, 3);
+                          const opportunities = [...sorted].sort((a, b) => a.score - b.score).slice(0, 3);
+
+                          // Find which materials drive the top contributor stages
+                          const topStage = contributors[0]?.key;
+                          const topDrivers = topStage
+                            ? briefingPayload.materials
+                                .filter((m: { lifecycleScores: Record<string, number>; name: string }) => (m.lifecycleScores[topStage] ?? 0) >= 4)
+                                .map((m: { name: string }) => m.name)
+                                .slice(0, 3)
+                            : [];
+
+                          return (
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col justify-between">
+                              <div className="space-y-4">
+                                {/* Top Contributors */}
+                                <div>
+                                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-orange-600 mb-2">
+                                    Major Contributors
+                                  </h4>
+                                  <ul className="space-y-1.5">
+                                    {contributors.map(s => (
+                                      <li key={s.key} className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-700">{s.label}</span>
+                                        <div className="flex items-center gap-1.5">
+                                          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                              className="h-full rounded-full"
+                                              style={{
+                                                width: `${(s.score / 5) * 100}%`,
+                                                backgroundColor: s.score >= 3 ? '#f97316' : s.score >= 2 ? '#eab308' : '#22c55e',
+                                              }}
+                                            />
+                                          </div>
+                                          <span className="text-[10px] text-gray-500 w-6 text-right">{s.score.toFixed(1)}</span>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                  {topDrivers.length > 0 && (
+                                    <p className="text-[10px] text-gray-500 mt-1.5">
+                                      Driven by: {topDrivers.join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* Opportunities */}
+                                <div>
+                                  <h4 className="font-mono text-[10px] uppercase tracking-widest text-green-600 mb-2">
+                                    Strongest Stages
+                                  </h4>
+                                  <ul className="space-y-1.5">
+                                    {opportunities.map(s => (
+                                      <li key={s.key} className="flex items-center justify-between">
+                                        <span className="text-xs text-gray-700">{s.label}</span>
+                                        <div className="flex items-center gap-1.5">
+                                          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                            <div
+                                              className="h-full bg-green-500 rounded-full"
+                                              style={{ width: `${(s.score / 5) * 100}%` }}
+                                            />
+                                          </div>
+                                          <span className="text-[10px] text-gray-500 w-6 text-right">{s.score.toFixed(1)}</span>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                {/* Insight */}
+                                <div className="bg-white border border-gray-200 rounded p-2.5">
+                                  <p className="text-[11px] text-gray-600 leading-relaxed">
+                                    {contributors[0] && contributors[0].score >= 3
+                                      ? `The ${String(contributors[0].label).toLowerCase()} stage is the palette's largest carbon hotspot at ${contributors[0].score.toFixed(1)}/5. `
+                                      : `No single stage dominates — the palette has a balanced impact profile. `
+                                    }
+                                    {opportunities[0] && opportunities[0].score <= 2
+                                      ? `${String(opportunities[0].label)} and ${String(opportunities[1]?.label || 'maintenance').toLowerCase()} stages perform well, reflecting good in-service material choices.`
+                                      : `Focus procurement on reducing embodied carbon through EPDs and recycled content specifications.`
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
