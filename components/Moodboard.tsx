@@ -1706,200 +1706,103 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
-  const generateBriefingPdf = () => {
+  const generateBriefingPdf = async () => {
     if (!sustainabilityBriefing || !briefingPayload) return null;
+    const reportElement = document.getElementById('sustainability-report');
+    if (!reportElement) {
+      throw new Error('Sustainability briefing element not found.');
+    }
+
+    const { default: html2canvas } = await import('html2canvas');
+
+    if ('fonts' in document) {
+      try {
+        await (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
+      } catch {
+        // Continue even if the browser font API fails.
+      }
+    }
+
+    // Let chart and layout calculations settle before capture.
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
+
+    const captureCanvas = await html2canvas(reportElement, {
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      scrollX: 0,
+      scrollY: -window.scrollY,
+      onclone: (clonedDocument) => {
+        const clonedReport = clonedDocument.getElementById('sustainability-report') as HTMLElement | null;
+        if (clonedReport) {
+          clonedReport.style.boxShadow = 'none';
+        }
+      },
+    });
+
     const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
-    const pageW = doc.internal.pageSize.getWidth();
-    const margin = 40;
-    const contentW = pageW - margin * 2;
-    let y = margin;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 24;
+    const renderWidth = pageWidth - margin * 2;
+    const renderHeight = pageHeight - margin * 2;
+    const pxPerPt = captureCanvas.width / renderWidth;
+    const pageSliceHeightPx = Math.max(1, Math.floor(renderHeight * pxPerPt));
 
-    // Header
-    doc.setFillColor(240, 253, 244); // green-50
-    doc.rect(0, 0, pageW, 70, 'F');
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text('Sustainability Briefing', margin, 45);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 114, 128);
-    doc.text(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), pageW - margin, 45, { align: 'right' });
-    y = 85;
+    let offsetY = 0;
+    let pageIndex = 0;
 
-    // Summary
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text('Summary', margin, y);
-    y += 18;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(55, 65, 81);
-    const summaryLines = doc.splitTextToSize(sustainabilityBriefing.summary, contentW);
-    doc.text(summaryLines, margin, y);
-    y += summaryLines.length * 14 + 16;
+    while (offsetY < captureCanvas.height) {
+      const sliceHeightPx = Math.min(pageSliceHeightPx, captureCanvas.height - offsetY);
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = captureCanvas.width;
+      pageCanvas.height = sliceHeightPx;
+      const pageCtx = pageCanvas.getContext('2d');
+      if (!pageCtx) {
+        throw new Error('Canvas not supported in this browser.');
+      }
 
-    // Lifecycle scores table
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text('Lifecycle Impact Profile', margin, y);
-    y += 16;
+      pageCtx.fillStyle = '#ffffff';
+      pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      pageCtx.drawImage(
+        captureCanvas,
+        0,
+        offsetY,
+        captureCanvas.width,
+        sliceHeightPx,
+        0,
+        0,
+        pageCanvas.width,
+        pageCanvas.height
+      );
 
-    const stageLabels: Record<string, string> = {
-      raw: 'Raw Materials', manufacturing: 'Manufacturing', transport: 'Transport',
-      installation: 'Installation', inUse: 'In Use', maintenance: 'Maintenance', endOfLife: 'End of Life',
-    };
-    const scores = briefingPayload.averageScores;
-    type StageKey = 'raw' | 'manufacturing' | 'transport' | 'installation' | 'inUse' | 'maintenance' | 'endOfLife';
-    const stageKeys: StageKey[] = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'];
-    const sorted = stageKeys
-      .map((key) => ({ key, label: stageLabels[key] || key, score: scores[key] }))
-      .sort((a, b) => b.score - a.score);
+      if (pageIndex > 0) doc.addPage();
+      const sliceHeightPt = sliceHeightPx / pxPerPt;
+      doc.addImage(
+        pageCanvas.toDataURL('image/png'),
+        'PNG',
+        margin,
+        margin,
+        renderWidth,
+        sliceHeightPt,
+        undefined,
+        'FAST'
+      );
 
-    doc.setFontSize(9);
-    sorted.forEach((s) => {
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(55, 65, 81);
-      doc.text(s.label, margin, y);
-      // Bar
-      const barX = margin + 100;
-      const barW = 160;
-      const barH = 8;
-      doc.setFillColor(229, 231, 235);
-      doc.roundedRect(barX, y - 7, barW, barH, 2, 2, 'F');
-      const fillW = (s.score / 5) * barW;
-      if (s.score >= 3) doc.setFillColor(249, 115, 22); // orange
-      else if (s.score >= 2) doc.setFillColor(234, 179, 8); // yellow
-      else doc.setFillColor(34, 197, 94); // green
-      doc.roundedRect(barX, y - 7, fillW, barH, 2, 2, 'F');
-      doc.text(`${s.score.toFixed(1)}/5`, barX + barW + 8, y);
-      y += 16;
-    });
-    y += 10;
-
-    // Heroes
-    if (sustainabilityBriefing.heroes.length > 0) {
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(22, 163, 74); // green-600
-      doc.text('Hero Materials', margin, y);
-      y += 16;
-      doc.setFontSize(9);
-      sustainabilityBriefing.heroes.forEach((hero) => {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(17, 24, 39);
-        doc.text(hero.name, margin + 4, y);
-        const badge = hero.carbonIntensity === 'low' ? 'Low Carbon' : hero.carbonIntensity === 'high' ? 'High Carbon' : 'Medium';
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 114, 128);
-        doc.text(`[${badge}]`, margin + 4 + doc.getTextWidth(hero.name) + 6, y);
-        y += 13;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
-        const valLines = doc.splitTextToSize(`Strategic Value: ${hero.strategicValue}`, contentW - 8);
-        doc.text(valLines, margin + 4, y);
-        y += valLines.length * 12 + 8;
-      });
-      y += 6;
+      offsetY += sliceHeightPx;
+      pageIndex += 1;
     }
-
-    // Challenges
-    if (sustainabilityBriefing.challenges.length > 0) {
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(249, 115, 22); // orange-500
-      doc.text('Challenge Materials', margin, y);
-      y += 16;
-      doc.setFontSize(9);
-      sustainabilityBriefing.challenges.forEach((ch) => {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(17, 24, 39);
-        doc.text(ch.name, margin + 4, y);
-        const badge = ch.carbonIntensity === 'low' ? 'Low Carbon' : ch.carbonIntensity === 'high' ? 'High Carbon' : 'Medium';
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(107, 114, 128);
-        doc.text(`[${badge}]`, margin + 4 + doc.getTextWidth(ch.name) + 6, y);
-        y += 13;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
-        const tipLines = doc.splitTextToSize(`Mitigation Tip: ${ch.mitigationTip}`, contentW - 8);
-        doc.text(tipLines, margin + 4, y);
-        y += tipLines.length * 12 + 8;
-      });
-      y += 6;
-    }
-
-    // Synergies
-    if (sustainabilityBriefing.synergies && sustainabilityBriefing.synergies.length > 0) {
-      if (y > 700) { doc.addPage(); y = margin; }
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(245, 158, 11); // amber-500
-      doc.text('Strategic Synergies', margin, y);
-      y += 16;
-      doc.setFontSize(9);
-      sustainabilityBriefing.synergies.forEach((syn) => {
-        const mat1 = board.find(m => m.id === syn.pair[0]);
-        const mat2 = board.find(m => m.id === syn.pair[1]);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(17, 24, 39);
-        doc.text(`${mat1?.name || syn.pair[0]}  →  ${mat2?.name || syn.pair[1]}`, margin + 4, y);
-        y += 13;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(55, 65, 81);
-        const expLines = doc.splitTextToSize(syn.explanation, contentW - 8);
-        doc.text(expLines, margin + 4, y);
-        y += expLines.length * 12 + 8;
-      });
-      y += 6;
-    }
-
-    // Specifier checklist
-    if (y > 700) { doc.addPage(); y = margin; }
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(37, 99, 235); // blue-600
-    doc.text('Specifier Checklist', margin, y);
-    y += 16;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(55, 65, 81);
-    const materialTypes = new Set(board.map(m => m.materialType).filter(Boolean));
-    const categories = new Set(board.map(m => m.category));
-    const checklist: string[] = [];
-    if (materialTypes.has('metal') || board.some(m => m.id.includes('steel')))
-      checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
-    if (materialTypes.has('timber') || board.some(m => m.id.includes('timber') || m.id.includes('wood')))
-      checklist.push('Confirm FSC or PEFC certification for all timber products');
-    if (materialTypes.has('concrete') || board.some(m => m.id.includes('concrete')))
-      checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
-    if (materialTypes.has('glass') || categories.has('window'))
-      checklist.push('Verify glazing U-values meet or exceed building regs');
-    if (categories.has('insulation'))
-      checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
-    checklist.push('Collect EPDs for all major material categories');
-    checklist.push('Calculate transport distances for main structure materials');
-    checklist.slice(0, 5).forEach((item) => {
-      doc.text(`☐  ${item}`, margin + 4, y);
-      y += 14;
-    });
-
-    // Footer
-    y = doc.internal.pageSize.getHeight() - 30;
-    doc.setFontSize(7);
-    doc.setTextColor(156, 163, 175);
-    doc.text('Generated by MoodboardLab — indicative guidance only. Verify all data with material-specific EPDs and certifications.', pageW / 2, y, { align: 'center' });
 
     return doc;
   };
 
-  const handleDownloadBriefingPdf = () => {
+  const handleDownloadBriefingPdf = async () => {
     if (!sustainabilityBriefing || !briefingPayload) return;
     setExportingBriefingPdf(true);
     try {
-      const doc = generateBriefingPdf();
+      const doc = await generateBriefingPdf();
       if (doc) doc.save('sustainability-briefing.pdf');
     } catch (err) {
       console.error('Could not create briefing PDF', err);
@@ -3681,6 +3584,7 @@ ${JSON.stringify(proseContext)}`;
                     <button
                       onClick={handleDownloadBriefingPdf}
                       disabled={exportingBriefingPdf}
+                      data-html2canvas-ignore="true"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
                     >
                       {exportingBriefingPdf ? (
