@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { jsPDF } from 'jspdf';
-import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart, Leaf, Download, Lightbulb, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertCircle, Loader2, Trash2, ImageDown, Wand2, Search, ShoppingCart, Leaf, Download, Lightbulb, CheckCircle2, AlertTriangle, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Radar,
   RadarChart,
@@ -443,6 +443,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [sustainabilityBriefing, setSustainabilityBriefing] = useState<SustainabilityBriefingResponse | null>(null);
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
+  const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
 
   useEffect(() => {
     if (initialBoard) {
@@ -1705,6 +1706,209 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
+  const generateBriefingPdf = () => {
+    if (!sustainabilityBriefing || !briefingPayload) return null;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    const contentW = pageW - margin * 2;
+    let y = margin;
+
+    // Header
+    doc.setFillColor(240, 253, 244); // green-50
+    doc.rect(0, 0, pageW, 70, 'F');
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(17, 24, 39);
+    doc.text('Sustainability Briefing', margin, 45);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 114, 128);
+    doc.text(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), pageW - margin, 45, { align: 'right' });
+    y = 85;
+
+    // Summary
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(17, 24, 39);
+    doc.text('Summary', margin, y);
+    y += 18;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    const summaryLines = doc.splitTextToSize(sustainabilityBriefing.summary, contentW);
+    doc.text(summaryLines, margin, y);
+    y += summaryLines.length * 14 + 16;
+
+    // Lifecycle scores table
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(17, 24, 39);
+    doc.text('Lifecycle Impact Profile', margin, y);
+    y += 16;
+
+    const stageLabels: Record<string, string> = {
+      raw: 'Raw Materials', manufacturing: 'Manufacturing', transport: 'Transport',
+      installation: 'Installation', inUse: 'In Use', maintenance: 'Maintenance', endOfLife: 'End of Life',
+    };
+    const scores = briefingPayload.averageScores;
+    type StageKey = 'raw' | 'manufacturing' | 'transport' | 'installation' | 'inUse' | 'maintenance' | 'endOfLife';
+    const stageKeys: StageKey[] = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'];
+    const sorted = stageKeys
+      .map((key) => ({ key, label: stageLabels[key] || key, score: scores[key] }))
+      .sort((a, b) => b.score - a.score);
+
+    doc.setFontSize(9);
+    sorted.forEach((s) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(55, 65, 81);
+      doc.text(s.label, margin, y);
+      // Bar
+      const barX = margin + 100;
+      const barW = 160;
+      const barH = 8;
+      doc.setFillColor(229, 231, 235);
+      doc.roundedRect(barX, y - 7, barW, barH, 2, 2, 'F');
+      const fillW = (s.score / 5) * barW;
+      if (s.score >= 3) doc.setFillColor(249, 115, 22); // orange
+      else if (s.score >= 2) doc.setFillColor(234, 179, 8); // yellow
+      else doc.setFillColor(34, 197, 94); // green
+      doc.roundedRect(barX, y - 7, fillW, barH, 2, 2, 'F');
+      doc.text(`${s.score.toFixed(1)}/5`, barX + barW + 8, y);
+      y += 16;
+    });
+    y += 10;
+
+    // Heroes
+    if (sustainabilityBriefing.heroes.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(22, 163, 74); // green-600
+      doc.text('Hero Materials', margin, y);
+      y += 16;
+      doc.setFontSize(9);
+      sustainabilityBriefing.heroes.forEach((hero) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(17, 24, 39);
+        doc.text(hero.name, margin + 4, y);
+        const badge = hero.carbonIntensity === 'low' ? 'Low Carbon' : hero.carbonIntensity === 'high' ? 'High Carbon' : 'Medium';
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text(`[${badge}]`, margin + 4 + doc.getTextWidth(hero.name) + 6, y);
+        y += 13;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(55, 65, 81);
+        const valLines = doc.splitTextToSize(`Strategic Value: ${hero.strategicValue}`, contentW - 8);
+        doc.text(valLines, margin + 4, y);
+        y += valLines.length * 12 + 8;
+      });
+      y += 6;
+    }
+
+    // Challenges
+    if (sustainabilityBriefing.challenges.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(249, 115, 22); // orange-500
+      doc.text('Challenge Materials', margin, y);
+      y += 16;
+      doc.setFontSize(9);
+      sustainabilityBriefing.challenges.forEach((ch) => {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(17, 24, 39);
+        doc.text(ch.name, margin + 4, y);
+        const badge = ch.carbonIntensity === 'low' ? 'Low Carbon' : ch.carbonIntensity === 'high' ? 'High Carbon' : 'Medium';
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(107, 114, 128);
+        doc.text(`[${badge}]`, margin + 4 + doc.getTextWidth(ch.name) + 6, y);
+        y += 13;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(55, 65, 81);
+        const tipLines = doc.splitTextToSize(`Mitigation Tip: ${ch.mitigationTip}`, contentW - 8);
+        doc.text(tipLines, margin + 4, y);
+        y += tipLines.length * 12 + 8;
+      });
+      y += 6;
+    }
+
+    // Synergies
+    if (sustainabilityBriefing.synergies && sustainabilityBriefing.synergies.length > 0) {
+      if (y > 700) { doc.addPage(); y = margin; }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(245, 158, 11); // amber-500
+      doc.text('Strategic Synergies', margin, y);
+      y += 16;
+      doc.setFontSize(9);
+      sustainabilityBriefing.synergies.forEach((syn) => {
+        const mat1 = board.find(m => m.id === syn.pair[0]);
+        const mat2 = board.find(m => m.id === syn.pair[1]);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(17, 24, 39);
+        doc.text(`${mat1?.name || syn.pair[0]}  →  ${mat2?.name || syn.pair[1]}`, margin + 4, y);
+        y += 13;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(55, 65, 81);
+        const expLines = doc.splitTextToSize(syn.explanation, contentW - 8);
+        doc.text(expLines, margin + 4, y);
+        y += expLines.length * 12 + 8;
+      });
+      y += 6;
+    }
+
+    // Specifier checklist
+    if (y > 700) { doc.addPage(); y = margin; }
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(37, 99, 235); // blue-600
+    doc.text('Specifier Checklist', margin, y);
+    y += 16;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(55, 65, 81);
+    const materialTypes = new Set(board.map(m => m.materialType).filter(Boolean));
+    const categories = new Set(board.map(m => m.category));
+    const checklist: string[] = [];
+    if (materialTypes.has('metal') || board.some(m => m.id.includes('steel')))
+      checklist.push('Request EPD for recycled steel content (target: 85%+ recycled)');
+    if (materialTypes.has('timber') || board.some(m => m.id.includes('timber') || m.id.includes('wood')))
+      checklist.push('Confirm FSC or PEFC certification for all timber products');
+    if (materialTypes.has('concrete') || board.some(m => m.id.includes('concrete')))
+      checklist.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
+    if (materialTypes.has('glass') || categories.has('window'))
+      checklist.push('Verify glazing U-values meet or exceed building regs');
+    if (categories.has('insulation'))
+      checklist.push('Compare embodied carbon of insulation options (natural vs synthetic)');
+    checklist.push('Collect EPDs for all major material categories');
+    checklist.push('Calculate transport distances for main structure materials');
+    checklist.slice(0, 5).forEach((item) => {
+      doc.text(`☐  ${item}`, margin + 4, y);
+      y += 14;
+    });
+
+    // Footer
+    y = doc.internal.pageSize.getHeight() - 30;
+    doc.setFontSize(7);
+    doc.setTextColor(156, 163, 175);
+    doc.text('Generated by MoodboardLab — indicative guidance only. Verify all data with material-specific EPDs and certifications.', pageW / 2, y, { align: 'center' });
+
+    return doc;
+  };
+
+  const handleDownloadBriefingPdf = () => {
+    if (!sustainabilityBriefing || !briefingPayload) return;
+    setExportingBriefingPdf(true);
+    try {
+      const doc = generateBriefingPdf();
+      if (doc) doc.save('sustainability-briefing.pdf');
+    } catch (err) {
+      console.error('Could not create briefing PDF', err);
+      setError('Could not create the briefing PDF download.');
+    } finally {
+      setExportingBriefingPdf(false);
+    }
+  };
+
   const handleDownloadBoard = async (url: string, renderId?: string) => {
     if (!url) return;
     setDownloadingId(renderId || null);
@@ -1933,6 +2137,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       console.log('[Sustainability Briefing] Parsed response:', parsed);
 
       setSustainabilityBriefing(parsed);
+      setMaterialsAccordionOpen(false);
       return true;
     } catch (err) {
       console.error('[Sustainability Briefing] Generation failed:', err);
@@ -3074,10 +3279,18 @@ ${JSON.stringify(proseContext)}`;
         <div className="space-y-8">
           <section className="border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="inline-flex items-center gap-2 border border-black px-3 py-1 uppercase font-mono text-[11px] tracking-widest">
+              <button
+                onClick={() => setMaterialsAccordionOpen((prev) => !prev)}
+                className="inline-flex items-center gap-2 border border-black px-3 py-1 uppercase font-mono text-[11px] tracking-widest hover:bg-gray-50 transition-colors"
+              >
                 <ShoppingCart className="w-4 h-4" />
                 Chosen Materials
-              </div>
+                {materialsAccordionOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                )}
+              </button>
               <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
                 {board.length} item{board.length === 1 ? '' : 's'} selected
               </span>
@@ -3091,6 +3304,13 @@ ${JSON.stringify(proseContext)}`;
               </div>
             </div>
 
+            <div
+              className="overflow-hidden transition-all duration-300 ease-in-out"
+              style={{
+                maxHeight: materialsAccordionOpen ? '2000px' : '0px',
+                opacity: materialsAccordionOpen ? 1 : 0,
+              }}
+            >
             {board.length === 0 ? (
               <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">
                 <p className="font-sans text-gray-700 text-sm">No materials have been added yet. Head to the Materials page to curate your selection before building the board.</p>
@@ -3183,6 +3403,7 @@ ${JSON.stringify(proseContext)}`;
                 })}
               </div>
             )}
+            </div>
 
             {board.length > 0 && (
               <div className="space-y-3">
@@ -3446,104 +3667,6 @@ ${JSON.stringify(proseContext)}`;
               </div>
             )}
 
-            {moodboardRenderUrl && (
-              <div className="space-y-4">
-                <div className="border border-gray-200 p-4 bg-white space-y-3">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                    Moodboard Render
-                  </div>
-                  <div className="w-full border border-gray-200 bg-gray-50 relative flex items-center justify-center">
-                    <img
-                      src={moodboardRenderUrl}
-                      alt="Moodboard"
-                      className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition ${
-                        isRenderInFlight ? 'opacity-40 grayscale' : ''
-                      }`}
-                    />
-                    {isRenderInFlight && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60">
-                        <Loader2 className="w-12 h-12 animate-spin text-gray-700" />
-                        <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
-                          Updating moodboard…
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
-                    disabled={downloadingId === 'moodboard'}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                  >
-                    {downloadingId === 'moodboard' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Preparing...
-                      </>
-                    ) : (
-                      <>
-                        <ImageDown className="w-4 h-4" />
-                        Download
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => onNavigate?.('apply')}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
-                  >
-                    <Wand2 className="w-4 h-4" />
-                    Apply your materials
-                  </button>
-                  <button
-                    onClick={handleMobileSaveSummaryReport}
-                    disabled={!summaryReportReady || exportingSummaryReport}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-                  >
-                    Save summary (PDF)
-                  </button>
-                  <button
-                    onClick={handleMobileSaveReport}
-                    disabled={!fullReportReady || exportingReport}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-                  >
-                    Save full report (PDF)
-                  </button>
-                </div>
-                <div className="border border-gray-200 p-4 bg-white space-y-2">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                    Edit moodboard render (multi-turn)
-                  </div>
-                  <p className="font-sans text-sm text-gray-700">
-                    Provide new text instructions to adjust the latest moodboard image while keeping composition and materials consistent.
-                  </p>
-                  <textarea
-                    value={moodboardEditPrompt}
-                    onChange={(e) => setMoodboardEditPrompt(e.target.value)}
-                    placeholder="E.g., warm up the lighting and add a softer vignette."
-                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
-                  />
-                  <button
-                    onClick={handleMoodboardEdit}
-                    disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                  >
-                    {status === 'render' && isCreatingMoodboard ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Updating render
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        Apply text edit
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Sustainability Briefing Section */}
             {(sustainabilityBriefing || isBriefingLoading) && (
               <div id="sustainability-report" className="sustainability-briefing border border-gray-200 bg-white">
@@ -3556,10 +3679,15 @@ ${JSON.stringify(proseContext)}`;
                   </div>
                   {sustainabilityBriefing && (
                     <button
-                      onClick={() => window.print()}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors print:hidden"
+                      onClick={handleDownloadBriefingPdf}
+                      disabled={exportingBriefingPdf}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      {exportingBriefingPdf ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Download className="w-3.5 h-3.5" />
+                      )}
                       Download PDF
                     </button>
                   )}
@@ -3575,7 +3703,7 @@ ${JSON.stringify(proseContext)}`;
                     {/* Executive Summary */}
                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-5">
                       <h2 className="text-lg font-bold text-gray-900 mb-1">
-                        {sustainabilityBriefing.headline}
+                        Summary
                       </h2>
                       <p className="text-sm text-gray-700 leading-relaxed">
                         {sustainabilityBriefing.summary}
@@ -3855,6 +3983,104 @@ ${JSON.stringify(proseContext)}`;
                     </div>
                   </div>
                 ) : null}
+              </div>
+            )}
+
+            {moodboardRenderUrl && (
+              <div className="space-y-4">
+                <div className="border border-gray-200 p-4 bg-white space-y-3">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                    Moodboard Render
+                  </div>
+                  <div className="w-full border border-gray-200 bg-gray-50 relative flex items-center justify-center">
+                    <img
+                      src={moodboardRenderUrl}
+                      alt="Moodboard"
+                      className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition ${
+                        isRenderInFlight ? 'opacity-40 grayscale' : ''
+                      }`}
+                    />
+                    {isRenderInFlight && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60">
+                        <Loader2 className="w-12 h-12 animate-spin text-gray-700" />
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
+                          Updating moodboard…
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => handleDownloadBoard(moodboardRenderUrl, 'moodboard')}
+                    disabled={downloadingId === 'moodboard'}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {downloadingId === 'moodboard' ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Preparing...
+                      </>
+                    ) : (
+                      <>
+                        <ImageDown className="w-4 h-4" />
+                        Download
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => onNavigate?.('apply')}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    Apply your materials
+                  </button>
+                  <button
+                    onClick={handleMobileSaveSummaryReport}
+                    disabled={!summaryReportReady || exportingSummaryReport}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                  >
+                    Save summary (PDF)
+                  </button>
+                  <button
+                    onClick={handleMobileSaveReport}
+                    disabled={!fullReportReady || exportingReport}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+                  >
+                    Save full report (PDF)
+                  </button>
+                </div>
+                <div className="border border-gray-200 p-4 bg-white space-y-2">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                    Edit moodboard render (multi-turn)
+                  </div>
+                  <p className="font-sans text-sm text-gray-700">
+                    Provide new text instructions to adjust the latest moodboard image while keeping composition and materials consistent.
+                  </p>
+                  <textarea
+                    value={moodboardEditPrompt}
+                    onChange={(e) => setMoodboardEditPrompt(e.target.value)}
+                    placeholder="E.g., warm up the lighting and add a softer vignette."
+                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+                  />
+                  <button
+                    onClick={handleMoodboardEdit}
+                    disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                  >
+                    {status === 'render' && isCreatingMoodboard ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Updating render
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4" />
+                        Apply text edit
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
         </div>
