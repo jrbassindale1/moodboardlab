@@ -288,6 +288,21 @@ const normalizeSelectedMaterial = (material: MaterialOption): MaterialOption =>
 
 const normalizeBoardItems = (items: MaterialOption[]) => items.map(normalizeSelectedMaterial);
 
+const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
+  a === b ||
+  (a.id === b.id &&
+    a.name === b.name &&
+    a.finish === b.finish &&
+    a.description === b.description &&
+    a.tone === b.tone &&
+    a.category === b.category &&
+    a.colorLabel === b.colorLabel &&
+    a.colorVariantId === b.colorVariantId &&
+    a.customImage === b.customImage);
+
+const areBoardsEquivalent = (a: MaterialOption[], b: MaterialOption[]) =>
+  a.length === b.length && a.every((item, index) => areBoardItemsEquivalent(item, b[index]));
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -537,7 +552,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   useEffect(() => {
     if (initialBoard) {
-      setBoard(normalizeBoardItems(initialBoard));
+      const normalized = normalizeBoardItems(initialBoard);
+      setBoard((prev) => (areBoardsEquivalent(prev, normalized) ? prev : normalized));
     }
   }, [initialBoard]);
 
