@@ -2804,6 +2804,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
         });
         return;
       }
+      // Enable the sustainability preview + download buttons now that insights exist.
+      setSummaryReviewed(true);
 
       // Step 3: Generate report prose for PDF
       setFlowProgress({
