@@ -28,11 +28,8 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
       {/* Hero */}
       <header className="relative overflow-hidden border-b border-gray-200">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100" />
-        <div className="relative max-w-screen-2xl mx-auto px-6 py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="relative max-w-screen-2xl mx-auto px-6 pt-12 pb-24 md:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6">
-            <div className="inline-flex items-center gap-2 border border-black px-3 py-1">
-              <span className="font-mono text-xs uppercase tracking-widest font-bold">Moodboard Lab</span>
-            </div>
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95]">
               Material and moodboard workspace for architects and designers.
             </h1>
