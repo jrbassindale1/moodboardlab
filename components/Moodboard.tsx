@@ -136,7 +136,7 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
-const MOODBOARD_FLOW_TOTAL_STEPS = 1;
+const MOODBOARD_FLOW_TOTAL_STEPS = 2;
 const REPORT_PROSE_TIMEOUT_MS = 25000;
 const BENEFIT_LABELS: Record<Benefit['type'], string> = {
   biodiversity: 'Biodiversity and habitat uplift potential',
@@ -1670,18 +1670,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setStatus('all');
     setError(null);
     try {
-      // Step 1: Generate moodboard image + sustainability briefing in parallel
+      // Step 1: Generate moodboard image
       setFlowProgress({
         step: 1,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Generating moodboard image + briefing',
+        label: 'Generating moodboard image',
         state: 'running'
       });
 
-      const [renderOk] = await Promise.all([
-        runGemini('render', { onRender: setMoodboardRenderUrl }),
-        generateBriefing(),
-      ]);
+      const renderOk = await runGemini('render', { onRender: setMoodboardRenderUrl });
 
       if (!renderOk) {
         setFlowProgress({
@@ -1693,8 +1690,26 @@ const Moodboard: React.FC<MoodboardProps> = ({
         return;
       }
 
+      // Step 2: Generate sustainability briefing
       setFlowProgress({
-        step: 1,
+        step: 2,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Generating sustainability briefing',
+        state: 'running'
+      });
+      const briefingOk = await generateBriefing();
+      if (!briefingOk) {
+        setFlowProgress({
+          step: 2,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Briefing generation failed',
+          state: 'error'
+        });
+        return;
+      }
+
+      setFlowProgress({
+        step: 2,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
         label: 'Complete',
         state: 'complete'
