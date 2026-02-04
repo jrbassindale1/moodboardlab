@@ -34,6 +34,12 @@ const CARBON_IMPACT_CLASSES: Record<NonNullable<MaterialOption['carbonIntensity'
   high: 'bg-rose-50 text-rose-700 border-rose-200',
 };
 
+const CARBON_SORT_ORDER: Record<NonNullable<MaterialOption['carbonIntensity']>, number> = {
+  low: 0,
+  medium: 1,
+  high: 2,
+};
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -78,7 +84,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const boardRef = useRef<MaterialOption[]>(board);
   const [searchTerm, setSearchTerm] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
-  const [sortBy, setSortBy] = useState<'featured' | 'name'>('featured');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -302,11 +307,15 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   // Sort materials
   const sortedMaterials = useMemo(() => {
     const materials = [...displayedMaterials];
-    if (sortBy === 'name') {
-      return materials.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return materials;
-  }, [displayedMaterials, sortBy]);
+    return materials.sort((a, b) => {
+      const aCarbon = a.carbonIntensity ? CARBON_SORT_ORDER[a.carbonIntensity] : Number.MAX_SAFE_INTEGER;
+      const bCarbon = b.carbonIntensity ? CARBON_SORT_ORDER[b.carbonIntensity] : Number.MAX_SAFE_INTEGER;
+      if (aCarbon !== bCarbon) {
+        return aCarbon - bCarbon;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [displayedMaterials]);
 
   // Get category label
   const getCategoryLabel = () => {
@@ -773,21 +782,6 @@ IMPORTANT:
                       </p>
                     )}
                   </div>
-                  {!isCustomCategory && (
-                    <div className="flex items-center gap-3">
-                      <label className="text-sm text-gray-600 font-mono uppercase tracking-widest text-[11px]">
-                        Sort by
-                      </label>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as 'featured' | 'name')}
-                        className="border border-gray-200 px-3 py-1.5 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        <option value="featured">Featured</option>
-                        <option value="name">Name</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
 
                 {/* Search bar */}
@@ -1143,18 +1137,6 @@ IMPORTANT:
                         <p className="text-xs text-gray-600 font-sans line-clamp-2">{mat.finish}</p>
                         {mat.description && (
                           <p className="text-xs text-gray-500 font-sans line-clamp-2">{mat.description}</p>
-                        )}
-                        {mat.tags && mat.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {mat.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 bg-gray-100 text-gray-600"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
                         )}
                       </div>
 
