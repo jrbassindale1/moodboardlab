@@ -28,8 +28,8 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
       {/* Hero */}
       <header className="relative overflow-hidden border-b border-gray-200">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100" />
-        <div className="relative max-w-screen-2xl mx-auto px-6 pt-12 pb-24 md:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 space-y-6">
+        <div className="relative max-w-screen-2xl mx-auto px-6 pt-12 pb-20 md:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6 space-y-6">
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95]">
               Material and moodboard workspace for architects and designers.
             </h1>
@@ -47,19 +47,22 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
                 <span className="font-mono text-xs uppercase tracking-widest">Start Creating</span>
               </button>
             </div>
-            <div className="border border-gray-200 bg-white shadow-lg">
+          </div>
+          <div className="lg:col-span-6">
+            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-xl">
               <img
                 src={heroMoodboard}
                 alt="Moodboard hero preview"
-                className="w-full h-full object-cover"
+                className="w-full h-[420px] md:h-[520px] lg:h-[560px] object-cover"
               />
             </div>
           </div>
-          <div className="lg:col-span-5 bg-white border border-gray-200 shadow-xl p-6 space-y-4">
+        </div>
+        <div className="relative max-w-screen-2xl mx-auto px-6 pb-12">
+          <div className="max-w-3xl">
             <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Why it matters</p>
-            <p className="font-sans text-gray-800 text-lg leading-relaxed">
-              Moodboard Lab helps you move fast: curate materials, understand sustainability, generate visuals, and keep
-              your palette consistent from early ideas to detailed rendering.
+            <p className="mt-3 font-sans text-gray-800 text-lg leading-relaxed">
+              Moodboard Lab helps you move fast: curate materials, understand sustainability, generate visuals, and keep your palette consistent from early ideas to detailed rendering.
             </p>
           </div>
         </div>
