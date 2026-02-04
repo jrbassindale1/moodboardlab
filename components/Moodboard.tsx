@@ -4312,7 +4312,7 @@ ${JSON.stringify(proseContext)}`;
                       <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3">
                         Lifecycle Impact Profile
                       </h3>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Chart */}
                         <div className="bg-white border border-gray-200 rounded-lg p-4">
                           <div className="h-64">
@@ -4445,7 +4445,7 @@ ${JSON.stringify(proseContext)}`;
                     </div>
 
                     {/* Heroes and Challenges Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Heroes */}
                       <div>
                         <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-3 flex items-center gap-2">
