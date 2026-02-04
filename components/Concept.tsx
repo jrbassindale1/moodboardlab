@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Wand2 } from 'lucide-react';
-import { SUSTAINABILITY_PYRAMID } from '../constants';
 import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
 import carouselA from '../images/moodboard-4.webp';
@@ -34,9 +33,8 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
               Material and moodboard workspace for architects and designers.
             </h1>
             <p className="font-sans text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed">
-              From material intent to convincing visuals in minutes. Curate a material palette, get instant sustainability insight and a concise spec, and generate photorealistic
-              moodboard renders. Upload a reference image to see your palette applied, then pass selections into the
-              Material Lab for deeper rendering.
+              From material intent to convincing visuals in minutes. Curate a material palette, get instant sustainability insight, and generate photorealistic
+              moodboard renders. Upload a reference image to see your palette applied then use simple prompts for deeper rendering.
             </p>
             <div className="flex flex-wrap gap-4">
               <button

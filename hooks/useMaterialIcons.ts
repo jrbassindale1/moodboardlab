@@ -12,7 +12,6 @@ import {
   loadMaterialIcons,
   saveMaterialIcons,
   getMissingIconMaterials,
-  shouldRegenerateIcons,
   MaterialIcon,
   MaterialIconRequest
 } from '../utils/materialIconGenerator';

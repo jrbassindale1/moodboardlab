@@ -1,4 +1,4 @@
-import { MaterialOption, ProjectImage, SpecSection } from './types';
+import { MaterialOption, ProjectImage } from './types';
 import moodboardMain from './images/moodboard-2.webp';
 import moodboardAlt1 from './images/moodboard-4.webp';
 import moodboardAlt2 from './images/moodboard-5.webp';
@@ -13,8 +13,6 @@ export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
   'concrete-frame': moodboardAlt2,
   'hybrid-structure': moodboardAlt3
 };
-const contextImage = moodboardMain;
-
 export const PROJECT_IMAGES: ProjectImage[] = [
   {
     id: 'concept-board',

@@ -1,21 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2, Wand2, Search } from 'lucide-react';
+import { AlertCircle, Loader2, Wand2 } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
 import {
-  generateSummaryPdf as buildSummaryPdf,
-  generateReportPdf as buildReportPdf,
   generateBriefingPdf as buildBriefingPdf,
 } from '../utils/moodboardPdfGenerators';
-import { MATERIAL_PALETTE } from '../constants';
 import {
   MATERIAL_LIFECYCLE_PROFILES,
   LifecycleProfile,
   LifecycleStageKey,
 } from '../lifecycleProfiles';
 import { callGeminiImage, callGeminiText, saveGeneration, generateSustainabilityBriefing } from '../api';
-import { MaterialOption, MaterialCategory, UploadedImage } from '../types';
+import { MaterialOption } from '../types';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 
 // Sustainability report utilities
@@ -40,80 +37,6 @@ import {
 
 type BoardItem = MaterialOption;
 
-type MaterialTreeGroup = {
-  id: string;
-  label: string;
-  path: string;
-  description?: string;
-};
-
-const MATERIAL_TREE: { id: string; label: string; groups: MaterialTreeGroup[] }[] = [
-  {
-    id: 'structure',
-    label: 'Structure',
-    groups: [
-      { id: 'primary-structure', label: 'Primary Structure', path: 'Structure>Primary Structure' },
-      { id: 'secondary-structure', label: 'Secondary Structure', path: 'Structure>Secondary Structure' },
-      { id: 'floors-roofs', label: 'Floors and Roofs', path: 'Structure>Floors and Roofs' },
-      { id: 'stability-bracing', label: 'Stability and Bracing', path: 'Structure>Stability and Bracing' },
-      {
-        id: 'envelope-lightweight',
-        label: 'Envelope and Lightweight Structure',
-        path: 'Structure>Envelope and Lightweight Structure'
-      }
-    ]
-  },
-  {
-    id: 'external',
-    label: 'External',
-    groups: [
-      { id: 'facade', label: 'Façade', path: 'External>Façade' },
-      { id: 'glazing', label: 'Glazing', path: 'External>Glazing' },
-      { id: 'roofing', label: 'Roofing', path: 'External>Roofing' },
-      {
-        id: 'landscape',
-        label: 'External Ground / Landscaping',
-        path: 'External>External Ground / Landscaping'
-      },
-      { id: 'insulation', label: 'Insulation', path: 'External>Insulation' }
-    ]
-  },
-  {
-    id: 'internal',
-    label: 'Internal',
-    groups: [
-      { id: 'floors', label: 'Floors', path: 'Internal>Floors' },
-      { id: 'walls', label: 'Walls', path: 'Internal>Walls' },
-      { id: 'paint-standard', label: 'Paint – Standard', path: 'Internal>Paint – Standard' },
-      { id: 'paint-custom', label: 'Paint – Custom Colour', path: 'Internal>Paint – Custom Colour' },
-      { id: 'plaster', label: 'Plaster / Microcement', path: 'Internal>Plaster / Microcement' },
-      { id: 'timber-panels', label: 'Timber Panels', path: 'Internal>Timber Panels' },
-      { id: 'tiles', label: 'Tiles', path: 'Internal>Tiles' },
-      { id: 'wallpaper', label: 'Wallpaper', path: 'Internal>Wallpaper' },
-      { id: 'ceilings', label: 'Ceilings', path: 'Internal>Ceilings' },
-      { id: 'acoustic-panels', label: 'Acoustic Panels', path: 'Internal>Acoustic Panels' },
-      { id: 'timber-slats', label: 'Timber Slats', path: 'Internal>Timber Slats' },
-      { id: 'joinery', label: 'Joinery & Furniture', path: 'Internal>Joinery & Furniture' },
-      { id: 'fixtures', label: 'Fixtures & Fittings', path: 'Internal>Fixtures & Fittings' },
-      { id: 'doors', label: 'Doors', path: 'Internal>Doors' },
-      { id: 'balustrade', label: 'Balustrade & Railings', path: 'Internal>Balustrade & Railings' }
-    ]
-  },
-  {
-    id: 'custom',
-    label: 'Custom',
-    groups: [
-      { id: 'upload-image', label: 'Upload Image', path: 'Custom>Upload Image' },
-      {
-        id: 'brand-material',
-        label: 'Brand / Supplier Material',
-        path: 'Custom>Brand / Supplier Material'
-      },
-  { id: 'custom-finish', label: 'Custom Finish / Product Link', path: 'Custom>Custom Finish / Product Link' }
-    ]
-  }
-];
-
 // Use enhanced sustainability insight type from types/sustainability.ts
 type SustainabilityInsight = EnhancedSustainabilityInsight;
 
@@ -132,20 +55,7 @@ type MoodboardFlowProgress = {
   state: 'running' | 'complete' | 'error';
 };
 
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
-const MAX_UPLOAD_DIMENSION = 1000;
-const RESIZE_QUALITY = 0.82;
-const RESIZE_MIME = 'image/webp';
 const MOODBOARD_FLOW_TOTAL_STEPS = 2;
-const REPORT_PROSE_TIMEOUT_MS = 25000;
-const BENEFIT_LABELS: Record<Benefit['type'], string> = {
-  biodiversity: 'Biodiversity and habitat uplift potential',
-  circularity: 'Strong reuse and circularity potential',
-  durability: 'Durable system with long service life',
-  operational_carbon: 'Operational carbon savings potential',
-  health_voc: 'Lower VOC and indoor health benefit',
-  sequestration: 'Biogenic carbon storage potential'
-};
 const CUSTOM_PAINT_IDS = new Set(['custom-wall-paint', 'custom-ceiling-paint']);
 const GENERIC_COLOUR_SEGMENT_RE =
   /\b(multiple|select|choose|chosen|custom|palette|colou?r|color|tone|finish|texture|variant|option|options|ral|hex\/rgb)\b/i;
@@ -303,46 +213,6 @@ const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
 const areBoardsEquivalent = (a: MaterialOption[], b: MaterialOption[]) =>
   a.length === b.length && a.every((item, index) => areBoardItemsEquivalent(item, b[index]));
 
-const dataUrlSizeBytes = (dataUrl: string) => {
-  const base64 = dataUrl.split(',')[1] || '';
-  const padding = (base64.match(/=+$/)?.[0].length ?? 0);
-  return Math.floor((base64.length * 3) / 4) - padding;
-};
-
-const downscaleImage = (
-  dataUrl: string,
-  targetMime = RESIZE_MIME,
-  quality = RESIZE_QUALITY
-): Promise<{ dataUrl: string; width: number; height: number; mimeType: string; sizeBytes: number }> =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.width, img.height));
-      const width = Math.max(1, Math.round(img.width * scale));
-      const height = Math.max(1, Math.round(img.height * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas not supported in this browser.'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      const mime = targetMime || 'image/jpeg';
-      const resizedUrl = canvas.toDataURL(mime, quality);
-      resolve({
-        dataUrl: resizedUrl,
-        width,
-        height,
-        mimeType: mime,
-        sizeBytes: dataUrlSizeBytes(resizedUrl)
-      });
-    };
-    img.onerror = reject;
-    img.src = dataUrl;
-  });
-
 const dataUrlToInlineData = (dataUrl: string) => {
   const [meta, content] = dataUrl.split(',');
   const mimeMatch = meta?.match(/data:(.*);base64/);
@@ -352,19 +222,6 @@ const dataUrlToInlineData = (dataUrl: string) => {
       data: content || ''
     }
   };
-};
-
-const createImageBlobFromDataUrl = (dataUrl: string): Blob => {
-  const [meta, content] = dataUrl.split(',');
-  if (!meta || !content) throw new Error('Invalid image data.');
-  const mimeMatch = meta.match(/data:(.*);base64/);
-  const mimeType = mimeMatch?.[1] || 'image/png';
-  const byteCharacters = atob(content);
-  const byteArrays = new Uint8Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i += 1) {
-    byteArrays[i] = byteCharacters.charCodeAt(i);
-  }
-  return new Blob([byteArrays], { type: mimeType });
 };
 
 const LIFECYCLE_STAGE_ORDER: LifecycleStageKey[] = [
@@ -517,11 +374,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
-  const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
+  const [, setPaletteSummary] = useState<string | null>(null);
   const paletteSummaryRef = useRef<string | null>(null);
-  const [reportProse, setReportProse] = useState<ReportProse | null>(null);
   const reportProseRef = useRef<ReportProse | null>(null);
-  const [summaryReviewed, setSummaryReviewed] = useState(false);
+  const [, setSummaryReviewed] = useState(false);
   const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
@@ -530,20 +386,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [status, setStatus] = useState<
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
-  const [exportingReport, setExportingReport] = useState(false);
-  const [exportingSummaryReport, setExportingSummaryReport] = useState(false);
-  const [reportProgress, setReportProgress] = useState<{ step: string; percent: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
-  const [steelColor, setSteelColor] = useState('#ffffff');
-  const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
-  const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
-  const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
-  const [showDetectionModal, setShowDetectionModal] = useState(false);
-  const [addedDetectedIds, setAddedDetectedIds] = useState<Set<string>>(new Set());
   const [sustainabilityBriefing, setSustainabilityBriefing] = useState<SustainabilityBriefingResponse | null>(null);
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
@@ -598,264 +445,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     });
   }, [board]);
 
-  const treePathFallbacks = useMemo(
-    () => ({
-      structure: ['Structure>Primary Structure'],
-      floor: ['Internal>Floors', 'External>External Ground / Landscaping'],
-      'wall-internal': ['Internal>Walls'],
-      external: ['External>Façade'],
-      ceiling: ['Internal>Ceilings'],
-      soffit: ['Internal>Ceilings'],
-      window: ['External>Glazing'],
-      roof: ['External>Roofing'],
-      finish: ['Internal>Timber Panels', 'Internal>Acoustic Panels', 'Internal>Timber Slats'],
-      'paint-wall': ['Internal>Paint – Standard'],
-      'paint-ceiling': ['Internal>Ceilings'],
-      plaster: ['Internal>Plaster / Microcement'],
-      microcement: ['Internal>Plaster / Microcement'],
-      'timber-panel': ['Internal>Timber Panels'],
-      tile: ['Internal>Tiles'],
-      wallpaper: ['Internal>Wallpaper'],
-      'acoustic-panel': ['Internal>Acoustic Panels'],
-      'timber-slat': ['Internal>Timber Slats'],
-      'exposed-structure': ['Structure>Secondary Structure'],
-      joinery: ['Internal>Joinery & Furniture'],
-      fixture: ['Internal>Fixtures & Fittings'],
-      landscape: ['External>External Ground / Landscaping'],
-      insulation: ['External>Insulation'],
-      door: ['Internal>Doors'],
-      balustrade: ['Internal>Balustrade & Railings'],
-      'external-ground': ['External>External Ground / Landscaping']
-    }),
-    []
-  );
-
-  const materialsByPath = useMemo<Record<string, MaterialOption[]>>(() => {
-    const map: Record<string, MaterialOption[]> = {};
-    MATERIAL_PALETTE.forEach((mat) => {
-      const paths = mat.treePaths?.length ? mat.treePaths : treePathFallbacks[mat.category] || ['Unsorted>Other'];
-      paths.forEach((path) => {
-        map[path] = map[path] || [];
-        map[path].push(mat);
-      });
-    });
-    return map;
-  }, [treePathFallbacks]);
-
-  const [customFinishes, setCustomFinishes] = useState<Record<string, { color: string; finish: string }>>(() => {
-    const initial: Record<string, { color: string; finish: string }> = {};
-    MATERIAL_PALETTE.filter((m) => m.supportsColor && m.finishOptions?.length).forEach((mat) => {
-      initial[mat.id] = { color: mat.tone, finish: mat.finishOptions?.[0] || 'Matte' };
-    });
-    return initial;
-  });
-
-  const handleAdd = (
-    mat: MaterialOption,
-    customization?: { label?: string; tone?: string; finishVariant?: string }
-  ) => {
-    const baseSteel = MATERIAL_PALETTE.find((m) => m.id === 'steel-frame');
-    const baseTone = customization?.tone || mat.tone;
-    const finishVariant = customization?.finishVariant ? ` (${customization.finishVariant})` : '';
-    const labelSuffix = customization?.label ? ` — ${customization.label}` : '';
-    let finishText = `${mat.finish}${labelSuffix}${finishVariant}`;
-    let tone = baseTone;
-
-    if (mat.id === 'steel-frame') {
-      tone = customization?.tone || steelColor;
-      finishText = `${baseSteel?.finish || mat.finish} (${tone})`;
-    } else if (mat.supportsColor && customization?.tone) {
-      finishText = `${mat.finish}${labelSuffix}${finishVariant ? ` ${finishVariant}` : ''} (${customization.tone})`;
-    }
-
-    const next: MaterialOption = {
-      ...mat,
-      tone,
-      finish: finishText
-    };
-    const normalizedNext = normalizeSelectedMaterial(next);
-    setBoard((prev) => {
-      const nextTone = normalizedNext.tone?.toLowerCase().trim() || '';
-      const alreadyAdded = prev.some((item) => {
-        if (item.id !== normalizedNext.id) return false;
-        const itemTone = item.tone?.toLowerCase().trim() || '';
-        return itemTone === nextTone;
-      });
-      if (alreadyAdded) return prev;
-      return [...prev, normalizedNext];
-    });
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const id = e.dataTransfer.getData('text/material-id');
-    const found = MATERIAL_PALETTE.find((m) => m.id === id);
-    if (found) handleAdd(found);
-  };
-
-  const handleDragStart = (id: string, e: React.DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.setData('text/material-id', id);
-  };
-
   const handleRemove = (idxToRemove: number) => {
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
-  };
-
-  const renderMaterialCard = (mat: MaterialOption) => {
-    const customFinish = customFinishes[mat.id] || { color: mat.tone, finish: mat.finishOptions?.[0] || 'Matte' };
-    return (
-      <div
-        key={mat.id}
-        draggable
-        onDragStart={(e) => handleDragStart(mat.id, e)}
-        className="border border-gray-200 bg-white p-4 flex items-start gap-3 cursor-grab active:cursor-grabbing"
-      >
-        <span
-          className="w-10 h-10 rounded-full border border-gray-200 shadow-inner"
-          style={{ backgroundColor: mat.id === 'steel-frame' ? steelColor : customFinish.color || mat.tone }}
-          aria-hidden
-        />
-        <div className="space-y-2 flex-1">
-          <div>
-            <div className="font-display uppercase tracking-wide text-sm">{mat.name}</div>
-            <div className="font-mono text-[11px] uppercase tracking-widest">{mat.finish}</div>
-            <p className="font-sans text-sm text-gray-600 mt-1">{mat.description}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() =>
-                handleAdd(mat, {
-                  tone: mat.supportsColor ? (mat.id === 'steel-frame' ? steelColor : customFinish.color) : undefined,
-                  finishVariant: mat.finishOptions?.length ? customFinish.finish : undefined
-                })
-              }
-              className="font-mono text-[11px] uppercase tracking-widest border px-2 py-1 hover:bg-black hover:text-white"
-            >
-              Add to board
-            </button>
-            {mat.supportsColor && mat.finishOptions?.length ? (
-              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                Custom colour + finish ready
-              </span>
-            ) : null}
-          </div>
-
-          {mat.colorOptions?.length ? (
-            <div className="space-y-2">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                {mat.id === 'brick-veneer' ? 'Brick Colours' : 'Colour Options'}
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {mat.colorOptions.map((option) => (
-                  <button
-                    key={`${mat.id}-${option.label}`}
-                    onClick={() => handleAdd(mat, { label: option.label, tone: option.tone })}
-                    className="inline-flex items-center gap-2 px-2 py-1 border border-gray-200 hover:border-black"
-                  >
-                    <span
-                      className="w-4 h-4 rounded-full border border-gray-200 shadow-inner"
-                      style={{ backgroundColor: option.tone }}
-                      aria-hidden
-                    />
-                    <span className="font-mono text-[11px] uppercase tracking-widest">{option.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {mat.id === 'steel-frame' ? (
-            <div className="space-y-2">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Steel Colour</div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {[
-                  { label: 'White', value: '#ffffff' },
-                  { label: 'Charcoal', value: '#333333' },
-                  { label: 'Oxide Red', value: '#7a2c20' }
-                ].map((preset) => (
-                  <button
-                    key={preset.value}
-                    onClick={() => setSteelColor(preset.value)}
-                    className={`px-3 py-1 border text-xs font-mono uppercase tracking-widest ${
-                      steelColor.toLowerCase() === preset.value.toLowerCase()
-                        ? 'border-black bg-black text-white'
-                        : 'border-gray-200 hover:border-black'
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={steelColor}
-                  onChange={(e) => setSteelColor(e.target.value)}
-                  className="w-12 h-10 border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={steelColor}
-                  onChange={(e) => setSteelColor(e.target.value)}
-                  className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {mat.supportsColor && mat.finishOptions?.length ? (
-            <div className="space-y-2">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                Custom colour & finish
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  type="color"
-                  value={customFinish.color}
-                  onChange={(e) =>
-                    setCustomFinishes((prev) => ({
-                      ...prev,
-                      [mat.id]: { color: e.target.value, finish: customFinish.finish }
-                    }))
-                  }
-                  className="w-12 h-10 border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={customFinish.color}
-                  onChange={(e) =>
-                    setCustomFinishes((prev) => ({
-                      ...prev,
-                      [mat.id]: { color: e.target.value, finish: customFinish.finish }
-                    }))
-                  }
-                  className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
-                />
-                <select
-                  value={customFinish.finish}
-                  onChange={(e) =>
-                    setCustomFinishes((prev) => ({
-                      ...prev,
-                      [mat.id]: { color: customFinish.color, finish: e.target.value }
-                    }))
-                  }
-                  className="border border-gray-300 px-2 py-2 text-sm font-sans"
-                >
-                  {mat.finishOptions.map((option) => (
-                    <option key={`${mat.id}-${option}`} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <p className="font-sans text-xs text-gray-600">
-                Custom paint colour rule: pick any HEX/RGB value and finish (matte, satin, gloss) for walls or ceilings.
-              </p>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    );
   };
 
   const summaryText = useMemo(() => {
@@ -871,86 +462,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return lines.join('\n');
   }, [board]);
   const sustainabilityPayload = useMemo(() => buildSustainabilityPayload(board), [board]);
-  const allGroups = useMemo(
-    () => MATERIAL_TREE.flatMap((section) => section.groups.map((g) => g)),
-    []
-  );
-  const manualCategoryOptions: { id: MaterialOption['category']; label: string }[] = useMemo(
-    () => [
-      { id: 'structure', label: 'Structure' },
-      { id: 'floor', label: 'Floors' },
-      { id: 'wall-internal', label: 'Internal Walls' },
-      { id: 'external', label: 'External Envelope' },
-      { id: 'ceiling', label: 'Ceilings' },
-      { id: 'soffit', label: 'Soffits' },
-      { id: 'window', label: 'Window Frames / Glazing' },
-      { id: 'roof', label: 'Roofing' },
-      { id: 'finish', label: 'Internal Finishes' },
-      { id: 'paint-wall', label: 'Paint – Walls' },
-      { id: 'paint-ceiling', label: 'Paint – Ceilings' },
-      { id: 'plaster', label: 'Plaster' },
-      { id: 'microcement', label: 'Microcement' },
-      { id: 'timber-panel', label: 'Timber Panels' },
-      { id: 'tile', label: 'Tiles' },
-      { id: 'wallpaper', label: 'Wallpaper' },
-      { id: 'acoustic-panel', label: 'Acoustic Panels' },
-      { id: 'timber-slat', label: 'Timber Slats' },
-      { id: 'joinery', label: 'Joinery & Furniture' },
-      { id: 'fixture', label: 'Fixtures & Fittings' },
-      { id: 'landscape', label: 'External Ground / Landscaping' }
-    ],
-    []
-  );
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
-    const acc: Record<string, boolean> = {};
-    allGroups.forEach((group) => {
-      acc[group.id] = false;
-    });
-    acc.custom = false;
-    return acc;
-  });
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredMaterialsByPath: Record<string, MaterialOption[]> = useMemo(() => {
-    const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
-    if (!tokens.length) return materialsByPath;
-
-    const matchesSearch = (mat: MaterialOption) => {
-      const haystack = [
-        mat.name,
-        mat.finish,
-        mat.description,
-        mat.category,
-        ...(mat.keywords || []),
-        ...(mat.colorOptions?.map((c) => c.label) || [])
-      ]
-        .join(' ')
-        .toLowerCase();
-      return tokens.every((token) => haystack.includes(token));
-    };
-
-    const next: Record<string, MaterialOption[]> = {};
-    (Object.entries(materialsByPath) as Array<[string, MaterialOption[]]>).forEach(([path, list]) => {
-      next[path] = list.filter((item) => matchesSearch(item));
-    });
-    return next;
-  }, [normalizedSearch, materialsByPath]);
-  const hasSearch = normalizedSearch.length > 0;
-  const totalSearchResults = useMemo(
-    () => Object.values(filteredMaterialsByPath).reduce((acc, list) => acc + list.length, 0),
-    [filteredMaterialsByPath]
-  );
-  const [manualLabel, setManualLabel] = useState('');
-  const [manualCategory, setManualCategory] = useState<MaterialOption['category']>('finish');
-  const [manualTone, setManualTone] = useState('#e5e7eb');
-  const [carbonSectionsOpen, setCarbonSectionsOpen] = useState<Record<string, boolean>>(() => {
-    const acc: Record<string, boolean> = {};
-    allGroups.forEach((group) => {
-      acc[group.id] = false;
-    });
-    return acc;
-  });
-  const [materialFlagsOpen, setMaterialFlagsOpen] = useState(false);
-  const [assessmentOpen, setAssessmentOpen] = useState(false);
 
   const moodboardRenderUrl = moodboardRenderUrlProp ?? moodboardRenderUrlState;
 
@@ -964,48 +475,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setMoodboardRenderUrlState(moodboardRenderUrlProp);
     }
   }, [moodboardRenderUrlProp]);
-
-  useEffect(() => {
-    if (!hasSearch) return;
-    setOpenSections((prev) => {
-      const next = { ...prev };
-      allGroups.forEach((group) => {
-        next[group.id] = (filteredMaterialsByPath[group.path] || []).length > 0;
-      });
-      return next;
-    });
-    setCarbonSectionsOpen((prev) => {
-      const next = { ...prev };
-      allGroups.forEach((group) => {
-        const list = filteredMaterialsByPath[group.path] || [];
-        next[group.id] = list.some((m) => m.carbonIntensity === 'high');
-      });
-      return next;
-    });
-  }, [hasSearch, filteredMaterialsByPath, allGroups]);
-
-  useEffect(() => {
-    if (hasSearch) return;
-    setOpenSections((prev) => {
-      const anyOpen = allGroups.some((group) => prev[group.id]);
-      if (!anyOpen) return prev;
-      const next = { ...prev };
-      allGroups.forEach((group) => {
-        next[group.id] = false;
-      });
-      next.custom = prev.custom;
-      return next;
-    });
-    setCarbonSectionsOpen((prev) => {
-      const anyOpen = allGroups.some((group) => prev[group.id]);
-      if (!anyOpen) return prev;
-      const next = { ...prev };
-      allGroups.forEach((group) => {
-        next[group.id] = false;
-      });
-      return next;
-    });
-  }, [hasSearch, allGroups]);
 
   const buildMaterialKey = () => {
     if (!board.length) return 'No materials selected yet.';
@@ -1077,220 +546,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       img.src = src;
     });
 
-  const hasTextContent = () =>
-    Boolean(sustainabilityInsightsRef.current && sustainabilityInsightsRef.current.length > 0);
-
-  const sustainabilityPreview = useMemo(() => {
-    if (!summaryReviewed) return null;
-    const availableInsights = sustainabilityInsights || [];
-
-    const materialById = new Map<string, BoardItem>();
-    board.forEach((material) => materialById.set(material.id, material));
-
-    const insightById = new Map<string, SustainabilityInsight>();
-    availableInsights.forEach((insight) => {
-      if (insight?.id) insightById.set(insight.id, insight);
-    });
-
-    const metrics = new Map<string, MaterialMetrics>();
-    board.forEach((material) => {
-      const profile = MATERIAL_LIFECYCLE_PROFILES[material.id];
-      if (!profile) return;
-      const insight = insightById.get(material.id);
-      const benefits = insight?.benefits || [];
-      metrics.set(material.id, calculateMaterialMetrics(profile, benefits, material));
-    });
-
-    const labelFor = (id: string) =>
-      materialById.get(id)?.name || insightById.get(id)?.title || 'Material';
-
-    const isLandscapeId = (id: string) => {
-      const material = materialById.get(id);
-      return material ? isLandscapeMaterial(material) : false;
-    };
-
-    const uniqueList = (items: string[]) => {
-      const seen = new Set<string>();
-      const result: string[] = [];
-      items.forEach((item) => {
-        const trimmed = item.trim();
-        if (!trimmed || seen.has(trimmed)) return;
-        seen.add(trimmed);
-        result.push(trimmed);
-      });
-      return result;
-    };
-
-    const isWildflowerMeadow = (material?: BoardItem) => {
-      if (!material) return false;
-      if (material.id === 'wildflower-meadow') return true;
-      return /wildflower|meadow/i.test(material.name);
-    };
-
-    const stageLabelMap: Record<LifecycleStageKey, string> = {
-      raw: 'Raw stage',
-      manufacturing: 'Manufacturing stage',
-      transport: 'Transport stage',
-      installation: 'Installation stage',
-      inUse: 'In-use stage',
-      maintenance: 'Maintenance stage',
-      endOfLife: 'End-of-life stage'
-    };
-
-    const cleanSentence = (value?: string) => {
-      const trimmed = (value || '').trim();
-      if (!trimmed) return '';
-      return trimmed.replace(/[.]+$/, '');
-    };
-
-    const getTopHotspotLine = (insight?: SustainabilityInsight) => {
-      if (!insight?.hotspots?.length) return '';
-      const topHotspot = [...insight.hotspots].sort((a, b) => b.score - a.score)[0];
-      if (!topHotspot) return '';
-      const reason = cleanSentence(topHotspot.reason);
-      if (!reason) return '';
-      return `${stageLabelMap[topHotspot.stage]}: ${reason}`;
-    };
-
-    const getRiskLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
-      if (material && isWildflowerMeadow(material)) {
-        return 'High upfront establishment impact if pre-grown systems are used.';
-      }
-      const headline = cleanSentence(insight?.headline);
-      if (headline) return headline;
-      const hotspotLine = getTopHotspotLine(insight);
-      if (hotspotLine) return hotspotLine;
-      if (insight?.design_risk) return insight.design_risk;
-      const topRisk = insight?.risks?.reduce((best, risk) => {
-        if (!best || risk.severity_1to5 > best.severity_1to5) return risk;
-        return best;
-      }, undefined as Risk | undefined);
-      if (topRisk?.note) return topRisk.note;
-      return 'Performance justification is required at concept stage.';
-    };
-
-    const getBenefitLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
-      if (material && isWildflowerMeadow(material)) {
-        return 'Long-term ecological, water, and biodiversity benefits dominate lifecycle performance.';
-      }
-      const rationale = cleanSentence(insight?.whyItLooksLikeThis);
-      if (rationale) return rationale;
-      const benefits = insight?.benefits || [];
-      if (benefits.length > 0) {
-        const topBenefit = [...benefits].sort((a, b) => b.score_1to5 - a.score_1to5)[0];
-        if (topBenefit.note) return topBenefit.note;
-        return BENEFIT_LABELS[topBenefit.type] || 'Documented sustainability benefits are available.';
-      }
-      return 'Documented sustainability benefits are limited at concept stage.';
-    };
-
-    const getActionLine = (material: BoardItem | undefined, insight?: SustainabilityInsight) => {
-      if (material && isWildflowerMeadow(material)) {
-        return 'Avoid pre-grown mats. Use plug planting in site-won soil.';
-      }
-      if (insight?.design_response) return insight.design_response;
-      if (insight?.designLevers?.length) return insight.designLevers[0];
-      if (insight?.whatCouldChange?.length) return insight.whatCouldChange[0];
-      return 'Validate alternatives and avoid over-specification.';
-    };
-
-    const nonLandscapeEmbodied = [...metrics.entries()]
-      .filter(([id]) => !isLandscapeId(id))
-      .sort((a, b) => b[1].embodied_proxy - a[1].embodied_proxy);
-    const allEmbodiedSorted = [...metrics.entries()].sort(
-      (a, b) => b[1].embodied_proxy - a[1].embodied_proxy
-    );
-    const embodiedFallback = nonLandscapeEmbodied.length > 0 ? nonLandscapeEmbodied : allEmbodiedSorted;
-
-    const highestImpactIds = embodiedFallback.slice(0, 3).map(([id]) => id);
-    const highestImpact = highestImpactIds.map(labelFor);
-
-    // Conservative threshold: only genuinely low embodied materials qualify as "low-carbon".
-    const LOW_CARBON_EMBODIED_MAX = 2.2;
-
-    const lowCarbonCandidates = [...metrics.entries()]
-      .filter(([id, metric]) => {
-        const material = materialById.get(id);
-        if (!material) return false;
-        if (highestImpactIds.includes(id)) return false;
-        return metric.traffic_light === 'green' || metric.embodied_proxy <= LOW_CARBON_EMBODIED_MAX;
-      })
-      .sort((a, b) => a[1].embodied_proxy - b[1].embodied_proxy);
-
-    const lowCarbonSystems = lowCarbonCandidates.slice(0, 3).map(([id]) => labelFor(id));
-
-    const actionPriorities = uniqueList(
-      highestImpactIds.map((id) => getActionLine(materialById.get(id), insightById.get(id)))
-    ).slice(0, 3);
-
-    const summarySentence = paletteSummary?.trim()
-      ? paletteSummary.trim()
-      : highestImpact.length > 0 && lowCarbonSystems.length > 0
-        ? 'This palette combines performance-led finishes with lower-carbon structural and landscape systems. Several components will need justification or refinement at later stages.'
-        : highestImpact.length > 0
-          ? 'Several high-impact components will need justification or refinement at later stages.'
-          : 'Early-stage sustainability signals are available once materials are assessed.';
-
-    const goodPracticeIds = lowCarbonCandidates
-      .filter(([id]) => !highestImpactIds.includes(id))
-      .sort((a, b) => {
-        const benefitDiff = b[1].environmental_benefit_score - a[1].environmental_benefit_score;
-        if (benefitDiff !== 0) return benefitDiff;
-        return a[1].embodied_proxy - b[1].embodied_proxy;
-      })
-      .slice(0, 2)
-      .map(([id]) => id);
-
-    const highlightIds = [...highestImpactIds, ...goodPracticeIds];
-    const highlights = highlightIds.map((id) => {
-      const material = materialById.get(id);
-      const insight = insightById.get(id);
-      const isHighImpact = highestImpactIds.includes(id);
-      const left = isHighImpact ? getRiskLine(material, insight) : getBenefitLine(material, insight);
-      const right = getActionLine(material, insight);
-      const clean = (value: string) => value.trim().replace(/\.$/, '');
-      return {
-        id,
-        title: material?.name || insight?.title || 'Material',
-        line: `${clean(left)} → ${clean(right)}`
-      };
-    });
-
-    return {
-      snapshot: {
-        summarySentence,
-        highestImpact,
-        lowCarbonSystems,
-        actionPriorities
-      },
-      highlights
-    };
-  }, [board, sustainabilityInsights, paletteSummary, summaryReviewed]);
-
-  const generateSummaryPdf = () => {
-    const insights = sustainabilityInsightsRef.current || sustainabilityInsights || [];
-    return buildSummaryPdf({
-      board,
-      insights,
-      paletteSummary: paletteSummaryRef.current,
-      sustainabilityPreview,
-    });
-  };
-
-  const generateReportPdf = async (
-    onProgress?: (step: string, percent: number) => void
-  ) => {
-    const insights = sustainabilityInsightsRef.current || [];
-    return buildReportPdf({
-      board,
-      insights,
-      paletteSummary: paletteSummaryRef.current,
-      reportProse: reportProseRef.current,
-      moodboardRenderUrl,
-      onProgress,
-    });
-  };
-
   const generateBriefingPdf = () => {
     if (!sustainabilityBriefing || !briefingPayload) return null;
     return buildBriefingPdf({
@@ -1298,86 +553,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       briefingPayload,
       board,
     });
-  };
-
-  const handleDownloadSummaryReport = async () => {
-    if (!sustainabilityPreview) {
-      setError('Generate the sustainability summary first.');
-      return;
-    }
-    setExportingSummaryReport(true);
-    try {
-      const doc = generateSummaryPdf();
-      doc.save('moodboard-summary.pdf');
-    } catch (err) {
-      console.error('Could not create summary PDF', err);
-      setError('Could not create the summary download.');
-    } finally {
-      setExportingSummaryReport(false);
-    }
-  };
-
-  const handleMobileSaveSummaryReport = async () => {
-    if (!sustainabilityPreview) {
-      setError('Generate the sustainability summary first.');
-      return;
-    }
-    setExportingSummaryReport(true);
-    try {
-      const doc = generateSummaryPdf();
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        doc.save('moodboard-summary.pdf');
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (err) {
-      console.error('Could not create summary PDF', err);
-      setError('Could not create the mobile summary.');
-    } finally {
-      setExportingSummaryReport(false);
-    }
-  };
-
-  const handleDownloadReport = async () => {
-    if (!hasTextContent()) {
-      setError('Generate sustainability insights first.');
-      return;
-    }
-    setExportingReport(true);
-    try {
-      const doc = await generateReportPdf();
-      doc.save('moodboard-report.pdf');
-    } catch (err) {
-      console.error('Could not create report PDF', err);
-      setError('Could not create the report download.');
-    } finally {
-      setExportingReport(false);
-    }
-  };
-
-  const handleMobileSaveReport = async () => {
-    if (!hasTextContent()) {
-      setError('Generate sustainability insights first.');
-      return;
-    }
-    setExportingReport(true);
-    try {
-      const doc = await generateReportPdf();
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
-      if (!win) {
-        doc.save('moodboard-report.pdf');
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch (err) {
-      console.error('Could not create report PDF', err);
-      setError('Could not create the mobile report.');
-    } finally {
-      setExportingReport(false);
-    }
   };
 
   const handleDownloadBriefingPdf = () => {
@@ -1528,59 +703,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
-  const handleOpenImage = (url: string) => {
-    if (!url) return;
-    const opened = window.open(url, '_blank');
-    if (!opened) setError('Unable to open image. Please allow pop-ups to save it.');
-    else opened.focus?.();
-  };
-
-  const handleSaveImage = (dataUrl: string, filename: string) => {
-    if (!dataUrl) return;
-    try {
-      const blob = createImageBlobFromDataUrl(dataUrl);
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    } catch (err) {
-      console.error('Save image failed, opening instead', err);
-      handleOpenImage(dataUrl);
-    }
-  };
-
-  const handleInstagramShare = async (url: string) => {
-    if (!url) return;
-    setDownloadingId('instagram');
-    try {
-      const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent || '');
-      const blob = url.startsWith('data:')
-        ? createImageBlobFromDataUrl(url)
-        : await fetch(url).then(response => response.blob());
-      const file = new File([blob], 'moodboard.png', { type: blob.type || 'image/png' });
-      if (isMobile && navigator.canShare?.({ files: [file] }) && navigator.share) {
-        await navigator.share({
-          files: [file],
-          title: 'Moodboard',
-          text: 'Created with Moodboard Lab'
-        });
-        return;
-      }
-      handleSaveImage(url, 'moodboard.png');
-      const opened = window.open('https://www.instagram.com/', '_blank');
-      if (!opened) {
-        setError('Image downloaded. Open Instagram to upload your moodboard.');
-      }
-    } catch (err) {
-      console.error('Instagram share failed', err);
-      setError('Could not prepare the image for Instagram sharing.');
-    } finally {
-      setDownloadingId(null);
-    }
-  };
   // Helper to generate sustainability briefing
   const generateBriefing = async (): Promise<boolean> => {
     try {
@@ -1662,7 +784,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setSustainabilityInsights(null);
     setPaletteSummary(null);
     paletteSummaryRef.current = null;
-    setReportProse(null);
     reportProseRef.current = null;
     setSummaryReviewed(false);
     setSustainabilityBriefing(null);
@@ -1741,181 +862,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     } finally {
       setIsCreatingMoodboard(false);
     }
-  };
-
-  const addManualMaterial = () => {
-    if (!manualLabel.trim()) return;
-    const newMat: MaterialOption = {
-      id: `custom-${Date.now()}`,
-      name: manualLabel.trim(),
-      tone: manualTone || '#e5e7eb',
-      finish: manualLabel.trim(),
-      description: manualLabel.trim(),
-      keywords: ['custom'],
-      category: manualCategory
-    };
-    handleAdd(newMat);
-    setManualLabel('');
-  };
-
-  const handleMaterialDetectionUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const file = files[0];
-
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setError(`File exceeds 5 MB limit.`);
-      return;
-    }
-
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
-      const resized = await downscaleImage(dataUrl);
-      const uploadedImg: UploadedImage = {
-        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name: file.name,
-        dataUrl: resized.dataUrl,
-        mimeType: resized.mimeType,
-        sizeBytes: resized.sizeBytes,
-        originalSizeBytes: file.size,
-        width: resized.width,
-        height: resized.height
-      };
-
-      setDetectionImage(uploadedImg);
-    } catch (err) {
-      console.error('Could not process upload', err);
-      setError(`Could not process "${file.name}".`);
-    }
-  };
-
-  const startMaterialDetection = async () => {
-    if (!detectionImage) return;
-    await detectMaterialsFromImage(detectionImage);
-  };
-
-  const detectMaterialsFromImage = async (image: UploadedImage) => {
-    setStatus('detecting');
-    setError(null);
-
-    const prompt = `Analyze this image and identify all architectural materials visible. For each material, provide:
-1. name: The specific material name (e.g., "Oak Timber Flooring", "Polished Concrete")
-2. finish: The finish or surface treatment, INCLUDING the color in the description (e.g., "Oiled oak planks in warm honey tone", "Polished concrete slab in light grey")
-3. description: A detailed 1-2 sentence description of the material and its characteristics
-4. tone: A hex color code representing the EXACT dominant color of the material as seen in the photo (e.g., "#d8b185" for natural oak, "#c5c0b5" for light grey concrete). CRITICAL: Analyze the actual color in the image carefully.
-5. category: One of these categories: floor, structure, finish, wall-internal, external, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, joinery, fixture, landscape, insulation, door, balustrade, external-ground
-6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
-7. carbonIntensity: Either "low", "medium", or "high" based on the material's embodied carbon (e.g., timber is "low", zinc cladding is "medium", concrete is "high")
-
-Return ONLY a valid JSON object in this exact format:
-{
-  "materials": [
-    {
-      "name": "material name",
-      "finish": "finish description with color mentioned",
-      "description": "detailed description",
-      "tone": "#hexcolor",
-      "category": "category-name",
-      "keywords": ["keyword1", "keyword2", "keyword3"],
-      "carbonIntensity": "low"
-    }
-  ]
-}
-
-IMPORTANT:
-- Analyze the ACTUAL colors in the image carefully and provide accurate hex codes
-- Include color descriptions in the finish field (e.g., "White painted steel", "Charcoal powder-coated aluminum")
-- Be specific and accurate. Only include materials you can clearly identify in the image.`;
-
-    const payload = {
-      contents: [
-        {
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: image.mimeType,
-                data: image.dataUrl.split(',')[1]
-              }
-            }
-          ]
-        }
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        topP: 0.95,
-        topK: 40
-      }
-    };
-
-    try {
-      const data = await callGeminiText(payload);
-      let textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      // Clean up the response to extract JSON
-      textResult = textResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-      const parsed = JSON.parse(textResult);
-      const rawMaterials = Array.isArray(parsed?.materials) ? parsed.materials : [];
-
-      if (rawMaterials.length > 0) {
-        // Convert to full MaterialOption objects with all required fields
-        const fullMaterials: MaterialOption[] = rawMaterials.map((mat: any) => {
-          const category = mat.category as MaterialCategory;
-          const treePaths = treePathFallbacks[category] || ['Custom>Brand / Supplier Material'];
-
-          return {
-            id: `detected-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            name: mat.name || 'Unknown Material',
-            tone: mat.tone || '#e5e7eb',
-            finish: mat.finish || '',
-            description: mat.description || '',
-            keywords: Array.isArray(mat.keywords) ? mat.keywords : ['detected', 'custom'],
-            category: category,
-            carbonIntensity: (mat.carbonIntensity === 'low' || mat.carbonIntensity === 'medium' || mat.carbonIntensity === 'high')
-              ? mat.carbonIntensity
-              : undefined,
-            treePaths: treePaths
-          };
-        });
-
-        setDetectedMaterials(fullMaterials);
-        setShowDetectionModal(true);
-        setAddedDetectedIds(new Set()); // Reset tracking when showing new materials
-      } else {
-        setError('No materials detected in the image. Please try another image.');
-      }
-    } catch (err) {
-      console.error('Material detection error:', err);
-      setError('Failed to analyze materials. Please try again.');
-    } finally {
-      setStatus('idle');
-    }
-  };
-
-  const addSingleDetectedMaterial = (material: MaterialOption) => {
-    if (addedDetectedIds.has(material.id)) {
-      return; // Already added, don't add again
-    }
-    handleAdd(material);
-    setAddedDetectedIds((prev) => new Set([...prev, material.id]));
-  };
-
-  const addDetectedMaterialsToBoard = (materials: MaterialOption[]) => {
-    materials.forEach((mat) => {
-      if (!addedDetectedIds.has(mat.id)) {
-        handleAdd(mat);
-        setAddedDetectedIds((prev) => new Set([...prev, mat.id]));
-      }
-    });
-    setShowDetectionModal(false);
-    setDetectedMaterials(null);
-    setDetectionImage(null);
   };
 
   const runGemini = async (
@@ -2534,7 +1480,6 @@ ${JSON.stringify(proseContext)}`;
           setSustainabilityInsights(null);
           sustainabilityInsightsRef.current = null;
           setPaletteSummary(null);
-          setReportProse(null);
           reportProseRef.current = null;
           const message = 'Gemini returned malformed sustainability JSON.';
           if (canRetry) {
@@ -2665,7 +1610,6 @@ ${JSON.stringify(proseContext)}`;
           if (!prose.strategicOverview.narrative && !prose.complianceReadiness.intro) {
             throw new Error('Invalid report prose response');
           }
-          setReportProse(prose);
           reportProseRef.current = prose;
         } catch (parseError) {
           const recoveredProse: ReportProse = {
@@ -2693,13 +1637,11 @@ ${JSON.stringify(proseContext)}`;
           );
 
           if (hasRecoveredCopy) {
-            setReportProse(recoveredProse);
             reportProseRef.current = recoveredProse;
             console.warn('Malformed report prose JSON; using recovered text fields.', parseError);
             return true;
           }
 
-          setReportProse(null);
           reportProseRef.current = null;
           console.warn('Gemini returned malformed report prose JSON.', parseError);
           return false;
@@ -2732,7 +1674,6 @@ ${JSON.stringify(proseContext)}`;
     }
   };
 
-  const fullReportReady = hasTextContent();
   const isRenderInFlight = status === 'render' && isCreatingMoodboard;
 
   return (

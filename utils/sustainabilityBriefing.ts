@@ -4,7 +4,6 @@
  */
 
 import type { MaterialOption } from '../types';
-import type { LifecycleProfile, LifecycleStageKey } from '../lifecycleProfiles';
 import { getLifecycleProfile } from '../data';
 
 // Types for Sustainability Briefing

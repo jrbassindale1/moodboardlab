@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Search, ShoppingCart, X, FileText, Camera } from 'lucide-react';
+import { ChevronRight, Search, ShoppingCart, X, Camera } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
