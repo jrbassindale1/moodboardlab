@@ -4695,7 +4695,7 @@ ${JSON.stringify(proseContext)}`;
                         <Wand2 className="w-4 h-4" />
                         Apply text edit
                       </>
-                    )}
+                    )} 
                   </button>
                 </div>
               </div>
