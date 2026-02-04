@@ -136,7 +136,7 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
-const MOODBOARD_FLOW_TOTAL_STEPS = 3;
+const MOODBOARD_FLOW_TOTAL_STEPS = 1;
 const REPORT_PROSE_TIMEOUT_MS = 25000;
 const BENEFIT_LABELS: Record<Benefit['type'], string> = {
   biodiversity: 'Biodiversity and habitat uplift potential',
@@ -539,7 +539,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [steelColor, setSteelColor] = useState('#ffffff');
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
-  const [isBuildingFullReport, setIsBuildingFullReport] = useState(false);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[] | null>(null);
@@ -1659,7 +1658,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return;
     }
     setIsCreatingMoodboard(true);
-    setIsBuildingFullReport(false);
     setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
     setPaletteSummary(null);
@@ -1695,48 +1693,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
         return;
       }
 
-      // Step 2: Build full sustainability report (per-material deep dive)
-      setIsBuildingFullReport(true);
       setFlowProgress({
-        step: 2,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Building full sustainability report',
-        state: 'running'
-      });
-      const reportOk = await runGemini('sustainability');
-      if (!reportOk) {
-        setFlowProgress({
-          step: 2,
-          total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Full report generation failed',
-          state: 'error'
-        });
-        return;
-      }
-      // Enable the sustainability preview + download buttons now that insights exist.
-      setSummaryReviewed(true);
-
-      // Step 3: Generate report prose for PDF
-      setFlowProgress({
-        step: 3,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Writing report prose',
-        state: 'running'
-      });
-      const proseOk = await runGemini('report-prose', { requestTimeoutMs: REPORT_PROSE_TIMEOUT_MS });
-      if (!proseOk) {
-        console.warn('Report prose generation skipped; using deterministic PDF copy.');
-      }
-
-      setFlowProgress({
-        step: 3,
+        step: 1,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
         label: 'Complete',
         state: 'complete'
       });
       setMaterialsAccordionOpen(false);
     } finally {
-      setIsBuildingFullReport(false);
       setIsCreatingMoodboard(false);
       setStatus('idle');
     }
@@ -2843,15 +2807,6 @@ ${JSON.stringify(proseContext)}`;
               </div>
             )}
 
-            {isBuildingFullReport && moodboardRenderUrl && (
-              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                <AlertCircle className="w-4 h-4 mt-[2px]" />
-                <span>
-                  Moodboard preview is ready. Full sustainability report is still being generated.
-                </span>
-              </div>
-            )}
-
             <SustainabilityBriefingSection
               sustainabilityBriefing={sustainabilityBriefing}
               briefingPayload={briefingPayload}
@@ -2873,10 +2828,6 @@ ${JSON.stringify(proseContext)}`;
                 onDownloadBoard={handleDownloadBoard}
                 onNavigate={onNavigate}
                 onMoodboardEdit={handleMoodboardEdit}
-                fullReportReady={fullReportReady}
-                exportingReport={exportingReport}
-                onDownloadReport={handleDownloadReport}
-                onMobileSaveReport={handleMobileSaveReport}
               />
             )}
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Loader2,
   Leaf,
@@ -39,6 +39,8 @@ const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps
   board,
   onDownloadBriefingPdf,
 }) => {
+  const [fullReportNotice, setFullReportNotice] = useState<string | null>(null);
+
   if (!sustainabilityBriefing && !isBriefingLoading) return null;
 
   return (
@@ -51,20 +53,34 @@ const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps
           </span>
         </div>
         {sustainabilityBriefing && (
-          <button
-            onClick={onDownloadBriefingPdf}
-            disabled={exportingBriefingPdf}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
-          >
-            {exportingBriefingPdf ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onDownloadBriefingPdf}
+              disabled={exportingBriefingPdf}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors disabled:opacity-50"
+            >
+              {exportingBriefingPdf ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              Download PDF
+            </button>
+            <button
+              onClick={() => setFullReportNotice('This feature is in production and will be coming soon.')}
+              aria-disabled="true"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 rounded border border-gray-200 cursor-not-allowed"
+            >
+              Create Full Sustainability Report
+            </button>
+          </div>
         )}
       </div>
+      {fullReportNotice && (
+        <div className="px-4 py-2 border-b border-amber-200 bg-amber-50 text-xs text-amber-800">
+          {fullReportNotice}
+        </div>
+      )}
 
       {isBriefingLoading && !sustainabilityBriefing ? (
         <div className="flex items-center justify-center py-12">

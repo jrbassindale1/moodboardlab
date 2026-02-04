@@ -12,10 +12,6 @@ interface MoodboardRenderSectionProps {
   onDownloadBoard: (url: string, renderId?: string) => void;
   onNavigate?: (page: string) => void;
   onMoodboardEdit: () => void;
-  fullReportReady: boolean;
-  exportingReport: boolean;
-  onDownloadReport: () => void;
-  onMobileSaveReport: () => void;
 }
 
 const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
@@ -29,10 +25,6 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   onDownloadBoard,
   onNavigate,
   onMoodboardEdit,
-  fullReportReady,
-  exportingReport,
-  onDownloadReport,
-  onMobileSaveReport,
 }) => {
   return (
     <div className="space-y-4">
@@ -82,27 +74,6 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
         >
           <Wand2 className="w-4 h-4" />
           Apply your materials
-        </button>
-        <button
-          onClick={onDownloadReport}
-          disabled={!fullReportReady || exportingReport}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-        >
-          {exportingReport ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Building report...
-            </>
-          ) : (
-            'Download full report (PDF)'
-          )}
-        </button>
-        <button
-          onClick={onMobileSaveReport}
-          disabled={!fullReportReady || exportingReport}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
-        >
-          Save full report (PDF)
         </button>
       </div>
       <div className="border border-gray-200 p-4 bg-white space-y-2">
