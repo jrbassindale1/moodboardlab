@@ -55,7 +55,15 @@ export const OLD_TO_NEW_CATEGORY_MAPPING: Record<
     tags: [],
   },
   'Internal>Balustrade & Railings': {
-    newPath: 'Elements>Balustrades & Railings',
+    newPath: 'Envelope>Balustrades & Railings',
+    tags: [],
+  },
+  'Elements>Balustrades & Railings': {
+    newPath: 'Envelope>Balustrades & Railings',
+    tags: [],
+  },
+  'Elements>Furniture': {
+    newPath: 'Interiors>Fixtures & Fittings',
     tags: [],
   },
   'Internal>Joinery & Furniture': {

@@ -3,6 +3,8 @@ const ICON_FALLBACKS: Record<string, string> = {
   'aluminium-cladding': 'zinc-cladding',
   'stainless-cladding': 'zinc-cladding',
   'lead-cladding': 'zinc-cladding',
+  'green-oak-structure': 'glulam-structure',
+  'space-frame-structure': 'lightweight-space-frame-infill',
   'aluminium-standing-seam-roof': 'standing-seam-roof',
   'copper-standing-seam-roof': 'standing-seam-roof',
   'stainless-standing-seam-roof': 'standing-seam-roof',

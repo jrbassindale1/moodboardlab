@@ -139,14 +139,14 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       'acoustic-panel': 'Acoustic Panels',
       'timber-slat': 'Timber Slats',
       'exposed-structure': 'Exposed Structure',
-      'joinery': 'Joinery & Furniture',
+      'joinery': 'Joinery',
       'fixture': 'Fixtures & Fittings',
       'landscape': 'Landscaping',
       'insulation': 'Insulation',
       'door': 'Doors',
-      'balustrade': 'Balustrade & Railings',
+      'balustrade': 'Balustrades & Railings',
       'external-ground': 'External Ground',
-      'furniture': 'Furniture'
+      'furniture': 'Fixtures & Fittings'
     };
     return categoryMap[category] || category;
   };
@@ -191,14 +191,14 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       'acoustic-panel': 'Acoustic Panels',
       'timber-slat': 'Timber Slats',
       'exposed-structure': 'Exposed Structure',
-      'joinery': 'Joinery & Furniture',
+      'joinery': 'Joinery',
       'fixture': 'Fixtures & Fittings',
       'landscape': 'Landscaping',
       'insulation': 'Insulation',
       'door': 'Doors',
-      'balustrade': 'Balustrade & Railings',
+      'balustrade': 'Balustrades & Railings',
       'external-ground': 'External Ground',
-      'furniture': 'Furniture'
+      'furniture': 'Fixtures & Fittings'
     } as const).find(([_, display]) => display === targetCategory)?.[0] as MaterialOption['category'];
 
     if (categoryKey && material.category !== categoryKey) {

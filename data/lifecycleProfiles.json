@@ -83,6 +83,15 @@
       "maintenance": { "impact": 1, "confidence": "high" },
       "endOfLife": { "impact": 1, "confidence": "high" }
     },
+    "green-oak-structure": {
+      "raw": { "impact": 1, "confidence": "high" },
+      "manufacturing": { "impact": 2, "confidence": "high" },
+      "transport": { "impact": 2, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 1, "confidence": "high" }
+    },
     "glulam-columns-beams": {
       "raw": { "impact": 1, "confidence": "high" },
       "manufacturing": { "impact": 2, "confidence": "high" },
@@ -127,6 +136,15 @@
       "inUse": { "impact": 1, "confidence": "high" },
       "maintenance": { "impact": 2, "confidence": "medium" },
       "endOfLife": { "impact": 1, "confidence": "high" }
+    },
+    "space-frame-structure": {
+      "raw": { "impact": 5, "confidence": "high" },
+      "manufacturing": { "impact": 5, "confidence": "high" },
+      "transport": { "impact": 3, "confidence": "medium" },
+      "installation": { "impact": 3, "confidence": "medium" },
+      "inUse": { "impact": 1, "confidence": "high" },
+      "maintenance": { "impact": 2, "confidence": "medium" },
+      "endOfLife": { "impact": 2, "confidence": "high" }
     },
     "nlt-structure": {
       "raw": { "impact": 1, "confidence": "high" },

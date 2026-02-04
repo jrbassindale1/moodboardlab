@@ -26,8 +26,9 @@ const CATEGORY_TO_TREE_PATH: Record<MaterialCategory, string[]> = {
   landscape: ['Landscape>Landscaping'],
   insulation: ['Envelope>Insulation'],
   door: ['Interiors>Doors'],
-  balustrade: ['Elements>Balustrades & Railings'],
+  balustrade: ['Envelope>Balustrades & Railings'],
   'external-ground': ['Landscape>External Ground'],
+  furniture: ['Interiors>Fixtures & Fittings'],
   finish: ['Interiors>Walls'], // default for generic finishes
 };
 
@@ -135,7 +136,9 @@ function updatePathFormat(oldPath: string): string | null {
     'Structure>Floors and Roofs': 'Structure>Floors and Roofs',
     'Structure>Stability and Bracing': 'Structure>Stability and Bracing',
     'Structure>Envelope and Lightweight Structure': 'Structure>Envelope and Lightweight Structure',
-    'Internal>Balustrade & Railings': 'Elements>Balustrades & Railings',
+    'Internal>Balustrade & Railings': 'Envelope>Balustrades & Railings',
+    'Elements>Balustrades & Railings': 'Envelope>Balustrades & Railings',
+    'Elements>Furniture': 'Interiors>Fixtures & Fittings',
   };
 
   return pathMappings[oldPath] || oldPath;

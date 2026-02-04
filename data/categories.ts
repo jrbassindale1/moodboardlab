@@ -29,6 +29,7 @@ export const CATEGORIES: Category[] = [
       { id: 'glazing', label: 'Glazing' },
       { id: 'roofing', label: 'Roofing' },
       { id: 'insulation', label: 'Insulation' },
+      { id: 'balustrades-railings', label: 'Balustrades & Railings' },
     ],
   },
   {
@@ -49,14 +50,6 @@ export const CATEGORIES: Category[] = [
     children: [
       { id: 'external-ground', label: 'External Ground' },
       { id: 'landscaping', label: 'Landscaping' },
-    ],
-  },
-  {
-    id: 'elements',
-    label: 'Elements',
-    children: [
-      { id: 'balustrades-railings', label: 'Balustrades & Railings' },
-      { id: 'furniture', label: 'Furniture' },
     ],
   },
   {

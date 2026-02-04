@@ -10,8 +10,10 @@ export const MATERIAL_BASE_IMAGE = moodboardMain;
 export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
   'steel-frame': moodboardMain,
   'glulam-structure': moodboardAlt1,
+  'green-oak-structure': moodboardAlt1,
   'concrete-frame': moodboardAlt2,
-  'hybrid-structure': moodboardAlt3
+  'hybrid-structure': moodboardAlt3,
+  'space-frame-structure': moodboardAlt3
 };
 export const PROJECT_IMAGES: ProjectImage[] = [
   {
@@ -101,6 +103,21 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     manufacturingProcess: ['lamination', 'pressing', 'cutting']
   },
   {
+    id: 'green-oak-structure',
+    name: 'Green Oak Structure',
+    tone: '#b88a58',
+    finish: 'Fresh-sawn structural oak',
+    description:
+      'Green oak posts, beams, and braces with traditional carpentry joints; robust bio-based structure with strong carbon storage potential.',
+    keywords: ['timber', 'oak', 'green oak', 'post-and-beam'],
+    category: 'structure',
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['beam', 'bar'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['cutting', 'machining']
+  },
+  {
     id: 'concrete-frame',
     name: 'Reinforced Concrete Frame',
     tone: '#b8b8b8',
@@ -129,6 +146,21 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     materialForm: ['beam', 'bar'],
     materialFunction: ['structural'],
     manufacturingProcess: ['lamination', 'metal-working', 'cutting']
+  },
+  {
+    id: 'space-frame-structure',
+    name: 'Space Frame Structure',
+    tone: '#bec6cf',
+    finish: 'Tubular steel space frame',
+    description:
+      'Modular tubular steel space frame enabling long-span roofs and lightweight grids with high structural efficiency.',
+    keywords: ['space frame', 'steel', 'long span', 'modular'],
+    category: 'structure',
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['tube', 'bar', 'beam'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['metal-working', 'cutting', 'coating']
   },
   {
     id: 'clt-structure',
@@ -3208,7 +3240,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     materialFunction: ['decorative'],
     manufacturingProcess: ['cutting']
   },
-  // === ELEMENTS > FURNITURE ===
+  // === INTERIORS > FIXTURES & FITTINGS (FURNITURE) ===
   {
     id: 'oak-dining-table',
     name: 'Oak Dining Table',
@@ -3216,8 +3248,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Solid oak with oil finish',
     description: 'Solid oak dining table with natural oil finish; durable and timeless design.',
     keywords: ['furniture', 'oak', 'table', 'dining'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'low',
     materialType: 'timber',
     materialForm: ['panel', 'plank'],
@@ -3231,8 +3263,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Fabric or leather upholstery',
     description: 'Comfortable upholstered chairs or sofas; specify sustainable fabrics where possible.',
     keywords: ['furniture', 'seating', 'upholstered', 'chair'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'high',
     materialType: 'textile',
     materialForm: ['panel'],
@@ -3246,8 +3278,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Powder-coated steel',
     description: 'Powder-coated steel or aluminum chair; durable and suitable for indoor/outdoor use.',
     keywords: ['furniture', 'metal', 'chair', 'seating'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'high',
     materialType: 'metal',
     materialForm: ['bar', 'tube'],
@@ -3261,8 +3293,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Birch plywood construction',
     description: 'Furniture constructed from birch or FSC plywood; lightweight and economical.',
     keywords: ['furniture', 'plywood', 'birch', 'sustainable'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'low',
     materialType: 'timber',
     materialForm: ['panel', 'board'],
@@ -3276,8 +3308,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Salvaged timber with character',
     description: 'Furniture made from reclaimed timber; unique character and minimal embodied carbon.',
     keywords: ['furniture', 'reclaimed', 'timber', 'salvaged'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'low',
     materialType: 'timber',
     materialForm: ['plank', 'board'],
@@ -3291,8 +3323,8 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     finish: 'Powder-coated or timber',
     description: 'Modular shelving system; flexible, reusable, and easy to reconfigure.',
     keywords: ['furniture', 'shelving', 'modular', 'storage'],
-    category: 'furniture',
-    treePaths: ['Elements>Furniture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
     carbonIntensity: 'high',
     materialType: 'composite',
     materialForm: ['panel', 'bar'],
