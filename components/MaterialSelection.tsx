@@ -22,6 +22,18 @@ const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
 
+const CARBON_IMPACT_LABELS: Record<NonNullable<MaterialOption['carbonIntensity']>, string> = {
+  low: 'Low carbon impact',
+  medium: 'Medium carbon impact',
+  high: 'High carbon impact',
+};
+
+const CARBON_IMPACT_CLASSES: Record<NonNullable<MaterialOption['carbonIntensity']>, string> = {
+  low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  high: 'bg-rose-50 text-rose-700 border-rose-200',
+};
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -1145,6 +1157,16 @@ IMPORTANT:
                           </div>
                         )}
                       </div>
+
+                      {mat.carbonIntensity && (
+                        <div>
+                          <span
+                            className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[mat.carbonIntensity]}`}
+                          >
+                            {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Add to board button */}
                       <button
