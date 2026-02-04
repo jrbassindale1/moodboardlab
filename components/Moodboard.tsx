@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Loader2, Wand2, Search } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
-import SustainabilityPreviewSection from './moodboard/SustainabilityPreviewSection';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
 import {
@@ -147,6 +146,147 @@ const BENEFIT_LABELS: Record<Benefit['type'], string> = {
   health_voc: 'Lower VOC and indoor health benefit',
   sequestration: 'Biogenic carbon storage potential'
 };
+const CUSTOM_PAINT_IDS = new Set(['custom-wall-paint', 'custom-ceiling-paint']);
+const GENERIC_COLOUR_SEGMENT_RE =
+  /\b(multiple|select|choose|chosen|custom|palette|colou?r|color|tone|finish|texture|variant|option|options|ral|hex\/rgb)\b/i;
+
+const normalizeSpacing = (value: string) =>
+  value
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/\s+([,.;:])/g, '$1')
+    .trim();
+
+const normalizeSelectedPaintMaterial = (material: MaterialOption): MaterialOption => {
+  const isPaintCategory = material.category === 'paint-wall' || material.category === 'paint-ceiling';
+  if (!isPaintCategory) return material;
+
+  const hasCustomWording =
+    CUSTOM_PAINT_IDS.has(material.id) ||
+    /custom\s+colou?r/i.test(material.name) ||
+    /\bcustom\b/i.test(material.finish) ||
+    /pick any hex\/rgb|define a custom hex\/rgb/i.test(material.description);
+  if (!hasCustomWording) return material;
+
+  const fallbackName = material.category === 'paint-wall' ? 'Paint – Walls' : 'Paint – Ceilings';
+  const fallbackFinish = material.category === 'paint-wall' ? 'Emulsion paint' : 'Ceiling paint';
+  const fallbackDescription =
+    material.category === 'paint-wall'
+      ? 'Selected wall paint colour with matte, satin, or gloss finish.'
+      : 'Selected ceiling paint colour with matte, satin, or gloss finish.';
+
+  const namedByCategory =
+    material.category === 'paint-wall'
+      ? material.name.replace(/paint\s*[–-]\s*custom\s+colou?r\s*\(walls\)/i, 'Paint – Walls')
+      : material.name.replace(/paint\s*[–-]\s*custom\s+colou?r\s*\(ceilings\)/i, 'Paint – Ceilings');
+
+  const cleanedName =
+    normalizeSpacing(
+      namedByCategory
+        .replace(/\bcustom\s+colou?r\b/gi, '')
+        .replace(/\bcustom\b/gi, '')
+    ) || fallbackName;
+
+  const cleanedFinish =
+    normalizeSpacing(
+      material.finish
+        .replace(/\bcustom\s+emulsion\s+colou?r\b/gi, 'Emulsion paint')
+        .replace(/\bcustom\s+ceiling\s+paint\s+colou?r\b/gi, 'Ceiling paint')
+        .replace(/\bcustom\s+paint\s+colou?r\b/gi, 'Paint')
+        .replace(/\bcustom\b/gi, '')
+    ) || fallbackFinish;
+
+  const cleanedDescription = /pick any hex\/rgb|define a custom hex\/rgb/i.test(material.description)
+    ? fallbackDescription
+    : normalizeSpacing(material.description) || fallbackDescription;
+
+  return {
+    ...material,
+    name: cleanedName,
+    finish: cleanedFinish,
+    description: cleanedDescription
+  };
+};
+
+const normalizeSelectedColourWording = (material: MaterialOption): MaterialOption => {
+  const finishSegments = material.finish
+    .split(/\s[—-]\s/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+
+  let cleanedFinish = material.finish;
+  const explicitSelectionMatch = material.finish.match(
+    /^(.*?)(?:\s[—-]\s*)(?:select|choose|chosen|custom)\s+(?:colou?r|color|finish|texture|tone|variant|option|options)(?:\s[—-]\s*)(.+)$/i
+  );
+
+  if (explicitSelectionMatch?.[1] && explicitSelectionMatch?.[2]) {
+    cleanedFinish = normalizeSpacing(`${explicitSelectionMatch[1]} — ${explicitSelectionMatch[2]}`);
+  }
+
+  if (!explicitSelectionMatch && finishSegments.length >= 3) {
+    const base = finishSegments[0];
+    const middle = finishSegments.slice(1, -1).join(' ');
+    const selectedLabel = finishSegments[finishSegments.length - 1];
+    if (GENERIC_COLOUR_SEGMENT_RE.test(middle) && selectedLabel) {
+      cleanedFinish = normalizeSpacing(`${base} — ${selectedLabel}`);
+    }
+  } else if (
+    finishSegments.length === 2 &&
+    GENERIC_COLOUR_SEGMENT_RE.test(finishSegments[1]) &&
+    /\(#[0-9a-fA-F]{6}\)/.test(finishSegments[1])
+  ) {
+    const cleanedSuffix = normalizeSpacing(
+      finishSegments[1]
+        .replace(
+          /\b(select|choose|chosen|custom|multiple)\s+(?:colou?r|color|finish|texture|tone|variant|option|options)\b|\bselect\b|\bchoose\b|\bchosen\b|\bcustom\b|\bmultiple\b/gi,
+          ''
+        )
+        .replace(/\bral\s+colou?r\b|\bcolou?r\s+range\b|\bcolor\s+range\b|\bfinish\s+range\b|\bfinish\s+selector\b/gi, '')
+    );
+    cleanedFinish = cleanedSuffix ? normalizeSpacing(`${finishSegments[0]} ${cleanedSuffix}`) : finishSegments[0];
+  }
+
+  const selectedColourChosen =
+    finishSegments.length >= 3 ||
+    /\(#[0-9a-fA-F]{6}\)/.test(cleanedFinish) ||
+    Boolean(material.colorLabel);
+
+  const cleanedDescription = selectedColourChosen
+    ? normalizeSpacing(
+        material.description
+          .replace(/\s*Palette\s+spans[^.]*\.\s*/i, ' ')
+          .replace(/\s*Available\s+in\s+many\s+RAL\s+colou?rs?[^.]*\.\s*/i, ' ')
+          .replace(/\s*Pick\s+any\s+HEX\/RGB\s+colou?r[^.]*\.\s*/i, ' ')
+          .replace(/\s*Define\s+a\s+custom\s+HEX\/RGB\s+colou?r[^.]*\.\s*/i, ' ')
+          .replace(/\s*pair\s+with\s+the\s+finish\s+selector\.?\s*/i, ' ')
+          .replace(/\s*with\s+selectable\s+finish\.?\s*/i, ' ')
+          .replace(/\s*available\s+in\s+custom\s+colou?rs?\.?\s*/i, ' ')
+          .replace(/\s*with\s+various\s+finishes?[^.;]*[.;]?/i, '.')
+          .replace(/\s*and\s+customi[sz]able[^.;]*[.;]?/i, '.')
+          .replace(/,\s*and\s+available\s+in[^.;]*[.;]?/i, '.')
+          .replace(/\s*with\s+full\s+RAL\s+colou?r\s+range[^.;]*[.;]?/i, '.')
+          .replace(/\s*offered\s+in\s+the\s+finish\s+range[^.;]*[.;]?/i, '.')
+          .replace(/\s*available\s+in\s+a\s+zinc\s+finish\s+range[^.;]*[.;]?/i, '.')
+          .replace(/\.\./g, '.')
+      )
+    : material.description;
+
+  if (cleanedFinish === material.finish && cleanedDescription === material.description) {
+    return material;
+  }
+
+  return {
+    ...material,
+    finish: cleanedFinish,
+    description: cleanedDescription
+  };
+};
+
+const normalizeSelectedMaterial = (material: MaterialOption): MaterialOption =>
+  normalizeSelectedColourWording(normalizeSelectedPaintMaterial(material));
+
+const normalizeBoardItems = (items: MaterialOption[]) => items.map(normalizeSelectedMaterial);
 
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
@@ -359,7 +499,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   moodboardRenderUrl: moodboardRenderUrlProp,
   onMoodboardRenderUrlChange
 }) => {
-  const [board, setBoard] = useState<BoardItem[]>(initialBoard || []);
+  const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
   const [paletteSummary, setPaletteSummary] = useState<string | null>(null);
@@ -397,7 +537,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   useEffect(() => {
     if (initialBoard) {
-      setBoard(initialBoard);
+      setBoard(normalizeBoardItems(initialBoard));
     }
   }, [initialBoard]);
 
@@ -518,15 +658,16 @@ const Moodboard: React.FC<MoodboardProps> = ({
       tone,
       finish: finishText
     };
+    const normalizedNext = normalizeSelectedMaterial(next);
     setBoard((prev) => {
-      const nextTone = next.tone?.toLowerCase().trim() || '';
+      const nextTone = normalizedNext.tone?.toLowerCase().trim() || '';
       const alreadyAdded = prev.some((item) => {
-        if (item.id !== next.id) return false;
+        if (item.id !== normalizedNext.id) return false;
         const itemTone = item.tone?.toLowerCase().trim() || '';
         return itemTone === nextTone;
       });
       if (alreadyAdded) return prev;
-      return [...prev, next];
+      return [...prev, normalizedNext];
     });
   };
 
@@ -2597,7 +2738,6 @@ ${JSON.stringify(proseContext)}`;
   };
 
   const fullReportReady = hasTextContent();
-  const summaryReportReady = Boolean(sustainabilityPreview);
   const isRenderInFlight = status === 'render' && isCreatingMoodboard;
 
   return (
@@ -2687,32 +2827,13 @@ ${JSON.stringify(proseContext)}`;
               </div>
             )}
 
-            {isBuildingFullReport && (moodboardRenderUrl || sustainabilityPreview) && (
+            {isBuildingFullReport && moodboardRenderUrl && (
               <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 <AlertCircle className="w-4 h-4 mt-[2px]" />
                 <span>
                   Moodboard preview is ready. Full sustainability report is still being generated.
                 </span>
               </div>
-            )}
-
-            {sustainabilityPreview && (
-              <SustainabilityPreviewSection
-                sustainabilityPreview={sustainabilityPreview}
-                isBuildingFullReport={isBuildingFullReport}
-                fullReportReady={fullReportReady}
-                summaryReportReady={summaryReportReady}
-                materialFlagsOpen={materialFlagsOpen}
-                setMaterialFlagsOpen={setMaterialFlagsOpen}
-                assessmentOpen={assessmentOpen}
-                setAssessmentOpen={setAssessmentOpen}
-                exportingReport={exportingReport}
-                exportingSummaryReport={exportingSummaryReport}
-                onDownloadSummaryReport={handleDownloadSummaryReport}
-                onDownloadReport={handleDownloadReport}
-                onMobileSaveSummaryReport={handleMobileSaveSummaryReport}
-                onMobileSaveReport={handleMobileSaveReport}
-              />
             )}
 
             <SustainabilityBriefingSection
@@ -2736,11 +2857,9 @@ ${JSON.stringify(proseContext)}`;
                 onDownloadBoard={handleDownloadBoard}
                 onNavigate={onNavigate}
                 onMoodboardEdit={handleMoodboardEdit}
-                summaryReportReady={summaryReportReady}
                 fullReportReady={fullReportReady}
-                exportingSummaryReport={exportingSummaryReport}
                 exportingReport={exportingReport}
-                onMobileSaveSummaryReport={handleMobileSaveSummaryReport}
+                onDownloadReport={handleDownloadReport}
                 onMobileSaveReport={handleMobileSaveReport}
               />
             )}

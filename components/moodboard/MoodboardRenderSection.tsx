@@ -12,11 +12,9 @@ interface MoodboardRenderSectionProps {
   onDownloadBoard: (url: string, renderId?: string) => void;
   onNavigate?: (page: string) => void;
   onMoodboardEdit: () => void;
-  summaryReportReady: boolean;
   fullReportReady: boolean;
-  exportingSummaryReport: boolean;
   exportingReport: boolean;
-  onMobileSaveSummaryReport: () => void;
+  onDownloadReport: () => void;
   onMobileSaveReport: () => void;
 }
 
@@ -31,11 +29,9 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   onDownloadBoard,
   onNavigate,
   onMoodboardEdit,
-  summaryReportReady,
   fullReportReady,
-  exportingSummaryReport,
   exportingReport,
-  onMobileSaveSummaryReport,
+  onDownloadReport,
   onMobileSaveReport,
 }) => {
   return (
@@ -88,11 +84,18 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
           Apply your materials
         </button>
         <button
-          onClick={onMobileSaveSummaryReport}
-          disabled={!summaryReportReady || exportingSummaryReport}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black lg:hidden disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
+          onClick={onDownloadReport}
+          disabled={!fullReportReady || exportingReport}
+          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-300 disabled:border-gray-300 disabled:text-gray-500"
         >
-          Save summary (PDF)
+          {exportingReport ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Building report...
+            </>
+          ) : (
+            'Download full report (PDF)'
+          )}
         </button>
         <button
           onClick={onMobileSaveReport}
