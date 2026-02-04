@@ -4508,7 +4508,7 @@ ${JSON.stringify(proseContext)}`;
                           <Lightbulb className="w-4 h-4 text-amber-500" />
                           Strategic Synergies
                         </h3>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {sustainabilityBriefing.synergies.map((synergy, idx) => {
                             const mat1 = board.find(m => m.id === synergy.pair[0]);
                             const mat2 = board.find(m => m.id === synergy.pair[1]);
