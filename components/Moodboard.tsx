@@ -850,14 +850,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setFlowProgress({
         step: 2,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Preparing materials sheet',
-        state: 'running'
-      });
-      await handleDownloadMaterialsSheetPdf();
-
-      setFlowProgress({
-        step: 2,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
         label: 'Complete',
         state: 'complete'
       });

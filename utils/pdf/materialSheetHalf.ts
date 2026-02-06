@@ -52,13 +52,23 @@ type RenderOpts = {
 };
 
 const LIFECYCLE_STAGE_LABELS: Record<LifecycleKey, string> = {
-  raw: 'Raw',
+  raw: 'Raw Materials',
   manufacturing: 'Manufacturing',
   transport: 'Transport',
   installation: 'Installation',
   inUse: 'In Use',
   maintenance: 'Maintenance',
   endOfLife: 'End of Life',
+};
+
+const LIFECYCLE_STAGE_CHART_LABELS: Record<LifecycleKey, string[]> = {
+  raw: ['Raw', 'Materials'],
+  manufacturing: ['Manufacturing'],
+  transport: ['Transport'],
+  installation: ['Installation'],
+  inUse: ['In Use'],
+  maintenance: ['Maintenance'],
+  endOfLife: ['End of', 'Life'],
 };
 
 const LIFECYCLE_ORDER: LifecycleKey[] = [
@@ -106,12 +116,12 @@ export function renderMaterialSheetHalf(
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
+  doc.setFontSize(16);
   doc.setTextColor(25, 25, 25);
-  doc.text(clampText(doc, m.name, w - 200), x, y + 28);
+  doc.text(clampText(doc, m.name, w - 160), x, y + 24);
 
-  const chipY = y + 14;
-  const chipH = 20;
+  const chipY = y + 10;
+  const chipH = 16;
   const rightX = x + w;
 
   const chips = [
@@ -122,8 +132,8 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
   let cx = rightX;
   for (let i = chips.length - 1; i >= 0; i -= 1) {
     const t = chips[i].text;
-    const tw = measureText(doc, t, 11, 'helvetica', 'normal');
-    const chipW = tw + 18;
+    const tw = measureText(doc, t, 8, 'helvetica', 'normal');
+    const chipW = tw + 14;
     cx -= chipW;
     drawChip(doc, cx, chipY, chipW, chipH, t, chips[i].kind);
     cx -= 8;
@@ -146,56 +156,60 @@ function renderMain(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
 }
 
 function renderImageAndIdentity(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  const imgH = 120;
-  const cardGap = 10;
+  const imageBoxSize = 92;
+  const cardGap = 6;
+  const imageInset = 6;
 
-  drawCard(doc, x, y, w, imgH, { tint: 'light' });
+  drawCard(doc, x, y, imageBoxSize, imageBoxSize, { tint: 'light' });
   if (m.imageDataUri) {
-    const ix = x + 10;
-    const iy = y + 10;
-    const iw = w - 20;
-    const ih = imgH - 24;
+    const ix = x + imageInset;
+    const iy = y + imageInset;
+    const iw = imageBoxSize - imageInset * 2;
+    const ih = imageBoxSize - imageInset * 2;
     safeAddImage(doc, m.imageDataUri, ix, iy, iw, ih);
   }
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(7);
   doc.setTextColor(120);
   doc.text(
-    m.imageCaption ? clampText(doc, m.imageCaption, w - 20) : 'Typical finish shown',
-    x + 10,
-    y + imgH - 6
+    m.imageCaption ? clampText(doc, m.imageCaption, imageBoxSize) : 'Typical finish shown',
+    x,
+    y + imageBoxSize + 8
   );
 
-  let ty = y + imgH + cardGap;
+  let ty = y + imageBoxSize + 18;
 
   doc.setTextColor(30);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text('What it is', x, ty + 14);
+  doc.setFontSize(9);
+  doc.text('What it is', x, ty);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   const what = (m.whatItIs ?? '').trim();
+  let textCursorY = ty + 12;
   if (what) {
-    const lines = wrapLines(doc, what, w, 11).slice(0, 2);
-    doc.text(lines, x, ty + 34);
+    const lines = wrapLines(doc, what, w, 8).slice(0, 2);
+    doc.text(lines, x, textCursorY);
+    textCursorY += lines.length * 9;
   }
+  textCursorY += 8;
 
   const uses = (m.typicalUses ?? []).slice(0, 3).filter(Boolean);
   if (uses.length) {
-    const uy = ty + 62;
+    const uy = textCursorY;
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(9);
     doc.setTextColor(30);
     doc.text('Typical uses:', x, uy);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
+    doc.setFontSize(8);
     doc.setTextColor(60);
-    let by = uy + 18;
+    let by = uy + 12;
     for (const u of uses) {
       doc.text(`- ${clampText(doc, u, w - 10)}`, x + 2, by);
-      by += 16;
+      by += 11;
     }
   }
 }
@@ -204,47 +218,57 @@ function renderLifecycle(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
   drawCard(doc, x, y, w, h, { tint: 'light' });
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(9);
   doc.setTextColor(60);
-  doc.text('LIFECYCLE IMPACT PROFILE', x + CARD_PAD, y + 20);
+  doc.text('LIFECYCLE IMPACT PROFILE', x + CARD_PAD, y + 18);
 
   const chartX = x + CARD_PAD;
-  const chartY = y + 28;
+  const chartY = y + 24;
   const chartW = w - 2 * CARD_PAD;
   const chartH = 118;
 
-  renderLifecycleBars(doc, m.lifecycle, chartX, chartY, chartW, chartH);
+  doc.setDrawColor(230);
+  doc.setLineWidth(1);
+  doc.rect(chartX, chartY, chartW, chartH);
+
+  const stages = LIFECYCLE_ORDER.map((key) => ({
+    key,
+    label: LIFECYCLE_STAGE_LABELS[key],
+    chartLabel: LIFECYCLE_STAGE_CHART_LABELS[key],
+    score: Math.max(1, Math.min(5, m.lifecycle[key] ?? 1)),
+  }));
+  drawLifecycleRadarChart(doc, chartX, chartY, chartW, chartH, stages);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(7);
   doc.setTextColor(110);
   doc.text(
     'Lower scores = lower impact (1 minimal, 5 significant)',
     x + CARD_PAD,
-    chartY + chartH + 12
+    chartY + chartH + 10
   );
 
   const { highest, secondHighest, strongest } = summariseLifecycle(m.lifecycle);
 
-  const infoY = chartY + chartH + 30;
+  const infoY = chartY + chartH + 24;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   doc.setTextColor(30);
   doc.text('Highest stage:', x + CARD_PAD, infoY);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${labelStage(highest.key)} (${highest.val.toFixed(1)}/5)`, x + CARD_PAD + 92, infoY);
+  doc.text(`${labelStage(highest.key)} (${highest.val.toFixed(1)}/5)`, x + CARD_PAD + 72, infoY);
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Second:', x + CARD_PAD, infoY + 18);
+  doc.text('Second:', x + CARD_PAD, infoY + 14);
   doc.setFont('helvetica', 'normal');
   doc.text(
     `${labelStage(secondHighest.key)} (${secondHighest.val.toFixed(1)}/5)`,
-    x + CARD_PAD + 52,
-    infoY + 18
+    x + CARD_PAD + 42,
+    infoY + 14
   );
 
-  const stripY = infoY + 34;
-  drawRoundRect(doc, x + CARD_PAD, stripY, w - 2 * CARD_PAD, 26, 10, {
+  const stripY = infoY + 26;
+  drawRoundRect(doc, x + CARD_PAD, stripY, w - 2 * CARD_PAD, 22, 10, {
     fill: true,
     stroke: false,
     fillGrey: 245,
@@ -252,7 +276,7 @@ function renderLifecycle(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(70);
-  doc.text('Strongest', x + CARD_PAD + 8, stripY + 17);
+  doc.text('Strongest', x + CARD_PAD + 8, stripY + 14);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(30);
@@ -262,7 +286,7 @@ function renderLifecycle(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
   doc.text(
     clampText(doc, strongText, w - 2 * CARD_PAD - 80),
     x + CARD_PAD + 78,
-    stripY + 17
+    stripY + 14
   );
 }
 
@@ -276,30 +300,30 @@ function renderActions(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w:
   const xR = x + CARD_PAD + colL + G;
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(9);
   doc.setTextColor(30);
-  doc.text('Strategic value', xL, y + 20);
+  doc.text('Strategic value', xL, y + 16);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(8);
   doc.setTextColor(60);
   const sv = (m.strategicValue ?? '').trim();
-  const svLines = sv ? wrapLines(doc, sv, colL - CARD_PAD, 10.5).slice(0, 3) : [];
-  if (svLines.length) doc.text(svLines, xL, y + 38);
+  const svLines = sv ? wrapLines(doc, sv, colL - CARD_PAD, 8).slice(0, 3) : [];
+  if (svLines.length) doc.text(svLines, xL, y + 30);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(9);
   doc.setTextColor(30);
-  doc.text('Specification actions', xR, y + 20);
+  doc.text('Specification actions', xR, y + 16);
 
   const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(8);
   doc.setTextColor(60);
-  let ay = y + 38;
+  let ay = y + 30;
   for (const a of actions) {
     doc.text(`- ${clampText(doc, a, colR - 8)}`, xR, ay);
-    ay += 16;
+    ay += 12;
   }
 }
 
@@ -314,20 +338,20 @@ function renderRisks(
   drawCard(doc, x, y, w, h, { tint: 'amberTint' });
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(9);
   doc.setTextColor(30);
-  doc.text('Risks and mitigation', x + CARD_PAD, y + 20);
+  doc.text('Risks and mitigation', x + CARD_PAD, y + 16);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10.5);
+  doc.setFontSize(8);
   doc.setTextColor(60);
 
-  let ry = y + 38;
+  let ry = y + 30;
   for (const r of risks.slice(0, 2)) {
     const text = `- Risk: ${r.risk}  Mitigation: ${r.mitigation}`;
-    const lines = wrapLines(doc, text, w - 2 * CARD_PAD, 10.5).slice(0, 2);
+    const lines = wrapLines(doc, text, w - 2 * CARD_PAD, 8).slice(0, 2);
     doc.text(lines, x + CARD_PAD, ry);
-    ry += 18;
+    ry += 12;
   }
 }
 
@@ -341,7 +365,7 @@ function renderFooter(
   h: number
 ) {
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
+  doc.setFontSize(7);
   doc.setTextColor(110);
 
   const conf = m.lifecycleConfidence ?? 'Medium';
@@ -401,9 +425,9 @@ function drawChip(
   const fillGrey = kind === 'neutral' ? 245 : kind === 'green' ? 232 : kind === 'amber' ? 245 : 245;
   drawRoundRect(doc, x, y, w, h, 10, { fill: true, stroke: false, fillGrey });
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   doc.setTextColor(kind === 'green' ? 40 : 60);
-  doc.text(text, x + 9, y + 14);
+  doc.text(text, x + 7, y + 11);
 }
 
 function drawRoundRect(
@@ -451,42 +475,85 @@ function safeAddImage(doc: jsPDF, dataUri: string, x: number, y: number, w: numb
   }
 }
 
-function renderLifecycleBars(
+function drawPolygon(
   doc: jsPDF,
-  lc: Record<LifecycleKey, number>,
-  x: number,
-  y: number,
-  w: number,
-  h: number
+  points: Array<{ x: number; y: number }>,
+  style: 'S' | 'F' | 'FD'
 ) {
-  doc.setDrawColor(230);
-  doc.setLineWidth(1);
-  doc.rect(x, y, w, h);
+  if (points.length < 2) return;
+  const segments = points.slice(1).map((point, index) => [
+    point.x - points[index].x,
+    point.y - points[index].y,
+  ]);
+  doc.lines(segments, points[0].x, points[0].y, [1, 1], style, true);
+}
 
-  const chartPadding = 10;
-  const innerX = x + chartPadding;
-  const innerY = y + chartPadding;
-  const innerW = w - chartPadding * 2;
-  const innerH = h - chartPadding * 2 - 14;
+function drawLifecycleRadarChart(
+  doc: jsPDF,
+  x: number,
+  top: number,
+  width: number,
+  height: number,
+  stages: Array<{ key: LifecycleKey; label: string; chartLabel: string[]; score: number }>
+) {
+  const centerX = x + width / 2;
+  const centerY = top + height / 2;
+  const radius = Math.min(width, height) * 0.34;
+  const stageCount = stages.length;
 
-  const slotW = innerW / LIFECYCLE_ORDER.length;
-  const barW = Math.min(18, slotW * 0.6);
+  const pointFor = (stageIndex: number, valueOutOfFive: number) => {
+    const angle = -Math.PI / 2 + (stageIndex * Math.PI * 2) / stageCount;
+    const distance = radius * (valueOutOfFive / 5);
+    return {
+      x: centerX + Math.cos(angle) * distance,
+      y: centerY + Math.sin(angle) * distance,
+      angle,
+    };
+  };
 
-  doc.setFillColor(16, 185, 129);
-  doc.setTextColor(90);
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(229, 231, 235);
+  for (let level = 1; level <= 5; level += 1) {
+    const ring = stages.map((_, index) => pointFor(index, level));
+    drawPolygon(doc, ring, 'S');
+  }
+
+  stages.forEach((_, index) => {
+    const end = pointFor(index, 5);
+    doc.line(centerX, centerY, end.x, end.y);
+  });
+
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
+  doc.setTextColor(156, 163, 175);
+  for (let level = 1; level <= 5; level += 1) {
+    const levelPoint = pointFor(0, level);
+    doc.text(String(level), centerX + 4, levelPoint.y + 2);
+  }
 
-  LIFECYCLE_ORDER.forEach((key, idx) => {
-    const value = Math.max(1, Math.min(5, lc[key] ?? 1));
-    const barH = (value / 5) * innerH;
-    const bx = innerX + idx * slotW + (slotW - barW) / 2;
-    const by = innerY + innerH - barH;
-    doc.rect(bx, by, barW, barH, 'F');
+  const radarPoints = stages.map((stage, index) => pointFor(index, stage.score));
+  doc.setDrawColor(5, 150, 105);
+  doc.setLineWidth(1.2);
+  drawPolygon(doc, radarPoints, 'S');
+  doc.setLineWidth(0.5);
 
-    const label = LIFECYCLE_STAGE_LABELS[key];
-    const shortLabel = label.length > 9 ? `${label.slice(0, 8)}.` : label;
-    doc.text(shortLabel, bx - 2, innerY + innerH + 10);
+  doc.setFillColor(5, 150, 105);
+  radarPoints.forEach((point) => {
+    doc.circle(point.x, point.y, 1.8, 'F');
+  });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(75, 85, 99);
+  stages.forEach((stage, index) => {
+    const labelPoint = pointFor(index, 6.15);
+    const cosVal = Math.cos(labelPoint.angle);
+    const align: 'left' | 'center' | 'right' =
+      cosVal > 0.35 ? 'left' : cosVal < -0.35 ? 'right' : 'center';
+    const topOffset = index === 0 ? -5 : 0;
+    stage.chartLabel.forEach((line, lineIndex) => {
+      doc.text(line, labelPoint.x, labelPoint.y + topOffset + lineIndex * 7, { align });
+    });
   });
 }
 
