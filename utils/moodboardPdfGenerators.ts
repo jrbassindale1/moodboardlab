@@ -12,6 +12,7 @@ import {
   LifecycleStageKey,
 } from '../lifecycleProfiles';
 import { MaterialOption, MaterialCategory } from '../types';
+import { getLifecycleProfile, type LifecycleProfile } from '../data';
 import type {
   EnhancedSustainabilityInsight,
   MaterialMetrics,
@@ -39,6 +40,11 @@ import {
   prefetchMaterialIcons,
   optimizeImageDataUriForPdf,
 } from './pdfSections';
+import {
+  renderMaterialSheetHalf,
+  type MaterialPdfModel,
+  type LifecycleKey,
+} from './pdf/materialSheetHalf';
 import type {
   SustainabilityBriefingResponse,
   SustainabilityBriefingPayload,
@@ -115,6 +121,11 @@ export interface BriefingPdfParams {
   sustainabilityBriefing: SustainabilityBriefingResponse;
   briefingPayload: SustainabilityBriefingPayload;
   board: MaterialOption[];
+}
+
+export interface MaterialsSheetPdfParams {
+  board: MaterialOption[];
+  projectName?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -1350,6 +1361,236 @@ export function generateBriefingPdf(params: BriefingPdfParams): jsPDF | null {
   doc.setFontSize(6.75);
   doc.setTextColor(156, 163, 175);
   doc.text(disclaimerLines, pageW / 2, y, { align: 'center' });
+
+  return doc;
+}
+
+// ---------------------------------------------------------------------------
+// 4) generateMaterialsSheetPdf
+// ---------------------------------------------------------------------------
+
+export async function generateMaterialsSheetPdf(
+  params: MaterialsSheetPdfParams
+): Promise<jsPDF | null> {
+  const { board } = params;
+
+  if (!board || board.length === 0) return null;
+
+  const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+  const generatedOnText = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const DEFAULT_LIFECYCLE_SCORES: Record<LifecycleKey, number> = {
+    raw: 3,
+    manufacturing: 3,
+    transport: 2,
+    installation: 2,
+    inUse: 1,
+    maintenance: 2,
+    endOfLife: 2,
+  };
+
+  const categoryGroupLabel = (category: MaterialCategory): string => {
+    if (category === 'structure' || category === 'exposed-structure') return 'Structure';
+    if (
+      category === 'external' ||
+      category === 'window' ||
+      category === 'roof' ||
+      category === 'insulation' ||
+      category === 'soffit'
+    ) {
+      return 'Envelope';
+    }
+    if (category === 'landscape' || category === 'external-ground') return 'Landscape';
+    return 'Finishes';
+  };
+
+  const lifecycleScoresFor = (material: MaterialOption): Record<LifecycleKey, number> => {
+    const profile = getLifecycleProfile(material.id);
+    if (profile) {
+      return {
+        raw: profile.raw?.impact ?? DEFAULT_LIFECYCLE_SCORES.raw,
+        manufacturing: profile.manufacturing?.impact ?? DEFAULT_LIFECYCLE_SCORES.manufacturing,
+        transport: profile.transport?.impact ?? DEFAULT_LIFECYCLE_SCORES.transport,
+        installation: profile.installation?.impact ?? DEFAULT_LIFECYCLE_SCORES.installation,
+        inUse: profile.inUse?.impact ?? DEFAULT_LIFECYCLE_SCORES.inUse,
+        maintenance: profile.maintenance?.impact ?? DEFAULT_LIFECYCLE_SCORES.maintenance,
+        endOfLife: profile.endOfLife?.impact ?? DEFAULT_LIFECYCLE_SCORES.endOfLife,
+      };
+    }
+
+    const intensityMultiplier =
+      material.carbonIntensity === 'high'
+        ? 1.3
+        : material.carbonIntensity === 'low'
+        ? 0.7
+        : 1.0;
+
+    return {
+      raw: Math.round(DEFAULT_LIFECYCLE_SCORES.raw * intensityMultiplier),
+      manufacturing: Math.round(DEFAULT_LIFECYCLE_SCORES.manufacturing * intensityMultiplier),
+      transport: DEFAULT_LIFECYCLE_SCORES.transport,
+      installation: DEFAULT_LIFECYCLE_SCORES.installation,
+      inUse: DEFAULT_LIFECYCLE_SCORES.inUse,
+      maintenance: DEFAULT_LIFECYCLE_SCORES.maintenance,
+      endOfLife: DEFAULT_LIFECYCLE_SCORES.endOfLife,
+    };
+  };
+
+  const lifecycleConfidenceFor = (profile?: LifecycleProfile): 'High' | 'Medium' | 'Low' => {
+    if (!profile) return 'Medium';
+    const confidences = [
+      profile.raw.confidence,
+      profile.manufacturing.confidence,
+      profile.transport.confidence,
+      profile.installation.confidence,
+      profile.inUse.confidence,
+      profile.maintenance.confidence,
+      profile.endOfLife.confidence,
+    ];
+    if (confidences.includes('low')) return 'Low';
+    if (confidences.includes('medium')) return 'Medium';
+    return 'High';
+  };
+
+  const splitSentences = (value: string): string[] => {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    const matches = trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
+    return matches ? matches.map((entry) => entry.trim()) : [trimmed];
+  };
+
+  const buildSpecActions = (material: MaterialOption): string[] => {
+    const actions: string[] = [];
+    const id = material.id.toLowerCase();
+    const materialType = material.materialType;
+    const category = material.category;
+
+    if (materialType === 'metal' || id.includes('steel')) {
+      actions.push('Request EPD for recycled steel content (target: 85%+ recycled)');
+      actions.push('Verify steel supplier uses electric arc furnace (EAF) production');
+    }
+    if (materialType === 'timber' || id.includes('timber') || id.includes('wood')) {
+      actions.push('Confirm FSC or PEFC certification for all timber products');
+      actions.push('Request chain-of-custody documentation from supplier');
+    }
+    if (materialType === 'concrete' || id.includes('concrete')) {
+      actions.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
+      actions.push('Request EPD showing embodied carbon per m3');
+    }
+    if (materialType === 'glass' || category === 'window') {
+      actions.push('Verify glazing U-values meet or exceed building regs');
+      actions.push('Consider specifying higher recycled glass content');
+    }
+    if (category === 'insulation') {
+      actions.push('Compare embodied carbon of insulation options (natural vs synthetic)');
+      actions.push('Request blowing agent GWP values for foam insulation');
+    }
+
+    const fallback = [
+      'Collect EPDs for major material categories',
+      'Calculate transport distances for main structure materials',
+      'Document material reuse or reclaimed content percentages',
+    ];
+
+    fallback.forEach((item) => {
+      if (actions.length < 3) actions.push(item);
+    });
+
+    return actions.slice(0, 3);
+  };
+
+  const buildRisks = (
+    material: MaterialOption,
+    confidence: 'High' | 'Medium' | 'Low'
+  ): Array<{ risk: string; mitigation: string }> => {
+    const risks: Array<{ risk: string; mitigation: string }> = [];
+
+    if (material.carbonIntensity === 'high') {
+      risks.push({
+        risk: 'High embodied carbon intensity relative to alternatives.',
+        mitigation: 'Investigate lower-carbon suppliers or recycled content options.',
+      });
+    }
+
+    if (confidence === 'Low') {
+      risks.push({
+        risk: 'Lifecycle data confidence is low.',
+        mitigation: 'Verify with supplier EPDs and updated project data.',
+      });
+    }
+
+    return risks.slice(0, 2);
+  };
+
+  const iconMap = await prefetchMaterialIcons(
+    board.filter((material) => !material.customImage).map((material) => material.id)
+  );
+
+  const models: MaterialPdfModel[] = await Promise.all(
+    board.map(async (material) => {
+      const profile = getLifecycleProfile(material.id);
+      const lifecycle = lifecycleScoresFor(material);
+      const lifecycleConfidence = lifecycleConfidenceFor(profile);
+      const textSource = (material.customDescription || material.description || '').trim();
+      const sentences = splitSentences(textSource);
+      const whatItIs = sentences[0];
+      const strategicValue = sentences.slice(1).join(' ').trim() || undefined;
+
+      const keywords = material.keywords ?? [];
+      const tags = material.tags ?? [];
+      const typicalUses = [...new Set([...keywords, ...tags])].slice(0, 3);
+
+      let imageDataUri = material.customImage || iconMap.get(material.id);
+      if (imageDataUri) {
+        imageDataUri = await optimizeImageDataUriForPdf(imageDataUri, {
+          maxDimension: 512,
+          mimeType: 'image/jpeg',
+          quality: 0.8,
+        });
+      }
+
+      const imageCaption = material.finish || material.colorLabel || undefined;
+      const epdAvailable = [...keywords, ...tags].some((tag) =>
+        /epd|environmental product declaration/i.test(tag)
+      );
+
+      return {
+        name: material.name,
+        category: categoryGroupLabel(material.category),
+        carbonLabel:
+          material.carbonIntensity === 'low'
+            ? 'Low Carbon'
+            : material.carbonIntensity === 'high'
+            ? 'High Carbon'
+            : 'Medium Carbon',
+        imageDataUri,
+        imageCaption,
+        whatItIs,
+        typicalUses,
+        lifecycle,
+        lifecycleConfidence,
+        epdAvailable,
+        strategicValue,
+        specActions: buildSpecActions(material),
+        risks: buildRisks(material, lifecycleConfidence),
+      };
+    })
+  );
+
+  models.forEach((material, index) => {
+    if (index > 0 && index % 2 === 0) {
+      doc.addPage();
+    }
+
+    renderMaterialSheetHalf(doc, material, {
+      sheetIndex: (index % 2) as 0 | 1,
+      generatedOnText,
+    });
+  });
 
   return doc;
 }

@@ -5,6 +5,7 @@ import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSec
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
 import {
   generateBriefingPdf as buildBriefingPdf,
+  generateMaterialsSheetPdf as buildMaterialsSheetPdf,
 } from '../utils/moodboardPdfGenerators';
 import {
   MATERIAL_LIFECYCLE_PROFILES,
@@ -395,6 +396,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
+  const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
 
   useEffect(() => {
     if (initialBoard) {
@@ -555,6 +557,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     });
   };
 
+  const generateMaterialsSheetPdf = async () => buildMaterialsSheetPdf({ board });
+
   const handleDownloadBriefingPdf = () => {
     if (!sustainabilityBriefing || !briefingPayload) return;
     setExportingBriefingPdf(true);
@@ -566,6 +570,20 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Could not create the briefing PDF download.');
     } finally {
       setExportingBriefingPdf(false);
+    }
+  };
+
+  const handleDownloadMaterialsSheetPdf = async () => {
+    if (!board.length) return;
+    setExportingMaterialsSheetPdf(true);
+    try {
+      const doc = await generateMaterialsSheetPdf();
+      if (doc) doc.save('materials-sheet.pdf');
+    } catch (err) {
+      console.error('Could not create materials sheet PDF', err);
+      setError('Could not create the materials sheet PDF download.');
+    } finally {
+      setExportingMaterialsSheetPdf(false);
     }
   };
 
@@ -828,6 +846,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
         });
         return;
       }
+
+      setFlowProgress({
+        step: 2,
+        total: MOODBOARD_FLOW_TOTAL_STEPS,
+        label: 'Preparing materials sheet',
+        state: 'running'
+      });
+      await handleDownloadMaterialsSheetPdf();
 
       setFlowProgress({
         step: 2,
@@ -1768,8 +1794,10 @@ ${JSON.stringify(proseContext)}`;
               briefingPayload={briefingPayload}
               isBriefingLoading={isBriefingLoading}
               exportingBriefingPdf={exportingBriefingPdf}
+              exportingMaterialsSheetPdf={exportingMaterialsSheetPdf}
               board={board}
               onDownloadBriefingPdf={handleDownloadBriefingPdf}
+              onDownloadMaterialsSheetPdf={handleDownloadMaterialsSheetPdf}
             />
 
             {moodboardRenderUrl && (

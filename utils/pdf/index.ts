@@ -10,3 +10,4 @@ export * from './pageDesignDirection';
 export * from './pageCompliance';
 export * from './pageMaterialDetails';
 export * from './glossary';
+export * from './materialSheetHalf';

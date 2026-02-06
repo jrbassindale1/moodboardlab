@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageDown, Loader2, Wand2 } from 'lucide-react';
 import { callGeminiImage, saveGeneration } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
@@ -15,6 +15,47 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
+const MAX_EDIT_TURNS = 3;
+const DAILY_RENDER_LIMIT = 10;
+const QUOTA_STORAGE_KEY = 'moodboard_daily_quota';
+
+interface DailyQuota {
+  count: number;
+  date: string; // ISO date string (YYYY-MM-DD)
+}
+
+const getTodayDateString = (): string => {
+  return new Date().toISOString().split('T')[0];
+};
+
+const getDailyQuota = (): DailyQuota => {
+  try {
+    const stored = localStorage.getItem(QUOTA_STORAGE_KEY);
+    if (stored) {
+      const quota: DailyQuota = JSON.parse(stored);
+      // Reset if it's a new day
+      if (quota.date !== getTodayDateString()) {
+        return { count: 0, date: getTodayDateString() };
+      }
+      return quota;
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { count: 0, date: getTodayDateString() };
+};
+
+const incrementDailyQuota = (): DailyQuota => {
+  const quota = getDailyQuota();
+  const updated = { count: quota.count + 1, date: getTodayDateString() };
+  localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(updated));
+  return updated;
+};
+
+const getRemainingRenders = (): number => {
+  const quota = getDailyQuota();
+  return Math.max(0, DAILY_RENDER_LIMIT - quota.count);
+};
 
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
@@ -111,6 +152,26 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
+  const [editTurnCount, setEditTurnCount] = useState(0);
+  const [dailyRendersRemaining, setDailyRendersRemaining] = useState(getRemainingRenders);
+  const prevMoodboardRef = useRef(moodboardRenderUrl);
+
+  // Reset edit counter only when a NEW moodboard is generated
+  useEffect(() => {
+    if (moodboardRenderUrl && moodboardRenderUrl !== prevMoodboardRef.current) {
+      setEditTurnCount(0);
+      prevMoodboardRef.current = moodboardRenderUrl;
+    }
+  }, [moodboardRenderUrl]);
+
+  // Refresh daily quota on mount and periodically (handles midnight reset)
+  useEffect(() => {
+    setDailyRendersRemaining(getRemainingRenders());
+    const interval = setInterval(() => {
+      setDailyRendersRemaining(getRemainingRenders());
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const summaryText = useMemo(() => {
     if (!board.length) return 'No materials selected yet.';
@@ -250,6 +311,14 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
   }) => {
+    // Check daily quota first
+    const currentRemaining = getRemainingRenders();
+    if (currentRemaining <= 0) {
+      setError('Daily render limit reached. Your quota resets at midnight.');
+      setDailyRendersRemaining(0);
+      return;
+    }
+
     if (!board.length) {
       setError('Add materials to the moodboard first.');
       return;
@@ -362,6 +431,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       if (!img) throw new Error('Gemini did not return an image payload.');
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
       onAppliedRenderUrlChange(newUrl);
+      // Increment daily quota and update state
+      incrementDailyQuota();
+      setDailyRendersRemaining(getRemainingRenders());
       void persistGeneration(newUrl, prompt);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
@@ -381,26 +453,19 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('Add text instructions to update the applied render.');
       return;
     }
+    if (editTurnCount >= MAX_EDIT_TURNS) {
+      setError(`Edit limit reached (${MAX_EDIT_TURNS} edits). Generate a new moodboard to get more edits.`);
+      return;
+    }
     await runApplyRender({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
       renderMode: 'edit'
     });
+    setEditTurnCount((prev) => prev + 1);
+    setAppliedEditPrompt('');
   };
 
-  const handleRender4KFromCurrent = async () => {
-    if (!appliedRenderUrl) {
-      setError('Render with an upload first.');
-      return;
-    }
-    await runApplyRender({
-      editPrompt:
-        'Re-render this exact image in higher resolution with more detail and texture fidelity while preserving composition, geometry, material assignments, and lighting. If people are present, prioritize highly photorealistic humans: natural faces, accurate hands, realistic anatomy and proportions, believable skin texture, correct clothing folds, and natural poses.',
-      baseImageDataUrl: appliedRenderUrl,
-      imageSize: '4K',
-      renderMode: 'upscale-4k'
-    });
-  };
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
@@ -429,6 +494,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             <span>{error}</span>
           </div>
         )}
+
+        <div className={`flex items-center justify-between px-4 py-3 border ${dailyRendersRemaining <= 0 ? 'border-red-200 bg-red-50' : dailyRendersRemaining <= 3 ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
+          <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+            Daily Render Quota
+          </div>
+          <div className={`font-mono text-sm font-medium ${dailyRendersRemaining <= 0 ? 'text-red-600' : dailyRendersRemaining <= 3 ? 'text-amber-600' : 'text-gray-700'}`}>
+            {dailyRendersRemaining} / {DAILY_RENDER_LIMIT} renders remaining today
+          </div>
+        </div>
 
         {!moodboardRenderUrl ? (
           <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">
@@ -501,7 +575,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     </div>
                     <button
                       onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-                      disabled={status !== 'idle' || !board.length}
+                      disabled={status !== 'idle' || !board.length || dailyRendersRemaining <= 0}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'upload-1k' ? (
@@ -537,21 +611,32 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-                      Edit applied render (multi-turn)
+                    <div className="flex items-center justify-between">
+                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                        Edit applied render (multi-turn)
+                      </div>
+                      <div className={`font-mono text-[11px] uppercase tracking-widest ${editTurnCount >= MAX_EDIT_TURNS ? 'text-red-500' : 'text-gray-500'}`}>
+                        {MAX_EDIT_TURNS - editTurnCount} edit{MAX_EDIT_TURNS - editTurnCount !== 1 ? 's' : ''} remaining
+                      </div>
                     </div>
                     <p className="font-sans text-sm text-gray-700">
                       Send another instruction to refine this render without losing the palette application.
                     </p>
+                    {editTurnCount >= MAX_EDIT_TURNS && (
+                      <div className="bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-700">
+                        Edit limit reached. Generate a new moodboard to get more edits.
+                      </div>
+                    )}
                     <textarea
                       value={appliedEditPrompt}
                       onChange={(e) => setAppliedEditPrompt(e.target.value)}
                       placeholder="E.g., increase contrast and add dusk lighting."
-                      className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+                      disabled={editTurnCount >= MAX_EDIT_TURNS || dailyRendersRemaining <= 0}
+                      className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
                     />
                     <button
                       onClick={handleAppliedEdit}
-                      disabled={status !== 'idle' || !appliedRenderUrl}
+                      disabled={status !== 'idle' || !appliedRenderUrl || editTurnCount >= MAX_EDIT_TURNS || dailyRendersRemaining <= 0}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'edit' ? (
@@ -568,24 +653,20 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap justify-end items-center gap-2 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={handleRender4KFromCurrent}
-                    disabled={status !== 'idle' || !appliedRenderUrl}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-100 disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-400"
-                  >
-                    {status === 'render' && renderingMode === 'upscale-4k' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Rendering 4K
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        Render 4K
-                      </>
-                    )}
-                  </button>
+                <div className="flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-gray-200">
+                  <div className="relative group">
+                    <button
+                      disabled
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-gray-100 text-gray-400 font-mono text-[11px] uppercase tracking-widest cursor-not-allowed"
+                    >
+                      <Wand2 className="w-4 h-4" />
+                      Render 4K
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      Feature coming soon
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                    </div>
+                  </div>
                   <button
                     onClick={() => handleDownloadImage(appliedRenderUrl, 'applied')}
                     disabled={downloadingId === 'applied' || status !== 'idle'}

@@ -27,8 +27,10 @@ interface SustainabilityBriefingSectionProps {
   briefingPayload: SustainabilityBriefingPayload | null;
   isBriefingLoading: boolean;
   exportingBriefingPdf: boolean;
+  exportingMaterialsSheetPdf: boolean;
   board: MaterialOption[];
   onDownloadBriefingPdf: () => void;
+  onDownloadMaterialsSheetPdf: () => void;
 }
 
 const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps> = ({
@@ -36,8 +38,10 @@ const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps
   briefingPayload,
   isBriefingLoading,
   exportingBriefingPdf,
+  exportingMaterialsSheetPdf,
   board,
   onDownloadBriefingPdf,
+  onDownloadMaterialsSheetPdf,
 }) => {
   const [fullReportNotice, setFullReportNotice] = useState<string | null>(null);
 
@@ -65,6 +69,18 @@ const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps
                 <Download className="w-3.5 h-3.5" />
               )}
               Download PDF
+            </button>
+            <button
+              onClick={onDownloadMaterialsSheetPdf}
+              disabled={exportingMaterialsSheetPdf}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors disabled:opacity-50"
+            >
+              {exportingMaterialsSheetPdf ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              Materials Sheet
             </button>
             <button
               onClick={() => setFullReportNotice('This feature is in production and will be coming soon.')}
