@@ -77,8 +77,8 @@ export function renderMaterialSheetHalf(
   renderHeader(doc, material, x0, y, w, headerH);
   y += headerH + 6;
 
-  // Two-column body
-  const bodyH = 200;
+  // Two-column body (increased height for bar chart rows)
+  const bodyH = 220;
   renderBody(doc, material, x0, y, w, bodyH);
   y += bodyH + 6;
 
@@ -260,40 +260,31 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
 
   let analysisY = chartY + chartH + 14;
 
-  // Hotspots (orange)
+  // Major Contributors (orange) - matching sustainability briefing style
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.5);
   doc.setTextColor(234, 88, 12);
-  doc.text('HOTSPOTS', x, analysisY);
-  analysisY += 9;
+  doc.text('MAJOR CONTRIBUTORS', x, analysisY);
+  analysisY += 10;
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
   hotspots.forEach((item) => {
-    doc.setTextColor(55, 65, 81);
-    doc.text(`• ${item.label}`, x, analysisY);
-    doc.setTextColor(107, 114, 128);
-    doc.text(`${item.score.toFixed(1)}/5`, x + w - 20, analysisY);
-    analysisY += 9;
+    const scoreColor: [number, number, number] = item.score >= 3 ? [249, 115, 22] : item.score >= 2 ? [234, 179, 8] : [34, 197, 94];
+    drawScoreRow(doc, x, analysisY, item.label, item.score, scoreColor, w);
+    analysisY += 11;
   });
 
   analysisY += 4;
 
-  // Strengths (green)
+  // Strongest Stages (green) - matching sustainability briefing style
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(6.5);
   doc.setTextColor(22, 163, 74);
-  doc.text('STRENGTHS', x, analysisY);
-  analysisY += 9;
+  doc.text('STRONGEST STAGES', x, analysisY);
+  analysisY += 10;
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
   strengths.forEach((item) => {
-    doc.setTextColor(55, 65, 81);
-    doc.text(`• ${item.label}`, x, analysisY);
-    doc.setTextColor(107, 114, 128);
-    doc.text(`${item.score.toFixed(1)}/5`, x + w - 20, analysisY);
-    analysisY += 9;
+    drawScoreRow(doc, x, analysisY, item.label, item.score, [34, 197, 94], w);
+    analysisY += 11;
   });
 
   // Lifecycle insight box
@@ -310,6 +301,39 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(55, 65, 81);
   const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, 3);
   doc.text(insightLines, x + 6, insightY + 10);
+}
+
+/** Draw a score row with label, bar chart, and score value */
+function drawScoreRow(
+  doc: jsPDF,
+  x: number,
+  rowY: number,
+  label: string,
+  score: number,
+  color: [number, number, number],
+  columnWidth: number
+) {
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(55, 65, 81);
+  doc.text(label, x, rowY);
+
+  const barX = x + 70;
+  const barW = columnWidth - 100;
+  const barH = 4;
+
+  // Background bar
+  doc.setFillColor(229, 231, 235);
+  doc.roundedRect(barX, rowY - 3, barW, barH, 2, 2, 'F');
+
+  // Filled bar
+  doc.setFillColor(color[0], color[1], color[2]);
+  doc.roundedRect(barX, rowY - 3, Math.max(2, (score / 5) * barW), barH, 2, 2, 'F');
+
+  // Score value
+  doc.setFontSize(6.5);
+  doc.setTextColor(107, 114, 128);
+  doc.text(score.toFixed(1), barX + barW + 4, rowY);
 }
 
 function renderActions(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {

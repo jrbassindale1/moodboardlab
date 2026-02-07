@@ -1,5 +1,6 @@
 import type { MaterialOption, MaterialCategory, MaterialFunction } from '../types';
 import lifecycleProfilesData from './lifecycleProfiles.json';
+import lifecycleInsightsData from './lifecycleInsights.json';
 
 export type MaterialSystemRole = 'Structure' | 'Envelope' | 'Openings' | 'Finishes' | 'Landscape';
 export type DataConfidence = 'High' | 'Medium' | 'Low';
@@ -180,6 +181,8 @@ const DEFAULT_LIFECYCLE_SCORES: Record<MaterialLifecycleStage, number> = {
 
 const lifecycleProfiles = (lifecycleProfilesData as { profiles: Record<string, LifecycleProfile> })
   .profiles;
+
+const lifecycleInsights = (lifecycleInsightsData as { insights: Record<string, string> }).insights;
 
 // Optional per-material overrides for hand-curated fact sheets.
 const MATERIAL_FACT_OVERRIDES: Record<string, MaterialFactOverride> = {};
@@ -422,7 +425,7 @@ export function buildMaterialFact(material: MaterialOption): MaterialFact {
       strengths,
     },
     carbonIntensity: material.carbonIntensity ?? 'medium',
-    insight: buildInsightSentence(hotspots, strengths),
+    insight: lifecycleInsights[material.id] || buildInsightSentence(hotspots, strengths),
     actions: getSpecActions(material),
     dataConfidence: getDataConfidence(material),
     epdStatus: getEpdStatus(material),
