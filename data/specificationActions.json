@@ -1,1074 +1,1074 @@
 {
   "$schema": "./schemas/specificationActions.schema.json",
-  "_comment": "Material-specific specification actions. Each material has up to 3 targeted actions for specifiers. Evidence prompts should vary (EPD / CoC / VOC / take-back / test data / provenance) to avoid repetition.",
+  "_comment": "Material-specific specification actions. Each material has up to 3 targeted actions for specifiers. Evidence prompts should vary (EPD / chain-of-custody / VOC / take-back / test data / provenance) to avoid repetition.",
   "actions": {
     "steel-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted connections for future disassembly and reuse"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted connections so it can be taken apart and reused"
     ],
     "steel-columns-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted connections for future disassembly and reuse"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted connections so it can be taken apart and reused"
     ],
     "rammed-earth-structure": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify stabiliser content (target: <10% cement by volume) and confirm local soil sourcing",
       "Request moisture management details for long-term durability"
     ],
     "timber-flooring": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify low-VOC finish specification",
       "Check supplier offers refinishing service to extend lifespan"
     ],
     "glass-door": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify high recycled cullet content and verify U-value meets or exceeds building regs",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Specify high recycled cullet content and verify insulation performance meets regs",
       "Specify toughened/laminated for safety and longevity"
     ],
     "acoustic-ceiling-baffles": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
       "Verify recycled content of core material",
       "Confirm modular system allows partial replacement"
     ],
     "concrete-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement; consider high-SCM mixes where appropriate",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
       "Verify formwork reuse strategy with contractor"
     ],
     "rc-columns-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement; consider high-SCM mixes where appropriate",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
       "Confirm reinforcement uses high recycled content steel"
     ],
     "glulam-structure": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive type and formaldehyde emissions",
       "Verify fire treatment is non-toxic and doesn't impair recyclability"
     ],
     "green-oak-structure": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify green oak is appropriately seasoned for application",
       "Specify traditional joinery connections where possible"
     ],
     "glulam-columns-beams": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive type and formaldehyde emissions",
       "Verify structural calculations account for creep"
     ],
     "clt-structure": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
       "Verify moisture protection strategy during construction"
     ],
     "brick-veneer": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed brick where available",
       "Specify lime mortar to enable future brick recovery"
     ],
     "polished-concrete": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement; consider high-SCM mixes where appropriate",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
       "Verify curing compound is low-VOC"
     ],
     "hybrid-structure": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Confirm timber elements are certified (FSC/PEFC)",
       "Verify connection details allow for material separation at end-of-life"
     ],
     "space-frame-structure": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify joint system allows disassembly",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Verify joint system can be taken apart",
       "Confirm coating system is durable and low-maintenance"
     ],
     "nlt-structure": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive/fastener specification",
       "Verify acoustic performance if exposed"
     ],
     "ggbs-concrete": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify GGBS replacement ratio (target: 50-70% by mass)",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for a high cement replacement where possible; confirm in the mix design",
       "Confirm early-age strength gain suits programme"
     ],
     "lino-floor": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify natural raw material content (linseed oil, cork, wood flour)",
       "Specify low-VOC adhesive that allows future removal"
     ],
     "recycled-terrazzo": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled aggregate content percentage",
       "Confirm supplier offers grinding/refinishing service"
     ],
     "rubber-floor": [
-      "Confirm take-back scheme terms (what is accepted, in what condition, and who pays).",
+      "Confirm the take-back scheme (what’s accepted, in what condition, and who pays).",
       "Prioritise high recycled content rubber (verify)",
       "Specify click-fit system to enable partial replacement"
     ],
     "grey-carpet": [
-      "Confirm take-back scheme terms (what is accepted, in what condition, and who pays).",
+      "Confirm the take-back scheme (what’s accepted, in what condition, and who pays).",
       "Verify recycled fibre content and type",
       "Specify modular tiles for partial replacement"
     ],
     "bamboo-parquet": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
-      "Verify formaldehyde emission class (E1 or better)",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
+      "Verify low-formaldehyde class (E1 or better)",
       "Confirm product can be refinished to extend lifespan"
     ],
     "cork-plank-floor": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder/adhesive specification",
       "Confirm low-VOC finish and adhesive, and allow plank replacement"
     ],
     "reclaimed-timber-floor": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Confirm treatment for pests/rot is non-toxic",
       "Specify refinishing rather than replacement where possible"
     ],
     "stone-paver": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local or reclaimed stone",
       "Specify dry-laid or lime mortar bedding for future reuse"
     ],
     "vinyl-planks": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
-      "Verify recycled PVC content and phthalate-free formulation",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Verify recycled PVC content and free of harmful plasticisers (phthalates)",
       "Specify click-fit system for partial replacement"
     ],
     "resin-flooring": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify low-emission resin system specification",
       "Confirm substrate preparation allows future removal"
     ],
     "microcement-floor": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify sealer is low-VOC and food-safe if applicable",
       "Confirm crack repair protocol with supplier"
     ],
     "ceramic-tiles": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify tile thickness is optimised for application",
       "Specify removable fixing system where possible"
     ],
     "epoxy-flooring": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify low-emission application protocols",
       "Confirm system allows overcoating for maintenance"
     ],
     "travertine-tiles": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local supply to reduce transport impact",
       "Specify honed finish to reduce processing energy"
     ],
     "marble-floor": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed or local marble",
       "Specify thinner formats where structurally appropriate"
     ],
     "engineered-oak-floor": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive formaldehyde emissions",
       "Verify wear layer thickness allows refinishing"
     ],
     "linoleum-tiles": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify natural raw material content",
       "Specify low-VOC adhesive that allows future removal"
     ],
     "aluminum-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content aluminium (verify)",
       "Specify powder coating over anodising where appropriate"
     ],
     "timber-frame": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
-      "Specify mechanical fixings for disassembly"
+      "Specify screw/bolt fixings so it can be taken apart"
     ],
     "recycled-aluminum-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Prioritise high recycled content aluminium (verify) and confirm thermal break uses low-GWP materials",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Prioritise high recycled content aluminium (verify) and use low-impact thermal breaks",
       "Specify long-life hardware to match frame lifespan"
     ],
     "steel-window-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel content and specify double glazing units with recycled glass",
       "Verify galvanising or coating system durability"
     ],
     "composite-window-frame": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify end-of-life recyclability pathway",
       "Confirm thermal performance matches energy targets"
     ],
     "upvc-window-frame": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify recycled PVC content and lead-free stabilisers",
       "Confirm manufacturer take-back scheme"
     ],
     "curtain-wall-system": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled aluminium content",
-      "Specify gasket materials with long service life"
+      "Specify seal materials with long service life"
     ],
     "frameless-glazing": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify high recycled cullet content and low-VOC structural silicone",
       "Specify toughened/laminated for safety"
     ],
     "clay-plaster": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify local clay sourcing",
       "Request guidance on humidity buffering performance"
     ],
     "gypsum-wall": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled gypsum content (target: 25%+)",
-      "Specify screw fixings for disassembly"
+      "Specify screw fixings so it can be taken apart"
     ],
     "plasterboard-wall": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled gypsum content (target: 25%+)",
       "Confirm take-back scheme for offcuts and demolition"
     ],
     "plywood-panels-wall": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
-      "Verify formaldehyde emission class (E1 or better)",
-      "Specify mechanical fixings for future removal"
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
+      "Verify low-formaldehyde class (E1 or better)",
+      "Specify screw/bolt fixings for future removal"
     ],
     "acoustic-panels-wall": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
       "Verify core material composition and recycled content",
       "Confirm modular system allows partial replacement"
     ],
     "glass-partitions": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify demountable framing system and high recycled cullet glass",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Specify easy-to-remove framing system and high recycled cullet glass",
       "Verify manifestation meets accessibility requirements"
     ],
     "brick-internal": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed brick where available",
       "Verify slip/veneer thickness if applicable"
     ],
     "concrete-block-wall": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA in block manufacture",
-      "Verify U-value of complete wall build-up"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement blocks where possible",
+      "Verify insulation performance of the full wall build-up"
     ],
     "mineral-microcement": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify sealer is low-VOC",
       "Confirm maintenance and repair protocol"
     ],
     "standard-wall-paint": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Specify low-VOC or zero-VOC formulation",
       "Choose durable finish to extend repainting cycles"
     ],
     "custom-wall-paint": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Specify low-VOC or zero-VOC formulation",
       "Choose durable finish to extend repainting cycles"
     ],
     "standard-ceiling-paint": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Specify low-VOC or zero-VOC formulation",
       "Verify anti-fungal properties for humid areas"
     ],
     "custom-ceiling-paint": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Specify low-VOC or zero-VOC formulation",
       "Verify anti-fungal properties for humid areas"
     ],
     "perforated-metal-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel/aluminium content and acoustic backing material composition",
       "Specify clip-in system for easy access and replacement"
     ],
     "timber-slat-ceiling": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify fire treatment is non-toxic",
       "Specify concealed fixing system for clean aesthetic"
     ],
     "gypsum-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled gypsum content (target: 25%+)",
-      "Specify demountable tiles for services access"
+      "Specify tiles that can be lifted out for services access"
     ],
     "open-grid-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled metal content and coating durability/maintenance requirements",
       "Confirm grid module suits services coordination"
     ],
     "stretch-fabric-ceiling": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify PVC/polyester content and fire rating",
       "Confirm reinstallation possible for services access"
     ],
     "coffered-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Confirm material composition (timber, GRG, MDF)",
-      "Specify mechanical fixings for future access"
+      "Specify screw/bolt fixings for future access"
     ],
     "plasterboard-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled gypsum content (target: 25%+)",
       "Confirm access panel strategy for services"
     ],
     "exposed-clt-ceiling": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
       "Verify fire treatment allows visible timber finish"
     ],
     "metal-mesh-ceiling": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel/aluminium content and mesh pattern provides required shading coefficient",
       "Specify clip-in system for easy maintenance"
     ],
     "acoustic-tiles-ceiling": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
       "Verify recycled content of mineral fibre",
-      "Confirm tiles are compatible with demountable grid"
+      "Confirm tiles fit an easy-to-remove grid"
     ],
     "exposed-concrete-soffit": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement; consider high-SCM mixes where appropriate",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
       "Verify surface finish quality in mockup"
     ],
     "timber-slat-soffit": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify fire treatment for external soffits",
       "Specify stainless steel fixings for durability"
     ],
     "perforated-metal-soffit": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel/aluminium content and ventilation performance if applicable",
       "Specify powder coating for weather resistance"
     ],
     "timber-linings": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify fire treatment is non-toxic",
       "Specify concealed fixing for clean finish"
     ],
     "bio-fibre-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder is low-toxicity and formaldehyde-free",
       "Confirm end-of-life composting or recycling pathway"
     ],
     "timber-wall-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive formaldehyde emissions",
-      "Specify mechanical fixings for future removal"
+      "Specify screw/bolt fixings for future removal"
     ],
     "porcelain-tiles": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify slip rating for application",
       "Specify larger formats to reduce grout joints"
     ],
     "textured-wallpaper": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify ink/coating composition",
       "Specify paste-the-wall for easier future removal"
     ],
     "fabric-acoustic-panels": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
       "Verify core and fabric composition (recycled content where possible)",
       "Confirm fabric can be removed for cleaning/replacement"
     ],
     "oak-timber-slats": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify fire treatment is non-toxic",
       "Specify concealed fixing system"
     ],
     "cork-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder/adhesive specification",
       "Confirm natural wax finish is low-VOC and re-applicable for maintenance"
     ],
     "reclaimed-boarding": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Confirm treatment for pests/rot is non-toxic",
-      "Specify mechanical fixings for future reuse"
+      "Specify screw/bolt fixings for future reuse"
     ],
     "mycelium-tiles": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify fire resistance and durability performance",
       "Confirm end-of-life composting pathway"
     ],
     "wool-felt-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify wool sourcing and moth treatment",
       "Confirm panels can be removed for cleaning or replacement"
     ],
     "bamboo-slat-wall": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive formaldehyde emissions",
-      "Specify mechanical fixings for removal"
+      "Specify screw/bolt fixings for removal"
     ],
     "plywood-panels-finish": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
-      "Verify formaldehyde emission class (E1 or better)",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
+      "Verify low-formaldehyde class (E1 or better)",
       "Specify low-VOC lacquer or oil finish"
     ],
     "marble-panels": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed or local marble",
       "Specify thinner formats and honeycomb backing if appropriate"
     ],
     "leather-panels": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify leather sourcing and tanning process",
       "Confirm fire retardant treatment is non-toxic"
     ],
     "metal-mesh-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel/aluminium content and mesh pattern/perforation for application",
       "Specify powder coating for durability"
     ],
     "glass-panels-finish": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify high recycled cullet content and low-VOC back-painting or laminate",
       "Specify toughened glass for safety"
     ],
     "acoustic-plaster": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
       "Verify composition and recycled content",
       "Confirm repair methodology with supplier"
     ],
     "lime-plaster": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify lime sourcing and burning process",
       "Request guidance on curing and maintenance"
     ],
     "tadelakt-plaster": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify authentic lime composition",
       "Request guidance on maintenance and repair"
     ],
     "secondary-steelwork": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted connections for disassembly"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted connections so it can be taken apart"
     ],
     "brick-loadbearing": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed brick where available",
       "Specify lime mortar to enable future brick recovery"
     ],
     "hempcrete-structural": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify hemp sourcing and binder composition",
       "Confirm moisture management strategy"
     ],
     "steel-concrete-composite": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify steel recycled content and concrete SCM ratio",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Verify steel recycled content and cement replacement ratio",
       "Confirm connection details for end-of-life separation"
     ],
     "precast-concrete": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement; consider high-SCM mixes where appropriate",
-      "Verify connection details allow disassembly"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
+      "Verify connection details can be taken apart"
     ],
     "mass-timber-columns": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
       "Verify fire strategy (encapsulation vs char rate)"
     ],
     "steel-trusses": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future reuse"
     ],
     "prestressed-concrete": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA cement replacement where structurally viable",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement mixes where structurally viable",
       "Verify strand/tendon material is recyclable"
     ],
     "permeable-paving": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify infiltration rate meets SuDS requirements",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Verify infiltration rate meets drainage requirements",
       "Confirm maintenance regime for long-term performance"
     ],
     "joinery-built-in": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify board formaldehyde emissions",
-      "Specify mechanical fixings for future adaptation"
+      "Specify screw/bolt fixings for future adaptation"
     ],
     "brass-fixtures": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled brass content",
       "Confirm lead-free alloy for water contact"
     ],
     "standing-seam-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled metal content and coating system durability (25+ year warranty)",
       "Specify clip fixings for thermal movement and replacement"
     ],
     "green-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify growing medium is peat-free",
       "Confirm maintenance access strategy"
     ],
     "cool-roof": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify solar reflectance index (SRI) meets targets",
       "Confirm system is compatible with PV if planned"
     ],
     "pv-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify manufacturer take-back scheme for panels",
       "Confirm roof structure capacity for additional load"
     ],
     "blue-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify attenuation capacity meets drainage strategy",
       "Confirm maintenance and inspection access"
     ],
     "clay-tiles-roof": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed tiles where available",
       "Verify tile profile suits local weather exposure"
     ],
     "slate-tiles-roof": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local or reclaimed slate",
       "Specify stainless steel or copper fixings"
     ],
     "metal-tiles-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled metal content and coating system durability",
       "Confirm fixings allow for thermal movement"
     ],
     "epdm-membrane": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify membrane thickness suits application",
       "Confirm welded joints over adhesive where possible"
     ],
     "tpo-membrane": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify membrane thickness and reinforcement",
       "Confirm manufacturer recycling scheme"
     ],
     "built-up-roofing": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify bitumen sourcing and additives",
       "Confirm reflective surface for heat reduction"
     ],
     "polycarbonate-roof": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify UV protection and expected service life",
       "Confirm fixings allow for thermal expansion"
     ],
     "wood-fiber-insulation": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder content",
       "Verify moisture behaviour suits wall build-up"
     ],
     "hemp-insulation": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide provenance for hemp supply and declare fire retardant treatment (type and toxicity).",
       "Verify hemp sourcing and fire retardant treatment",
       "Confirm vapour permeability suits build-up"
     ],
     "sheep-wool-insulation": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide provenance for wool supply and declare mothproofing treatment (type and toxicity).",
       "Verify wool sourcing and moth treatment",
       "Confirm moisture buffering suits build-up"
     ],
     "cellulose-insulation": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide evidence of recycled paper content and declare fire retardant treatment (type and toxicity).",
       "Verify high recycled paper content (verify)",
       "Confirm installation density meets thermal targets"
     ],
     "mineral-wool": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify formaldehyde-free binder",
       "Confirm density and lambda value for application"
     ],
     "pir-insulation": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
-      "Verify low-GWP blowing agent and recyclable foil facing",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Verify low climate-impact blowing agent and recyclable foil facing",
       "Confirm fire performance for application"
     ],
     "aerogel-insulation": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify application is cost-effective vs alternatives",
       "Confirm installation methodology and protection"
     ],
     "timber-door": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify core construction and adhesive emissions",
       "Specify durable ironmongery for long service life"
     ],
     "steel-door": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel content and galvanising/coating durability",
       "Specify adjustable hinges for long-term alignment"
     ],
     "aluminum-door": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content aluminium (verify)",
-      "Specify thermal break for external doors"
+      "Include an insulating thermal break for external doors"
     ],
     "composite-door": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify thermal performance (U-value)",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Verify thermal performance (insulation rating)",
       "Confirm end-of-life recyclability pathway"
     ],
     "fire-rated-door": [
-      "Provide third-party test data relevant to performance (e.g. fire classification, NRC/CAC, durability/warranty).",
-      "Verify intumescent seals are replaceable",
+      "Provide third-party test data on performance (e.g. fire rating, sound ratings, durability/warranty).",
+      "Verify fire-swelling seals are replaceable",
       "Confirm ironmongery meets fire rating"
     ],
     "glass-balustrade": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify high recycled cullet content and low-carbon interlayer",
       "Specify stainless steel fixings for durability"
     ],
     "steel-railing": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel content and galvanising/coating durability",
       "Specify bolted connections for replacement"
     ],
     "timber-railing": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
       "Specify stainless steel fixings for durability"
     ],
     "cable-railing": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify stainless steel grade and recycled content where available",
       "Confirm infill spacing meets building regs"
     ],
     "mesh-railing": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel content and mesh pattern meets safety requirements",
       "Specify powder coating for weather resistance"
     ],
     "gravel-paving": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify local sourcing to reduce transport",
       "Confirm edging system to contain gravel"
     ],
     "resin-bound-gravel": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
-      "Verify permeability meets SuDS requirements",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Verify permeability meets drainage requirements",
       "Confirm UV stability for external use"
     ],
     "concrete-paving": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify GGBS/PFA in block manufacture",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement blocks where possible",
       "Confirm slip rating and drainage falls"
     ],
     "block-paving": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify dry-lay system for future lifting",
       "Confirm edge restraint allows for reuse"
     ],
     "grass-reinforcement": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify load capacity for intended use",
       "Confirm maintenance regime for grass health"
     ],
     "decking-external": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
       "Specify stainless steel fixings for longevity"
     ],
     "zinc-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled zinc content and patina/coating system for intended aesthetic",
       "Specify clip fixings for thermal movement"
     ],
     "copper-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled copper content and patina/coating suits design intent",
       "Specify clip fixings for thermal movement"
     ],
     "aluminium-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content aluminium (verify)",
-      "Specify mechanical fixings for disassembly"
+      "Specify screw/bolt fixings so it can be taken apart"
     ],
     "weathering-steel-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled steel content and stabilisation treatment if required",
       "Confirm drainage details prevent staining"
     ],
     "timber-rainscreen": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
       "Specify ventilated cavity design"
     ],
     "stone-facade": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local or reclaimed stone",
-      "Specify mechanical fixings for disassembly"
+      "Specify screw/bolt fixings so it can be taken apart"
     ],
     "insulated-render-system": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Verify insulation board composition and GWP",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Verify insulation board composition and climate impact",
       "Confirm mesh and basecoat are low-cement"
     ],
     "living-green-wall": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify irrigation system efficiency",
       "Confirm plant selection suits microclimate"
     ],
     "native-planting": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify plants are locally sourced",
       "Specify maintenance regime for establishment"
     ],
     "wildflower-meadow": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Confirm soil preparation methodology",
       "Specify long-term management plan"
     ],
     "rain-garden": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify plant selection for water tolerance",
-      "Confirm connection to wider SuDS strategy"
+      "Confirm connection to wider drainage strategy"
     ],
     "terracotta-panels": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local supply and lower-fired products where possible",
-      "Specify mechanical fixings for panel replacement"
+      "Specify screw/bolt fixings for panel replacement"
     ],
     "composite-metal-deck-slabs": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Specify high recycled content steel deck and optimise deck gauge",
-      "Plan for end-of-life separation with demountable connections"
+      "Plan to separate materials at end of life with easy-to-remove connections"
     ],
     "precast-concrete-floor-planks": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify low-carbon mix; consider high-SCM mixes where appropriate",
-      "Use demountable connections for reuse"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
+      "Use easy-to-remove connections for reuse"
     ],
     "timber-joists-floor-cassettes": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class for engineered elements",
-      "Specify demountable fixings for disassembly"
+      "Specify easy-to-remove fixings so it can be taken apart"
     ],
     "clt-floor-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
-      "Specify demountable fixings for future disassembly"
+      "Specify easy-to-remove fixings so it can be taken apart later"
     ],
     "secondary-steel-infill-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted connections for disassembly"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted connections so it can be taken apart"
     ],
     "raised-access-floor-systems": [
-      "Confirm take-back scheme terms (what is accepted, in what condition, and who pays).",
+      "Confirm the take-back scheme (what’s accepted, in what condition, and who pays).",
       "Verify recycled content of panels and pedestals",
       "Specify modular tiles for partial replacement and reuse"
     ],
     "timber-rafters-purlins": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
-      "Specify mechanical fixings for future replacement"
+      "Specify screw/bolt fixings for future replacement"
     ],
     "steel-purlins": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future replacement"
     ],
     "glulam-roof-beams": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
       "Confirm moisture protection and inspection access"
     ],
     "secondary-trusses": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future reuse"
     ],
     "clt-roof-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
       "Confirm moisture protection and inspection access for long-term durability"
     ],
     "lightweight-space-frame-infill": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted nodes for disassembly and reuse"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted nodes so it can be taken apart and reused"
     ],
     "edge-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Optimise section sizes and specify high recycled content where possible",
       "Use bolted connections to allow future replacement"
     ],
     "spandrel-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Optimise section sizes and specify high recycled content where possible",
       "Use bolted connections to allow future replacement"
     ],
     "ring-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify low-carbon mix; consider high-SCM mixes where appropriate",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
       "Confirm reinforcement detailing supports long service life"
     ],
     "secondary-lintels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future replacement"
     ],
     "masonry-shelf-angles": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for inspection and replacement"
     ],
     "cross-bracing-steel": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
-      "Specify bolted connections for disassembly and reuse"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
+      "Specify bolted connections so it can be taken apart and reused"
     ],
     "timber-wind-bracing": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify grading and moisture content for structural performance",
       "Specify bolted connections for adjustability"
     ],
     "k-x-bracing-secondary": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future adjustment and reuse"
     ],
     "diaphragm-bracing-elements": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify steel recycled content and optimise deck/panel gauge",
       "Specify bolted connections for inspection and replacement"
     ],
     "secondary-shear-panels": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
-      "Verify low-emission adhesives and formaldehyde class (E1 or better)",
-      "Specify mechanical fixings for future replacement"
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
+      "Verify low-emission adhesives and low-formaldehyde class (E1 or better)",
+      "Specify screw/bolt fixings for future replacement"
     ],
     "steel-stair-stringers": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify adjustable fixings for long-term alignment"
     ],
     "timber-stair-carriages": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class for engineered elements",
       "Specify replaceable treads and repairable connections"
     ],
     "stair-landings-trimmers": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for inspection and replacement"
     ],
     "cantilevered-stair-treads": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify responsible timber sourcing and low-VOC finish specification",
-      "Specify replaceable treads and demountable fixings"
+      "Specify replaceable treads and easy-to-remove fixings"
     ],
     "facade-support-rails": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted fixings for replacement and adjustment"
     ],
     "rainscreen-carrier-systems": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted fixings for adjustability and replacement"
     ],
     "curtain-wall-mullions-transoms": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Prioritise high recycled content aluminium (verify) and low-GWP thermal breaks",
-      "Specify replaceable gaskets and pressure plates for long service life"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Prioritise high recycled content aluminium (verify) and use low-impact thermal breaks",
+      "Specify replaceable seals and pressure plates for long service life"
     ],
     "secondary-facade-brackets": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted fixings for replacement"
     ],
     "balcony-support-beams": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for future replacement and reuse"
     ],
     "steel-canopy-frames": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify corrosion protection for long-term durability"
     ],
     "timber-pergola-structures": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify preservative treatment is non-toxic",
       "Specify stainless steel fixings for durability"
     ],
     "tension-rods-tie-members": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify adjustable tensioning for long-term service"
     ],
     "secondary-cantilever-arms": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Aim for high recycled content (verify) and prefer electric arc furnace (EAF) production",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Aim for high recycled content (verify) and prefer electric-arc furnace steel where available",
       "Specify bolted connections for inspection and replacement"
     ],
     "aluminium-standing-seam-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content aluminium (verify) and confirm coating system durability",
       "Specify clip fixings for thermal movement and future replacement"
     ],
     "copper-standing-seam-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled copper content and patina/coating suitability",
       "Specify clip fixings for thermal movement and replacement"
     ],
     "stainless-standing-seam-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify high recycled content stainless steel (verify)",
       "Specify clip fixings for thermal movement and replacement"
     ],
     "lead-standing-seam-roof": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled lead content and responsible sourcing",
       "Specify clip fixings for thermal movement and replacement"
     ],
     "cork-insulation": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder/additive specification and low-toxicity treatment",
       "Confirm moisture behaviour suits wall build-up"
     ],
     "clt-loadbearing-walls": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify adhesive emissions class",
-      "Confirm moisture protection strategy and demountable fixings"
+      "Confirm moisture protection strategy and easy-to-remove fixings"
     ],
     "masonry-loadbearing": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed or local masonry units",
       "Specify lime mortar to enable future recovery"
     ],
     "brick-slip-rainscreen": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise reclaimed or local brick slips where available",
-      "Specify mechanical fixing system for removal and reuse"
+      "Specify screw/bolt fixing system for removal and reuse"
     ],
     "stone-rainscreen": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local or reclaimed stone",
-      "Specify mechanical fixings for panel replacement"
+      "Specify screw/bolt fixings for panel replacement"
     ],
     "precast-concrete-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify low-carbon mix; consider high-SCM mixes where appropriate",
-      "Use mechanical fixings for panel replacement"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Use lower-cement concrete mixes where feasible, and check the EPD.",
+      "Use screw/bolt fixings for panel replacement"
     ],
     "gfrc-grc-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Specify low-cement mixes and verify recycled content where feasible",
-      "Use mechanical fixings for panel replacement"
+      "Use screw/bolt fixings for panel replacement"
     ],
     "slate-cladding": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Prioritise local or reclaimed slate",
-      "Specify mechanical fixings for panel replacement"
+      "Specify screw/bolt fixings for panel replacement"
     ],
     "hemp-lime-wall": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify hemp sourcing and binder composition",
       "Confirm vapour-open detailing for long-term durability"
     ],
     "charred-timber-cladding": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify charring method and confirm no toxic sealers or preservatives",
       "Specify ventilated cavity and replaceable board system"
     ],
     "cork-rainscreen": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder/additive specification and fire treatment",
-      "Specify mechanical fixings for panel replacement"
+      "Specify screw/bolt fixings for panel replacement"
     ],
     "wood-fibre-lime-render": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify binder composition and vapour permeability",
       "Specify repairable finish and maintenance guidance"
     ],
     "stainless-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify high recycled content stainless steel (verify)",
-      "Specify mechanical fixings for disassembly"
+      "Specify screw/bolt fixings so it can be taken apart"
     ],
     "lead-cladding": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Verify recycled lead content and responsible sourcing",
       "Specify clip fixings for thermal movement and maintenance"
     ],
     "insulated-metal-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Prioritise high recycled content metal and low-GWP insulation core",
-      "Specify demountable fixings for panel replacement"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Prioritise high recycled content metal and low climate-impact insulation core",
+      "Specify easy-to-remove fixings for panel replacement"
     ],
     "fibre-cement-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Specify low-cement mixes and confirm recycled content where available",
-      "Use mechanical fixings to allow panel replacement"
+      "Use screw/bolt fixings to allow panel replacement"
     ],
     "metal-composite-panels": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content aluminium (verify) and low-toxicity core",
-      "Specify mechanical fixings for panel replacement"
+      "Specify screw/bolt fixings for panel replacement"
     ],
     "glass-facade": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
-      "Specify high recycled cullet content and verify U-value/solar performance",
-      "Use demountable glazing to enable replacement"
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
+      "Specify high recycled cullet content and verify insulation and solar performance",
+      "Use glazing that can be removed to enable replacement"
     ],
     "etfe-tensile-facade": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify polymer formulation and fire classification",
       "Specify modular cushions and replaceable fixing system"
     ],
     "living-wall-external": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify irrigation system efficiency",
       "Confirm maintenance access and replaceable planting modules"
     ],
     "ornamental-planting": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify plants are locally sourced and suited to climate",
       "Specify maintenance regime for establishment"
     ],
     "tree-planting": [
-      "Provide provenance and responsible sourcing evidence (reclaimed/local preferred where feasible).",
+      "Provide origin and responsible-sourcing evidence (reclaimed/local preferred where possible).",
       "Verify native provenance and climate suitability",
       "Specify establishment and maintenance regime"
     ],
     "oak-dining-table": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify low-VOC finish specification",
       "Specify repairable construction and refinishing"
     ],
     "upholstered-seating": [
-      "Provide VOC/emissions evidence and declare key additives (e.g. plasticisers, flame retardants) where relevant.",
+      "Provide VOC/indoor-air evidence and list key additives (e.g. plasticisers, flame retardants) where relevant.",
       "Verify low-VOC foam and fabric treatments",
       "Specify replaceable covers and repairable components"
     ],
     "metal-chair": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content metal (verify)",
       "Specify repairable components and replaceable glides"
     ],
     "plywood-furniture": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
-      "Verify formaldehyde emission class (E1 or better)",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
+      "Verify low-formaldehyde class (E1 or better)",
       "Specify repairable construction and refinishing"
     ],
     "reclaimed-timber-furniture": [
-      "Provide FSC or PEFC chain-of-custody evidence (and provenance if reclaimed).",
+      "Provide FSC or PEFC chain-of-custody proof (and origin details if reclaimed).",
       "Verify provenance and ensure treatments are non-toxic",
       "Specify repairable construction and refinishing"
     ],
     "modular-shelving": [
-      "Provide an EPD (EN 15804) or verified embodied carbon figure (A1–A3), and state the life-cycle stages covered.",
+      "Provide an EPD (EN 15804) or a verified carbon figure (A1–A3), and say which life-cycle stages are included.",
       "Prioritise high recycled content metal (verify) and durable finishes",
       "Specify modular components for reconfiguration and repair"
     ]

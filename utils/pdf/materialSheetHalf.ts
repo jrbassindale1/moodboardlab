@@ -63,8 +63,51 @@ export function renderMaterialSheetHalf(
   material: MaterialPdfModel,
   opts: RenderOpts
 ) {
-  // Move 2nd material up by 15px to account for page footer
-  const sheetTop = opts.sheetIndex === 0 ? 0 : SHEET_H - 15;
+  // Card layout constants
+  const headerH = 38;
+  const headerGap = 6;
+  const bodyH = 270;
+  const footerY = A4_H - 28;
+  const minFooterClearance = 34; // Minimum space above footer
+  const targetInterCardGap = { min: 18, max: 22 }; // Target gap between cards
+
+  // Calculate card 1 bottom position
+  const card1Top = M;
+  const card1Bottom = card1Top + headerH + headerGap + bodyH;
+
+  // For card 2, start with desired offset of -28pt
+  let secondMaterialOffset = -28;
+
+  if (opts.sheetIndex === 1) {
+    const proposedCard2Top = SHEET_H + secondMaterialOffset + M;
+    const card2Bottom = proposedCard2Top + headerH + headerGap + bodyH;
+
+    // Safety check 1: Footer collision - ensure 34pt clearance from footer
+    const footerClearance = footerY - 8 - card2Bottom; // -8 for divider line above footer
+    if (footerClearance < minFooterClearance) {
+      secondMaterialOffset += (minFooterClearance - footerClearance);
+    }
+
+    // Safety check 2: Inter-card gap - aim for 18-22pt
+    const recalculatedCard2Top = SHEET_H + secondMaterialOffset + M;
+    const interCardGap = recalculatedCard2Top - card1Bottom;
+
+    if (interCardGap > targetInterCardGap.max) {
+      // Move card 2 up (more negative offset), but respect footer clearance
+      const adjustment = Math.min(
+        interCardGap - targetInterCardGap.max,
+        footerClearance - minFooterClearance
+      );
+      if (adjustment > 0) {
+        secondMaterialOffset -= adjustment;
+      }
+    } else if (interCardGap < targetInterCardGap.min) {
+      // Move card 2 down (less negative offset)
+      secondMaterialOffset += (targetInterCardGap.min - interCardGap);
+    }
+  }
+
+  const sheetTop = opts.sheetIndex === 0 ? 0 : SHEET_H + secondMaterialOffset;
   const x0 = M;
   const y0 = sheetTop + M;
   const w = A4_W - 2 * M;
@@ -72,17 +115,15 @@ export function renderMaterialSheetHalf(
   let y = y0;
 
   // Header row (with thumbnail)
-  const headerH = 38;
   renderHeader(doc, material, x0, y, w, headerH);
-  y += headerH + 6;
+  y += headerH + headerGap;
 
   // Two-column body (health box + spec actions in left column, lifecycle in right column)
-  const bodyH = 270;
   renderBody(doc, material, x0, y, w, bodyH);
 
   // Page footer (only render on bottom material of each page)
   if (opts.sheetIndex === 1) {
-    renderPageFooter(doc, opts, A4_H - 28);
+    renderPageFooter(doc, opts, footerY);
   }
 }
 
@@ -92,17 +133,16 @@ export function renderMaterialSheetFooter(doc: jsPDF, generatedOnText?: string) 
 }
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  // Calculate header box to align with both columns below
-  // Left column starts at: x + CARD_PAD - 4
-  // Right column ends at: x + w - CARD_PAD + 4 (based on colR box ending)
-  const headerLeft = x + CARD_PAD - 4;
-  const headerRight = x + w - CARD_PAD + 4;
-  const headerWidth = headerRight - headerLeft;
+  // Shared outer frame matching body containers exactly
+  // Left column box starts at: x + CARD_PAD - 4
+  // Right column box ends at: x + w + 4 (verified by: xR - 4 + colR - CARD_PAD + 8)
+  const cardOuterX = x + CARD_PAD - 4;
+  const cardOuterW = w - CARD_PAD + 8; // Spans from left column left edge to right column right edge
 
-  // Grey background box for header
+  // Grey background box for header (matches body outer frame)
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(headerLeft, y, headerWidth, h, 6, 6, 'FD');
+  doc.roundedRect(cardOuterX, y, cardOuterW, h, 6, 6, 'FD');
 
   // Thumbnail on left side
   const thumbSize = 32;
@@ -117,45 +157,73 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
     doc.roundedRect(thumbX, thumbY, thumbSize, thumbSize, 3, 3, 'F');
   }
 
-  // Material name (to the right of thumbnail)
+  // Layout constants
   const textStartX = thumbX + thumbSize + 10;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(17, 24, 39);
-  doc.text(clampText(doc, m.name, w - thumbSize - 40), textStartX, y + 16);
-
-  // Pills below the name (to the right of thumbnail)
-  const chipY = y + 22;
+  const titleY = y + 14;
+  const descriptorY = titleY + 12; // One line-height below title
+  const tagsY = titleY + 6; // Midway between title and descriptor for optical centering
   const chipH = 12;
+  const chipGap = 6;
+  const tagsRightX = cardOuterX + cardOuterW - CARD_PAD;
 
+  // Build tags (right-aligned)
   const chips = [
     { text: m.category, kind: 'neutral' as const },
     { text: m.carbonLabel, kind: labelKind(m.carbonLabel) },
   ];
 
-  let cx = textStartX;
+  // Calculate tags total width for collision detection
+  let totalTagsWidth = 0;
+  const chipWidths: number[] = [];
   for (const chip of chips) {
     const tw = measureText(doc, chip.text, 6.5, 'helvetica', 'bold');
     const chipW = tw + 10;
-    drawChip(doc, cx, chipY, chipW, chipH, chip.text, chip.kind);
-    cx += chipW + 5;
+    chipWidths.push(chipW);
+    totalTagsWidth += chipW;
+  }
+  totalTagsWidth += (chips.length - 1) * chipGap;
+
+  // Draw tags from right-to-left
+  let tagX = tagsRightX;
+  for (let i = chips.length - 1; i >= 0; i--) {
+    const chipW = chipWidths[i];
+    tagX -= chipW;
+    drawChip(doc, tagX, tagsY, chipW, chipH, chips[i].text, chips[i].kind);
+    if (i > 0) tagX -= chipGap;
   }
 
-  // Variant text on far right, vertically centered
+  // Calculate available width for title and descriptor (avoid collision with tags)
+  const tagsLeftX = tagX;
+  const maxTextWidth = tagsLeftX - textStartX - 8;
+
+  // Material name (title)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(17, 24, 39);
+  doc.text(clampText(doc, m.name, maxTextWidth), textStartX, titleY);
+
+  // Descriptor text under title (eg "Fabric-wrapped baffles")
   const variant = (m.formVariant || m.imageCaption || '').trim();
   if (variant) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(107, 114, 128);
-    const rightEdge = x + w - CARD_PAD;
-    const verticalCenter = y + h / 2;
-    doc.text(clampText(doc, variant, 120), rightEdge, verticalCenter, { align: 'right' });
+    // Wrap to max 2 lines with ellipsis on line 2 if needed
+    const descriptorLines = wrapLines(doc, variant, maxTextWidth, 7).slice(0, 2);
+    if (descriptorLines.length === 2) {
+      // Ensure ellipsis on second line if truncated
+      const fullLines = wrapLines(doc, variant, maxTextWidth, 7);
+      if (fullLines.length > 2) {
+        descriptorLines[1] = clampText(doc, descriptorLines[1], maxTextWidth);
+      }
+    }
+    doc.text(descriptorLines, textStartX, descriptorY);
   }
 
-  // Divider line
+  // Divider line spanning full outer frame width
   doc.setDrawColor(229, 231, 235);
   doc.setLineWidth(0.5);
-  doc.line(x + CARD_PAD, y + h, x + w - CARD_PAD, y + h);
+  doc.line(cardOuterX, y + h, cardOuterX + cardOuterW, y + h);
 }
 
 function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
@@ -166,14 +234,108 @@ function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
   const xL = x + CARD_PAD;
   const xR = x + CARD_PAD + colL + colGap;
 
+  // Calculate content needs and apply flexibility
+  const contentNeeds = calculateLeftColumnContentNeeds(doc, m, colL - CARD_PAD);
+  const flexibility = calculateFlexibility(contentNeeds, h);
+
   // Left column: material description, typical uses, key performance, health box, spec actions
-  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, h);
+  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, h, flexibility.mainContentShrink);
 
   // Right column: radar chart + lifecycle analysis + insight box
-  renderRightColumn(doc, m, xR, y, colR - CARD_PAD, h);
+  renderRightColumn(doc, m, xR, y, colR - CARD_PAD, h, flexibility.chartShrink, flexibility.insightShrink);
 }
 
-function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+/** Calculate approximate content height needs for left column */
+function calculateLeftColumnContentNeeds(doc: jsPDF, m: MaterialPdfModel, w: number): number {
+  let needed = 12; // Initial padding
+
+  // Description
+  const whatText = (m.whatItIs ?? '').trim();
+  if (whatText) {
+    const whatLines = wrapLines(doc, whatText, w, 8).slice(0, 3);
+    needed += whatLines.length * 10 + 8;
+  } else {
+    needed += 12;
+  }
+
+  // Typical uses
+  const uses = (m.typicalUses ?? []).slice(0, 4).filter(Boolean);
+  if (uses.length) {
+    needed += 10 + (uses.length * 10) + 6;
+  }
+
+  // Key performance
+  const perf = (m.performanceNote ?? m.strategicValue ?? '').trim();
+  if (perf) {
+    const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
+    needed += 10 + (perfLines.length * 10) + 6;
+  }
+
+  // Service life
+  if (m.serviceLife) {
+    needed += 22;
+  }
+
+  // Risks
+  const risks = (m.risks ?? []).slice(0, 2);
+  if (risks.length) {
+    needed += 10 + (risks.length * 9);
+  }
+
+  return needed;
+}
+
+/** Calculate flexibility adjustments based on content needs */
+function calculateFlexibility(contentNeeds: number, totalHeight: number): {
+  mainContentShrink: number;
+  insightShrink: number;
+  chartShrink: number;
+} {
+  // Base allocations
+  const healthBoxH = 50;
+  const actionsH = 50;
+  const boxGap = 4;
+  const bottomSectionH = healthBoxH + boxGap + actionsH + boxGap;
+  const baseMainContentH = totalHeight - bottomSectionH;
+
+  // Calculate overflow
+  const overflow = contentNeeds - baseMainContentH;
+
+  if (overflow <= 0) {
+    // No overflow, no shrinking needed
+    return { mainContentShrink: 0, insightShrink: 0, chartShrink: 0 };
+  }
+
+  // Apply shrinkage in order:
+  // 1. Main content can shrink up to 12pt (absorbs overflow by expanding into reserved space)
+  // 2. Insight box can shrink up to 8pt
+  // 3. Chart can shrink up to 10pt (min 100pt)
+
+  let remaining = overflow;
+  let mainContentShrink = 0;
+  let insightShrink = 0;
+  let chartShrink = 0;
+
+  // First: allow main content to use reserved space (effectively shrink bottom section)
+  const mainContentFlex = Math.min(remaining, 12);
+  mainContentShrink = -mainContentFlex; // Negative means expand main content
+  remaining -= mainContentFlex;
+
+  if (remaining > 0) {
+    // Second: shrink insight box
+    insightShrink = Math.min(remaining, 8);
+    remaining -= insightShrink;
+  }
+
+  if (remaining > 0) {
+    // Third: shrink chart (min 100pt, so max shrink is 10pt from 110)
+    chartShrink = Math.min(remaining, 10);
+  }
+
+  return { mainContentShrink, insightShrink, chartShrink };
+}
+
+function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number, mainContentShrink = 0) {
   // Reserve space for health box and spec actions at the bottom
   const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
   const actionsH = actions.length ? 50 : 0;
@@ -181,8 +343,9 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
   const boxGap = 4;
 
   // Calculate main content height (leaving room for health + actions at bottom)
+  // mainContentShrink is negative when we want to expand main content into reserved space
   const bottomSectionH = healthBoxH + boxGap + actionsH + (actions.length ? boxGap : 0);
-  const mainContentH = h - bottomSectionH;
+  const mainContentH = h - bottomSectionH - mainContentShrink;
 
   // Light grey card background for main content
   doc.setFillColor(249, 250, 251);
@@ -295,12 +458,52 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setFontSize(7);
     doc.setTextColor(55, 65, 81);
 
+    // Bullet wrapping with hanging indent
+    const bulletIndent = 10;
+    const hangingIndent = 10;
+    const lineHeight = 10;
+    const maxTotalLines = 4;
+    const wrapWidth = w - bulletIndent - hangingIndent - 4; // Account for padding
+
     let ay = actionsY + 22;
-    actions.forEach((action) => {
-      const lines = wrapLines(doc, `• ${action}`, w, 7).slice(0, 1);
-      doc.text(lines, x, ay);
-      ay += 9;
-    });
+    let totalLinesUsed = 0;
+
+    for (let i = 0; i < actions.length && totalLinesUsed < maxTotalLines; i++) {
+      const action = actions[i];
+      const isLastAction = i === actions.length - 1;
+      const remainingLines = maxTotalLines - totalLinesUsed;
+
+      // Wrap the action text
+      let lines = wrapLines(doc, action, wrapWidth, 7);
+
+      // Truncate if needed
+      if (lines.length > remainingLines) {
+        lines = lines.slice(0, remainingLines);
+        // Add ellipsis to the last line if truncated
+        const lastLine = lines[lines.length - 1];
+        if (lastLine) {
+          lines[lines.length - 1] = clampTextWithEllipsis(doc, lastLine, wrapWidth) + '...';
+        }
+      } else if (isLastAction && lines.length > 0) {
+        // Ensure proper punctuation on last line
+        const lastLine = lines[lines.length - 1].trim();
+        if (lastLine && !/[.!?]$/.test(lastLine)) {
+          lines[lines.length - 1] = lastLine + '.';
+        }
+      }
+
+      // Draw bullet on first line
+      doc.text('•', x, ay);
+
+      // Draw each line with proper indentation
+      lines.forEach((line, lineIdx) => {
+        if (totalLinesUsed >= maxTotalLines) return;
+        const textX = lineIdx === 0 ? x + bulletIndent : x + bulletIndent + hangingIndent;
+        doc.text(line, textX, ay);
+        ay += lineHeight;
+        totalLinesUsed++;
+      });
+    }
   }
 }
 
@@ -318,7 +521,8 @@ function renderHealthBox(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
   doc.setDrawColor(153, 246, 228);
   doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
 
-  let cursorY = y + 10;
+  // Increased top padding: +4pt vertical inset (was 10, now 14)
+  let cursorY = y + 14;
 
   // Draw green cross icon
   const crossX = x;
@@ -336,7 +540,7 @@ function renderHealthBox(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
   doc.setTextColor(17, 94, 89);
   doc.text('HEALTH & INDOOR AIR', x + 12, cursorY);
 
-  // Risk level badge
+  // Risk level badge - aligned with title baseline
   if (m.healthRiskLevel) {
     const badge = healthBadge(m.healthRiskLevel);
     const badgeText = badge.label;
@@ -387,7 +591,7 @@ function healthBadge(level: 'low' | 'medium' | 'high'): {
   };
 }
 
-function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number, chartShrink = 0, insightShrink = 0) {
   // Calculate height to align with left column's bottom
   // Left column's spec actions box ends at y + h, so right column should match
   const rightColumnHeight = h;
@@ -403,11 +607,11 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(75, 85, 99);
   doc.text('LIFECYCLE IMPACT', x, y + 12);
 
-  // Radar chart - increased by 10px
+  // Radar chart - base 110px, can shrink up to 10px (min 100px)
   const chartX = x;
   const chartY = y + 16;
   const chartW = w;
-  const chartH = 110;
+  const chartH = Math.max(100, 110 - chartShrink);
 
   drawLifecycleRadarChart(doc, { x: chartX, y: chartY, width: chartW, height: chartH }, m.lifecycle);
 
@@ -455,9 +659,9 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
     analysisY += 11;
   });
 
-  // Lifecycle insight box (fixed height)
+  // Lifecycle insight box (can shrink up to 8pt)
   const insightY = analysisY + 4;
-  const insightH = 40;
+  const insightH = Math.max(32, 40 - insightShrink);
   const insightText = m.lifecycleInsight || generateDefaultInsight(m);
 
   doc.setFillColor(249, 250, 251);
@@ -467,7 +671,9 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(55, 65, 81);
-  const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, 3);
+  // Reduce max lines if box is shrunk
+  const maxInsightLines = insightH >= 38 ? 3 : 2;
+  const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, maxInsightLines);
   doc.text(insightLines, x + 6, insightY + 10);
 }
 
@@ -660,6 +866,17 @@ function clampText(doc: jsPDF, text: string, maxW: number) {
   let t = text;
   while (t.length > 3 && doc.getTextWidth(t + '...') > maxW) t = t.slice(0, -1);
   return t.length ? `${t}...` : '';
+}
+
+function clampTextWithEllipsis(doc: jsPDF, text: string, maxW: number) {
+  // Clamp text to fit within maxW, leaving room for ellipsis to be added externally
+  const ellipsisWidth = doc.getTextWidth('...');
+  if (doc.getTextWidth(text) <= maxW - ellipsisWidth) return text;
+  let t = text;
+  while (t.length > 0 && doc.getTextWidth(t) > maxW - ellipsisWidth) {
+    t = t.slice(0, -1);
+  }
+  return t.trimEnd();
 }
 
 function wrapLines(doc: jsPDF, text: string, maxW: number, fontSize: number) {

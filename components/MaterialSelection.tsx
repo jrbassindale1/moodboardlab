@@ -1456,6 +1456,43 @@ IMPORTANT:
                     </div>
                   )}
 
+                  {/* Health Impact */}
+                  {(sustainabilityMaterial.fact.healthRiskLevel || sustainabilityMaterial.fact.healthNote) && (
+                    <div className={`rounded-lg p-4 border ${
+                      sustainabilityMaterial.fact.healthRiskLevel === 'high'
+                        ? 'bg-red-50 border-red-200'
+                        : sustainabilityMaterial.fact.healthRiskLevel === 'medium'
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-green-50 border-green-200'
+                    }`}>
+                      <h4 className={`font-mono text-[10px] uppercase tracking-widest mb-2 ${
+                        sustainabilityMaterial.fact.healthRiskLevel === 'high'
+                          ? 'text-red-700'
+                          : sustainabilityMaterial.fact.healthRiskLevel === 'medium'
+                          ? 'text-amber-700'
+                          : 'text-green-700'
+                      }`}>
+                        Health Impact
+                        {sustainabilityMaterial.fact.healthRiskLevel && (
+                          <span className="ml-2 capitalize">({sustainabilityMaterial.fact.healthRiskLevel} risk)</span>
+                        )}
+                      </h4>
+                      {sustainabilityMaterial.fact.healthConcerns && sustainabilityMaterial.fact.healthConcerns.length > 0 && (
+                        <ul className="space-y-1 mb-2">
+                          {sustainabilityMaterial.fact.healthConcerns.slice(0, 3).map((concern, i) => (
+                            <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                              <span className="text-gray-400 mt-0.5">•</span>
+                              <span>{concern}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {sustainabilityMaterial.fact.healthNote && (
+                        <p className="text-xs text-gray-600">{sustainabilityMaterial.fact.healthNote}</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Specification Actions - moved to left column */}
                   {sustainabilityMaterial.fact.actions.length > 0 && (
                     <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
