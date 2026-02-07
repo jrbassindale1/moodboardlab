@@ -1,0 +1,86 @@
+{
+  "$schema": "./schemas/materialRisks.schema.json",
+  "_comment": "Material-specific risks and mitigations for specification",
+  "risks": {
+    "cross-laminated-timber": [
+      { "risk": "Moisture ingress during construction", "mitigation": "Ensure weather protection and proper sealing" },
+      { "risk": "Fire performance concerns", "mitigation": "Specify char rate calculations and intumescent coatings" }
+    ],
+    "glulam-beam": [
+      { "risk": "Moisture damage if exposed", "mitigation": "Apply protective finish and ensure ventilation" },
+      { "risk": "Connection detail complexity", "mitigation": "Coordinate early with structural engineer" }
+    ],
+    "steel-frame": [
+      { "risk": "Corrosion in humid environments", "mitigation": "Specify galvanizing or protective coatings" },
+      { "risk": "Thermal bridging at connections", "mitigation": "Include thermal breaks in details" }
+    ],
+    "concrete-insitu": [
+      { "risk": "Quality control on site", "mitigation": "Specify test cubes and inspection regime" },
+      { "risk": "Long curing time affecting programme", "mitigation": "Consider accelerators or off-site options" }
+    ],
+    "precast-concrete": [
+      { "risk": "Joint waterproofing failures", "mitigation": "Specify robust sealant and drainage details" },
+      { "risk": "Tolerance and fit issues", "mitigation": "Coordinate surveys and mock-ups early" }
+    ],
+    "brick-masonry": [
+      { "risk": "Efflorescence staining", "mitigation": "Specify low-salt bricks and proper DPC" },
+      { "risk": "Mortar colour mismatch", "mitigation": "Request sample panels before main works" }
+    ],
+    "aluminium-cladding": [
+      { "risk": "Galvanic corrosion with dissimilar metals", "mitigation": "Isolate with neoprene gaskets" },
+      { "risk": "Thermal movement causing buckling", "mitigation": "Design expansion joints into system" }
+    ],
+    "zinc-cladding": [
+      { "risk": "Patina variation across panels", "mitigation": "Specify pre-weathered finish if consistency needed" },
+      { "risk": "Run-off staining adjacent materials", "mitigation": "Detail drip edges and sacrificial surfaces" }
+    ],
+    "timber-cladding": [
+      { "risk": "Uneven weathering and greying", "mitigation": "Accept natural variation or specify protective oils" },
+      { "risk": "Movement and checking", "mitigation": "Select stable species and allow for movement" }
+    ],
+    "curtain-wall": [
+      { "risk": "Air and water infiltration", "mitigation": "Specify CWCT testing and site hose testing" },
+      { "risk": "Thermal bridging at transoms", "mitigation": "Require thermal break details in specs" }
+    ],
+    "triple-glazing": [
+      { "risk": "Weight requires stronger frames", "mitigation": "Coordinate frame sizing with glass supplier" },
+      { "risk": "Seal failure causing misting", "mitigation": "Specify minimum 10-year IGU warranty" }
+    ],
+    "green-roof": [
+      { "risk": "Waterproofing failure under substrate", "mitigation": "Specify root barrier and flood testing" },
+      { "risk": "Plant establishment failure", "mitigation": "Include irrigation and maintenance period" }
+    ],
+    "mineral-wool-insulation": [
+      { "risk": "Moisture absorption reducing performance", "mitigation": "Ensure cavity ventilation and vapour control" },
+      { "risk": "Slumping in cavity over time", "mitigation": "Specify semi-rigid batts with friction fit" }
+    ],
+    "pir-insulation": [
+      { "risk": "Thermal drift reducing R-value", "mitigation": "Specify aged thermal values in calculations" },
+      { "risk": "Fire performance in some applications", "mitigation": "Check fire rating for specific use" }
+    ],
+    "vinyl-flooring": [
+      { "risk": "Subfloor moisture causing failure", "mitigation": "Test subfloor RH before installation" },
+      { "risk": "Plasticizer migration over time", "mitigation": "Specify phthalate-free options" }
+    ],
+    "terrazzo": [
+      { "risk": "Cracking if substrate moves", "mitigation": "Include movement joints at 3m centres" },
+      { "risk": "Staining from spills", "mitigation": "Apply penetrating sealer and maintain" }
+    ],
+    "natural-stone": [
+      { "risk": "Variation between batches", "mitigation": "Request samples from production batch" },
+      { "risk": "Staining and etching", "mitigation": "Specify appropriate sealer for stone type" }
+    ],
+    "plasterboard": [
+      { "risk": "Moisture damage in humid areas", "mitigation": "Specify moisture-resistant board (green)" },
+      { "risk": "Impact damage in high-traffic zones", "mitigation": "Consider impact-resistant options" }
+    ],
+    "acoustic-ceiling": [
+      { "risk": "Sagging from humidity", "mitigation": "Specify humidity-resistant core for wet areas" },
+      { "risk": "Poor acoustic performance if gaps", "mitigation": "Ensure tight joints and edge details" }
+    ],
+    "paint-interior": [
+      { "risk": "Poor adhesion to substrate", "mitigation": "Specify appropriate primer system" },
+      { "risk": "VOC emissions affecting IAQ", "mitigation": "Specify low-VOC or zero-VOC products" }
+    ]
+  }
+}

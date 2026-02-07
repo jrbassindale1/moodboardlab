@@ -3,6 +3,8 @@ import lifecycleProfilesData from './lifecycleProfiles.json';
 import lifecycleInsightsData from './lifecycleInsights.json';
 import specificationActionsData from './specificationActions.json';
 import healthToxicityData from './healthToxicity.json';
+import materialDurationsData from './materialDurations.json';
+import materialRisksData from './materialRisks.json';
 
 export type MaterialSystemRole = 'Structure' | 'Envelope' | 'Openings' | 'Finishes' | 'Landscape';
 export type DataConfidence = 'High' | 'Medium' | 'Low';
@@ -46,6 +48,8 @@ export interface MaterialFact {
   healthConcerns?: string[];
   healthNote?: string;
   localityFlag?: string;
+  serviceLife?: number;
+  risks?: { risk: string; mitigation: string }[];
 }
 
 type MaterialFactOverride = Partial<Omit<MaterialFact, 'lifecycle'>> & {
@@ -194,6 +198,22 @@ type HealthRiskLevel = 'low' | 'medium' | 'high';
 type HealthConcern = 'vocs' | 'formaldehyde' | 'fibres' | 'phthalates' | 'flame-retardants' | 'isocyanates' | 'lead' | 'chromium' | 'radon' | 'lead-paint' | 'treatments' | 'preservatives' | 'fire-retardants' | 'moth-treatments' | 'binders' | 'odour' | 'dust' | 'biocides' | 'pahs' | 'bpa' | 'fire';
 type HealthDataEntry = { riskLevel: HealthRiskLevel; concerns: HealthConcern[]; note: string };
 const healthToxicity = (healthToxicityData as { healthData: Record<string, HealthDataEntry> }).healthData;
+
+type DurationOverride = {
+  id: string;
+  pattern: string;
+  patternFlags?: string;
+  categories?: string[];
+  duration: {
+    serviceLife: number;
+    replacementCycle?: number;
+    notes?: string;
+  };
+};
+const materialDurations = (materialDurationsData as { overrides: DurationOverride[] }).overrides;
+
+type RiskEntry = { risk: string; mitigation: string };
+const materialRisks = (materialRisksData as { risks: Record<string, RiskEntry[]> }).risks;
 
 // Optional per-material overrides for hand-curated fact sheets.
 const MATERIAL_FACT_OVERRIDES: Record<string, MaterialFactOverride> = {};
@@ -377,6 +397,44 @@ const getEpdStatus = (material: MaterialOption): EpdStatus => {
   return 'Unknown';
 };
 
+const getServiceLife = (material: MaterialOption): number | undefined => {
+  const nameAndId = `${material.id} ${material.name}`.toLowerCase();
+
+  for (const override of materialDurations) {
+    // Check category match if specified
+    if (override.categories && override.categories.length > 0) {
+      if (!override.categories.includes(material.category)) {
+        continue;
+      }
+    }
+
+    // Check pattern match
+    const flags = override.patternFlags || 'i';
+    const regex = new RegExp(override.pattern, flags);
+    if (regex.test(nameAndId)) {
+      return override.duration.serviceLife;
+    }
+  }
+
+  // Default service life by category
+  const categoryDefaults: Partial<Record<MaterialCategory, number>> = {
+    structure: 60,
+    'exposed-structure': 60,
+    external: 40,
+    roof: 40,
+    window: 30,
+    floor: 25,
+    'wall-internal': 30,
+    ceiling: 30,
+    'paint-wall': 10,
+    'paint-ceiling': 12,
+    landscape: 30,
+    insulation: 60,
+  };
+
+  return categoryDefaults[material.category];
+};
+
 const getFormVariant = (material: MaterialOption): string => {
   if (material.finish) return cleanVariant(material.finish);
   if (material.materialForm && material.materialForm.length > 0) {
@@ -450,6 +508,8 @@ export function buildMaterialFact(material: MaterialOption): MaterialFact {
     healthRiskLevel: healthToxicity[material.id]?.riskLevel,
     healthConcerns: healthToxicity[material.id]?.concerns,
     healthNote: healthToxicity[material.id]?.note,
+    serviceLife: getServiceLife(material),
+    risks: materialRisks[material.id],
   };
 
   return applyOverrides(fact, MATERIAL_FACT_OVERRIDES[material.id]);

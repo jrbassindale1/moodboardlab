@@ -1426,6 +1426,36 @@ IMPORTANT:
                     </div>
                   )}
 
+                  {/* Service Life */}
+                  {sustainabilityMaterial.fact.serviceLife && (
+                    <div className="flex items-center gap-3">
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500">Expected Service Life</h4>
+                      <span className="text-sm font-medium text-gray-700">{sustainabilityMaterial.fact.serviceLife} years</span>
+                    </div>
+                  )}
+
+                  {/* Risks / Watch For */}
+                  {sustainabilityMaterial.fact.risks && sustainabilityMaterial.fact.risks.length > 0 && (
+                    <div>
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-orange-600 mb-2">Watch For</h4>
+                      <ul className="space-y-2">
+                        {sustainabilityMaterial.fact.risks.slice(0, 2).map((riskItem, i) => (
+                          <li key={i} className="text-sm text-gray-700">
+                            <div className="flex items-start gap-2">
+                              <span className="text-orange-500 mt-0.5">•</span>
+                              <div>
+                                <span className="font-medium">{riskItem.risk}</span>
+                                {riskItem.mitigation && (
+                                  <p className="text-xs text-gray-500 mt-0.5">{riskItem.mitigation}</p>
+                                )}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Specification Actions - moved to left column */}
                   {sustainabilityMaterial.fact.actions.length > 0 && (
                     <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">

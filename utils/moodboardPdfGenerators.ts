@@ -1452,10 +1452,11 @@ export async function generateMaterialsSheetPdf(
         epdAvailable,
         epdStatus: fact.epdStatus,
         specActions: fact.actions,
-        risks: buildRisks(material, lifecycleConfidence),
+        risks: fact.risks || buildRisks(material, lifecycleConfidence),
         healthRiskLevel: fact.healthRiskLevel,
         healthConcerns: fact.healthConcerns,
         healthNote: fact.healthNote,
+        serviceLife: fact.serviceLife,
       };
     })
   );

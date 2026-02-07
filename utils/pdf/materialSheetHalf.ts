@@ -49,6 +49,8 @@ export type MaterialPdfModel = {
   healthRiskLevel?: 'low' | 'medium' | 'high';
   healthConcerns?: string[];
   healthNote?: string;
+
+  serviceLife?: number;
 };
 
 type RenderOpts = {
@@ -74,7 +76,7 @@ export function renderMaterialSheetHalf(
   renderHeader(doc, material, x0, y, w, headerH);
   y += headerH + 6;
 
-  // Two-column body (spec actions in left column, health box in right column)
+  // Two-column body (health box + spec actions in left column, lifecycle in right column)
   const bodyH = 270;
   renderBody(doc, material, x0, y, w, bodyH);
 
@@ -157,19 +159,23 @@ function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
   const xL = x + CARD_PAD;
   const xR = x + CARD_PAD + colL + colGap;
 
-  // Left column: material description, typical uses, strategic value (full height)
+  // Left column: material description, typical uses, key performance, health box, spec actions
   renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, h);
 
-  // Right column: radar chart + lifecycle insight + health box
+  // Right column: radar chart + lifecycle analysis + insight box
   renderRightColumn(doc, m, xR, y, colR - CARD_PAD, h);
 }
 
 function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  // Reserve space for spec actions at the bottom
+  // Reserve space for health box and spec actions at the bottom
   const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
   const actionsH = actions.length ? 50 : 0;
-  const actionsGap = actions.length ? 4 : 0;
-  const mainContentH = h - actionsH - actionsGap;
+  const healthBoxH = 50;
+  const boxGap = 4;
+
+  // Calculate main content height (leaving room for health + actions at bottom)
+  const bottomSectionH = healthBoxH + boxGap + actionsH + (actions.length ? boxGap : 0);
+  const mainContentH = h - bottomSectionH;
 
   // Light grey card background for main content
   doc.setFillColor(249, 250, 251);
@@ -224,11 +230,48 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setTextColor(55, 65, 81);
     const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
     doc.text(perfLines, x, cursorY);
+    cursorY += perfLines.length * 10 + 6;
   }
+
+  // Service life (durability)
+  if (m.serviceLife) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(75, 85, 99);
+    doc.text('EXPECTED SERVICE LIFE', x, cursorY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(55, 65, 81);
+    doc.text(`${m.serviceLife} years`, x + 82, cursorY);
+    cursorY += 12;
+  }
+
+  // Risks / Watch for
+  const risks = (m.risks ?? []).slice(0, 2);
+  if (risks.length) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(234, 88, 12); // Orange color for warnings
+    doc.text('WATCH FOR', x, cursorY);
+    cursorY += 10;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(55, 65, 81);
+    risks.forEach((riskItem) => {
+      doc.text(`• ${clampText(doc, riskItem.risk, w - 8)}`, x, cursorY);
+      cursorY += 9;
+    });
+  }
+
+  // Health box - above spec actions
+  const healthBoxY = y + mainContentH + boxGap;
+  renderHealthBox(doc, m, x, healthBoxY, w, healthBoxH);
 
   // Specification actions at the bottom of left column
   if (actions.length) {
-    const actionsY = y + mainContentH + actionsGap;
+    const actionsY = healthBoxY + healthBoxH + boxGap;
 
     // Light green background
     doc.setFillColor(240, 253, 244);
@@ -414,11 +457,6 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(55, 65, 81);
   const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, 3);
   doc.text(insightLines, x + 6, insightY + 10);
-
-  // Health box - now in right column under lifecycle insight
-  const healthBoxY = insightY + insightH + 4;
-  const healthBoxH = 36;
-  renderHealthBox(doc, m, x, healthBoxY, w, healthBoxH);
 }
 
 /** Draw a score row with label, bar chart, and score value */
