@@ -70,7 +70,7 @@ const WorkflowStrip: React.FC = () => {
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              A beautiful moodboard is created in an instant.
+              A beautiful moodboard image, featuring all your materials, is created in an instant 
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
@@ -161,7 +161,7 @@ const WorkflowStrip: React.FC = () => {
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
-              A beautiful moodboard is created in an instant.
+              A beautiful moodboard image, featuring all your materials, is created in an instant 
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
               <img

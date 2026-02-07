@@ -297,8 +297,8 @@ function calculateFlexibility(contentNeeds: number, totalHeight: number): {
   insightShrink: number;
   chartShrink: number;
 } {
-  // Base allocations (updated: health 56pt, spec 76pt)
-  const healthBoxH = 56;
+  // Base allocations (updated: health 46pt, spec 76pt)
+  const healthBoxH = 46;
   const actionsH = 76;
   const boxGap = 4;
   const bottomSectionH = healthBoxH + boxGap + actionsH + boxGap;
@@ -349,8 +349,8 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
   // Check if health data exists
   const hasHealthData = !!(m.healthRiskLevel || m.healthNote);
 
-  // Box heights: Health 56pt, Spec 76pt (or 132pt if no health)
-  const baseHealthH = 56;
+  // Box heights: Health 46pt, Spec 76pt (or 122pt if no health)
+  const baseHealthH = 46;
   const baseSpecH = 76;
 
   // Conditional: if no health data, collapse health box and give space to spec
