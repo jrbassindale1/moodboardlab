@@ -291,9 +291,9 @@ function calculateFlexibility(contentNeeds: number, totalHeight: number): {
   insightShrink: number;
   chartShrink: number;
 } {
-  // Base allocations
-  const healthBoxH = 50;
-  const actionsH = 50;
+  // Base allocations (updated: health 56pt, spec 76pt)
+  const healthBoxH = 56;
+  const actionsH = 76;
   const boxGap = 4;
   const bottomSectionH = healthBoxH + boxGap + actionsH + boxGap;
   const baseMainContentH = totalHeight - bottomSectionH;
@@ -338,13 +338,22 @@ function calculateFlexibility(contentNeeds: number, totalHeight: number): {
 function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number, mainContentShrink = 0) {
   // Reserve space for health box and spec actions at the bottom
   const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
-  const actionsH = actions.length ? 50 : 0;
-  const healthBoxH = 50;
   const boxGap = 4;
+
+  // Check if health data exists
+  const hasHealthData = !!(m.healthRiskLevel || m.healthNote);
+
+  // Box heights: Health 56pt, Spec 76pt (or 132pt if no health)
+  const baseHealthH = 56;
+  const baseSpecH = 76;
+
+  // Conditional: if no health data, collapse health box and give space to spec
+  const healthBoxH = hasHealthData ? baseHealthH : 0;
+  const actionsH = actions.length ? (hasHealthData ? baseSpecH : baseSpecH + baseHealthH) : 0;
 
   // Calculate main content height (leaving room for health + actions at bottom)
   // mainContentShrink is negative when we want to expand main content into reserved space
-  const bottomSectionH = healthBoxH + boxGap + actionsH + (actions.length ? boxGap : 0);
+  const bottomSectionH = healthBoxH + (hasHealthData ? boxGap : 0) + actionsH + (actions.length ? boxGap : 0);
   const mainContentH = h - bottomSectionH - mainContentShrink;
 
   // Light grey card background for main content
@@ -436,13 +445,16 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     });
   }
 
-  // Health box - above spec actions
+  // Health box - above spec actions (only if health data exists)
   const healthBoxY = y + mainContentH + boxGap;
-  renderHealthBox(doc, m, x, healthBoxY, w, healthBoxH);
+  if (hasHealthData) {
+    renderHealthBox(doc, m, x, healthBoxY, w, healthBoxH);
+  }
 
   // Specification actions at the bottom of left column
   if (actions.length) {
-    const actionsY = healthBoxY + healthBoxH + boxGap;
+    // Position spec actions: after health box if present, otherwise directly after main content
+    const actionsY = hasHealthData ? healthBoxY + healthBoxH + boxGap : healthBoxY;
 
     // Light green background
     doc.setFillColor(240, 253, 244);
@@ -462,7 +474,7 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     const bulletIndent = 10;
     const hangingIndent = 10;
     const lineHeight = 10;
-    const maxTotalLines = 4;
+    const maxTotalLines = 5; // Allow 5 lines for taller spec box
     const wrapWidth = w - bulletIndent - hangingIndent - 4; // Account for padding
 
     let ay = actionsY + 22;
@@ -470,22 +482,25 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
 
     for (let i = 0; i < actions.length && totalLinesUsed < maxTotalLines; i++) {
       const action = actions[i];
-      const isLastAction = i === actions.length - 1;
       const remainingLines = maxTotalLines - totalLinesUsed;
 
       // Wrap the action text
       let lines = wrapLines(doc, action, wrapWidth, 7);
+      let isTruncated = false;
 
-      // Truncate if needed
+      // Truncate if needed (prefer truncating last bullet)
       if (lines.length > remainingLines) {
         lines = lines.slice(0, remainingLines);
+        isTruncated = true;
         // Add ellipsis to the last line if truncated
         const lastLine = lines[lines.length - 1];
         if (lastLine) {
           lines[lines.length - 1] = clampTextWithEllipsis(doc, lastLine, wrapWidth) + '...';
         }
-      } else if (isLastAction && lines.length > 0) {
-        // Ensure proper punctuation on last line
+      }
+
+      // Ensure proper punctuation on each bullet's final line (full-stop if not already punctuated)
+      if (!isTruncated && lines.length > 0) {
         const lastLine = lines[lines.length - 1].trim();
         if (lastLine && !/[.!?]$/.test(lastLine)) {
           lines[lines.length - 1] = lastLine + '.';
@@ -662,7 +677,8 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   // Lifecycle insight box (can shrink up to 8pt)
   const insightY = analysisY + 4;
   const insightH = Math.max(32, 40 - insightShrink);
-  const insightText = m.lifecycleInsight || generateDefaultInsight(m);
+  const rawInsight = m.lifecycleInsight || generateDefaultInsight(m);
+  const insightText = normalizeNarrativeText(rawInsight);
 
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
@@ -877,6 +893,28 @@ function clampTextWithEllipsis(doc: jsPDF, text: string, maxW: number) {
     t = t.slice(0, -1);
   }
   return t.trimEnd();
+}
+
+/** Normalize narrative text: sentence case and ensure full stop at end */
+function normalizeNarrativeText(text: string): string {
+  if (!text || !text.trim()) return '';
+
+  // Split into sentences, normalize each
+  const sentences = text.split(/(?<=[.!?])\s+/).map((sentence) => {
+    const trimmed = sentence.trim();
+    if (!trimmed) return '';
+
+    // Capitalize first letter (sentence case)
+    const capitalized = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+
+    // Ensure ends with punctuation
+    if (!/[.!?]$/.test(capitalized)) {
+      return capitalized + '.';
+    }
+    return capitalized;
+  });
+
+  return sentences.filter(Boolean).join(' ');
 }
 
 function wrapLines(doc: jsPDF, text: string, maxW: number, fontSize: number) {
