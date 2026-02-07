@@ -51,6 +51,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Easily pick your proposed building materials from an extensive list.
+            </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={materialKey}
@@ -66,6 +69,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              A beautiful moodboard is created in an instant.
+            </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={moodboardSheet}
@@ -81,6 +87,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Use a wireframe or a sketch to see your materials applied to your project.
+            </p>
             <div
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-64 cursor-ew-resize select-none"
               style={{ touchAction: 'none' }}
@@ -133,6 +142,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">01</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
+              Easily pick your proposed building materials from an extensive list.
+            </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
               <img
                 src={materialKey}
@@ -148,6 +160,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">02</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
+              A beautiful moodboard is created in an instant.
+            </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
               <img
                 src={moodboardSheet}
@@ -163,6 +178,9 @@ const WorkflowStrip: React.FC = () => {
               <span className="font-mono text-xs text-gray-400">03</span>
               <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
             </div>
+            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
+              Use a wireframe or a sketch to see your materials applied to your project.
+            </p>
             <div
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 cursor-ew-resize select-none"
               style={{ touchAction: 'none' }}
