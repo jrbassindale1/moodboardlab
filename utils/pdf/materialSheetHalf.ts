@@ -74,9 +74,9 @@ export function renderMaterialSheetHalf(
   y += headerH + 6;
 
   // Two-column body
-  const bodyH = 300;
+  const bodyH = 270;
   renderBody(doc, material, x0, y, w, bodyH);
-  y += bodyH + 12;
+  y += bodyH + 8;
 
   // Specification actions (compact full-width band)
   const actions = (material.specActions ?? []).slice(0, 3).filter(Boolean);
@@ -97,6 +97,11 @@ export function renderMaterialSheetFooter(doc: jsPDF, generatedOnText?: string) 
 }
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+  // Grey background box for header
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(x + CARD_PAD - 4, y, w - 2 * CARD_PAD + 8, h, 6, 6, 'FD');
+
   // Thumbnail on left side
   const thumbSize = 32;
   const thumbX = x + CARD_PAD;
@@ -160,8 +165,8 @@ function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
   const xR = x + CARD_PAD + colL + colGap;
 
   // Health box dimensions (aligned with insight box at bottom)
-  const healthBoxH = 60;
-  const healthBoxGap = 6;
+  const healthBoxH = 50;
+  const healthBoxGap = 4;
   const mainContentH = h - healthBoxH - healthBoxGap;
 
   // Left column: material description, typical uses, strategic value (shorter to make room for health box)
@@ -235,24 +240,34 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
 function renderHealthBox(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
   if (!m.healthRiskLevel && !m.healthNote) {
     // Draw empty placeholder box if no health data
-    doc.setFillColor(249, 250, 251);
-    doc.setDrawColor(229, 231, 235);
+    doc.setFillColor(240, 253, 250);
+    doc.setDrawColor(153, 246, 228);
     doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
     return;
   }
 
-  // Light grey card background
-  doc.setFillColor(249, 250, 251);
-  doc.setDrawColor(229, 231, 235);
+  // Hospital green card background
+  doc.setFillColor(240, 253, 250);
+  doc.setDrawColor(153, 246, 228);
   doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
 
-  let cursorY = y + 12;
+  let cursorY = y + 10;
 
-  // Health & Indoor Air heading
+  // Draw green cross icon
+  const crossX = x;
+  const crossY = cursorY - 5;
+  const crossSize = 8;
+  doc.setFillColor(20, 184, 166);
+  // Vertical bar of cross
+  doc.rect(crossX + crossSize * 0.35, crossY, crossSize * 0.3, crossSize, 'F');
+  // Horizontal bar of cross
+  doc.rect(crossX, crossY + crossSize * 0.35, crossSize, crossSize * 0.3, 'F');
+
+  // Health & Indoor Air heading (offset for cross)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
-  doc.setTextColor(75, 85, 99);
-  doc.text('HEALTH & INDOOR AIR', x, cursorY);
+  doc.setTextColor(17, 94, 89);
+  doc.text('HEALTH & INDOOR AIR', x + 12, cursorY);
 
   // Risk level badge
   if (m.healthRiskLevel) {
@@ -273,8 +288,8 @@ function renderHealthBox(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, 
   if (m.healthNote) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(55, 65, 81);
-    const healthLines = wrapLines(doc, m.healthNote, w, 7).slice(0, 3);
+    doc.setTextColor(17, 94, 89);
+    const healthLines = wrapLines(doc, m.healthNote, w - 4, 7).slice(0, 2);
     doc.text(healthLines, x, cursorY);
   }
 }
@@ -317,11 +332,11 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(75, 85, 99);
   doc.text('LIFECYCLE IMPACT', x, y + 12);
 
-  // Radar chart (larger with increased body height)
+  // Radar chart
   const chartX = x;
   const chartY = y + 16;
   const chartW = w;
-  const chartH = 115;
+  const chartH = 100;
 
   drawLifecycleRadarChart(doc, { x: chartX, y: chartY, width: chartW, height: chartH }, m.lifecycle);
 
@@ -339,7 +354,7 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   // Get hotspots and strengths
   const { hotspots, strengths } = analyseLifecycle(m.lifecycle);
 
-  let analysisY = chartY + chartH + 14;
+  let analysisY = chartY + chartH + 18;
 
   // Major Contributors (orange) - matching sustainability briefing style
   doc.setFont('helvetica', 'bold');
@@ -370,7 +385,7 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
 
   // Lifecycle insight box (fixed height)
   const insightY = analysisY + 4;
-  const insightH = 50;
+  const insightH = 40;
   const insightText = m.lifecycleInsight || generateDefaultInsight(m);
 
   doc.setFillColor(249, 250, 251);
