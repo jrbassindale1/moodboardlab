@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from './components/Navbar';
 import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
@@ -11,13 +11,37 @@ import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
 import CookieBanner from './components/CookieBanner';
 import { MaterialOption } from './types';
+import type {
+  SustainabilityBriefingPayload,
+  SustainabilityBriefingResponse,
+} from './utils/sustainabilityBriefing';
+import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('concept');
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
+  const [sustainabilityBriefing, setSustainabilityBriefing] =
+    useState<SustainabilityBriefingResponse | null>(null);
+  const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
+  const [briefingMaterialsKey, setBriefingMaterialsKey] = useState<string | null>(null);
+  const [briefingInvalidatedMessage, setBriefingInvalidatedMessage] = useState<string | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
+
+  const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
+
+  useEffect(() => {
+    if (!briefingMaterialsKey) return;
+    if (materialsKey !== briefingMaterialsKey) {
+      setSustainabilityBriefing(null);
+      setBriefingPayload(null);
+      setBriefingMaterialsKey(null);
+      setBriefingInvalidatedMessage(
+        'Materials palette changed. Please create a new moodboard and sustainability briefing.'
+      );
+    }
+  }, [materialsKey, briefingMaterialsKey]);
 
   const renderPage = () => {
     switch(currentPage) {
@@ -39,6 +63,13 @@ const App: React.FC = () => {
             onBoardChange={setSelectedMaterials}
             moodboardRenderUrl={moodboardRenderUrl}
             onMoodboardRenderUrlChange={setMoodboardRenderUrl}
+            sustainabilityBriefing={sustainabilityBriefing}
+            onSustainabilityBriefingChange={setSustainabilityBriefing}
+            briefingPayload={briefingPayload}
+            onBriefingPayloadChange={setBriefingPayload}
+            onBriefingMaterialsKeyChange={setBriefingMaterialsKey}
+            briefingInvalidatedMessage={briefingInvalidatedMessage}
+            onBriefingInvalidatedMessageChange={setBriefingInvalidatedMessage}
           />
         );
       case 'apply':

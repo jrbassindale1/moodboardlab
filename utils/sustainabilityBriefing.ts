@@ -67,6 +67,23 @@ export interface SustainabilityBriefingResponse {
   synergies: MaterialSynergy[];
 }
 
+export function getBriefingMaterialsKey(materials: MaterialOption[]): string {
+  return materials
+    .map((material) => [
+      material.id,
+      material.name,
+      material.finish,
+      material.tone,
+      material.category,
+      material.materialType ?? '',
+      material.carbonIntensity ?? '',
+    ]
+      .map((value) => `${value ?? ''}`.trim())
+      .join('::'))
+    .sort()
+    .join('||');
+}
+
 // Default lifecycle scores for materials without profile
 const DEFAULT_LIFECYCLE_SCORES = {
   raw: 3,

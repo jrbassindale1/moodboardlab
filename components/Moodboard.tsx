@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Loader2, Wand2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Wand2 } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
@@ -32,6 +32,7 @@ import { isLandscapeMaterial } from '../utils/lifecycleDurations';
 import {
   prepareBriefingPayload,
   getSustainabilityBriefingSystemInstruction,
+  getBriefingMaterialsKey,
   type SustainabilityBriefingResponse,
   type SustainabilityBriefingPayload,
 } from '../utils/sustainabilityBriefing';
@@ -47,6 +48,13 @@ interface MoodboardProps {
   onBoardChange?: (items: BoardItem[]) => void;
   moodboardRenderUrl?: string | null;
   onMoodboardRenderUrlChange?: (url: string | null) => void;
+  sustainabilityBriefing?: SustainabilityBriefingResponse | null;
+  onSustainabilityBriefingChange?: (value: SustainabilityBriefingResponse | null) => void;
+  briefingPayload?: SustainabilityBriefingPayload | null;
+  onBriefingPayloadChange?: (value: SustainabilityBriefingPayload | null) => void;
+  onBriefingMaterialsKeyChange?: (value: string | null) => void;
+  briefingInvalidatedMessage?: string | null;
+  onBriefingInvalidatedMessageChange?: (value: string | null) => void;
 }
 
 type MoodboardFlowProgress = {
@@ -370,7 +378,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
   initialBoard,
   onBoardChange,
   moodboardRenderUrl: moodboardRenderUrlProp,
-  onMoodboardRenderUrlChange
+  onMoodboardRenderUrlChange,
+  sustainabilityBriefing: sustainabilityBriefingProp,
+  onSustainabilityBriefingChange,
+  briefingPayload: briefingPayloadProp,
+  onBriefingPayloadChange,
+  onBriefingMaterialsKeyChange,
+  briefingInvalidatedMessage,
+  onBriefingInvalidatedMessageChange
 }) => {
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
@@ -383,6 +398,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
   );
+  const [sustainabilityBriefingState, setSustainabilityBriefingState] =
+    useState<SustainabilityBriefingResponse | null>(sustainabilityBriefingProp ?? null);
+  const [briefingPayloadState, setBriefingPayloadState] = useState<SustainabilityBriefingPayload | null>(
+    briefingPayloadProp ?? null
+  );
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
   const [status, setStatus] = useState<
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
@@ -392,8 +412,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
-  const [sustainabilityBriefing, setSustainabilityBriefing] = useState<SustainabilityBriefingResponse | null>(null);
-  const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
@@ -466,10 +484,22 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const sustainabilityPayload = useMemo(() => buildSustainabilityPayload(board), [board]);
 
   const moodboardRenderUrl = moodboardRenderUrlProp ?? moodboardRenderUrlState;
+  const sustainabilityBriefing = sustainabilityBriefingProp ?? sustainabilityBriefingState;
+  const briefingPayload = briefingPayloadProp ?? briefingPayloadState;
 
   const setMoodboardRenderUrl = (url: string | null) => {
     setMoodboardRenderUrlState(url);
     onMoodboardRenderUrlChange?.(url);
+  };
+
+  const setSustainabilityBriefing = (value: SustainabilityBriefingResponse | null) => {
+    setSustainabilityBriefingState(value);
+    onSustainabilityBriefingChange?.(value);
+  };
+
+  const setBriefingPayload = (value: SustainabilityBriefingPayload | null) => {
+    setBriefingPayloadState(value);
+    onBriefingPayloadChange?.(value);
   };
 
   useEffect(() => {
@@ -477,6 +507,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setMoodboardRenderUrlState(moodboardRenderUrlProp);
     }
   }, [moodboardRenderUrlProp]);
+
+  useEffect(() => {
+    if (sustainabilityBriefingProp !== undefined) {
+      setSustainabilityBriefingState(sustainabilityBriefingProp);
+    }
+  }, [sustainabilityBriefingProp]);
+
+  useEffect(() => {
+    if (briefingPayloadProp !== undefined) {
+      setBriefingPayloadState(briefingPayloadProp);
+    }
+  }, [briefingPayloadProp]);
 
   const buildMaterialKey = () => {
     if (!board.length) return 'No materials selected yet.';
@@ -782,6 +824,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       console.log('[Sustainability Briefing] Parsed response:', parsed);
 
       setSustainabilityBriefing(parsed);
+      onBriefingMaterialsKeyChange?.(getBriefingMaterialsKey(board));
+      onBriefingInvalidatedMessageChange?.(null);
       setMaterialsAccordionOpen(false);
       return true;
     } catch (err) {
@@ -806,6 +850,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setSummaryReviewed(false);
     setSustainabilityBriefing(null);
     setBriefingPayload(null);
+    onBriefingMaterialsKeyChange?.(null);
+    onBriefingInvalidatedMessageChange?.(null);
     setStatus('all');
     setError(null);
     try {
@@ -1778,6 +1824,13 @@ ${JSON.stringify(proseContext)}`;
               <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 <AlertCircle className="w-4 h-4 mt-[2px]" />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {briefingInvalidatedMessage && (
+              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <AlertTriangle className="w-4 h-4 mt-[2px]" />
+                <span>{briefingInvalidatedMessage}</span>
               </div>
             )}
 
