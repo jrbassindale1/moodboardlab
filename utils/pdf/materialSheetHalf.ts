@@ -92,10 +92,17 @@ export function renderMaterialSheetFooter(doc: jsPDF, generatedOnText?: string) 
 }
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+  // Calculate header box to align with both columns below
+  // Left column starts at: x + CARD_PAD - 4
+  // Right column ends at: x + w - CARD_PAD + 4 (based on colR box ending)
+  const headerLeft = x + CARD_PAD - 4;
+  const headerRight = x + w - CARD_PAD + 4;
+  const headerWidth = headerRight - headerLeft;
+
   // Grey background box for header
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x + CARD_PAD - 4, y, w - 2 * CARD_PAD + 8, h, 6, 6, 'FD');
+  doc.roundedRect(headerLeft, y, headerWidth, h, 6, 6, 'FD');
 
   // Thumbnail on left side
   const thumbSize = 32;
@@ -239,11 +246,12 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setFontSize(7);
     doc.setTextColor(75, 85, 99);
     doc.text('EXPECTED SERVICE LIFE', x, cursorY);
+    cursorY += 10;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(55, 65, 81);
-    doc.text(`${m.serviceLife} years`, x + 82, cursorY);
+    doc.text(`${m.serviceLife} years`, x, cursorY);
     cursorY += 12;
   }
 
@@ -380,10 +388,14 @@ function healthBadge(level: 'low' | 'medium' | 'high'): {
 }
 
 function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+  // Calculate height to align with left column's bottom
+  // Left column's spec actions box ends at y + h, so right column should match
+  const rightColumnHeight = h;
+
   // White card background with border
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x - 4, y, w + 8, h - 8, 6, 6, 'FD');
+  doc.roundedRect(x - 4, y, w + 8, rightColumnHeight, 6, 6, 'FD');
 
   // Section heading
   doc.setFont('helvetica', 'bold');
