@@ -161,9 +161,9 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
   const textStartX = thumbX + thumbSize + 10;
   const titleY = y + 14;
   const descriptorY = titleY + 12; // One line-height below title
-  const tagsY = titleY + 6; // Midway between title and descriptor for optical centering
   const chipH = 12;
   const chipGap = 6;
+  const tagsY = y + (h - chipH) / 2; // Vertically centered in header box
   const tagsRightX = cardOuterX + cardOuterW - CARD_PAD;
 
   // Build tags (right-aligned)
@@ -276,10 +276,16 @@ function calculateLeftColumnContentNeeds(doc: jsPDF, m: MaterialPdfModel, w: num
     needed += 22;
   }
 
-  // Risks
+  // Risks (now includes mitigation text)
   const risks = (m.risks ?? []).slice(0, 2);
   if (risks.length) {
-    needed += 10 + (risks.length * 9);
+    needed += 4 + 10; // 4px extra spacing + heading
+    risks.forEach((riskItem) => {
+      needed += 9; // Risk line
+      if (riskItem.mitigation) {
+        needed += 8; // Mitigation line
+      }
+    });
   }
 
   return needed;
@@ -427,9 +433,11 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     cursorY += 12;
   }
 
-  // Risks / Watch for
+  // Risks / Watch for (add 4px spacing before section)
   const risks = (m.risks ?? []).slice(0, 2);
   if (risks.length) {
+    cursorY += 4; // Extra spacing before Watch For
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(234, 88, 12); // Orange color for warnings
@@ -438,10 +446,21 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(55, 65, 81);
     risks.forEach((riskItem) => {
+      // Risk text in dark grey
+      doc.setTextColor(55, 65, 81);
       doc.text(`• ${clampText(doc, riskItem.risk, w - 8)}`, x, cursorY);
       cursorY += 9;
+
+      // Mitigation text in lighter grey, indented
+      if (riskItem.mitigation) {
+        doc.setTextColor(107, 114, 128);
+        doc.setFontSize(6.5);
+        const mitigationText = `→ ${riskItem.mitigation}`;
+        doc.text(clampText(doc, mitigationText, w - 12), x + 6, cursorY);
+        doc.setFontSize(7);
+        cursorY += 8;
+      }
     });
   }
 
@@ -470,12 +489,11 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setFontSize(7);
     doc.setTextColor(55, 65, 81);
 
-    // Bullet wrapping with hanging indent
-    const bulletIndent = 10;
-    const hangingIndent = 10;
+    // Bullet wrapping - all lines align after bullet (no hanging indent)
+    const bulletIndent = 8;
     const lineHeight = 10;
-    const maxTotalLines = 5; // Allow 5 lines for taller spec box
-    const wrapWidth = w - bulletIndent - hangingIndent - 4; // Account for padding
+    const maxTotalLines = 6; // Allow 6 lines for taller spec box
+    const wrapWidth = w - bulletIndent - 4; // Account for padding
 
     let ay = actionsY + 22;
     let totalLinesUsed = 0;
@@ -510,11 +528,10 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
       // Draw bullet on first line
       doc.text('•', x, ay);
 
-      // Draw each line with proper indentation
-      lines.forEach((line, lineIdx) => {
+      // Draw each line with same indentation (aligned after bullet)
+      lines.forEach((line) => {
         if (totalLinesUsed >= maxTotalLines) return;
-        const textX = lineIdx === 0 ? x + bulletIndent : x + bulletIndent + hangingIndent;
-        doc.text(line, textX, ay);
+        doc.text(line, x + bulletIndent, ay);
         ay += lineHeight;
         totalLinesUsed++;
       });
@@ -660,7 +677,7 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
     analysisY += 11;
   });
 
-  analysisY += 4;
+  analysisY += 8; // Extra 4px spacing before Strongest Stages
 
   // Strongest Stages (green) - matching sustainability briefing style
   doc.setFont('helvetica', 'bold');
@@ -675,7 +692,7 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   });
 
   // Lifecycle insight box (can shrink up to 8pt)
-  const insightY = analysisY + 4;
+  const insightY = analysisY + 8; // Extra 4px spacing before insight box
   const insightH = Math.max(32, 40 - insightShrink);
   const rawInsight = m.lifecycleInsight || generateDefaultInsight(m);
   const insightText = normalizeNarrativeText(rawInsight);
