@@ -1,7 +1,6 @@
 import type { jsPDF } from 'jspdf';
 import {
   drawLifecycleRadarChart,
-  LIFECYCLE_ORDER,
   LIFECYCLE_STAGE_LABELS,
   type LifecycleKey,
 } from './charts/radarLifecycle';
@@ -18,7 +17,6 @@ const SHEET_H = A4_H / 2;
 
 const M = 20;
 const G = 10;
-const R = 8;
 
 const CARD_PAD = 10;
 
@@ -47,6 +45,10 @@ export type MaterialPdfModel = {
   specActions?: string[];
 
   risks?: { risk: string; mitigation: string }[];
+
+  healthRiskLevel?: 'low' | 'medium' | 'high';
+  healthConcerns?: string[];
+  healthNote?: string;
 };
 
 type RenderOpts = {
@@ -63,12 +65,6 @@ export function renderMaterialSheetHalf(
   const x0 = M;
   const y0 = sheetTop + M;
   const w = A4_W - 2 * M;
-  const h = SHEET_H - 2 * M;
-
-  // Main card border
-  doc.setDrawColor(229, 231, 235);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(x0, y0, w, h, R, R, 'S');
 
   let y = y0;
 
@@ -138,12 +134,15 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
     cx += chipW + 5;
   }
 
+  // Variant text on far right, vertically centered
   const variant = (m.formVariant || m.imageCaption || '').trim();
   if (variant) {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(7);
     doc.setTextColor(107, 114, 128);
-    doc.text(clampText(doc, variant, w - thumbSize - 40), textStartX, y + 35);
+    const rightEdge = x + w - CARD_PAD;
+    const verticalCenter = y + h / 2;
+    doc.text(clampText(doc, variant, 120), rightEdge, verticalCenter, { align: 'right' });
   }
 
   // Divider line
@@ -219,9 +218,68 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(55, 65, 81);
-    const perfLines = wrapLines(doc, perf, w, 8).slice(0, 4);
+    const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
     doc.text(perfLines, x, cursorY);
+    cursorY += perfLines.length * 10 + 6;
   }
+
+  // Health & Toxicity section
+  if (m.healthRiskLevel || m.healthNote) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(75, 85, 99);
+    doc.text('HEALTH & INDOOR AIR', x, cursorY);
+
+    // Risk level badge
+    if (m.healthRiskLevel) {
+      const badge = healthBadge(m.healthRiskLevel);
+      const badgeText = badge.label;
+      const badgeW = measureText(doc, badgeText, 6, 'helvetica', 'bold') + 8;
+      const badgeX = x + w - badgeW;
+      doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
+      doc.roundedRect(badgeX, cursorY - 7, badgeW, 10, 5, 5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6);
+      doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
+      doc.text(badgeText, badgeX + 4, cursorY - 0.5);
+    }
+    cursorY += 10;
+
+    // Health note
+    if (m.healthNote) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(55, 65, 81);
+      const healthLines = wrapLines(doc, m.healthNote, w, 7).slice(0, 3);
+      doc.text(healthLines, x, cursorY);
+    }
+  }
+}
+
+function healthBadge(level: 'low' | 'medium' | 'high'): {
+  label: string;
+  bg: [number, number, number];
+  text: [number, number, number];
+} {
+  if (level === 'low') {
+    return {
+      label: 'Low Risk',
+      bg: [220, 252, 231],
+      text: [22, 101, 52],
+    };
+  }
+  if (level === 'high') {
+    return {
+      label: 'High Risk',
+      bg: [254, 226, 226],
+      text: [153, 27, 27],
+    };
+  }
+  return {
+    label: 'Medium Risk',
+    bg: [254, 249, 195],
+    text: [133, 77, 14],
+  };
 }
 
 function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {

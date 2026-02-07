@@ -1,0 +1,736 @@
+{
+  "$schema": "./schemas/healthToxicity.schema.json",
+  "_comment": "Material-specific health and toxicity considerations for specifiers and occupants.",
+  "healthData": {
+    "steel-frame": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products."
+    },
+    "steel-columns-beams": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products."
+    },
+    "rammed-earth-structure": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Stabilisers (cement/lime) are inert once cured."
+    },
+    "timber-flooring": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Check finish and adhesive for VOC emissions—specify E1 or better for engineered products."
+    },
+    "glass-door": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Sealants and gaskets should be low-VOC."
+    },
+    "acoustic-ceiling-baffles": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "fibres"],
+      "note": "Check core material composition. Mineral fibre can release particles during installation—ensure proper sealing."
+    },
+    "concrete-frame": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Silica dust during construction requires PPE. Admixtures should be verified for low toxicity."
+    },
+    "rc-columns-beams": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Silica dust during construction requires PPE. Admixtures should be verified for low toxicity."
+    },
+    "glulam-structure": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better) for enclosed spaces."
+    },
+    "green-oak-structure": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural untreated material with excellent indoor air quality. No adhesives or chemical treatments."
+    },
+    "glulam-columns-beams": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better) for enclosed spaces."
+    },
+    "clt-structure": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better) for enclosed spaces."
+    },
+    "brick-veneer": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Excellent for indoor air quality."
+    },
+    "polished-concrete": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Sealers and densifiers should be verified for low VOC content."
+    },
+    "hybrid-structure": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Check adhesives and connections for emissions. Timber elements should meet E1 formaldehyde class."
+    },
+    "space-frame-structure": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Coatings should be verified for low VOC content."
+    },
+    "nlt-structure": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Verify adhesive and fastener coatings for emissions if exposed internally."
+    },
+    "ggbs-concrete": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. GGBS is a by-product with no additional health concerns vs standard concrete."
+    },
+    "lino-floor": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material (linseed oil, cork, wood flour) with low emissions. May have temporary odour during installation."
+    },
+    "recycled-terrazzo": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Resin-bound versions may have higher emissions than cement-bound—verify with EPD."
+    },
+    "rubber-floor": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "odour"],
+      "note": "New rubber flooring can off-gas VOCs. Specify products meeting indoor air quality standards. Allow ventilation period post-installation."
+    },
+    "grey-carpet": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "formaldehyde", "flame-retardants"],
+      "note": "Can emit VOCs from fibres, backing, and adhesives. Specify CRI Green Label Plus or equivalent. Consider wool alternatives."
+    },
+    "bamboo-parquet": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Verify adhesive emissions class (E1 or better). Low-VOC finish essential for good indoor air quality."
+    },
+    "cork-plank-floor": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Verify binder and finish are low-VOC."
+    },
+    "reclaimed-timber-floor": {
+      "riskLevel": "low",
+      "concerns": ["lead-paint", "treatments"],
+      "note": "Test for lead paint or historic treatments on reclaimed material. Once verified clean, excellent indoor air quality."
+    },
+    "stone-paver": {
+      "riskLevel": "low",
+      "concerns": ["radon"],
+      "note": "Inert material. Some granites may emit low levels of radon—verify with supplier if used in enclosed spaces."
+    },
+    "vinyl-planks": {
+      "riskLevel": "medium",
+      "concerns": ["phthalates", "vocs"],
+      "note": "PVC flooring can contain phthalates and emit VOCs. Specify phthalate-free products meeting FloorScore or equivalent."
+    },
+    "resin-flooring": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "isocyanates"],
+      "note": "High VOC emissions during application—requires ventilation. Once cured, emissions reduce significantly. Specify low-VOC systems."
+    },
+    "microcement-floor": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Sealers should be verified for low VOC content."
+    },
+    "ceramic-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Excellent for indoor air quality. Grout should be low-VOC."
+    },
+    "epoxy-flooring": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "bpa"],
+      "note": "High VOC emissions during application. Once fully cured (7+ days), emissions reduce. Specify water-based or low-VOC epoxies where possible."
+    },
+    "travertine-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material with no off-gassing. Excellent for indoor air quality."
+    },
+    "marble-floor": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material with no off-gassing. Excellent for indoor air quality."
+    },
+    "engineered-oak-floor": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural surface with plywood core. Verify formaldehyde emissions class (E1 or better). Low-VOC finish essential."
+    },
+    "linoleum-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with low emissions. May have temporary linseed oil odour during installation."
+    },
+    "aluminum-frame": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable to solvent-based finishes."
+    },
+    "timber-frame": {
+      "riskLevel": "low",
+      "concerns": ["preservatives"],
+      "note": "Natural material. Verify preservative treatments are non-toxic (avoid CCA). Untreated timber has excellent indoor air quality."
+    },
+    "recycled-aluminum-frame": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Recycling process does not affect health properties."
+    },
+    "steel-window-frame": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Galvanising and powder coating are preferable to solvent-based paints."
+    },
+    "composite-window-frame": {
+      "riskLevel": "medium",
+      "concerns": ["vocs"],
+      "note": "Check composite material composition. Some may contain formaldehyde-based resins. Verify emissions data."
+    },
+    "upvc-window-frame": {
+      "riskLevel": "medium",
+      "concerns": ["phthalates", "lead"],
+      "note": "Historic uPVC contained lead stabilisers—verify lead-free formulation. Modern uPVC has low emissions once installed."
+    },
+    "curtain-wall-system": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Aluminium and glass are inert. Sealants and gaskets should be verified for low VOC content."
+    },
+    "frameless-glazing": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Glass is inert. Structural silicone should be low-VOC and verified for indoor air quality."
+    },
+    "clay-plaster": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Excellent for indoor air quality. Natural humidity buffering. No synthetic additives or emissions."
+    },
+    "gypsum-wall": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Paper facing may attract mould if wet—ensure proper moisture management."
+    },
+    "plasterboard-wall": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Paper facing may attract mould if wet—ensure proper moisture management."
+    },
+    "plywood-panels-wall": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Verify formaldehyde emissions class (E1 or better). Low-VOC finish essential for good indoor air quality."
+    },
+    "acoustic-panels-wall": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "flame-retardants"],
+      "note": "Check core material and fabric for emissions. Specify products meeting indoor air quality standards."
+    },
+    "glass-partitions": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Glass is inert with no off-gassing. Frame sealants should be low-VOC."
+    },
+    "brick-internal": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Excellent for indoor air quality."
+    },
+    "concrete-block-wall": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Excellent for indoor air quality when left exposed or painted with low-VOC paint."
+    },
+    "mineral-microcement": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Sealers should be verified for low VOC content."
+    },
+    "standard-wall-paint": {
+      "riskLevel": "medium",
+      "concerns": ["vocs"],
+      "note": "Conventional paints emit VOCs. Specify low-VOC or zero-VOC formulations. Allow adequate ventilation during drying."
+    },
+    "custom-wall-paint": {
+      "riskLevel": "medium",
+      "concerns": ["vocs"],
+      "note": "Conventional paints emit VOCs. Specify low-VOC or zero-VOC formulations. Allow adequate ventilation during drying."
+    },
+    "standard-ceiling-paint": {
+      "riskLevel": "medium",
+      "concerns": ["vocs"],
+      "note": "Conventional paints emit VOCs. Specify low-VOC or zero-VOC formulations. Allow adequate ventilation during drying."
+    },
+    "custom-ceiling-paint": {
+      "riskLevel": "medium",
+      "concerns": ["vocs"],
+      "note": "Conventional paints emit VOCs. Specify low-VOC or zero-VOC formulations. Allow adequate ventilation during drying."
+    },
+    "perforated-metal-ceiling": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. Acoustic backing should be verified for fibre release and emissions."
+    },
+    "timber-slat-ceiling": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde", "fire-retardants"],
+      "note": "Natural material. Verify fire treatment is non-toxic and finish is low-VOC."
+    },
+    "gypsum-ceiling": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Excellent for indoor air quality."
+    },
+    "open-grid-ceiling": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert metal material with no off-gassing. Powder coating is preferable."
+    },
+    "stretch-fabric-ceiling": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "phthalates"],
+      "note": "PVC-based systems may contain phthalates and emit VOCs. Specify phthalate-free products or polyester alternatives."
+    },
+    "coffered-ceiling": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Depends on material—timber/MDF may emit formaldehyde. GRG is inert. Verify emissions class."
+    },
+    "plasterboard-ceiling": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Excellent for indoor air quality."
+    },
+    "exposed-clt-ceiling": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better)."
+    },
+    "metal-mesh-ceiling": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable to solvent-based finishes."
+    },
+    "acoustic-tiles-ceiling": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "fibres"],
+      "note": "Mineral fibre tiles may release particles. Specify products meeting indoor air quality standards. Sealed surfaces reduce fibre release."
+    },
+    "exposed-concrete-soffit": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Excellent for indoor air quality. Sealers should be low-VOC."
+    },
+    "timber-slat-soffit": {
+      "riskLevel": "low",
+      "concerns": ["preservatives"],
+      "note": "Verify preservative treatment for external soffits is non-toxic. Internal soffits should have low-VOC finish."
+    },
+    "perforated-metal-soffit": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable."
+    },
+    "timber-linings": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde", "fire-retardants"],
+      "note": "Natural material. Verify fire treatment is non-toxic and any board substrate meets E1 emissions class."
+    },
+    "bio-fibre-panels": {
+      "riskLevel": "low",
+      "concerns": ["binders"],
+      "note": "Natural fibres are healthy. Verify binder is non-toxic and formaldehyde-free."
+    },
+    "timber-wall-panels": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Verify adhesive and substrate emissions class (E1 or better). Low-VOC finish essential."
+    },
+    "porcelain-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Excellent for indoor air quality."
+    },
+    "textured-wallpaper": {
+      "riskLevel": "low",
+      "concerns": ["vocs"],
+      "note": "Paper-based wallpapers are generally low-emission. Vinyl wallpapers may emit VOCs. Specify low-VOC paste."
+    },
+    "fabric-acoustic-panels": {
+      "riskLevel": "medium",
+      "concerns": ["flame-retardants", "vocs"],
+      "note": "Check fabric and core for flame retardant treatments and emissions. Specify products meeting indoor air quality standards."
+    },
+    "oak-timber-slats": {
+      "riskLevel": "low",
+      "concerns": ["fire-retardants"],
+      "note": "Natural material with excellent indoor air quality. Verify fire treatment is non-toxic if applied."
+    },
+    "cork-panels": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Verify any finish is low-VOC."
+    },
+    "reclaimed-boarding": {
+      "riskLevel": "low",
+      "concerns": ["lead-paint", "treatments"],
+      "note": "Test for lead paint or historic treatments. Once verified clean, excellent indoor air quality."
+    },
+    "mycelium-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural bio-based material with no synthetic additives. Excellent for indoor air quality."
+    },
+    "wool-felt-panels": {
+      "riskLevel": "low",
+      "concerns": ["moth-treatments"],
+      "note": "Natural material. Verify moth treatment is non-toxic (avoid permethrin). Excellent acoustic and air quality properties."
+    },
+    "bamboo-slat-wall": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Verify adhesive emissions class (E1 or better). Low-VOC finish essential."
+    },
+    "plywood-panels-finish": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Verify formaldehyde emissions class (E1 or better). Low-VOC lacquer or oil finish essential."
+    },
+    "marble-panels": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material with no off-gassing. Excellent for indoor air quality."
+    },
+    "leather-panels": {
+      "riskLevel": "medium",
+      "concerns": ["chromium", "vocs"],
+      "note": "Chrome-tanned leather may contain chromium VI. Specify vegetable-tanned or chrome-free alternatives. Check fire retardant treatments."
+    },
+    "metal-mesh-panels": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable."
+    },
+    "glass-panels-finish": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Glass is inert. Back-painting should use low-VOC paints."
+    },
+    "acoustic-plaster": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Mineral-based with low emissions once cured. Verify composition with manufacturer."
+    },
+    "lime-plaster": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Humidity buffering and naturally antifungal."
+    },
+    "tadelakt-plaster": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural lime-based material with excellent indoor air quality. Soap treatment is non-toxic."
+    },
+    "secondary-steelwork": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Coatings should be verified for low VOC content."
+    },
+    "brick-loadbearing": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Excellent for indoor air quality."
+    },
+    "hempcrete-structural": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Humidity buffering and breathable. Lime binder is non-toxic."
+    },
+    "steel-concrete-composite": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Both materials are inert once cured. Excellent for indoor air quality."
+    },
+    "precast-concrete": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Factory production typically results in consistent quality and low emissions."
+    },
+    "mass-timber-columns": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better)."
+    },
+    "steel-trusses": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Coatings should be verified for low VOC content."
+    },
+    "prestressed-concrete": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Excellent for indoor air quality."
+    },
+    "permeable-paving": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. External use minimises any indoor air quality impact."
+    },
+    "joinery-built-in": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "vocs"],
+      "note": "Board materials may emit formaldehyde. Verify E1 class or better. Specify low-VOC finishes and adhesives."
+    },
+    "brass-fixtures": {
+      "riskLevel": "low",
+      "concerns": ["lead"],
+      "note": "Some brass alloys contain lead. Specify lead-free brass for any water contact applications."
+    },
+    "standing-seam-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. External use means no indoor air quality impact."
+    },
+    "green-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural planting improves air quality. Ensure growing medium is contaminant-free."
+    },
+    "cool-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "External membrane with minimal indoor air quality impact. Verify any coatings are low-VOC."
+    },
+    "pv-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "External installation with no indoor air quality impact. Panels are sealed units."
+    },
+    "blue-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "External system with no indoor air quality impact. Liner materials should be food-safe if connected to harvesting."
+    },
+    "clay-tiles-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material. External use means no indoor air quality impact."
+    },
+    "slate-tiles-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material. External use means no indoor air quality impact."
+    },
+    "metal-tiles-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "epdm-membrane": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Synthetic rubber with low emissions once installed. External use minimises any impact."
+    },
+    "tpo-membrane": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Thermoplastic with low emissions. External use minimises any indoor air quality impact."
+    },
+    "built-up-roofing": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "pahs"],
+      "note": "Bitumen can emit VOCs and PAHs during application. External use minimises occupant exposure. Avoid hot-applied systems where possible."
+    },
+    "polycarbonate-roof": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Low emissions once installed. UV stabilisers are encapsulated within material."
+    },
+    "wood-fiber-insulation": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with excellent indoor air quality. Verify binder is non-toxic. Humidity buffering properties."
+    },
+    "hemp-insulation": {
+      "riskLevel": "low",
+      "concerns": ["fire-retardants"],
+      "note": "Natural material with excellent indoor air quality. Verify fire retardant (typically borate) is non-toxic."
+    },
+    "sheep-wool-insulation": {
+      "riskLevel": "low",
+      "concerns": ["moth-treatments"],
+      "note": "Natural material with excellent indoor air quality. Verify moth treatment is non-toxic. Excellent humidity buffering."
+    },
+    "cellulose-insulation": {
+      "riskLevel": "low",
+      "concerns": ["fire-retardants"],
+      "note": "Recycled paper with low emissions. Fire retardants (typically borate) are low-toxicity. Good for indoor air quality."
+    },
+    "mineral-wool": {
+      "riskLevel": "medium",
+      "concerns": ["fibres", "formaldehyde"],
+      "note": "Fibres can cause irritation during installation—use PPE. Verify formaldehyde-free binder. Once installed and covered, low emissions."
+    },
+    "pir-insulation": {
+      "riskLevel": "medium",
+      "concerns": ["isocyanates", "fire"],
+      "note": "Isocyanates used in manufacture. Once cured, low emissions. Toxic fumes if burned—ensure adequate fire protection."
+    },
+    "aerogel-insulation": {
+      "riskLevel": "low",
+      "concerns": ["dust"],
+      "note": "Silica-based with low emissions. Fine dust during cutting—use PPE. Once installed, excellent for indoor air quality."
+    },
+    "timber-door": {
+      "riskLevel": "low",
+      "concerns": ["formaldehyde"],
+      "note": "Natural material. Verify core construction meets E1 emissions class. Low-VOC finish essential."
+    },
+    "steel-door": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Verify any foam core insulation emissions."
+    },
+    "aluminum-door": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable."
+    },
+    "composite-door": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "vocs"],
+      "note": "Check composite material composition. Foam cores and resins may emit. Verify emissions data."
+    },
+    "fire-rated-door": {
+      "riskLevel": "medium",
+      "concerns": ["formaldehyde", "fire-retardants"],
+      "note": "Fire-resistant cores may contain formaldehyde. Intumescent seals are inert until activated. Verify emissions data."
+    },
+    "glass-balustrade": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Glass is inert with no off-gassing. Excellent for indoor air quality."
+    },
+    "steel-railing": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable."
+    },
+    "timber-railing": {
+      "riskLevel": "low",
+      "concerns": ["preservatives"],
+      "note": "Natural material. Verify preservative treatment is non-toxic for internal use. Low-VOC finish essential."
+    },
+    "cable-railing": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Stainless steel is inert with no off-gassing. Excellent for indoor air quality."
+    },
+    "mesh-railing": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material with no off-gassing. Powder coating is preferable."
+    },
+    "gravel-paving": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural inert material. External use means no indoor air quality impact."
+    },
+    "resin-bound-gravel": {
+      "riskLevel": "low",
+      "concerns": ["vocs"],
+      "note": "Resin may emit VOCs during application. Once cured, low emissions. External use minimises impact."
+    },
+    "concrete-paving": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "block-paving": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "grass-reinforcement": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Plastic grid with natural grass. External use means no indoor air quality impact."
+    },
+    "decking-external": {
+      "riskLevel": "low",
+      "concerns": ["preservatives"],
+      "note": "Verify preservative treatment is non-toxic (avoid CCA). External use minimises exposure."
+    },
+    "zinc-cladding": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "copper-cladding": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "aluminium-cladding": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "weathering-steel-cladding": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert material. External use means no indoor air quality impact."
+    },
+    "timber-rainscreen": {
+      "riskLevel": "low",
+      "concerns": ["preservatives"],
+      "note": "Verify preservative treatment is non-toxic. External use minimises exposure."
+    },
+    "stone-facade": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert natural material. External use means no indoor air quality impact."
+    },
+    "insulated-render-system": {
+      "riskLevel": "medium",
+      "concerns": ["vocs", "biocides"],
+      "note": "Render may contain biocides. EPS/PIR boards have low emissions once installed. External use minimises impact."
+    },
+    "living-green-wall": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Plants improve air quality. Verify irrigation system and growing medium are contaminant-free."
+    },
+    "native-planting": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural planting improves air quality. No health concerns."
+    },
+    "wildflower-meadow": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural planting improves air quality. No health concerns."
+    },
+    "rain-garden": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural planting improves air quality. No health concerns."
+    }
+  }
+}

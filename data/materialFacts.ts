@@ -1,6 +1,8 @@
 import type { MaterialOption, MaterialCategory, MaterialFunction } from '../types';
 import lifecycleProfilesData from './lifecycleProfiles.json';
 import lifecycleInsightsData from './lifecycleInsights.json';
+import specificationActionsData from './specificationActions.json';
+import healthToxicityData from './healthToxicity.json';
 
 export type MaterialSystemRole = 'Structure' | 'Envelope' | 'Openings' | 'Finishes' | 'Landscape';
 export type DataConfidence = 'High' | 'Medium' | 'Low';
@@ -40,7 +42,9 @@ export interface MaterialFact {
   epdStatus: EpdStatus;
   alternatives?: string[];
   circularityNote?: string;
-  healthFlag?: string;
+  healthRiskLevel?: 'low' | 'medium' | 'high';
+  healthConcerns?: string[];
+  healthNote?: string;
   localityFlag?: string;
 }
 
@@ -184,6 +188,13 @@ const lifecycleProfiles = (lifecycleProfilesData as { profiles: Record<string, L
 
 const lifecycleInsights = (lifecycleInsightsData as { insights: Record<string, string> }).insights;
 
+const specificationActions = (specificationActionsData as { actions: Record<string, string[]> }).actions;
+
+type HealthRiskLevel = 'low' | 'medium' | 'high';
+type HealthConcern = 'vocs' | 'formaldehyde' | 'fibres' | 'phthalates' | 'flame-retardants' | 'isocyanates' | 'lead' | 'chromium' | 'radon' | 'lead-paint' | 'treatments' | 'preservatives' | 'fire-retardants' | 'moth-treatments' | 'binders' | 'odour' | 'dust' | 'biocides' | 'pahs' | 'bpa' | 'fire';
+type HealthDataEntry = { riskLevel: HealthRiskLevel; concerns: HealthConcern[]; note: string };
+const healthToxicity = (healthToxicityData as { healthData: Record<string, HealthDataEntry> }).healthData;
+
 // Optional per-material overrides for hand-curated fact sheets.
 const MATERIAL_FACT_OVERRIDES: Record<string, MaterialFactOverride> = {};
 
@@ -311,6 +322,13 @@ const getPerformanceNote = (material: MaterialOption): string => {
 };
 
 const getSpecActions = (material: MaterialOption): string[] => {
+  // First, check for material-specific actions in JSON
+  const jsonActions = specificationActions[material.id];
+  if (jsonActions && jsonActions.length > 0) {
+    return jsonActions.slice(0, 3);
+  }
+
+  // Fallback to generated actions based on material type/category
   const actions: string[] = [];
   const id = material.id.toLowerCase();
   const materialType = material.materialType;
@@ -429,6 +447,9 @@ export function buildMaterialFact(material: MaterialOption): MaterialFact {
     actions: getSpecActions(material),
     dataConfidence: getDataConfidence(material),
     epdStatus: getEpdStatus(material),
+    healthRiskLevel: healthToxicity[material.id]?.riskLevel,
+    healthConcerns: healthToxicity[material.id]?.concerns,
+    healthNote: healthToxicity[material.id]?.note,
   };
 
   return applyOverrides(fact, MATERIAL_FACT_OVERRIDES[material.id]);
