@@ -63,6 +63,7 @@ export interface LandscapeConfig {
 import lifecycleProfilesData from './lifecycleProfiles.json';
 import categoryDurationsData from './categoryDurations.json';
 import materialDurationsData from './materialDurations.json';
+import lifecycleInsightsData from './lifecycleInsights.json';
 
 // ============================================================================
 // DATA TRANSFORMATION
@@ -158,6 +159,7 @@ function loadLandscapeConfig(): LandscapeConfig {
 // ============================================================================
 
 let _lifecycleProfiles: Map<string, LifecycleProfile> | null = null;
+let _lifecycleInsights: Map<string, string> | null = null;
 let _categoryDurations: Record<MaterialCategory, LifecycleDuration> | null = null;
 let _materialDurationOverrides: MaterialDurationOverride[] | null = null;
 let _landscapeConfig: LandscapeConfig | null = null;
@@ -165,6 +167,20 @@ let _landscapeConfig: LandscapeConfig | null = null;
 // ============================================================================
 // PUBLIC API
 // ============================================================================
+
+/**
+ * Load lifecycle insights from JSON
+ */
+function loadLifecycleInsights(): Map<string, string> {
+  const insights = new Map<string, string>();
+  const data = lifecycleInsightsData as { insights: Record<string, string> };
+
+  for (const [id, insight] of Object.entries(data.insights)) {
+    insights.set(id, insight);
+  }
+
+  return insights;
+}
 
 /**
  * Get all lifecycle profiles
@@ -196,6 +212,24 @@ export function hasLifecycleProfile(materialId: string): boolean {
  */
 export function getProfiledMaterialIds(): string[] {
   return Array.from(getLifecycleProfiles().keys());
+}
+
+/**
+ * Get all lifecycle insights
+ * Lazy-loaded and cached
+ */
+export function getLifecycleInsights(): Map<string, string> {
+  if (!_lifecycleInsights) {
+    _lifecycleInsights = loadLifecycleInsights();
+  }
+  return _lifecycleInsights;
+}
+
+/**
+ * Get lifecycle insight for a material
+ */
+export function getLifecycleInsight(materialId: string): string | undefined {
+  return getLifecycleInsights().get(materialId);
 }
 
 /**
@@ -262,6 +296,7 @@ export function getDataStats(): {
  */
 export function clearCache(): void {
   _lifecycleProfiles = null;
+  _lifecycleInsights = null;
   _categoryDurations = null;
   _materialDurationOverrides = null;
   _landscapeConfig = null;

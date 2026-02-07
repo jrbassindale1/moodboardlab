@@ -9,6 +9,9 @@ import {
 // Re-export for external use
 export type { LifecycleKey } from './charts/radarLifecycle';
 
+// Export page height for footer positioning
+export const MATERIAL_SHEET_PAGE_HEIGHT = 841.89;
+
 const A4_W = 595.28;
 const A4_H = 841.89;
 const SHEET_H = A4_H / 2;
@@ -23,17 +26,22 @@ export type MaterialPdfModel = {
   name: string;
   category: string;
   carbonLabel: 'Low Carbon' | 'Medium Carbon' | 'High Carbon';
+  formVariant?: string;
 
   imageDataUri?: string;
   imageCaption?: string;
 
   whatItIs?: string;
   typicalUses?: string[];
+  performanceNote?: string;
+  hotspots?: LifecycleKey[];
+  strengths?: LifecycleKey[];
 
   lifecycle: Record<LifecycleKey, number>;
   lifecycleConfidence?: 'High' | 'Medium' | 'Low';
   lifecycleInsight?: string;
   epdAvailable?: boolean;
+  epdStatus?: 'Yes' | 'No' | 'Unknown';
 
   strategicValue?: string;
   specActions?: string[];
@@ -81,15 +89,21 @@ export function renderMaterialSheetHalf(
     renderActions(doc, material, x0, y, w, actionsH);
   }
 
-  // Footer
-  const footerH = 14;
-  renderFooter(doc, material, opts, x0, y0 + h - footerH, w, footerH);
+  // Page footer (only render on bottom material of each page)
+  if (opts.sheetIndex === 1) {
+    renderPageFooter(doc, opts, A4_H - 28);
+  }
+}
+
+/** Render the page footer - exported for use when odd number of materials */
+export function renderMaterialSheetFooter(doc: jsPDF, generatedOnText?: string) {
+  renderPageFooter(doc, { sheetIndex: 0, generatedOnText }, A4_H - 28);
 }
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  // Thumbnail in top-right corner (small, no border)
+  // Thumbnail on left side
   const thumbSize = 32;
-  const thumbX = x + w - CARD_PAD - thumbSize;
+  const thumbX = x + CARD_PAD;
   const thumbY = y + 4;
 
   if (m.imageDataUri) {
@@ -100,13 +114,14 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
     doc.roundedRect(thumbX, thumbY, thumbSize, thumbSize, 3, 3, 'F');
   }
 
-  // Material name (to the left of thumbnail)
+  // Material name (to the right of thumbnail)
+  const textStartX = thumbX + thumbSize + 10;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(17, 24, 39);
-  doc.text(clampText(doc, m.name, w - thumbSize - 100), x + CARD_PAD, y + 16);
+  doc.text(clampText(doc, m.name, w - thumbSize - 40), textStartX, y + 16);
 
-  // Pills below the name
+  // Pills below the name (to the right of thumbnail)
   const chipY = y + 22;
   const chipH = 12;
 
@@ -115,12 +130,20 @@ function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: 
     { text: m.carbonLabel, kind: labelKind(m.carbonLabel) },
   ];
 
-  let cx = x + CARD_PAD;
+  let cx = textStartX;
   for (const chip of chips) {
     const tw = measureText(doc, chip.text, 6.5, 'helvetica', 'bold');
     const chipW = tw + 10;
     drawChip(doc, cx, chipY, chipW, chipH, chip.text, chip.kind);
     cx += chipW + 5;
+  }
+
+  const variant = (m.formVariant || m.imageCaption || '').trim();
+  if (variant) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(107, 114, 128);
+    doc.text(clampText(doc, variant, w - thumbSize - 40), textStartX, y + 35);
   }
 
   // Divider line
@@ -152,13 +175,7 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
 
   let cursorY = y + 12;
 
-  // What it is
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(75, 85, 99);
-  doc.text('WHAT IT IS', x, cursorY);
-  cursorY += 10;
-
+  // Material description (no heading)
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(55, 65, 81);
@@ -190,20 +207,20 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     cursorY += 6;
   }
 
-  // Strategic value
-  const sv = (m.strategicValue ?? '').trim();
-  if (sv) {
+  // Key performance
+  const perf = (m.performanceNote ?? m.strategicValue ?? '').trim();
+  if (perf) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(75, 85, 99);
-    doc.text('STRATEGIC VALUE', x, cursorY);
+    doc.text('KEY PERFORMANCE', x, cursorY);
     cursorY += 10;
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(55, 65, 81);
-    const svLines = wrapLines(doc, sv, w, 8).slice(0, 4);
-    doc.text(svLines, x, cursorY);
+    const perfLines = wrapLines(doc, perf, w, 8).slice(0, 4);
+    doc.text(perfLines, x, cursorY);
   }
 }
 
@@ -213,39 +230,86 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setDrawColor(229, 231, 235);
   doc.roundedRect(x - 4, y, w + 8, h - 8, 6, 6, 'FD');
 
+  // Section heading
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(75, 85, 99);
+  doc.text('LIFECYCLE IMPACT', x, y + 12);
+
   // Radar chart
   const chartX = x;
-  const chartY = y + 6;
+  const chartY = y + 16;
   const chartW = w;
-  const chartH = 120;
+  const chartH = 95;
 
   drawLifecycleRadarChart(doc, { x: chartX, y: chartY, width: chartW, height: chartH }, m.lifecycle);
 
   // Helper text centered below chart
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
+  doc.setFontSize(5.5);
   doc.setTextColor(107, 114, 128);
   doc.text(
     'Lower scores = lower impact (1 minimal, 5 significant)',
     x + w / 2,
-    chartY + chartH + 6,
+    chartY + chartH + 5,
     { align: 'center' }
   );
 
+  // Get hotspots and strengths
+  const { hotspots, strengths } = analyseLifecycle(m.lifecycle);
+
+  let analysisY = chartY + chartH + 14;
+
+  // Hotspots (orange)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(234, 88, 12);
+  doc.text('HOTSPOTS', x, analysisY);
+  analysisY += 9;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  hotspots.forEach((item) => {
+    doc.setTextColor(55, 65, 81);
+    doc.text(`• ${item.label}`, x, analysisY);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`${item.score.toFixed(1)}/5`, x + w - 20, analysisY);
+    analysisY += 9;
+  });
+
+  analysisY += 4;
+
+  // Strengths (green)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(22, 163, 74);
+  doc.text('STRENGTHS', x, analysisY);
+  analysisY += 9;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  strengths.forEach((item) => {
+    doc.setTextColor(55, 65, 81);
+    doc.text(`• ${item.label}`, x, analysisY);
+    doc.setTextColor(107, 114, 128);
+    doc.text(`${item.score.toFixed(1)}/5`, x + w - 20, analysisY);
+    analysisY += 9;
+  });
+
   // Lifecycle insight box
-  const insightY = chartY + chartH + 14;
+  const insightY = analysisY + 4;
   const insightH = h - (insightY - y) - 14;
   const insightText = m.lifecycleInsight || generateDefaultInsight(m);
 
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x, insightY, w, insightH, 4, 4, 'FD');
+  doc.roundedRect(x, insightY, w, Math.max(insightH, 28), 4, 4, 'FD');
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor(55, 65, 81);
-  const insightLines = wrapLines(doc, insightText, w - 12, 7.5).slice(0, 4);
-  doc.text(insightLines, x + 6, insightY + 12);
+  const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, 3);
+  doc.text(insightLines, x + 6, insightY + 10);
 }
 
 function renderActions(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
@@ -272,47 +336,86 @@ function renderActions(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w:
   });
 }
 
-function renderFooter(
-  doc: jsPDF,
-  m: MaterialPdfModel,
-  opts: RenderOpts,
-  x: number,
-  y: number,
-  w: number,
-  h: number
-) {
+function renderPageFooter(doc: jsPDF, opts: RenderOpts, y: number) {
+  const pageW = A4_W;
+
   // Divider line
   doc.setDrawColor(229, 231, 235);
   doc.setLineWidth(0.5);
-  doc.line(x + CARD_PAD, y - 4, x + w - CARD_PAD, y - 4);
+  doc.line(M, y - 8, pageW - M, y - 8);
 
+  // Generated by MoodboardLab line
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6);
+  doc.setFontSize(7.5);
   doc.setTextColor(107, 114, 128);
+  const dateLabel = opts.generatedOnText || new Date().toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  doc.text(`Generated by MoodboardLab | ${dateLabel}`, pageW / 2, y, { align: 'center' });
 
-  const conf = m.lifecycleConfidence ?? 'Medium';
-  const epd = m.epdAvailable ? 'EPD: Yes' : 'EPD: No';
-  const gen = opts.generatedOnText ? `Generated: ${opts.generatedOnText}` : '';
-
-  const parts = [`Data confidence: ${conf}`, epd];
-  if (gen) parts.push(gen);
-
-  doc.text(parts.join('  ·  '), x + CARD_PAD, y + 6);
+  // Disclaimer line
+  doc.setFontSize(6.75);
+  doc.setTextColor(156, 163, 175);
+  const disclaimer = 'This briefing provides indicative guidance only. Verify all data with material-specific EPDs and certifications.';
+  doc.text(disclaimer, pageW / 2, y + 10, { align: 'center' });
 }
 
-function generateDefaultInsight(m: MaterialPdfModel): string {
-  const entries = Object.entries(m.lifecycle) as [LifecycleKey, number][];
+function analyseLifecycle(lifecycle: Record<LifecycleKey, number>): {
+  hotspots: Array<{ key: LifecycleKey; label: string; score: number }>;
+  strengths: Array<{ key: LifecycleKey; label: string; score: number }>;
+} {
+  const entries = Object.entries(lifecycle) as [LifecycleKey, number][];
   const sortedDesc = [...entries].sort((a, b) => b[1] - a[1]);
   const sortedAsc = [...entries].sort((a, b) => a[1] - b[1]);
 
-  const highest = sortedDesc[0];
-  const lowest = sortedAsc[0];
+  const hotspots = sortedDesc.slice(0, 2).map(([key, score]) => ({
+    key,
+    label: LIFECYCLE_STAGE_LABELS[key],
+    score,
+  }));
 
-  if (highest[1] >= 3) {
-    return `Biggest hotspot is ${LIFECYCLE_STAGE_LABELS[highest[0]].toLowerCase()} (${highest[1].toFixed(1)}/5). ${LIFECYCLE_STAGE_LABELS[lowest[0]]} performs well at ${lowest[1].toFixed(1)}/5.`;
+  const strengths = sortedAsc.slice(0, 2).map(([key, score]) => ({
+    key,
+    label: LIFECYCLE_STAGE_LABELS[key],
+    score,
+  }));
+
+  return { hotspots, strengths };
+}
+
+function generateDefaultInsight(m: MaterialPdfModel): string {
+  const { hotspots: autoHotspots, strengths: autoStrengths } = analyseLifecycle(m.lifecycle);
+
+  const hotspots =
+    m.hotspots && m.hotspots.length > 0
+      ? m.hotspots.map((key) => ({
+          key,
+          label: LIFECYCLE_STAGE_LABELS[key],
+          score: m.lifecycle[key] ?? 1,
+        }))
+      : autoHotspots;
+
+  const strengths =
+    m.strengths && m.strengths.length > 0
+      ? m.strengths.map((key) => ({
+          key,
+          label: LIFECYCLE_STAGE_LABELS[key],
+          score: m.lifecycle[key] ?? 1,
+        }))
+      : autoStrengths;
+
+  const highest = hotspots[0];
+  const hotspotLabels = hotspots.map((item) => item.label).join(', ');
+  const strengthLabels = strengths.map((item) => item.label).join(', ');
+  const summary = `Hotspots: ${hotspotLabels}. Strengths: ${strengthLabels}.`;
+
+  if (highest.score >= 3) {
+    return `${summary} Main hotspot is ${highest.label.toLowerCase()}; reduce via targeted specification.`;
   }
 
-  return `Balanced lifecycle profile with no major hotspots. ${LIFECYCLE_STAGE_LABELS[lowest[0]]} stage is strongest at ${lowest[1].toFixed(1)}/5.`;
+  return `${summary} Balanced lifecycle profile with no major hotspots.`;
 }
 
 function labelKind(lbl: MaterialPdfModel['carbonLabel']): 'green' | 'amber' | 'red' {

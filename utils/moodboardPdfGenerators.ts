@@ -12,7 +12,7 @@ import {
   LifecycleStageKey,
 } from '../lifecycleProfiles';
 import { MaterialOption, MaterialCategory } from '../types';
-import { getLifecycleProfile, type LifecycleProfile } from '../data';
+import { buildMaterialFact } from '../data/materialFacts';
 import type {
   EnhancedSustainabilityInsight,
   MaterialMetrics,
@@ -42,6 +42,7 @@ import {
 } from './pdfSections';
 import {
   renderMaterialSheetHalf,
+  renderMaterialSheetFooter,
   type MaterialPdfModel,
   type LifecycleKey,
 } from './pdf/materialSheetHalf';
@@ -1383,126 +1384,6 @@ export async function generateMaterialsSheetPdf(
     year: 'numeric',
   });
 
-  const DEFAULT_LIFECYCLE_SCORES: Record<LifecycleKey, number> = {
-    raw: 3,
-    manufacturing: 3,
-    transport: 2,
-    installation: 2,
-    inUse: 1,
-    maintenance: 2,
-    endOfLife: 2,
-  };
-
-  const categoryGroupLabel = (category: MaterialCategory): string => {
-    if (category === 'structure' || category === 'exposed-structure') return 'Structure';
-    if (
-      category === 'external' ||
-      category === 'window' ||
-      category === 'roof' ||
-      category === 'insulation' ||
-      category === 'soffit'
-    ) {
-      return 'Envelope';
-    }
-    if (category === 'landscape' || category === 'external-ground') return 'Landscape';
-    return 'Finishes';
-  };
-
-  const lifecycleScoresFor = (material: MaterialOption): Record<LifecycleKey, number> => {
-    const profile = getLifecycleProfile(material.id);
-    if (profile) {
-      return {
-        raw: profile.raw?.impact ?? DEFAULT_LIFECYCLE_SCORES.raw,
-        manufacturing: profile.manufacturing?.impact ?? DEFAULT_LIFECYCLE_SCORES.manufacturing,
-        transport: profile.transport?.impact ?? DEFAULT_LIFECYCLE_SCORES.transport,
-        installation: profile.installation?.impact ?? DEFAULT_LIFECYCLE_SCORES.installation,
-        inUse: profile.inUse?.impact ?? DEFAULT_LIFECYCLE_SCORES.inUse,
-        maintenance: profile.maintenance?.impact ?? DEFAULT_LIFECYCLE_SCORES.maintenance,
-        endOfLife: profile.endOfLife?.impact ?? DEFAULT_LIFECYCLE_SCORES.endOfLife,
-      };
-    }
-
-    const intensityMultiplier =
-      material.carbonIntensity === 'high'
-        ? 1.3
-        : material.carbonIntensity === 'low'
-        ? 0.7
-        : 1.0;
-
-    return {
-      raw: Math.round(DEFAULT_LIFECYCLE_SCORES.raw * intensityMultiplier),
-      manufacturing: Math.round(DEFAULT_LIFECYCLE_SCORES.manufacturing * intensityMultiplier),
-      transport: DEFAULT_LIFECYCLE_SCORES.transport,
-      installation: DEFAULT_LIFECYCLE_SCORES.installation,
-      inUse: DEFAULT_LIFECYCLE_SCORES.inUse,
-      maintenance: DEFAULT_LIFECYCLE_SCORES.maintenance,
-      endOfLife: DEFAULT_LIFECYCLE_SCORES.endOfLife,
-    };
-  };
-
-  const lifecycleConfidenceFor = (profile?: LifecycleProfile): 'High' | 'Medium' | 'Low' => {
-    if (!profile) return 'Medium';
-    const confidences = [
-      profile.raw.confidence,
-      profile.manufacturing.confidence,
-      profile.transport.confidence,
-      profile.installation.confidence,
-      profile.inUse.confidence,
-      profile.maintenance.confidence,
-      profile.endOfLife.confidence,
-    ];
-    if (confidences.includes('low')) return 'Low';
-    if (confidences.includes('medium')) return 'Medium';
-    return 'High';
-  };
-
-  const splitSentences = (value: string): string[] => {
-    const trimmed = value.trim();
-    if (!trimmed) return [];
-    const matches = trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g);
-    return matches ? matches.map((entry) => entry.trim()) : [trimmed];
-  };
-
-  const buildSpecActions = (material: MaterialOption): string[] => {
-    const actions: string[] = [];
-    const id = material.id.toLowerCase();
-    const materialType = material.materialType;
-    const category = material.category;
-
-    if (materialType === 'metal' || id.includes('steel')) {
-      actions.push('Request EPD for recycled steel content (target: 85%+ recycled)');
-      actions.push('Verify steel supplier uses electric arc furnace (EAF) production');
-    }
-    if (materialType === 'timber' || id.includes('timber') || id.includes('wood')) {
-      actions.push('Confirm FSC or PEFC certification for all timber products');
-      actions.push('Request chain-of-custody documentation from supplier');
-    }
-    if (materialType === 'concrete' || id.includes('concrete')) {
-      actions.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
-      actions.push('Request EPD showing embodied carbon per m3');
-    }
-    if (materialType === 'glass' || category === 'window') {
-      actions.push('Verify glazing U-values meet or exceed building regs');
-      actions.push('Consider specifying higher recycled glass content');
-    }
-    if (category === 'insulation') {
-      actions.push('Compare embodied carbon of insulation options (natural vs synthetic)');
-      actions.push('Request blowing agent GWP values for foam insulation');
-    }
-
-    const fallback = [
-      'Collect EPDs for major material categories',
-      'Calculate transport distances for main structure materials',
-      'Document material reuse or reclaimed content percentages',
-    ];
-
-    fallback.forEach((item) => {
-      if (actions.length < 3) actions.push(item);
-    });
-
-    return actions.slice(0, 3);
-  };
-
   const buildRisks = (
     material: MaterialOption,
     confidence: 'High' | 'Medium' | 'Low'
@@ -1532,17 +1413,9 @@ export async function generateMaterialsSheetPdf(
 
   const models: MaterialPdfModel[] = await Promise.all(
     board.map(async (material) => {
-      const profile = getLifecycleProfile(material.id);
-      const lifecycle = lifecycleScoresFor(material);
-      const lifecycleConfidence = lifecycleConfidenceFor(profile);
-      const textSource = (material.customDescription || material.description || '').trim();
-      const sentences = splitSentences(textSource);
-      const whatItIs = sentences[0];
-      const strategicValue = sentences.slice(1).join(' ').trim() || undefined;
-
-      const keywords = material.keywords ?? [];
-      const tags = material.tags ?? [];
-      const typicalUses = [...new Set([...keywords, ...tags])].slice(0, 3);
+      const fact = buildMaterialFact(material);
+      const lifecycle = fact.lifecycle.scores as Record<LifecycleKey, number>;
+      const lifecycleConfidence = fact.dataConfidence;
 
       let imageDataUri = material.customImage || iconMap.get(material.id);
       if (imageDataUri) {
@@ -1554,13 +1427,12 @@ export async function generateMaterialsSheetPdf(
       }
 
       const imageCaption = material.finish || material.colorLabel || undefined;
-      const epdAvailable = [...keywords, ...tags].some((tag) =>
-        /epd|environmental product declaration/i.test(tag)
-      );
+      const epdAvailable = fact.epdStatus === 'Yes' ? true : fact.epdStatus === 'No' ? false : undefined;
 
       return {
         name: material.name,
-        category: categoryGroupLabel(material.category),
+        category: fact.systemRole,
+        formVariant: fact.formVariant,
         carbonLabel:
           material.carbonIntensity === 'low'
             ? 'Low Carbon'
@@ -1569,13 +1441,17 @@ export async function generateMaterialsSheetPdf(
             : 'Medium Carbon',
         imageDataUri,
         imageCaption,
-        whatItIs,
-        typicalUses,
+        whatItIs: fact.whatItIs,
+        typicalUses: fact.typicalUses,
+        performanceNote: fact.performanceNote,
         lifecycle,
+        hotspots: fact.lifecycle.hotspots as LifecycleKey[],
+        strengths: fact.lifecycle.strengths as LifecycleKey[],
         lifecycleConfidence,
+        lifecycleInsight: fact.insight,
         epdAvailable,
-        strategicValue,
-        specActions: buildSpecActions(material),
+        epdStatus: fact.epdStatus,
+        specActions: fact.actions,
         risks: buildRisks(material, lifecycleConfidence),
       };
     })
@@ -1591,6 +1467,11 @@ export async function generateMaterialsSheetPdf(
       generatedOnText,
     });
   });
+
+  // If odd number of materials, render footer on last page (top material only)
+  if (models.length % 2 === 1) {
+    renderMaterialSheetFooter(doc, generatedOnText);
+  }
 
   return doc;
 }
