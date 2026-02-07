@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Search, ShoppingCart, X, Camera } from 'lucide-react';
+import { ChevronRight, Search, ShoppingCart, X, Camera, Leaf } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
@@ -8,6 +8,7 @@ import { callGeminiText } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconId } from '../utils/materialIconMapping';
+import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -101,6 +102,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isDetecting, setIsDetecting] = useState(false);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
@@ -1141,12 +1143,23 @@ IMPORTANT:
                       </div>
 
                       {mat.carbonIntensity && (
-                        <div>
+                        <div className="flex items-center justify-between">
                           <span
                             className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[mat.carbonIntensity]}`}
                           >
                             {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
                           </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const fact = buildMaterialFact(mat);
+                              setSustainabilityMaterial({ material: mat, fact });
+                            }}
+                            className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
+                            title="Click to view material sustainability credentials"
+                          >
+                            <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
+                          </button>
                         </div>
                       )}
 
@@ -1334,6 +1347,255 @@ IMPORTANT:
                 Cancel
               </button>
             </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sustainability Credentials Modal */}
+      {sustainabilityMaterial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-4 overflow-y-auto">
+          <div className="relative w-full max-w-4xl bg-white shadow-2xl my-auto">
+            <div className="max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-green-50">
+                <div className="flex items-center gap-3">
+                  <Leaf className="w-5 h-5 text-emerald-600" />
+                  <span className="font-mono text-xs uppercase tracking-widest text-gray-700">
+                    Sustainability Credentials
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSustainabilityMaterial(null)}
+                  className="p-1 hover:bg-white/50 rounded transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Material Title Bar */}
+              <div className="flex items-center gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div
+                  className="w-12 h-12 border border-gray-200 flex-shrink-0 rounded"
+                  style={{ backgroundColor: sustainabilityMaterial.material.tone }}
+                />
+                <div className="flex-1">
+                  <h2 className="font-display uppercase tracking-wide text-lg">{sustainabilityMaterial.fact.name}</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">{sustainabilityMaterial.fact.formVariant}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[sustainabilityMaterial.fact.carbonIntensity]}`}>
+                    {CARBON_IMPACT_LABELS[sustainabilityMaterial.fact.carbonIntensity]}
+                  </span>
+                  <span className="inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest bg-gray-50 text-gray-600 border-gray-200">
+                    {sustainabilityMaterial.fact.systemRole}
+                  </span>
+                </div>
+              </div>
+
+              {/* Two-column content (landscape layout) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+                {/* Left Column: Material Info */}
+                <div className="space-y-5">
+                  {/* Description */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <p className="text-sm text-gray-700 leading-relaxed">{sustainabilityMaterial.fact.whatItIs}</p>
+                  </div>
+
+                  {/* Typical Uses */}
+                  {sustainabilityMaterial.fact.typicalUses.length > 0 && (
+                    <div>
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-2">Typical Uses</h4>
+                      <ul className="space-y-1.5">
+                        {sustainabilityMaterial.fact.typicalUses.slice(0, 4).map((use, i) => (
+                          <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-gray-400 mt-1">•</span>
+                            <span>{use}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Key Performance */}
+                  {sustainabilityMaterial.fact.performanceNote && (
+                    <div>
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-2">Key Performance</h4>
+                      <p className="text-sm text-gray-700">{sustainabilityMaterial.fact.performanceNote}</p>
+                    </div>
+                  )}
+
+                  {/* Health & Indoor Air */}
+                  {(sustainabilityMaterial.fact.healthRiskLevel || sustainabilityMaterial.fact.healthNote) && (
+                    <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 relative">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-1 h-3 bg-teal-500 rounded-sm" />
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-3 h-1 bg-teal-500 rounded-sm" />
+                            </div>
+                          </div>
+                          <h4 className="font-mono text-[10px] uppercase tracking-widest text-teal-700">Health & Indoor Air</h4>
+                        </div>
+                        {sustainabilityMaterial.fact.healthRiskLevel && (
+                          <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest rounded-full ${
+                            sustainabilityMaterial.fact.healthRiskLevel === 'low' ? 'bg-emerald-100 text-emerald-700' :
+                            sustainabilityMaterial.fact.healthRiskLevel === 'high' ? 'bg-rose-100 text-rose-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {sustainabilityMaterial.fact.healthRiskLevel} Risk
+                          </span>
+                        )}
+                      </div>
+                      {sustainabilityMaterial.fact.healthNote && (
+                        <p className="text-sm text-teal-800">{sustainabilityMaterial.fact.healthNote}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Lifecycle Impact */}
+                <div className="space-y-5">
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-4">Lifecycle Impact</h4>
+
+                    {/* Lifecycle bars */}
+                    <div className="space-y-2.5">
+                      {(['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const).map((stage) => {
+                        const score = sustainabilityMaterial.fact.lifecycle.scores[stage];
+                        const isHotspot = sustainabilityMaterial.fact.lifecycle.hotspots.includes(stage);
+                        const isStrength = sustainabilityMaterial.fact.lifecycle.strengths.includes(stage);
+                        const labels: Record<string, string> = {
+                          raw: 'Raw Materials',
+                          manufacturing: 'Manufacturing',
+                          transport: 'Transport',
+                          installation: 'Installation',
+                          inUse: 'In Use',
+                          maintenance: 'Maintenance',
+                          endOfLife: 'End of Life',
+                        };
+                        return (
+                          <div key={stage} className="flex items-center gap-3">
+                            <span className="text-xs text-gray-600 w-24 flex-shrink-0">{labels[stage]}</span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  isHotspot ? 'bg-orange-400' : isStrength ? 'bg-emerald-400' : 'bg-gray-300'
+                                }`}
+                                style={{ width: `${(score / 5) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-500 w-6 text-right">{score.toFixed(1)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-[10px] text-gray-400 text-center mt-3">
+                      Lower scores = lower impact (1 minimal, 5 significant)
+                    </p>
+                  </div>
+
+                  {/* Major Contributors */}
+                  <div>
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-orange-600 mb-2">Major Contributors</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {sustainabilityMaterial.fact.lifecycle.hotspots.map((stage) => {
+                        const labels: Record<string, string> = {
+                          raw: 'Raw Materials',
+                          manufacturing: 'Manufacturing',
+                          transport: 'Transport',
+                          installation: 'Installation',
+                          inUse: 'In Use',
+                          maintenance: 'Maintenance',
+                          endOfLife: 'End of Life',
+                        };
+                        return (
+                          <span key={stage} className="inline-flex items-center px-2 py-1 text-xs bg-orange-50 text-orange-700 border border-orange-200 rounded">
+                            {labels[stage]}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Strongest Stages */}
+                  <div>
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-600 mb-2">Strongest Stages</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {sustainabilityMaterial.fact.lifecycle.strengths.map((stage) => {
+                        const labels: Record<string, string> = {
+                          raw: 'Raw Materials',
+                          manufacturing: 'Manufacturing',
+                          transport: 'Transport',
+                          installation: 'Installation',
+                          inUse: 'In Use',
+                          maintenance: 'Maintenance',
+                          endOfLife: 'End of Life',
+                        };
+                        return (
+                          <span key={stage} className="inline-flex items-center px-2 py-1 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">
+                            {labels[stage]}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Lifecycle Insight */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                    <p className="text-sm text-gray-700 leading-relaxed">{sustainabilityMaterial.fact.insight}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Specification Actions */}
+              {sustainabilityMaterial.fact.actions.length > 0 && (
+                <div className="px-6 pb-6">
+                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-700 mb-3 flex items-center gap-2">
+                      <Leaf className="w-3 h-3" />
+                      Specification Actions
+                    </h4>
+                    <ul className="space-y-2">
+                      {sustainabilityMaterial.fact.actions.slice(0, 3).map((action, i) => (
+                        <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                          <span className="text-emerald-500 mt-0.5">•</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium">Data Confidence:</span>
+                    <span className={`${
+                      sustainabilityMaterial.fact.dataConfidence === 'High' ? 'text-emerald-600' :
+                      sustainabilityMaterial.fact.dataConfidence === 'Low' ? 'text-amber-600' :
+                      'text-gray-600'
+                    }`}>{sustainabilityMaterial.fact.dataConfidence}</span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium">EPD:</span>
+                    <span>{sustainabilityMaterial.fact.epdStatus}</span>
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSustainabilityMaterial(null)}
+                  className="px-4 py-2 bg-arch-black text-white uppercase font-mono text-[10px] tracking-widest hover:bg-gray-900 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
