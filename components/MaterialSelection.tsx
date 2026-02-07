@@ -1396,7 +1396,7 @@ IMPORTANT:
 
               {/* Two-column content (landscape layout) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                {/* Left Column: Material Info */}
+                {/* Left Column: Material Info + Specification Actions */}
                 <div className="space-y-5">
                   {/* Description */}
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
@@ -1426,76 +1426,137 @@ IMPORTANT:
                     </div>
                   )}
 
-                  {/* Health & Indoor Air */}
-                  {(sustainabilityMaterial.fact.healthRiskLevel || sustainabilityMaterial.fact.healthNote) && (
-                    <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 relative">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-1 h-3 bg-teal-500 rounded-sm" />
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-3 h-1 bg-teal-500 rounded-sm" />
-                            </div>
-                          </div>
-                          <h4 className="font-mono text-[10px] uppercase tracking-widest text-teal-700">Health & Indoor Air</h4>
-                        </div>
-                        {sustainabilityMaterial.fact.healthRiskLevel && (
-                          <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest rounded-full ${
-                            sustainabilityMaterial.fact.healthRiskLevel === 'low' ? 'bg-emerald-100 text-emerald-700' :
-                            sustainabilityMaterial.fact.healthRiskLevel === 'high' ? 'bg-rose-100 text-rose-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
-                            {sustainabilityMaterial.fact.healthRiskLevel} Risk
-                          </span>
-                        )}
-                      </div>
-                      {sustainabilityMaterial.fact.healthNote && (
-                        <p className="text-sm text-teal-800">{sustainabilityMaterial.fact.healthNote}</p>
-                      )}
+                  {/* Specification Actions - moved to left column */}
+                  {sustainabilityMaterial.fact.actions.length > 0 && (
+                    <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-700 mb-3 flex items-center gap-2">
+                        <Leaf className="w-3 h-3" />
+                        Specification Actions
+                      </h4>
+                      <ul className="space-y-2">
+                        {sustainabilityMaterial.fact.actions.slice(0, 3).map((action, i) => (
+                          <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-emerald-500 mt-0.5">•</span>
+                            <span>{action}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </div>
 
-                {/* Right Column: Lifecycle Impact */}
+                {/* Right Column: Lifecycle Impact + Health */}
                 <div className="space-y-5">
                   <div className="bg-white rounded-lg p-4 border border-gray-200">
                     <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-4">Lifecycle Impact</h4>
 
-                    {/* Lifecycle bars */}
-                    <div className="space-y-2.5">
-                      {(['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const).map((stage) => {
-                        const score = sustainabilityMaterial.fact.lifecycle.scores[stage];
-                        const isHotspot = sustainabilityMaterial.fact.lifecycle.hotspots.includes(stage);
-                        const isStrength = sustainabilityMaterial.fact.lifecycle.strengths.includes(stage);
-                        const labels: Record<string, string> = {
-                          raw: 'Raw Materials',
-                          manufacturing: 'Manufacturing',
-                          transport: 'Transport',
-                          installation: 'Installation',
-                          inUse: 'In Use',
-                          maintenance: 'Maintenance',
-                          endOfLife: 'End of Life',
-                        };
-                        return (
-                          <div key={stage} className="flex items-center gap-3">
-                            <span className="text-xs text-gray-600 w-24 flex-shrink-0">{labels[stage]}</span>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${
-                                  isHotspot ? 'bg-orange-400' : isStrength ? 'bg-emerald-400' : 'bg-gray-300'
-                                }`}
-                                style={{ width: `${(score / 5) * 100}%` }}
-                              />
-                            </div>
-                            <span className="text-xs text-gray-500 w-6 text-right">{score.toFixed(1)}</span>
-                          </div>
-                        );
-                      })}
+                    {/* Radar Chart */}
+                    <div className="flex justify-center">
+                      <svg viewBox="0 0 200 200" className="w-48 h-48">
+                        {/* Background circles */}
+                        {[1, 2, 3, 4, 5].map((level) => (
+                          <polygon
+                            key={level}
+                            points={(() => {
+                              const stages = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const;
+                              const cx = 100, cy = 100, maxR = 70;
+                              const r = (level / 5) * maxR;
+                              return stages.map((_, i) => {
+                                const angle = (Math.PI * 2 * i) / stages.length - Math.PI / 2;
+                                return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+                              }).join(' ');
+                            })()}
+                            fill="none"
+                            stroke="#e5e7eb"
+                            strokeWidth="0.5"
+                          />
+                        ))}
+                        {/* Axis lines */}
+                        {(['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const).map((_, i) => {
+                          const cx = 100, cy = 100, maxR = 70;
+                          const angle = (Math.PI * 2 * i) / 7 - Math.PI / 2;
+                          return (
+                            <line
+                              key={i}
+                              x1={cx}
+                              y1={cy}
+                              x2={cx + maxR * Math.cos(angle)}
+                              y2={cy + maxR * Math.sin(angle)}
+                              stroke="#e5e7eb"
+                              strokeWidth="0.5"
+                            />
+                          );
+                        })}
+                        {/* Data polygon */}
+                        <polygon
+                          points={(() => {
+                            const stages = ['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const;
+                            const cx = 100, cy = 100, maxR = 70;
+                            return stages.map((stage, i) => {
+                              const score = sustainabilityMaterial.fact.lifecycle.scores[stage];
+                              const r = (score / 5) * maxR;
+                              const angle = (Math.PI * 2 * i) / stages.length - Math.PI / 2;
+                              return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+                            }).join(' ');
+                          })()}
+                          fill="rgba(34, 197, 94, 0.2)"
+                          stroke="#22c55e"
+                          strokeWidth="2"
+                        />
+                        {/* Data points */}
+                        {(['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const).map((stage, i) => {
+                          const cx = 100, cy = 100, maxR = 70;
+                          const score = sustainabilityMaterial.fact.lifecycle.scores[stage];
+                          const isHotspot = sustainabilityMaterial.fact.lifecycle.hotspots.includes(stage);
+                          const isStrength = sustainabilityMaterial.fact.lifecycle.strengths.includes(stage);
+                          const r = (score / 5) * maxR;
+                          const angle = (Math.PI * 2 * i) / 7 - Math.PI / 2;
+                          const x = cx + r * Math.cos(angle);
+                          const y = cy + r * Math.sin(angle);
+                          return (
+                            <circle
+                              key={stage}
+                              cx={x}
+                              cy={y}
+                              r="4"
+                              fill={isHotspot ? '#f97316' : isStrength ? '#22c55e' : '#9ca3af'}
+                              stroke="white"
+                              strokeWidth="1.5"
+                            />
+                          );
+                        })}
+                        {/* Labels */}
+                        {(['raw', 'manufacturing', 'transport', 'installation', 'inUse', 'maintenance', 'endOfLife'] as const).map((stage, i) => {
+                          const cx = 100, cy = 100, labelR = 88;
+                          const angle = (Math.PI * 2 * i) / 7 - Math.PI / 2;
+                          const x = cx + labelR * Math.cos(angle);
+                          const y = cy + labelR * Math.sin(angle);
+                          const shortLabels: Record<string, string> = {
+                            raw: 'Raw',
+                            manufacturing: 'Mfg',
+                            transport: 'Trans',
+                            installation: 'Install',
+                            inUse: 'Use',
+                            maintenance: 'Maint',
+                            endOfLife: 'EoL',
+                          };
+                          return (
+                            <text
+                              key={stage}
+                              x={x}
+                              y={y}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              className="text-[8px] fill-gray-500"
+                            >
+                              {shortLabels[stage]}
+                            </text>
+                          );
+                        })}
+                      </svg>
                     </div>
 
-                    <p className="text-[10px] text-gray-400 text-center mt-3">
+                    <p className="text-[10px] text-gray-400 text-center mt-2">
                       Lower scores = lower impact (1 minimal, 5 significant)
                     </p>
                   </div>
@@ -1550,28 +1611,39 @@ IMPORTANT:
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                     <p className="text-sm text-gray-700 leading-relaxed">{sustainabilityMaterial.fact.insight}</p>
                   </div>
+
+                  {/* Health & Indoor Air - moved to right column */}
+                  {(sustainabilityMaterial.fact.healthRiskLevel || sustainabilityMaterial.fact.healthNote) && (
+                    <div className="bg-teal-50 rounded-lg p-4 border border-teal-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 relative">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-1 h-3 bg-teal-500 rounded-sm" />
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-3 h-1 bg-teal-500 rounded-sm" />
+                            </div>
+                          </div>
+                          <h4 className="font-mono text-[10px] uppercase tracking-widest text-teal-700">Health & Indoor Air</h4>
+                        </div>
+                        {sustainabilityMaterial.fact.healthRiskLevel && (
+                          <span className={`inline-flex items-center px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest rounded-full ${
+                            sustainabilityMaterial.fact.healthRiskLevel === 'low' ? 'bg-emerald-100 text-emerald-700' :
+                            sustainabilityMaterial.fact.healthRiskLevel === 'high' ? 'bg-rose-100 text-rose-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {sustainabilityMaterial.fact.healthRiskLevel} Risk
+                          </span>
+                        )}
+                      </div>
+                      {sustainabilityMaterial.fact.healthNote && (
+                        <p className="text-sm text-teal-800">{sustainabilityMaterial.fact.healthNote}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Specification Actions */}
-              {sustainabilityMaterial.fact.actions.length > 0 && (
-                <div className="px-6 pb-6">
-                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-700 mb-3 flex items-center gap-2">
-                      <Leaf className="w-3 h-3" />
-                      Specification Actions
-                    </h4>
-                    <ul className="space-y-2">
-                      {sustainabilityMaterial.fact.actions.slice(0, 3).map((action, i) => (
-                        <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                          <span className="text-emerald-500 mt-0.5">•</span>
-                          <span>{action}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
 
               {/* Footer */}
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
@@ -1583,10 +1655,6 @@ IMPORTANT:
                       sustainabilityMaterial.fact.dataConfidence === 'Low' ? 'text-amber-600' :
                       'text-gray-600'
                     }`}>{sustainabilityMaterial.fact.dataConfidence}</span>
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="font-medium">EPD:</span>
-                    <span>{sustainabilityMaterial.fact.epdStatus}</span>
                   </span>
                 </div>
                 <button

@@ -61,7 +61,8 @@ export function renderMaterialSheetHalf(
   material: MaterialPdfModel,
   opts: RenderOpts
 ) {
-  const sheetTop = opts.sheetIndex === 0 ? 0 : SHEET_H;
+  // Move 2nd material up by 15px to account for page footer
+  const sheetTop = opts.sheetIndex === 0 ? 0 : SHEET_H - 15;
   const x0 = M;
   const y0 = sheetTop + M;
   const w = A4_W - 2 * M;
@@ -73,17 +74,9 @@ export function renderMaterialSheetHalf(
   renderHeader(doc, material, x0, y, w, headerH);
   y += headerH + 6;
 
-  // Two-column body
+  // Two-column body (spec actions in left column, health box in right column)
   const bodyH = 270;
   renderBody(doc, material, x0, y, w, bodyH);
-  y += bodyH + 8;
-
-  // Specification actions (compact full-width band)
-  const actions = (material.specActions ?? []).slice(0, 3).filter(Boolean);
-  if (actions.length) {
-    const actionsH = 44;
-    renderActions(doc, material, x0, y, w, actionsH);
-  }
 
   // Page footer (only render on bottom material of each page)
   if (opts.sheetIndex === 1) {
@@ -164,27 +157,24 @@ function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
   const xL = x + CARD_PAD;
   const xR = x + CARD_PAD + colL + colGap;
 
-  // Health box dimensions (aligned with insight box at bottom)
-  const healthBoxH = 50;
-  const healthBoxGap = 4;
-  const mainContentH = h - healthBoxH - healthBoxGap;
+  // Left column: material description, typical uses, strategic value (full height)
+  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, h);
 
-  // Left column: material description, typical uses, strategic value (shorter to make room for health box)
-  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, mainContentH);
-
-  // Health box: separate box below left column, aligned with insight box bottom
-  const healthBoxY = y + mainContentH + healthBoxGap;
-  renderHealthBox(doc, m, xL, healthBoxY, colL - CARD_PAD, healthBoxH);
-
-  // Right column: radar chart + lifecycle insight
+  // Right column: radar chart + lifecycle insight + health box
   renderRightColumn(doc, m, xR, y, colR - CARD_PAD, h);
 }
 
 function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  // Light grey card background
+  // Reserve space for spec actions at the bottom
+  const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
+  const actionsH = actions.length ? 50 : 0;
+  const actionsGap = actions.length ? 4 : 0;
+  const mainContentH = h - actionsH - actionsGap;
+
+  // Light grey card background for main content
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
+  doc.roundedRect(x - 4, y, w + 8, mainContentH, 6, 6, 'FD');
 
   let cursorY = y + 12;
 
@@ -234,6 +224,32 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setTextColor(55, 65, 81);
     const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
     doc.text(perfLines, x, cursorY);
+  }
+
+  // Specification actions at the bottom of left column
+  if (actions.length) {
+    const actionsY = y + mainContentH + actionsGap;
+
+    // Light green background
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(187, 247, 208);
+    doc.roundedRect(x - 4, actionsY, w + 8, actionsH, 6, 6, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(21, 128, 61);
+    doc.text('SPECIFICATION ACTIONS', x, actionsY + 11);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(55, 65, 81);
+
+    let ay = actionsY + 22;
+    actions.forEach((action) => {
+      const lines = wrapLines(doc, `• ${action}`, w, 7).slice(0, 1);
+      doc.text(lines, x, ay);
+      ay += 9;
+    });
   }
 }
 
@@ -332,11 +348,11 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(75, 85, 99);
   doc.text('LIFECYCLE IMPACT', x, y + 12);
 
-  // Radar chart
+  // Radar chart - increased by 10px
   const chartX = x;
   const chartY = y + 16;
   const chartW = w;
-  const chartH = 100;
+  const chartH = 110;
 
   drawLifecycleRadarChart(doc, { x: chartX, y: chartY, width: chartW, height: chartH }, m.lifecycle);
 
@@ -354,6 +370,7 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   // Get hotspots and strengths
   const { hotspots, strengths } = analyseLifecycle(m.lifecycle);
 
+  // Major Contributors section - moved down 10px (via larger chart)
   let analysisY = chartY + chartH + 18;
 
   // Major Contributors (orange) - matching sustainability briefing style
@@ -397,6 +414,11 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(55, 65, 81);
   const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, 3);
   doc.text(insightLines, x + 6, insightY + 10);
+
+  // Health box - now in right column under lifecycle insight
+  const healthBoxY = insightY + insightH + 4;
+  const healthBoxH = 36;
+  renderHealthBox(doc, m, x, healthBoxY, w, healthBoxH);
 }
 
 /** Draw a score row with label, bar chart, and score value */
@@ -430,30 +452,6 @@ function drawScoreRow(
   doc.setFontSize(6.5);
   doc.setTextColor(107, 114, 128);
   doc.text(score.toFixed(1), barX + barW + 4, rowY);
-}
-
-function renderActions(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
-  // Light green background like briefing's checklist style
-  doc.setFillColor(240, 253, 244);
-  doc.setDrawColor(187, 247, 208);
-  doc.roundedRect(x + CARD_PAD, y, w - 2 * CARD_PAD, h, 6, 6, 'FD');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7);
-  doc.setTextColor(21, 128, 61);
-  doc.text('SPECIFICATION ACTIONS', x + CARD_PAD + 8, y + 11);
-
-  const actions = (m.specActions ?? []).slice(0, 3).filter(Boolean);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(55, 65, 81);
-
-  let ay = y + 22;
-  actions.forEach((action) => {
-    const lines = wrapLines(doc, `• ${action}`, w - 2 * CARD_PAD - 16, 7).slice(0, 1);
-    doc.text(lines, x + CARD_PAD + 8, ay);
-    ay += 9;
-  });
 }
 
 function renderPageFooter(doc: jsPDF, opts: RenderOpts, y: number) {
