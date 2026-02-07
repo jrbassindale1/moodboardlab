@@ -73,10 +73,10 @@ export function renderMaterialSheetHalf(
   renderHeader(doc, material, x0, y, w, headerH);
   y += headerH + 6;
 
-  // Two-column body (increased height for bar chart rows)
-  const bodyH = 220;
+  // Two-column body
+  const bodyH = 300;
   renderBody(doc, material, x0, y, w, bodyH);
-  y += bodyH + 6;
+  y += bodyH + 12;
 
   // Specification actions (compact full-width band)
   const actions = (material.specActions ?? []).slice(0, 3).filter(Boolean);
@@ -294,11 +294,11 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.setTextColor(75, 85, 99);
   doc.text('LIFECYCLE IMPACT', x, y + 12);
 
-  // Radar chart
+  // Radar chart (larger with increased body height)
   const chartX = x;
   const chartY = y + 16;
   const chartW = w;
-  const chartH = 95;
+  const chartH = 115;
 
   drawLifecycleRadarChart(doc, { x: chartX, y: chartY, width: chartW, height: chartH }, m.lifecycle);
 
@@ -345,14 +345,14 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
     analysisY += 11;
   });
 
-  // Lifecycle insight box
+  // Lifecycle insight box (fixed height)
   const insightY = analysisY + 4;
-  const insightH = h - (insightY - y) - 14;
+  const insightH = 50;
   const insightText = m.lifecycleInsight || generateDefaultInsight(m);
 
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x, insightY, w, Math.max(insightH, 28), 4, 4, 'FD');
+  doc.roundedRect(x, insightY, w, insightH, 4, 4, 'FD');
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
