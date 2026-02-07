@@ -159,8 +159,17 @@ function renderBody(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
   const xL = x + CARD_PAD;
   const xR = x + CARD_PAD + colL + colGap;
 
-  // Left column: material description, typical uses, strategic value
-  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, h);
+  // Health box dimensions (aligned with insight box at bottom)
+  const healthBoxH = 60;
+  const healthBoxGap = 6;
+  const mainContentH = h - healthBoxH - healthBoxGap;
+
+  // Left column: material description, typical uses, strategic value (shorter to make room for health box)
+  renderLeftColumn(doc, m, xL, y, colL - CARD_PAD, mainContentH);
+
+  // Health box: separate box below left column, aligned with insight box bottom
+  const healthBoxY = y + mainContentH + healthBoxGap;
+  renderHealthBox(doc, m, xL, healthBoxY, colL - CARD_PAD, healthBoxH);
 
   // Right column: radar chart + lifecycle insight
   renderRightColumn(doc, m, xR, y, colR - CARD_PAD, h);
@@ -170,7 +179,7 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
   // Light grey card background
   doc.setFillColor(249, 250, 251);
   doc.setDrawColor(229, 231, 235);
-  doc.roundedRect(x - 4, y, w + 8, h - 8, 6, 6, 'FD');
+  doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
 
   let cursorY = y + 12;
 
@@ -220,39 +229,53 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
     doc.setTextColor(55, 65, 81);
     const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
     doc.text(perfLines, x, cursorY);
-    cursorY += perfLines.length * 10 + 6;
+  }
+}
+
+function renderHealthBox(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
+  if (!m.healthRiskLevel && !m.healthNote) {
+    // Draw empty placeholder box if no health data
+    doc.setFillColor(249, 250, 251);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
+    return;
   }
 
-  // Health & Toxicity section
-  if (m.healthRiskLevel || m.healthNote) {
+  // Light grey card background
+  doc.setFillColor(249, 250, 251);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(x - 4, y, w + 8, h, 6, 6, 'FD');
+
+  let cursorY = y + 12;
+
+  // Health & Indoor Air heading
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(75, 85, 99);
+  doc.text('HEALTH & INDOOR AIR', x, cursorY);
+
+  // Risk level badge
+  if (m.healthRiskLevel) {
+    const badge = healthBadge(m.healthRiskLevel);
+    const badgeText = badge.label;
+    const badgeW = measureText(doc, badgeText, 6, 'helvetica', 'bold') + 8;
+    const badgeX = x + w - badgeW;
+    doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
+    doc.roundedRect(badgeX, cursorY - 7, badgeW, 10, 5, 5, 'F');
     doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6);
+    doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
+    doc.text(badgeText, badgeX + 4, cursorY - 0.5);
+  }
+  cursorY += 10;
+
+  // Health note
+  if (m.healthNote) {
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(75, 85, 99);
-    doc.text('HEALTH & INDOOR AIR', x, cursorY);
-
-    // Risk level badge
-    if (m.healthRiskLevel) {
-      const badge = healthBadge(m.healthRiskLevel);
-      const badgeText = badge.label;
-      const badgeW = measureText(doc, badgeText, 6, 'helvetica', 'bold') + 8;
-      const badgeX = x + w - badgeW;
-      doc.setFillColor(badge.bg[0], badge.bg[1], badge.bg[2]);
-      doc.roundedRect(badgeX, cursorY - 7, badgeW, 10, 5, 5, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6);
-      doc.setTextColor(badge.text[0], badge.text[1], badge.text[2]);
-      doc.text(badgeText, badgeX + 4, cursorY - 0.5);
-    }
-    cursorY += 10;
-
-    // Health note
-    if (m.healthNote) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.setTextColor(55, 65, 81);
-      const healthLines = wrapLines(doc, m.healthNote, w, 7).slice(0, 3);
-      doc.text(healthLines, x, cursorY);
-    }
+    doc.setTextColor(55, 65, 81);
+    const healthLines = wrapLines(doc, m.healthNote, w, 7).slice(0, 3);
+    doc.text(healthLines, x, cursorY);
   }
 }
 
