@@ -367,79 +367,92 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
   doc.setDrawColor(229, 231, 235);
   doc.roundedRect(x - 4, y, w + 8, mainContentH, 6, 6, 'FD');
 
-  let cursorY = y + 12;
+  // Calculate content scale factor based on available space
+  const availableContentH = mainContentH - 16; // Account for top/bottom padding
+  const baseContentNeeds = calculateLeftColumnContentNeeds(doc, m, w);
+  const scaleFactor = Math.min(1, Math.max(0.75, availableContentH / baseContentNeeds));
+
+  // Scaled font sizes (with minimums for readability)
+  const descFontSize = Math.max(6.5, 8 * scaleFactor);
+  const headingFontSize = Math.max(6, 7 * scaleFactor);
+  const bodyFontSize = Math.max(6, 7.5 * scaleFactor);
+  const perfFontSize = Math.max(6, 8 * scaleFactor);
+  const lineHeight = Math.max(8, 10 * scaleFactor);
+  const sectionGap = Math.max(4, 6 * scaleFactor);
+
+  let cursorY = y + 10 * scaleFactor + 2;
 
   // Material description (no heading)
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(descFontSize);
   doc.setTextColor(55, 65, 81);
   const whatText = (m.whatItIs ?? '').trim();
   if (whatText) {
-    const whatLines = wrapLines(doc, whatText, w, 8).slice(0, 3);
+    const whatLines = wrapLines(doc, whatText, w, descFontSize).slice(0, 3);
     doc.text(whatLines, x, cursorY);
-    cursorY += whatLines.length * 10 + 8;
+    cursorY += whatLines.length * lineHeight + sectionGap;
   } else {
-    cursorY += 12;
+    cursorY += lineHeight;
   }
 
   // Typical uses
   const uses = (m.typicalUses ?? []).slice(0, 4).filter(Boolean);
   if (uses.length) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(headingFontSize);
     doc.setTextColor(75, 85, 99);
     doc.text('TYPICAL USES', x, cursorY);
-    cursorY += 10;
+    cursorY += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(bodyFontSize);
     doc.setTextColor(55, 65, 81);
     uses.forEach((use) => {
       doc.text(`• ${clampText(doc, use, w - 8)}`, x, cursorY);
-      cursorY += 10;
+      cursorY += lineHeight;
     });
-    cursorY += 6;
+    cursorY += sectionGap;
   }
 
   // Key performance
   const perf = (m.performanceNote ?? m.strategicValue ?? '').trim();
   if (perf) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(headingFontSize);
     doc.setTextColor(75, 85, 99);
     doc.text('KEY PERFORMANCE', x, cursorY);
-    cursorY += 10;
+    cursorY += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(perfFontSize);
     doc.setTextColor(55, 65, 81);
-    const perfLines = wrapLines(doc, perf, w, 8).slice(0, 2);
+    const perfLines = wrapLines(doc, perf, w, perfFontSize).slice(0, 2);
     doc.text(perfLines, x, cursorY);
-    cursorY += perfLines.length * 10 + 6;
+    cursorY += perfLines.length * lineHeight + sectionGap;
   }
 
   // Service life (durability)
   if (m.serviceLife) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(headingFontSize);
     doc.setTextColor(75, 85, 99);
     doc.text('EXPECTED SERVICE LIFE', x, cursorY);
-    cursorY += 10;
+    cursorY += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(perfFontSize);
     doc.setTextColor(55, 65, 81);
     doc.text(`${m.serviceLife} years`, x, cursorY);
-    cursorY += 12;
+    cursorY += lineHeight + 2;
   }
 
-  // Risks / Watch for (add 4px spacing before section)
+  // Risks / Watch for (add spacing before section)
   const risks = (m.risks ?? []).slice(0, 2);
   if (risks.length) {
-    cursorY += 4; // Extra spacing before Watch For
+    cursorY += sectionGap * 0.5; // Extra spacing before Watch For
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(headingFontSize);
     doc.setTextColor(234, 88, 12); // Orange color for warnings
     doc.text('WATCH FOR', x, cursorY);
     cursorY += 10;
@@ -691,9 +704,14 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
     analysisY += 11;
   });
 
-  // Lifecycle insight box (can shrink up to 8pt)
+  // Lifecycle insight box - always 4 lines max with proper ellipsis truncation
   const insightY = analysisY + 8; // Extra 4px spacing before insight box
-  const insightH = Math.max(32, 40 - insightShrink);
+  const lifecycleSummaryMaxLines = 4;
+  const insightFontSize = 7;
+  const insightLineHeight = 9;
+  const insightPaddingY = 8;
+  const insightH = Math.max(44, insightPaddingY * 2 + lifecycleSummaryMaxLines * insightLineHeight - insightShrink);
+
   const rawInsight = m.lifecycleInsight || generateDefaultInsight(m);
   const insightText = normalizeNarrativeText(rawInsight);
 
@@ -702,12 +720,12 @@ function renderRightColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number
   doc.roundedRect(x, insightY, w, insightH, 4, 4, 'FD');
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(insightFontSize);
   doc.setTextColor(55, 65, 81);
-  // Reduce max lines if box is shrunk
-  const maxInsightLines = insightH >= 38 ? 3 : 2;
-  const insightLines = wrapLines(doc, insightText, w - 12, 7).slice(0, maxInsightLines);
-  doc.text(insightLines, x + 6, insightY + 10);
+
+  // Use fitTextToBox to ensure proper truncation with ellipsis on line 4 if overflow
+  const insightLines = fitTextToBox(doc, insightText, w - 12, insightFontSize, lifecycleSummaryMaxLines);
+  doc.text(insightLines, x + 6, insightY + insightPaddingY + 2);
 }
 
 /** Draw a score row with label, bar chart, and score value */
@@ -910,6 +928,56 @@ function clampTextWithEllipsis(doc: jsPDF, text: string, maxW: number) {
     t = t.slice(0, -1);
   }
   return t.trimEnd();
+}
+
+/**
+ * Fit text to a box with a fixed number of lines.
+ * If text overflows, truncate the last line with ellipsis.
+ * Returns an array of lines ready to render.
+ */
+function fitTextToBox(
+  doc: jsPDF,
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+  maxLines: number
+): string[] {
+  doc.setFontSize(fontSize);
+  const allLines = doc.splitTextToSize(text, maxWidth) as string[];
+
+  if (allLines.length <= maxLines) {
+    return allLines;
+  }
+
+  // Text overflows - take first (maxLines - 1) lines, then fit remaining text on last line with ellipsis
+  const resultLines = allLines.slice(0, maxLines - 1);
+
+  // Join remaining text for the last line
+  const remainingText = allLines.slice(maxLines - 1).join(' ');
+
+  // Clamp the last line to fit with ellipsis
+  const ellipsis = '...';
+  let lastLine = remainingText;
+
+  // Trim to fit within maxWidth including ellipsis
+  while (lastLine.length > 0 && doc.getTextWidth(lastLine + ellipsis) > maxWidth) {
+    lastLine = lastLine.slice(0, -1);
+  }
+
+  // Clean up: remove trailing spaces and partial words if possible
+  lastLine = lastLine.trimEnd();
+  // Try to break at word boundary if we have space
+  const lastSpaceIdx = lastLine.lastIndexOf(' ');
+  if (lastSpaceIdx > lastLine.length * 0.6) {
+    // Only break at word if we're not losing too much content
+    const wordBroken = lastLine.slice(0, lastSpaceIdx).trimEnd();
+    if (doc.getTextWidth(wordBroken + ellipsis) <= maxWidth) {
+      lastLine = wordBroken;
+    }
+  }
+
+  resultLines.push(lastLine + ellipsis);
+  return resultLines;
 }
 
 /** Normalize narrative text: sentence case and ensure full stop at end */
