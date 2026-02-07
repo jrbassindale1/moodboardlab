@@ -116,7 +116,7 @@ export function renderMaterialSheetHalf(
 
 function renderHeader(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setTextColor(25, 25, 25);
   doc.text(clampText(doc, m.name, w - 160), x, y + 24);
 
@@ -158,7 +158,7 @@ function renderMain(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: nu
 function renderImageAndIdentity(doc: jsPDF, m: MaterialPdfModel, x: number, y: number, w: number, h: number) {
   const imageBoxSize = 92;
   const cardGap = 6;
-  const imageInset = 6;
+  const imageInset = 12;
 
   drawCard(doc, x, y, imageBoxSize, imageBoxSize, { tint: 'light' });
   if (m.imageDataUri) {
