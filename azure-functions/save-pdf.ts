@@ -26,8 +26,8 @@ async function uploadPdfToBlob(
   const blobServiceClient = BlobServiceClient.fromConnectionString(BLOB_CONNECTION_STRING);
   const containerClient = blobServiceClient.getContainerClient(BLOB_CONTAINER);
 
-  // Ensure container exists
-  await containerClient.createIfNotExists({ access: 'blob' });
+  // Ensure container exists (no public access - storage account doesn't allow it)
+  await containerClient.createIfNotExists();
 
   // Generate unique blob name
   const blobName = `${uuidv4()}.pdf`;

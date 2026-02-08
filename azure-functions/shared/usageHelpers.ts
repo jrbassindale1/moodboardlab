@@ -45,7 +45,10 @@ export async function canUserGenerate(userId: string): Promise<{
       used: totalUsed,
     };
   } catch (error: unknown) {
-    if ((error as { code?: number }).code === 404) {
+    // CosmosDB SDK may use 'code' (number or string) or 'statusCode'
+    const err = error as { code?: number | string; statusCode?: number };
+    const is404 = err.code === 404 || err.code === 'NotFound' || err.statusCode === 404;
+    if (is404) {
       return {
         canGenerate: true,
         remaining: FREE_MONTHLY_LIMIT,
@@ -90,7 +93,10 @@ export async function incrementUsage(
       });
     }
   } catch (error: unknown) {
-    if ((error as { code?: number }).code === 404) {
+    // CosmosDB SDK may use 'code' (number or string) or 'statusCode'
+    const err = error as { code?: number | string; statusCode?: number };
+    const is404 = err.code === 404 || err.code === 'NotFound' || err.statusCode === 404;
+    if (is404) {
       // Create new document
       const newUsage: UsageDocument = {
         id: documentId,
