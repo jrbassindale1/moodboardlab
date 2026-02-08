@@ -359,8 +359,8 @@ const getSpecActions = (material: MaterialOption): string[] => {
     actions.push('Verify steel supplier uses electric arc furnace (EAF) production');
   }
   if (materialType === 'timber' || id.includes('timber') || id.includes('wood')) {
-    actions.push('Confirm FSC or PEFC certification for all timber products');
-    actions.push('Request chain-of-custody documentation from supplier');
+    actions.push('Confirm FSC or PEFC certification for all timber products.');
+    actions.push('Request chain-of-custody documentation from supplier.');
   }
   if (materialType === 'concrete' || id.includes('concrete')) {
     actions.push('Specify GGBS/PFA cement replacement (target: 50%+ replacement)');
