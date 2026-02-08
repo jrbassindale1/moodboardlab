@@ -66,8 +66,8 @@ export async function savePdf(
 
   try {
     // Require authentication for PDF saves
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const validatedUser = await validateToken(request);
+    if (!validatedUser) {
       return {
         status: 401,
         headers,
@@ -75,19 +75,7 @@ export async function savePdf(
       };
     }
 
-    const token = authHeader.substring(7);
-    let userId: string;
-
-    try {
-      const decoded = await validateToken(token);
-      userId = decoded.sub;
-    } catch (tokenError) {
-      return {
-        status: 401,
-        headers,
-        body: JSON.stringify({ error: 'Invalid token' }),
-      };
-    }
+    const userId = validatedUser.userId;
 
     const body = await request.json() as {
       pdfBase64?: string;

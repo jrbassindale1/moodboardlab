@@ -90,20 +90,14 @@ export async function saveGeneration(
     const blobUrl = await uploadToBlob(imageBase64, mimeType || 'image/png');
 
     // Check for authenticated request
-    const authHeader = request.headers.get('authorization');
     let userId = 'anon';
     let isAuthenticated = false;
 
-    if (authHeader?.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
-      try {
-        const decoded = await validateToken(token);
-        userId = decoded.sub;
-        isAuthenticated = true;
-        context.log(`Authenticated user: ${userId}`);
-      } catch (tokenError) {
-        context.log('Token validation failed, treating as anonymous:', tokenError);
-      }
+    const validatedUser = await validateToken(request);
+    if (validatedUser) {
+      userId = validatedUser.userId;
+      isAuthenticated = true;
+      context.log(`Authenticated user: ${userId}`);
     }
 
     // For authenticated users, save to their history and increment usage
