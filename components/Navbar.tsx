@@ -19,11 +19,15 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  const navItems = [
+  const baseNavItems = [
     { id: 'concept', label: 'Home' },
     { id: 'materials', label: 'Materials' },
     { id: 'moodboard', label: 'Moodboard Lab' },
-    { id: 'apply', label: 'Apply' },
+    { id: 'apply', label: 'Apply' }
+  ];
+  const navItemsDesktop = baseNavItems;
+  const navItemsMobile = [
+    ...baseNavItems,
     ...(isAuthenticated ? [{ id: 'dashboard', label: 'Dashboard' }] : [])
   ];
 
@@ -53,7 +57,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
         <div className="flex items-center gap-4 md:gap-8">
           <div className="hidden md:flex gap-8 font-mono text-xs uppercase tracking-widest text-gray-600">
-            {navItems.map((item) => (
+            {navItemsDesktop.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
@@ -104,7 +108,7 @@ const Navbar: React.FC<NavbarProps> = ({
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-sm">
           <div className="max-w-screen-2xl mx-auto px-6 py-4 flex flex-col gap-4 font-mono text-sm uppercase tracking-widest text-gray-700">
-            {navItems.map((item) => (
+            {navItemsMobile.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}

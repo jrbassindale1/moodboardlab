@@ -219,8 +219,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }))
     };
 
-    try {
-      if (isAuthenticated) {
+    // Try authenticated save first, fall back to anonymous save
+    if (isAuthenticated) {
+      try {
         const token = await getAccessToken();
         if (token) {
           await saveGenerationAuth({
@@ -231,8 +232,13 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           }, token);
           return;
         }
+      } catch (err) {
+        console.error('Authenticated save failed, trying anonymous save:', err);
       }
-      // Fallback for anonymous users
+    }
+
+    // Fallback for anonymous users or if authenticated save failed
+    try {
       await saveGeneration({
         prompt,
         imageDataUri,
