@@ -15,7 +15,8 @@
       "Bash(node /private/tmp/claude/-Users-jr-bassindale-moodboard-lab/74b18fa0-76b6-4d05-bf63-5230a2c662b0/scratchpad/check-missing.js:*)",
       "Bash(npm run optimize-icons:*)",
       "Bash(npm install:*)",
-      "Bash(node scripts/generate-lifecycle-insights.mjs:*)"
+      "Bash(node scripts/generate-lifecycle-insights.mjs:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

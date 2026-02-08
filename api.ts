@@ -4,6 +4,44 @@ type RequestOptions = {
   timeoutMs?: number;
 };
 
+export type GenerationType =
+  | 'moodboard'
+  | 'applyMaterials'
+  | 'upscale'
+  | 'materialIcon'
+  | 'sustainabilityBriefing';
+
+export interface UsageData {
+  moodboard: number;
+  applyMaterials: number;
+  upscale: number;
+  materialIcon: number;
+  sustainabilityBriefing: number;
+  total: number;
+  yearMonth?: string;
+}
+
+export interface Generation {
+  id: string;
+  type: GenerationType;
+  blobUrl?: string;
+  createdAt: string;
+  prompt: string;
+  materials?: unknown;
+}
+
+export interface GenerationsResponse {
+  items: Generation[];
+  hasMore: boolean;
+}
+
+export interface QuotaResponse {
+  canGenerate: boolean;
+  remaining: number;
+  limit: number;
+  used: number;
+}
+
 function getApiBase() {
   // Always use production API - local Azure Functions not typically available
   // To use local backend, set VITE_USE_LOCAL_API=true in .env.local
@@ -159,4 +197,149 @@ Respond with ONLY valid JSON matching the required structure.`;
   };
 
   return callGeminiText(geminiPayload, { timeoutMs: options?.timeoutMs ?? 60000 });
+}
+
+// ============================================
+// Authenticated API functions
+// ============================================
+
+/**
+ * Get current month's usage for authenticated user
+ */
+export async function getUsage(accessToken: string): Promise<UsageData> {
+  const API_BASE = getApiBase();
+  const res = await fetch(`${API_BASE}/api/usage`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch usage');
+  }
+  return res.json();
+}
+
+/**
+ * Check if user can generate (quota check)
+ */
+export async function checkQuota(accessToken: string): Promise<QuotaResponse> {
+  const API_BASE = getApiBase();
+  const res = await fetch(`${API_BASE}/api/check-quota`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to check quota');
+  }
+  return res.json();
+}
+
+/**
+ * Get user's generation history
+ */
+export async function getGenerations(
+  accessToken: string,
+  options?: { limit?: number; offset?: number }
+): Promise<GenerationsResponse> {
+  const API_BASE = getApiBase();
+  const params = new URLSearchParams();
+  if (options?.limit) params.set('limit', String(options.limit));
+  if (options?.offset) params.set('offset', String(options.offset));
+
+  const res = await fetch(`${API_BASE}/api/generations?${params}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch generations');
+  }
+  return res.json();
+}
+
+/**
+ * Call Gemini backend with authentication
+ */
+export async function callGeminiBackendAuth(
+  payload: unknown,
+  mode: "text" | "image",
+  accessToken: string,
+  generationType: GenerationType,
+  options?: RequestOptions
+) {
+  const API_BASE = getApiBase();
+  const timeoutMs = options?.timeoutMs ?? (mode === 'image' ? 120000 : 180000);
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/generate-moodboard`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ mode, payload, generationType }),
+    },
+    timeoutMs
+  );
+
+  if (!res.ok) {
+    let message: string;
+    try {
+      const body = await res.json();
+      // Handle quota exceeded error
+      if (res.status === 429) {
+        throw new Error('Monthly generation limit reached. Please wait until next month or upgrade your plan.');
+      }
+      message = body?.error?.message || body?.message || JSON.stringify(body);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('Monthly generation limit')) {
+        throw err;
+      }
+      message = `Backend error (status ${res.status})`;
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Save generation with authentication
+ */
+export async function saveGenerationAuth(
+  payload: {
+    prompt: string;
+    imageDataUri: string;
+    materials?: unknown;
+    generationType: GenerationType;
+  },
+  accessToken: string
+) {
+  const SAVE_URL = getSaveUrl();
+  const res = await fetchWithTimeout(
+    SAVE_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        prompt: payload.prompt,
+        imageBase64: payload.imageDataUri,
+        mimeType: payload.imageDataUri.split(";")[0].replace("data:", ""),
+        materials: payload.materials ?? {},
+        generationType: payload.generationType,
+      }),
+    },
+    45000
+  );
+
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
 }

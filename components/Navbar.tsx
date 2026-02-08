@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, ShoppingCart, X } from 'lucide-react';
+import AuthButton from './AuthButton';
+import { useAuth } from '../auth';
 
 interface NavbarProps {
   currentPage: string;
@@ -15,12 +17,14 @@ const Navbar: React.FC<NavbarProps> = ({
   moodboardReady = false
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const navItems = [
     { id: 'concept', label: 'Home' },
     { id: 'materials', label: 'Materials' },
     { id: 'moodboard', label: 'Moodboard Lab' },
-    { id: 'apply', label: 'Apply' }
+    { id: 'apply', label: 'Apply' },
+    ...(isAuthenticated ? [{ id: 'dashboard', label: 'Dashboard' }] : [])
   ];
 
   const handleNavigate = (page: string) => {
@@ -82,6 +86,10 @@ const Navbar: React.FC<NavbarProps> = ({
               </span>
             )}
           </button>
+
+          {/* Auth Button */}
+          <AuthButton onNavigate={onNavigate} />
+
           <button
             className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             onClick={() => setIsMobileMenuOpen((open) => !open)}

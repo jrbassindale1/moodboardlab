@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageDown, Loader2, Wand2 } from 'lucide-react';
-import { callGeminiImage, saveGeneration } from '../api';
+import { callGeminiImage, saveGeneration, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
+import { useAuth, useUsage } from '../auth';
+import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
   onNavigate?: (page: string) => void;
@@ -145,6 +147,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   appliedRenderUrl,
   onAppliedRenderUrlChange
 }) => {
+  // Auth and usage hooks
+  const { isAuthenticated, getAccessToken } = useAuth();
+  const { refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
+
   const [renderNote, setRenderNote] = useState('');
   const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -311,12 +317,30 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
   }) => {
-    // Check daily quota first
-    const currentRemaining = getRemainingRenders();
-    if (currentRemaining <= 0) {
-      setError('Daily render limit reached. Your quota resets at midnight.');
-      setDailyRendersRemaining(0);
-      return;
+    // Check quota - server-side for authenticated users, local for anonymous
+    if (isAuthenticated) {
+      // Refresh and check server-side quota
+      try {
+        const token = await getAccessToken();
+        if (token) {
+          const quotaCheck = await checkQuota(token);
+          if (!quotaCheck.canGenerate) {
+            setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Quota check failed:', err);
+        // Continue with render if quota check fails (graceful degradation)
+      }
+    } else {
+      // Check local daily quota for anonymous users
+      const currentRemaining = getRemainingRenders();
+      if (currentRemaining <= 0) {
+        setError('Daily render limit reached. Sign in to get 10 free generations per month.');
+        setDailyRendersRemaining(0);
+        return;
+      }
     }
 
     if (!board.length) {
@@ -431,9 +455,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       if (!img) throw new Error('Gemini did not return an image payload.');
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
       onAppliedRenderUrlChange(newUrl);
-      // Increment daily quota and update state
-      incrementDailyQuota();
-      setDailyRendersRemaining(getRemainingRenders());
+
+      // Update quota tracking based on auth status
+      if (isAuthenticated) {
+        // Refresh server-side usage count
+        await refreshUsage();
+      } else {
+        // Increment local daily quota for anonymous users
+        incrementDailyQuota();
+        incrementLocalUsage();
+        setDailyRendersRemaining(getRemainingRenders());
+      }
+
       void persistGeneration(newUrl, prompt);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
@@ -495,14 +528,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        <div className={`flex items-center justify-between px-4 py-3 border ${dailyRendersRemaining <= 0 ? 'border-red-200 bg-red-50' : dailyRendersRemaining <= 3 ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-gray-50'}`}>
-          <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-            Daily Render Quota
-          </div>
-          <div className={`font-mono text-sm font-medium ${dailyRendersRemaining <= 0 ? 'text-red-600' : dailyRendersRemaining <= 3 ? 'text-amber-600' : 'text-gray-700'}`}>
-            {dailyRendersRemaining} / {DAILY_RENDER_LIMIT} renders remaining today
-          </div>
-        </div>
+        <UsageDisplay variant="full" showSignUpPrompt={isAnonymous} />
 
         {!moodboardRenderUrl ? (
           <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">

@@ -469,7 +469,7 @@ function renderLeftColumn(doc: jsPDF, m: MaterialPdfModel, x: number, y: number,
       if (riskItem.mitigation) {
         doc.setTextColor(107, 114, 128);
         doc.setFontSize(6.5);
-        const mitigationText = `→ ${riskItem.mitigation}`;
+        const mitigationText = `- ${riskItem.mitigation}`;
         doc.text(clampText(doc, mitigationText, w - 12), x + 6, cursorY);
         doc.setFontSize(7);
         cursorY += 8;

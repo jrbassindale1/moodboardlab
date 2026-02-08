@@ -10,6 +10,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
 import CookieBanner from './components/CookieBanner';
+import Dashboard from './components/Dashboard';
 import { MaterialOption } from './types';
 import type {
   SustainabilityBriefingPayload,
@@ -90,6 +91,8 @@ const App: React.FC = () => {
         return <TermsOfService />;
       case 'contact':
         return <Contact />;
+      case 'dashboard':
+        return <Dashboard onNavigate={setCurrentPage} />;
       default:
         return <Concept onNavigate={setCurrentPage} />;
     }

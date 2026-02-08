@@ -22,6 +22,7 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
+const SMALL_SCREEN_QUERY = '(max-width: 639px)';
 
 const CARBON_IMPACT_LABELS: Record<NonNullable<MaterialOption['carbonIntensity']>, string> = {
   low: 'Low carbon impact',
@@ -83,6 +84,11 @@ const downscaleImage = (
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const boardRef = useRef<MaterialOption[]>(board);
+  const hasScrolledToTop = useRef(false);
+  const [isSmallScreen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia(SMALL_SCREEN_QUERY).matches;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -109,6 +115,12 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
+
+  useEffect(() => {
+    if (!isSmallScreen || hasScrolledToTop.current) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    hasScrolledToTop.current = true;
+  }, [isSmallScreen]);
 
   useEffect(() => {
     if (!selectedCategory || !selectedCategory.startsWith('Custom>')) return;
@@ -1047,53 +1059,61 @@ IMPORTANT:
             ) : !selectedCategory ? (
               /* Empty state when no category selected - Video showcase */
               <div className={`${isFadingOut ? 'animate-fade-out' : ''}`}>
-                {/* Material video showcase */}
-                <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-black aspect-square max-w-full lg:max-w-2xl">
-                  <video
-                    key={currentVideoIndex}
-                    autoPlay
-                    muted
-                    playsInline
-                    loop={false}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                      isVideoTransitioning ? 'opacity-0' : 'opacity-100'
-                    }`}
-                    style={{
-                      objectPosition: 'center center',
-                    }}
-                    onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
-                      const video = e.currentTarget;
-                      video.playbackRate = 0.5;
+                {isSmallScreen ? (
+                  <div className="mx-auto w-full max-w-full border border-arch-line p-8 text-center">
+                    <p className="text-gray-700 font-sans text-base">
+                      Choose a category to browse materials.
+                    </p>
+                  </div>
+                ) : (
+                  /* Material video showcase */
+                  <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-black aspect-square max-w-full lg:max-w-2xl">
+                    <video
+                      key={currentVideoIndex}
+                      autoPlay
+                      muted
+                      playsInline
+                      loop={false}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                        isVideoTransitioning ? 'opacity-0' : 'opacity-100'
+                      }`}
+                      style={{
+                        objectPosition: 'center center',
+                      }}
+                      onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
+                        const video = e.currentTarget;
+                        video.playbackRate = 0.5;
 
-                      // Force move to next video after 7 seconds
-                      setTimeout(() => {
+                        // Force move to next video after 7 seconds
+                        setTimeout(() => {
+                          setIsVideoTransitioning(true);
+                          setTimeout(() => {
+                            const nextIndex = Math.floor(Math.random() * videos.length);
+                            setCurrentVideoIndex(nextIndex);
+                            setIsVideoTransitioning(false);
+                          }, 1000);
+                        }, 7000);
+                      }}
+                      onEnded={() => {
                         setIsVideoTransitioning(true);
                         setTimeout(() => {
                           const nextIndex = Math.floor(Math.random() * videos.length);
                           setCurrentVideoIndex(nextIndex);
                           setIsVideoTransitioning(false);
                         }, 1000);
-                      }, 7000);
-                    }}
-                    onEnded={() => {
-                      setIsVideoTransitioning(true);
-                      setTimeout(() => {
-                        const nextIndex = Math.floor(Math.random() * videos.length);
-                        setCurrentVideoIndex(nextIndex);
-                        setIsVideoTransitioning(false);
-                      }, 1000);
-                    }}
-                  >
-                    <source src={videos[currentVideoIndex]} type="video/mp4" />
-                  </video>
+                      }}
+                    >
+                      <source src={videos[currentVideoIndex]} type="video/mp4" />
+                    </video>
 
-                  {/* Overlay text */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <p className="text-white font-sans text-lg text-center px-6">
-                      Choose a category to browse materials
-                    </p>
+                    {/* Overlay text */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <p className="text-white font-sans text-lg text-center px-6">
+                        Choose a category to browse materials
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : (
               <>

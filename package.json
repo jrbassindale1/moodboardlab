@@ -11,6 +11,7 @@
     "optimize-icons": "tsx scripts/optimizeIcons.ts"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.60.0",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.556.0",
     "react": "^19.2.1",
