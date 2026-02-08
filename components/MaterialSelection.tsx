@@ -85,6 +85,7 @@ const downscaleImage = (
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const { isAuthenticated } = useAuth();
+  const addDisabled = !isAuthenticated;
   const boardRef = useRef<MaterialOption[]>(board);
   const hasScrolledToTop = useRef(false);
   const [isSmallScreen] = useState(() => {
@@ -377,6 +378,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     customization?: { tone?: string; label?: string },
     skipModal?: boolean
   ) => {
+    if (!isAuthenticated) {
+      return;
+    }
     // If no customization provided and not skipping modal, just show modal (don't add to board yet)
     if (!customization && !skipModal) {
       setRecentlyAdded(material);
@@ -452,6 +456,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
 
   const handleCreateCustomMaterial = () => {
+    if (!isAuthenticated) {
+      return;
+    }
     if (!customMaterialName.trim()) {
       alert('Please enter a material name');
       return;
@@ -810,6 +817,11 @@ IMPORTANT:
 
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
+            {addDisabled && (
+              <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] font-mono uppercase tracking-widest text-amber-800">
+                Please log in or sign up to add materials to your board.
+              </div>
+            )}
             {/* Page title and sort - only show when category is selected */}
             {selectedCategory && (
               <>
@@ -1016,10 +1028,12 @@ IMPORTANT:
                               setDetectedMaterials([]);
                               setSelectedMaterialIds(new Set());
                             }}
-                            disabled={selectedMaterialIds.size === 0}
-                            className="flex-1 bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={addDisabled || selectedMaterialIds.size === 0}
+                            className={`flex-1 py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                              addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
+                            }`}
                           >
-                            Add Selected to Board
+                            {addDisabled ? 'Login to add' : 'Add Selected to Board'}
                           </button>
                         </div>
                       </div>
@@ -1075,9 +1089,12 @@ IMPORTANT:
                     {/* Create Button */}
                     <button
                       onClick={handleCreateCustomMaterial}
-                      className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors"
+                      disabled={addDisabled}
+                      className={`w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${
+                        addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
+                      }`}
                     >
-                      Create & Add to Board
+                      {addDisabled ? 'Login to add' : 'Create & Add to Board'}
                     </button>
                   </div>
                 )}
@@ -1223,9 +1240,12 @@ IMPORTANT:
                       {/* Add to board button */}
                       <button
                         onClick={() => handleAdd(mat)}
-                        className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors"
+                        disabled={addDisabled}
+                        className={`w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${
+                          addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
+                        }`}
                       >
-                        Add to board
+                        {addDisabled ? 'Login to add' : 'Add to board'}
                       </button>
                     </article>
                     );
@@ -1392,9 +1412,12 @@ IMPORTANT:
                     boardRef.current = nextBoard;
                     setRecentlyAdded(null);
                   }}
-                  className="flex-1 px-4 py-3 bg-arch-black text-white uppercase font-mono text-[11px] tracking-widest hover:bg-gray-900 transition-colors"
+                  disabled={addDisabled}
+                  className={`flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors disabled:cursor-not-allowed ${
+                    addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
+                  }`}
                 >
-                  Add to Board
+                  {addDisabled ? 'Login to add' : 'Add to Board'}
                 </button>
               )}
               <button

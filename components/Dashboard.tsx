@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, clerkPubKey } from '../auth';
 import { getGenerations } from '../api';
-import { Calendar, Image, Loader2, LogIn, ChevronRight, Download } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 
 interface Generation {
   id: string;
@@ -37,6 +37,28 @@ const isPdfGeneration = (gen: Generation): boolean => {
   return urlWithoutQuery.toLowerCase().endsWith('.pdf');
 };
 
+type PdfBucket = 'materialsSheet' | 'sustainabilityBriefing';
+
+const getPdfBucket = (gen: Generation): PdfBucket | null => {
+  if (gen.type === 'materialIcon' || /materials sheet/i.test(gen.prompt || '')) {
+    return 'materialsSheet';
+  }
+  if (gen.type === 'sustainabilityBriefing') {
+    return 'sustainabilityBriefing';
+  }
+  return null;
+};
+
+const toTimestamp = (value: string): number => {
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+const isNewerGeneration = (candidate: Generation, current?: Generation | null): boolean => {
+  if (!current) return true;
+  return toTimestamp(candidate.createdAt) > toTimestamp(current.createdAt);
+};
+
 const getBoardKey = (materials?: unknown): string | null => {
   if (!materials || typeof materials !== 'object') return null;
   const board = (materials as { board?: BoardItemLike[] }).board;
@@ -56,22 +78,30 @@ const getBoardKey = (materials?: unknown): string | null => {
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
-  const { user, isAuthenticated, getAccessToken, login } = useAuth();
+  const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const hasFetchedRef = useRef(false);
   const limit_per_page = 12;
 
   const displayItems = useMemo(() => {
-    const pdfByBoardKey = new Map<string, Generation[]>();
+    const pdfByBoardKey = new Map<string, Map<PdfBucket, Generation>>();
     for (const gen of generations) {
       if (!isPdfGeneration(gen)) continue;
+      const bucket = getPdfBucket(gen);
+      if (!bucket) continue;
       const key = getBoardKey(gen.materials);
       if (!key) continue;
-      if (!pdfByBoardKey.has(key)) pdfByBoardKey.set(key, []);
-      pdfByBoardKey.get(key)!.push(gen);
+      if (!pdfByBoardKey.has(key)) {
+        pdfByBoardKey.set(key, new Map());
+      }
+      const bucketMap = pdfByBoardKey.get(key)!;
+      if (isNewerGeneration(gen, bucketMap.get(bucket))) {
+        bucketMap.set(bucket, gen);
+      }
     }
 
     return generations
@@ -81,7 +111,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         if (gen.type === 'moodboard') {
           const boardKey = getBoardKey(gen.materials);
           if (boardKey && pdfByBoardKey.has(boardKey)) {
-            attachments = pdfByBoardKey.get(boardKey) || [];
+            const bucketMap = pdfByBoardKey.get(boardKey);
+            if (bucketMap) {
+              const order: Record<PdfBucket, number> = {
+                materialsSheet: 0,
+                sustainabilityBriefing: 1,
+              };
+              attachments = Array.from(bucketMap.entries())
+                .sort(([a], [b]) => order[a] - order[b])
+                .map(([, item]) => item);
+            }
             pdfByBoardKey.delete(boardKey);
           }
         }
@@ -92,8 +131,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   useEffect(() => {
     if (!isAuthenticated) {
       setIsLoading(false);
+      setGenerations([]);
+      setHasMore(false);
+      setOffset(0);
+      hasFetchedRef.current = false;
       return;
     }
+
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
     const fetchGenerations = async () => {
       setIsLoading(true);
@@ -209,38 +255,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <button
-            onClick={() => onNavigate?.('moodboard')}
-            className="group flex items-center justify-between p-6 border border-gray-200 hover:border-black transition-colors"
-          >
-            <div className="text-left">
-              <h3 className="font-display text-xl font-bold uppercase tracking-tight">
-                Create Moodboard
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Generate a new AI moodboard from your selected materials
-              </p>
-            </div>
-            <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-black transition-colors" />
-          </button>
-          <button
-            onClick={() => onNavigate?.('apply')}
-            className="group flex items-center justify-between p-6 border border-gray-200 hover:border-black transition-colors"
-          >
-            <div className="text-left">
-              <h3 className="font-display text-xl font-bold uppercase tracking-tight">
-                Apply Materials
-              </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Apply your material palette to an uploaded design
-              </p>
-            </div>
-            <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-black transition-colors" />
-          </button>
-        </div>
-
         {/* Generation History */}
         <div>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-4">
@@ -271,13 +285,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                       className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
                     >
                       {gen.blobUrl ? (
-                        <div className="aspect-square bg-gray-100 overflow-hidden">
+                        <div className="relative aspect-square bg-gray-100 overflow-hidden">
                           <img
                             src={gen.blobUrl}
                             alt={gen.type}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
                           />
+                          <a
+                            href={gen.blobUrl}
+                            download
+                            className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm transition-opacity"
+                            aria-label="Download image"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
                         </div>
                       ) : (
                         <div className="aspect-square bg-gray-100 flex items-center justify-center">
@@ -298,7 +320,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                           <div className="flex flex-wrap gap-2">
                             {attachments.map((pdf) => {
                               const rawUrl = pdf.blobUrl || '';
-                              const isMaterialsSheet = pdf.type === 'materialIcon' || /materials sheet/i.test(pdf.prompt || '');
+                              const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
                               const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Download PDF';
                               const pdfButtonClass = isMaterialsSheet
                                 ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
