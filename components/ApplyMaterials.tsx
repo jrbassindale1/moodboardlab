@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageDown, Loader2, Wand2 } from 'lucide-react';
-import { callGeminiImage, saveGeneration, checkQuota } from '../api';
+import { callGeminiImage, saveGeneration, saveGenerationAuth, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { useAuth, useUsage } from '../auth';
 import UsageDisplay from './UsageDisplay';
@@ -220,6 +220,19 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     };
 
     try {
+      if (isAuthenticated) {
+        const token = await getAccessToken();
+        if (token) {
+          await saveGenerationAuth({
+            prompt,
+            imageDataUri,
+            materials: metadata,
+            generationType: 'applyMaterials'
+          }, token);
+          return;
+        }
+      }
+      // Fallback for anonymous users
       await saveGeneration({
         prompt,
         imageDataUri,

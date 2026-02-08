@@ -12,8 +12,9 @@ import {
   LifecycleProfile,
   LifecycleStageKey,
 } from '../lifecycleProfiles';
-import { callGeminiImage, callGeminiText, saveGeneration, generateSustainabilityBriefing } from '../api';
+import { callGeminiImage, callGeminiText, saveGeneration, saveGenerationAuth, savePdfAuth, generateSustainabilityBriefing } from '../api';
 import { MaterialOption } from '../types';
+import { useAuth } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 
 // Sustainability report utilities
@@ -387,6 +388,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   briefingInvalidatedMessage,
   onBriefingInvalidatedMessageChange
 }) => {
+  // Auth hook for authenticated saves
+  const { isAuthenticated, getAccessToken } = useAuth();
+
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
@@ -536,6 +540,19 @@ const Moodboard: React.FC<MoodboardProps> = ({
     };
 
     try {
+      if (isAuthenticated) {
+        const token = await getAccessToken();
+        if (token) {
+          await saveGenerationAuth({
+            prompt,
+            imageDataUri,
+            materials: metadata,
+            generationType: 'moodboard'
+          }, token);
+          return;
+        }
+      }
+      // Fallback for anonymous users
       await saveGeneration({
         prompt,
         imageDataUri,
@@ -601,12 +618,28 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const generateMaterialsSheetPdf = async () => buildMaterialsSheetPdf({ board });
 
-  const handleDownloadBriefingPdf = () => {
+  const handleDownloadBriefingPdf = async () => {
     if (!sustainabilityBriefing || !briefingPayload) return;
     setExportingBriefingPdf(true);
     try {
       const doc = generateBriefingPdf();
-      if (doc) doc.save('sustainability-briefing.pdf');
+      if (doc) {
+        // Save locally
+        doc.save('sustainability-briefing.pdf');
+
+        // Save to backend for authenticated users
+        if (isAuthenticated) {
+          const token = await getAccessToken();
+          if (token) {
+            const pdfDataUri = doc.output('datauristring');
+            await savePdfAuth({
+              pdfDataUri,
+              pdfType: 'sustainabilityBriefing',
+              materials: { board, briefingPayload }
+            }, token);
+          }
+        }
+      }
     } catch (err) {
       console.error('Could not create briefing PDF', err);
       setError('Could not create the briefing PDF download.');
@@ -620,7 +653,23 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setExportingMaterialsSheetPdf(true);
     try {
       const doc = await generateMaterialsSheetPdf();
-      if (doc) doc.save('materials-sheet.pdf');
+      if (doc) {
+        // Save locally
+        doc.save('materials-sheet.pdf');
+
+        // Save to backend for authenticated users
+        if (isAuthenticated) {
+          const token = await getAccessToken();
+          if (token) {
+            const pdfDataUri = doc.output('datauristring');
+            await savePdfAuth({
+              pdfDataUri,
+              pdfType: 'materialsSheet',
+              materials: { board }
+            }, token);
+          }
+        }
+      }
     } catch (err) {
       console.error('Could not create materials sheet PDF', err);
       setError('Could not create the materials sheet PDF download.');

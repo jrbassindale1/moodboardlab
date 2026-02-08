@@ -343,3 +343,36 @@ export async function saveGenerationAuth(
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+/**
+ * Save PDF with authentication
+ */
+export async function savePdfAuth(
+  payload: {
+    pdfDataUri: string;
+    pdfType: 'sustainabilityBriefing' | 'materialsSheet';
+    materials?: unknown;
+  },
+  accessToken: string
+) {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/save-pdf`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        pdfBase64: payload.pdfDataUri,
+        pdfType: payload.pdfType,
+        materials: payload.materials ?? {},
+      }),
+    },
+    45000
+  );
+
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
