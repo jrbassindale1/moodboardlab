@@ -18,9 +18,10 @@ jobs:
       id-token: write
       contents: read
 
-    # 👇 This makes VITE_GEMINI_API_KEY available to the build (Vite will pick it up)
+    # 👇 This makes VITE_ env vars available to the build (Vite will pick them up)
     env:
       VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
 
     steps:
       - uses: actions/checkout@v3
