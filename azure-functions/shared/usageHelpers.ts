@@ -12,6 +12,7 @@ import {
   FREE_MONTHLY_LIMIT,
   UsageDocument,
   GenerationDocument,
+  isCosmosNotFound,
 } from './cosmosClient';
 
 export type GenerationType =
@@ -20,6 +21,23 @@ export type GenerationType =
   | 'upscale'
   | 'materialIcon'
   | 'sustainabilityBriefing';
+
+function stripDataUrls(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(stripDataUrls);
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      if (typeof val === 'string' && val.startsWith('data:')) {
+        continue;
+      }
+      result[key] = stripDataUrls(val);
+    }
+    return result;
+  }
+  return value;
+}
 
 /**
  * Check if user can generate (has remaining quota)
@@ -45,10 +63,7 @@ export async function canUserGenerate(userId: string): Promise<{
       used: totalUsed,
     };
   } catch (error: unknown) {
-    // CosmosDB SDK may use 'code' (number or string) or 'statusCode'
-    const err = error as { code?: number | string; statusCode?: number };
-    const is404 = err.code === 404 || err.code === 'NotFound' || err.statusCode === 404;
-    if (is404) {
+    if (isCosmosNotFound(error)) {
       return {
         canGenerate: true,
         remaining: FREE_MONTHLY_LIMIT,
@@ -88,36 +103,34 @@ export async function incrementUsage(
       await usageContainer.item(documentId, userId).replace({
         ...existing,
         generationCounts: updatedCounts,
-        totalGenerations: existing.totalGenerations + 1,
+        totalGenerations: (existing.totalGenerations || 0) + 1,
         lastUpdatedAt: now,
       });
+      return;
     }
   } catch (error: unknown) {
-    // CosmosDB SDK may use 'code' (number or string) or 'statusCode'
-    const err = error as { code?: number | string; statusCode?: number };
-    const is404 = err.code === 404 || err.code === 'NotFound' || err.statusCode === 404;
-    if (is404) {
-      // Create new document
-      const newUsage: UsageDocument = {
-        id: documentId,
-        userId,
-        yearMonth,
-        generationCounts: {
-          moodboard: generationType === 'moodboard' ? 1 : 0,
-          applyMaterials: generationType === 'applyMaterials' ? 1 : 0,
-          upscale: generationType === 'upscale' ? 1 : 0,
-          materialIcon: generationType === 'materialIcon' ? 1 : 0,
-          sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? 1 : 0,
-        },
-        totalGenerations: 1,
-        lastUpdatedAt: now,
-      };
-
-      await usageContainer.items.create(newUsage);
-    } else {
+    if (!isCosmosNotFound(error)) {
       throw error;
     }
   }
+
+  // Create new document if read returned nothing or item was not found.
+  const newUsage: UsageDocument = {
+    id: documentId,
+    userId,
+    yearMonth,
+    generationCounts: {
+      moodboard: generationType === 'moodboard' ? 1 : 0,
+      applyMaterials: generationType === 'applyMaterials' ? 1 : 0,
+      upscale: generationType === 'upscale' ? 1 : 0,
+      materialIcon: generationType === 'materialIcon' ? 1 : 0,
+      sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? 1 : 0,
+    },
+    totalGenerations: 1,
+    lastUpdatedAt: now,
+  };
+
+  await usageContainer.items.create(newUsage);
 }
 
 /**
@@ -134,6 +147,7 @@ export async function saveGenerationRecord(
   const generationsContainer = getContainer('generations');
   const id = uuidv4();
   const now = new Date().toISOString();
+  const sanitizedMaterials = materials ? stripDataUrls(materials) : materials;
 
   const record: GenerationDocument = {
     id,
@@ -141,7 +155,7 @@ export async function saveGenerationRecord(
     type: generationType,
     prompt,
     blobUrl,
-    materials,
+    materials: sanitizedMaterials,
     createdAt: now,
     metadata,
   };

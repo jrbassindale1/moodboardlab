@@ -14,6 +14,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { requireAuth, ValidatedUser } from './shared/validateToken';
 import { getContainer, GenerationDocument } from './shared/cosmosClient';
+import { getSasUrlForBlob } from './shared/blobSas';
 
 export async function generations(
   req: HttpRequest,
@@ -67,11 +68,15 @@ export async function generations(
     // Check if there are more items
     const hasMore = resources.length > limit;
     const items = hasMore ? resources.slice(0, limit) : resources;
+    const itemsWithSas = items.map((item) => ({
+      ...item,
+      blobUrl: item.blobUrl ? getSasUrlForBlob(item.blobUrl) : item.blobUrl,
+    }));
 
     return {
       status: 200,
       body: JSON.stringify({
-        items,
+        items: itemsWithSas,
         hasMore,
         offset,
         limit,

@@ -14,6 +14,7 @@ import {
   getUsageDocumentId,
   getCurrentYearMonth,
   UsageDocument,
+  isCosmosNotFound,
 } from './shared/cosmosClient';
 
 export async function usage(
@@ -57,7 +58,7 @@ export async function usage(
       }
     } catch (error: unknown) {
       // If document doesn't exist, return zeros
-      if ((error as { code?: number }).code !== 404) {
+      if (!isCosmosNotFound(error)) {
         throw error;
       }
     }

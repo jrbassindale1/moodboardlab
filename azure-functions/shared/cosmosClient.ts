@@ -97,3 +97,17 @@ export function getUsageDocumentId(userId: string, yearMonth?: string): string {
 }
 
 export const FREE_MONTHLY_LIMIT = 10;
+
+export function isCosmosNotFound(error: unknown): boolean {
+  const err = error as {
+    code?: number | string;
+    statusCode?: number;
+    body?: { code?: string };
+  };
+  return (
+    err.code === 404 ||
+    err.code === 'NotFound' ||
+    err.statusCode === 404 ||
+    err.body?.code === 'NotFound'
+  );
+}

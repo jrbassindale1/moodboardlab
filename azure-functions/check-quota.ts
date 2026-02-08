@@ -15,6 +15,7 @@ import {
   getCurrentYearMonth,
   FREE_MONTHLY_LIMIT,
   UsageDocument,
+  isCosmosNotFound,
 } from './shared/cosmosClient';
 
 export async function checkQuota(
@@ -50,7 +51,7 @@ export async function checkQuota(
       }
     } catch (error: unknown) {
       // If document doesn't exist, user has 0 usage
-      if ((error as { code?: number }).code !== 404) {
+      if (!isCosmosNotFound(error)) {
         throw error;
       }
     }

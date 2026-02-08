@@ -12,6 +12,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import { validateToken } from './shared/validateToken';
 import { saveGenerationRecord, GenerationType } from './shared/usageHelpers';
+import { getSasUrlForBlob } from './shared/blobSas';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';
@@ -103,6 +104,7 @@ export async function savePdf(
 
     // Upload to blob storage
     const blobUrl = await uploadPdfToBlob(pdfBase64);
+    const blobUrlWithSas = getSasUrlForBlob(blobUrl);
 
     // Map pdfType to generationType for recording
     const generationType: GenerationType = pdfType === 'sustainabilityBriefing'
@@ -129,7 +131,7 @@ export async function savePdf(
       headers,
       body: JSON.stringify({
         success: true,
-        blobUrl,
+        blobUrl: blobUrlWithSas,
         pdfType,
       }),
     };

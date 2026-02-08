@@ -13,6 +13,7 @@ import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import { validateToken } from './shared/validateToken';
 import { incrementUsage, saveGenerationRecord, GenerationType } from './shared/usageHelpers';
+import { getSasUrlForBlob } from './shared/blobSas';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';
@@ -88,6 +89,7 @@ export async function saveGeneration(
 
     // Upload to blob storage
     const blobUrl = await uploadToBlob(imageBase64, mimeType || 'image/png');
+    const blobUrlWithSas = getSasUrlForBlob(blobUrl);
 
     // Check for authenticated request
     let userId = 'anon';
@@ -118,7 +120,7 @@ export async function saveGeneration(
       headers,
       body: JSON.stringify({
         success: true,
-        blobUrl,
+        blobUrl: blobUrlWithSas,
         userId: isAuthenticated ? userId : undefined,
       }),
     };
