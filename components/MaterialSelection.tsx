@@ -9,6 +9,7 @@ import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconId } from '../utils/materialIconMapping';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
+import { useAuth } from '../auth';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -83,6 +84,7 @@ const downscaleImage = (
   });
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
+  const { isAuthenticated } = useAuth();
   const boardRef = useRef<MaterialOption[]>(board);
   const hasScrolledToTop = useRef(false);
   const [isSmallScreen] = useState(() => {
@@ -109,6 +111,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
+  const [sustainabilityAuthNoticeId, setSustainabilityAuthNoticeId] = useState<string | null>(null);
+  const authNoticeTimeoutRef = useRef<number | null>(null);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
@@ -121,6 +125,28 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     hasScrolledToTop.current = true;
   }, [isSmallScreen]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSustainabilityMaterial(null);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => () => {
+    if (authNoticeTimeoutRef.current) {
+      window.clearTimeout(authNoticeTimeoutRef.current);
+    }
+  }, []);
+
+  const showSustainabilityAuthNotice = (materialId: string) => {
+    setSustainabilityAuthNoticeId(materialId);
+    if (authNoticeTimeoutRef.current) {
+      window.clearTimeout(authNoticeTimeoutRef.current);
+    }
+    authNoticeTimeoutRef.current = window.setTimeout(() => {
+      setSustainabilityAuthNoticeId(null);
+    }, 2400);
+  };
 
   useEffect(() => {
     if (!selectedCategory || !selectedCategory.startsWith('Custom>')) return;
@@ -1169,17 +1195,28 @@ IMPORTANT:
                           >
                             {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
                           </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const fact = buildMaterialFact(mat);
-                              setSustainabilityMaterial({ material: mat, fact });
-                            }}
-                            className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
-                            title="Click to view material sustainability credentials"
-                          >
-                            <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
-                          </button>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isAuthenticated) {
+                                  showSustainabilityAuthNotice(mat.id);
+                                  return;
+                                }
+                                const fact = buildMaterialFact(mat);
+                                setSustainabilityMaterial({ material: mat, fact });
+                              }}
+                              className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
+                              title="Click to view material sustainability credentials"
+                            >
+                              <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
+                            </button>
+                            {!isAuthenticated && sustainabilityAuthNoticeId === mat.id && (
+                              <div className="absolute right-0 top-full mt-2 w-56 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-amber-800 shadow-sm">
+                                You need to be logged in to see material sustainability data.
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 

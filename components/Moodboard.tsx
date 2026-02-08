@@ -419,6 +419,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
+  const requireAuthForMoodboard = () => {
+    if (isAuthenticated) return true;
+    setError('You need an account to create moodboards. Please sign in to continue.');
+    return false;
+  };
 
   useEffect(() => {
     if (initialBoard) {
@@ -892,6 +897,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   };
 
   const runMoodboardFlow = async () => {
+    if (!requireAuthForMoodboard()) {
+      return;
+    }
     if (!board.length) {
       setError('Add materials to the moodboard first.');
       return;
@@ -962,6 +970,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   };
 
   const handleMoodboardEdit = async () => {
+    if (!requireAuthForMoodboard()) {
+      return;
+    }
     const trimmed = moodboardEditPrompt.trim();
     if (!moodboardRenderUrl) {
       setError('Generate a moodboard render first.');
@@ -994,6 +1005,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
       requestTimeoutMs?: number;
     }
   ): Promise<boolean> => {
+    if (mode === 'render' && !requireAuthForMoodboard()) {
+      return false;
+    }
     if (!board.length) {
       setError('Add materials to the moodboard first.');
       return false;

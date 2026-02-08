@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, clerkPubKey } from '../auth';
 import { getGenerations } from '../api';
-import { Calendar, Image, Loader2, LogIn, ChevronRight } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, ChevronRight, Download } from 'lucide-react';
 
 interface Generation {
   id: string;
@@ -209,44 +209,65 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           ) : (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {generations.map((gen) => (
-                  <div
-                    key={gen.id}
-                    className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
-                  >
-                    {gen.blobUrl ? (
-                      <div className="aspect-square bg-gray-100 overflow-hidden">
-                        <img
-                          src={gen.blobUrl}
-                          alt={gen.type}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                        />
+                {generations.map((gen) => {
+                  const rawUrl = gen.blobUrl || '';
+                  const urlWithoutQuery = rawUrl.split('?')[0];
+                  const isPdf = !!rawUrl && urlWithoutQuery.toLowerCase().endsWith('.pdf');
+                  const isMaterialsSheet = isPdf && (gen.type === 'materialIcon' || /materials sheet/i.test(gen.prompt || ''));
+                  const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Sustainability Briefing';
+                  const pdfButtonClass = isMaterialsSheet
+                    ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
+                    : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors';
+
+                  return (
+                    <div
+                      key={gen.id}
+                      className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
+                    >
+                      {!isPdf && gen.blobUrl ? (
+                        <div className="aspect-square bg-gray-100 overflow-hidden">
+                          <img
+                            src={gen.blobUrl}
+                            alt={gen.type}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : !isPdf ? (
+                        <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                          <Image className="w-12 h-12 text-gray-300" />
+                        </div>
+                      ) : null}
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
+                            {isPdf ? pdfLabel : (typeLabels[gen.type] || gen.type)}
+                          </span>
+                          <span className="flex items-center gap-1 text-gray-500 text-xs">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(gen.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {isPdf && gen.blobUrl ? (
+                          <a
+                            href={gen.blobUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={pdfButtonClass}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            {isMaterialsSheet ? 'Materials Sheet' : 'Download PDF'}
+                          </a>
+                        ) : gen.prompt ? (
+                          <p className="text-sm text-gray-700 line-clamp-2">
+                            {gen.prompt.slice(0, 100)}
+                            {gen.prompt.length > 100 ? '...' : ''}
+                          </p>
+                        ) : null}
                       </div>
-                    ) : (
-                      <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                        <Image className="w-12 h-12 text-gray-300" />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
-                          {typeLabels[gen.type] || gen.type}
-                        </span>
-                        <span className="flex items-center gap-1 text-gray-500 text-xs">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(gen.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {gen.prompt && (
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          {gen.prompt.slice(0, 100)}
-                          {gen.prompt.length > 100 ? '...' : ''}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {hasMore && (
