@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, clerkPubKey } from '../auth';
 import { getGenerations } from '../api';
@@ -17,12 +17,42 @@ interface DashboardProps {
   onNavigate?: (page: string) => void;
 }
 
+type BoardItemLike = {
+  id?: string;
+  name?: string;
+  finish?: string;
+};
+
 const typeLabels: Record<string, string> = {
   moodboard: 'Moodboard',
   applyMaterials: 'Applied Materials',
   upscale: '4K Upscale',
   materialIcon: 'Material Icon',
   sustainabilityBriefing: 'Sustainability',
+};
+
+const isPdfGeneration = (gen: Generation): boolean => {
+  if (!gen.blobUrl) return false;
+  const urlWithoutQuery = gen.blobUrl.split('?')[0];
+  return urlWithoutQuery.toLowerCase().endsWith('.pdf');
+};
+
+const getBoardKey = (materials?: unknown): string | null => {
+  if (!materials || typeof materials !== 'object') return null;
+  const board = (materials as { board?: BoardItemLike[] }).board;
+  if (!Array.isArray(board) || board.length === 0) return null;
+  const parts = board
+    .map((item) => {
+      if (!item || typeof item !== 'object') return '';
+      const id = String(item.id || '');
+      const name = String(item.name || '');
+      const finish = String(item.finish || '');
+      return `${id}|${name}|${finish}`;
+    })
+    .filter(Boolean)
+    .sort();
+  if (!parts.length) return null;
+  return parts.join('::');
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
@@ -33,6 +63,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const limit_per_page = 12;
+
+  const displayItems = useMemo(() => {
+    const pdfByBoardKey = new Map<string, Generation[]>();
+    for (const gen of generations) {
+      if (!isPdfGeneration(gen)) continue;
+      const key = getBoardKey(gen.materials);
+      if (!key) continue;
+      if (!pdfByBoardKey.has(key)) pdfByBoardKey.set(key, []);
+      pdfByBoardKey.get(key)!.push(gen);
+    }
+
+    return generations
+      .filter((gen) => !isPdfGeneration(gen))
+      .map((gen) => {
+        let attachments: Generation[] = [];
+        if (gen.type === 'moodboard') {
+          const boardKey = getBoardKey(gen.materials);
+          if (boardKey && pdfByBoardKey.has(boardKey)) {
+            attachments = pdfByBoardKey.get(boardKey) || [];
+            pdfByBoardKey.delete(boardKey);
+          }
+        }
+        return { gen, attachments };
+      });
+  }, [generations]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -209,22 +264,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           ) : (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {generations.map((gen) => {
-                  const rawUrl = gen.blobUrl || '';
-                  const urlWithoutQuery = rawUrl.split('?')[0];
-                  const isPdf = !!rawUrl && urlWithoutQuery.toLowerCase().endsWith('.pdf');
-                  const isMaterialsSheet = isPdf && (gen.type === 'materialIcon' || /materials sheet/i.test(gen.prompt || ''));
-                  const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Sustainability Briefing';
-                  const pdfButtonClass = isMaterialsSheet
-                    ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
-                    : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors';
-
+                {displayItems.map(({ gen, attachments }) => {
                   return (
                     <div
                       key={gen.id}
                       className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
                     >
-                      {!isPdf && gen.blobUrl ? (
+                      {gen.blobUrl ? (
                         <div className="aspect-square bg-gray-100 overflow-hidden">
                           <img
                             src={gen.blobUrl}
@@ -233,37 +279,45 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                             loading="lazy"
                           />
                         </div>
-                      ) : !isPdf ? (
+                      ) : (
                         <div className="aspect-square bg-gray-100 flex items-center justify-center">
                           <Image className="w-12 h-12 text-gray-300" />
                         </div>
-                      ) : null}
+                      )}
                       <div className="p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
-                            {isPdf ? pdfLabel : (typeLabels[gen.type] || gen.type)}
+                            {typeLabels[gen.type] || gen.type}
                           </span>
                           <span className="flex items-center gap-1 text-gray-500 text-xs">
                             <Calendar className="w-3 h-3" />
                             {new Date(gen.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        {isPdf && gen.blobUrl ? (
-                          <a
-                            href={gen.blobUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={pdfButtonClass}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            {isMaterialsSheet ? 'Materials Sheet' : 'Download PDF'}
-                          </a>
-                        ) : gen.prompt ? (
-                          <p className="text-sm text-gray-700 line-clamp-2">
-                            {gen.prompt.slice(0, 100)}
-                            {gen.prompt.length > 100 ? '...' : ''}
-                          </p>
-                        ) : null}
+                        {attachments.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {attachments.map((pdf) => {
+                              const rawUrl = pdf.blobUrl || '';
+                              const isMaterialsSheet = pdf.type === 'materialIcon' || /materials sheet/i.test(pdf.prompt || '');
+                              const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Download PDF';
+                              const pdfButtonClass = isMaterialsSheet
+                                ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
+                                : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors';
+
+                              return rawUrl ? (
+                                <a
+                                  key={pdf.id}
+                                  href={rawUrl}
+                                  download={isMaterialsSheet ? 'materials-sheet.pdf' : 'sustainability-briefing.pdf'}
+                                  className={pdfButtonClass}
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  {pdfLabel}
+                                </a>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

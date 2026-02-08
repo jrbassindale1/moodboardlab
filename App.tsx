@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
@@ -18,6 +18,49 @@ import type {
 } from './utils/sustainabilityBriefing';
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 
+const BRIEFING_CACHE_KEY = 'moodboard_sustainability_briefing_v1';
+const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
+
+type BriefingCache = {
+  materialsKey: string;
+  briefing: SustainabilityBriefingResponse;
+  payload: SustainabilityBriefingPayload;
+  savedAt: string;
+};
+
+type BoardCache = {
+  board: MaterialOption[];
+  savedAt: string;
+};
+
+const readBriefingCache = (): BriefingCache | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<BriefingCache>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed.materialsKey || !parsed.briefing || !parsed.payload) return null;
+    return parsed as BriefingCache;
+  } catch {
+    return null;
+  }
+};
+
+const readBoardCache = (): BoardCache | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(BOARD_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<BoardCache>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!Array.isArray(parsed.board)) return null;
+    return { board: parsed.board as MaterialOption[], savedAt: parsed.savedAt || '' };
+  } catch {
+    return null;
+  }
+};
+
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('concept');
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
@@ -29,8 +72,63 @@ const App: React.FC = () => {
   const [briefingMaterialsKey, setBriefingMaterialsKey] = useState<string | null>(null);
   const [briefingInvalidatedMessage, setBriefingInvalidatedMessage] = useState<string | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
+  const briefingCacheRef = useRef<BriefingCache | null>(null);
+  const boardCacheRestoredRef = useRef(false);
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
+
+  useEffect(() => {
+    briefingCacheRef.current = readBriefingCache();
+  }, []);
+
+  useEffect(() => {
+    if (boardCacheRestoredRef.current) return;
+    boardCacheRestoredRef.current = true;
+    const cached = readBoardCache();
+    if (!cached) return;
+    setSelectedMaterials((prev) => (prev.length ? prev : cached.board));
+  }, []);
+
+  useEffect(() => {
+    if (sustainabilityBriefing || briefingPayload) return;
+    if (!selectedMaterials.length) return;
+    const cached = briefingCacheRef.current;
+    if (!cached || cached.materialsKey !== materialsKey) return;
+    setSustainabilityBriefing(cached.briefing);
+    setBriefingPayload(cached.payload);
+    setBriefingMaterialsKey(cached.materialsKey);
+    setBriefingInvalidatedMessage(null);
+  }, [materialsKey, selectedMaterials.length, sustainabilityBriefing, briefingPayload]);
+
+  useEffect(() => {
+    if (!briefingMaterialsKey || !sustainabilityBriefing || !briefingPayload) return;
+    if (typeof window === 'undefined') return;
+    const cache: BriefingCache = {
+      materialsKey: briefingMaterialsKey,
+      briefing: sustainabilityBriefing,
+      payload: briefingPayload,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      window.localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify(cache));
+      briefingCacheRef.current = cache;
+    } catch {
+      // Ignore storage errors (quota, private mode, etc.)
+    }
+  }, [briefingMaterialsKey, sustainabilityBriefing, briefingPayload]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const cache: BoardCache = {
+      board: selectedMaterials,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      window.localStorage.setItem(BOARD_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // Ignore storage errors (quota, private mode, etc.)
+    }
+  }, [selectedMaterials]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -41,6 +139,14 @@ const App: React.FC = () => {
       setBriefingInvalidatedMessage(
         'Materials palette changed. Please create a new moodboard and sustainability briefing.'
       );
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.removeItem(BRIEFING_CACHE_KEY);
+        } catch {
+          // Ignore storage errors (quota, private mode, etc.)
+        }
+      }
+      briefingCacheRef.current = null;
     }
   }, [materialsKey, briefingMaterialsKey]);
 
