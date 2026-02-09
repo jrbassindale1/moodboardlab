@@ -72,6 +72,7 @@ const App: React.FC = () => {
   const [briefingMaterialsKey, setBriefingMaterialsKey] = useState<string | null>(null);
   const [briefingInvalidatedMessage, setBriefingInvalidatedMessage] = useState<string | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
 
@@ -149,6 +150,20 @@ const App: React.FC = () => {
       briefingCacheRef.current = null;
     }
   }, [materialsKey, briefingMaterialsKey]);
+
+  useEffect(() => {
+    if (!isHelpOpen || typeof window === 'undefined') return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsHelpOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isHelpOpen]);
 
   const renderPage = () => {
     switch(currentPage) {
@@ -239,6 +254,7 @@ const App: React.FC = () => {
             <h4 className="font-display font-bold uppercase tracking-widest text-lg">Moodboard Lab</h4>
             <div className="mt-3 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-widest text-gray-400">
               <button onClick={() => setCurrentPage('product')} className="hover:text-white transition-colors">Product</button>
+              <button onClick={() => setIsHelpOpen(true)} className="hover:text-white transition-colors">Help</button>
               <button onClick={() => setCurrentPage('privacy')} className="hover:text-white transition-colors">Privacy</button>
               <button onClick={() => setCurrentPage('terms')} className="hover:text-white transition-colors">Terms</button>
               <button onClick={() => setCurrentPage('contact')} className="hover:text-white transition-colors">Contact</button>
@@ -251,6 +267,76 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {isHelpOpen && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 py-8"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setIsHelpOpen(false);
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="help-modal-title"
+        >
+          <div className="w-full max-w-2xl bg-white text-gray-900 shadow-2xl border border-gray-200">
+            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <div>
+                <h2
+                  id="help-modal-title"
+                  className="font-display text-xl uppercase tracking-widest"
+                >
+                  Student Quick Guide
+                </h2>
+                <p className="mt-1 text-xs font-mono uppercase tracking-widest text-gray-500">
+                  Moodboard Lab
+                </p>
+              </div>
+              <button
+                onClick={() => setIsHelpOpen(false)}
+                className="text-xs font-mono uppercase tracking-widest text-gray-600 hover:text-black"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-6">
+              <div>
+                <h3 className="font-display uppercase tracking-widest text-sm mb-2">What You Can Do</h3>
+                <ul className="text-sm text-gray-700 font-sans space-y-2 list-disc list-inside">
+                  <li>Build a materials board by browsing categories and adding items.</li>
+                  <li>Generate a photorealistic moodboard render and download the image.</li>
+                  <li>Create a Sustainability Briefing and download the PDF.</li>
+                  <li>Download a Materials Sheet PDF for documentation or presentations.</li>
+                  <li>Apply your palette to a sketch/photo, then edit or upscale the render.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-display uppercase tracking-widest text-sm mb-2">Quick Steps</h3>
+                <ol className="text-sm text-gray-700 font-sans space-y-2 list-decimal list-inside">
+                  <li>Go to `Materials`, search or browse, then click `Add to Board`.</li>
+                  <li>Open `Moodboard Lab` and click `Create Moodboard`.</li>
+                  <li>In the Sustainability Briefing section, review the summary and download PDFs.</li>
+                  <li>Open `Apply`, upload a JPG/PNG, then `Render with Upload` and refine.</li>
+                </ol>
+              </div>
+
+              <div>
+                <h3 className="font-display uppercase tracking-widest text-sm mb-2">Important Notes</h3>
+                <ul className="text-sm text-gray-700 font-sans space-y-2 list-disc list-inside">
+                  <li>Sign in may be required to add materials or generate images.</li>
+                  <li>The `Apply` tab unlocks only after you create a moodboard.</li>
+                  <li>Generations are limited and reset on a schedule.</li>
+                  <li>
+                    AI-generated content must be used carefully. Verify materials, performance claims,
+                    and sustainability insights with reliable sources before using in real projects.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
