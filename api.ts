@@ -392,6 +392,16 @@ export async function savePdfAuth(
   },
   accessToken: string
 ) {
+  const normalizePdfBase64 = (value: string): string => {
+    if (!value) return value;
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('data:application/pdf')) return trimmed;
+    const marker = 'base64,';
+    const markerIndex = trimmed.indexOf(marker);
+    if (markerIndex === -1) return trimmed;
+    return trimmed.slice(markerIndex + marker.length);
+  };
+
   const API_BASE = getApiBase();
   const res = await fetchWithTimeout(
     `${API_BASE}/api/save-pdf`,
@@ -402,7 +412,7 @@ export async function savePdfAuth(
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        pdfBase64: payload.pdfDataUri,
+        pdfBase64: normalizePdfBase64(payload.pdfDataUri),
         pdfType: payload.pdfType,
         materials: payload.materials ?? {},
       }),

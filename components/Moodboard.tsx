@@ -12,9 +12,16 @@ import {
   LifecycleProfile,
   LifecycleStageKey,
 } from '../lifecycleProfiles';
-import { callGeminiImage, callGeminiText, saveGenerationAuth, savePdfAuth, generateSustainabilityBriefing } from '../api';
+import {
+  callGeminiImage,
+  callGeminiText,
+  checkQuota,
+  saveGenerationAuth,
+  savePdfAuth,
+  generateSustainabilityBriefing
+} from '../api';
 import { MaterialOption } from '../types';
-import { useAuth } from '../auth';
+import { useAuth, useUsage } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 
 // Sustainability report utilities
@@ -390,6 +397,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
+  const { refreshUsage } = useUsage();
 
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
@@ -423,6 +431,27 @@ const Moodboard: React.FC<MoodboardProps> = ({
     if (isAuthenticated) return true;
     setError('You need an account to create moodboards. Please sign in to continue.');
     return false;
+  };
+
+  const ensureQuotaForMoodboard = async () => {
+    if (!isAuthenticated) return false;
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setError('Please sign in to continue.');
+        return false;
+      }
+      const quota = await checkQuota(token);
+      if (!quota.canGenerate) {
+        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('Quota check failed:', err);
+      setError('Could not verify your remaining credits. Please try again.');
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -561,6 +590,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         materials: metadata,
         generationType: 'moodboard'
       }, token);
+      await refreshUsage();
     } catch (err) {
       console.error('Authenticated save failed:', err);
     }
@@ -896,6 +926,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Add materials to the moodboard first.');
       return;
     }
+    setError(null);
+    const canGenerate = await ensureQuotaForMoodboard();
+    if (!canGenerate) return;
     setIsCreatingMoodboard(true);
     setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
@@ -974,6 +1007,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Add text instructions to update the moodboard render.');
       return;
     }
+    const canGenerate = await ensureQuotaForMoodboard();
+    if (!canGenerate) return;
     setIsCreatingMoodboard(true);
     try {
       await runGemini('render', {

@@ -88,7 +88,10 @@ async function uploadPdfToBlob(
   await containerClient.createIfNotExists();
 
   // Convert base64 to buffer (handle data URI format)
-  const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+  const trimmedPdf = pdfBase64.trim();
+  const base64Data = trimmedPdf.includes('base64,')
+    ? trimmedPdf.split('base64,').pop() || ''
+    : trimmedPdf;
   const buffer = Buffer.from(base64Data, 'base64');
 
   // Upload blob
