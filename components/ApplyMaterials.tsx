@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageDown, Loader2, Wand2 } from 'lucide-react';
-import { callGeminiImage, saveGeneration, saveGenerationAuth, checkQuota } from '../api';
+import { callGeminiImage, saveGenerationAuth, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { useAuth, useUsage } from '../auth';
 import UsageDisplay from './UsageDisplay';
@@ -219,33 +219,25 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }))
     };
 
-    // Try authenticated save first, fall back to anonymous save
-    if (isAuthenticated) {
-      try {
-        const token = await getAccessToken();
-        if (token) {
-          await saveGenerationAuth({
-            prompt,
-            imageDataUri,
-            materials: metadata,
-            generationType: 'applyMaterials'
-          }, token);
-          return;
-        }
-      } catch (err) {
-        console.error('Authenticated save failed, trying anonymous save:', err);
-      }
+    if (!isAuthenticated) {
+      console.warn('Skipping save-generation: user not authenticated.');
+      return;
     }
 
-    // Fallback for anonymous users or if authenticated save failed
     try {
-      await saveGeneration({
+      const token = await getAccessToken();
+      if (!token) {
+        console.warn('Skipping save-generation: missing access token.');
+        return;
+      }
+      await saveGenerationAuth({
         prompt,
         imageDataUri,
-        materials: metadata
-      });
+        materials: metadata,
+        generationType: 'applyMaterials'
+      }, token);
     } catch (err) {
-      console.error('Failed to save generation to backend', err);
+      console.error('Authenticated save failed:', err);
     }
   };
 

@@ -11,7 +11,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
-import { validateToken } from './shared/validateToken';
+import { requireAuth, ValidatedUser } from './shared/validateToken';
 import { incrementUsage, saveGenerationRecord, GenerationType } from './shared/usageHelpers';
 import { getSasUrlForBlob } from './shared/blobSas';
 
@@ -87,23 +87,25 @@ export async function saveGeneration(
       };
     }
 
+    const authResult = await requireAuth(request);
+    if ('status' in authResult) {
+      return {
+        status: authResult.status,
+        headers,
+        body: authResult.body,
+      };
+    }
+
+    const user = authResult as ValidatedUser;
+    const userId = user.userId;
+    context.log(`Authenticated user: ${userId}`);
+
     // Upload to blob storage
     const blobUrl = await uploadToBlob(imageBase64, mimeType || 'image/png');
     const blobUrlWithSas = getSasUrlForBlob(blobUrl);
 
-    // Check for authenticated request
-    let userId = 'anon';
-    let isAuthenticated = false;
-
-    const validatedUser = await validateToken(request);
-    if (validatedUser) {
-      userId = validatedUser.userId;
-      isAuthenticated = true;
-      context.log(`Authenticated user: ${userId}`);
-    }
-
-    // For authenticated users, save to their history and increment usage
-    if (isAuthenticated && generationType) {
+    // Save to their history and increment usage when generation type is provided
+    if (generationType) {
       await saveGenerationRecord(
         userId,
         generationType,
@@ -121,7 +123,7 @@ export async function saveGeneration(
       body: JSON.stringify({
         success: true,
         blobUrl: blobUrlWithSas,
-        userId: isAuthenticated ? userId : undefined,
+        userId,
       }),
     };
   } catch (error) {

@@ -23,7 +23,7 @@ interface UsageContextType {
   isLoading: boolean;
   refreshUsage: () => Promise<void>;
   canGenerate: boolean;
-  incrementLocalUsage: () => void;
+  incrementLocalUsage: (count?: number) => void;
   isAnonymous: boolean;
 }
 
@@ -101,9 +101,10 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   }, [isAuthenticated, authLoading, refreshUsage]);
 
   // Increment local anonymous usage
-  const incrementLocalUsage = useCallback(() => {
+  const incrementLocalUsage = useCallback((count = 1) => {
     if (!isAuthenticated) {
-      const newCount = anonymousCount + 1;
+      const incrementBy = Number.isFinite(count) ? Math.max(1, Math.round(count)) : 1;
+      const newCount = anonymousCount + incrementBy;
       setAnonymousCount(newCount);
       setAnonymousQuota(newCount);
     }

@@ -4,12 +4,12 @@ import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
-import { callGeminiText } from '../api';
+import { callGeminiText, checkQuota, consumeCredits } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconId } from '../utils/materialIconMapping';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
-import { useAuth } from '../auth';
+import { useAuth, useUsage } from '../auth';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -84,7 +84,8 @@ const downscaleImage = (
   });
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, getAccessToken } = useAuth();
+  const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
   const addDisabled = !isAuthenticated;
   const boardRef = useRef<MaterialOption[]>(board);
   const hasScrolledToTop = useRef(false);
@@ -557,11 +558,35 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     handlePhotoUpload(files);
   };
 
+  const DETECTION_CREDIT_COST = 2;
+
   const startMaterialDetection = async () => {
     if (!detectionImage) return;
+    setDetectionError(null);
+
+    if (isAuthenticated) {
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          setDetectionError('Please sign in to continue.');
+          return;
+        }
+        const quota = await checkQuota(token);
+        if (quota.remaining < DETECTION_CREDIT_COST) {
+          setDetectionError('Not enough credits. This action costs 2 credits.');
+          return;
+        }
+      } catch (err) {
+        console.error('Quota check failed:', err);
+        setDetectionError('Could not verify your remaining credits. Please try again.');
+        return;
+      }
+    } else if (remaining < DETECTION_CREDIT_COST) {
+      setDetectionError('Not enough credits. This action costs 2 credits.');
+      return;
+    }
 
     setIsDetecting(true);
-    setDetectionError(null);
 
     const prompt = `Analyze this image and identify all architectural materials visible. For each material, provide:
 1. name: The specific material name (e.g., "Oak Timber Flooring", "Polished Concrete")
@@ -621,6 +646,24 @@ IMPORTANT:
       textResult = textResult.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(textResult);
       const materials = parsed.materials || [];
+
+      if (isAuthenticated) {
+        try {
+          const token = await getAccessToken();
+          if (token) {
+            await consumeCredits(token, {
+              generationType: 'materialIcon',
+              credits: DETECTION_CREDIT_COST,
+              reason: 'material-detection',
+            });
+            await refreshUsage();
+          }
+        } catch (err) {
+          console.error('Failed to consume credits:', err);
+        }
+      } else if (isAnonymous) {
+        incrementLocalUsage(DETECTION_CREDIT_COST);
+      }
 
       if (materials.length === 0) {
         setDetectionError('No materials detected in the image. Try a different photo.');

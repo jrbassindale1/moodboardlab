@@ -5,6 +5,10 @@
  *
  * Required environment variables:
  * - CLERK_SECRET_KEY: Your Clerk secret key (for verifying tokens)
+ *
+ * Optional (recommended) environment variables:
+ * - CLERK_ISSUER: Expected JWT issuer (iss)
+ * - CLERK_AUDIENCE: Expected JWT audience (aud), comma-separated for multiple
  */
 
 import { HttpRequest } from '@azure/functions';
@@ -48,6 +52,30 @@ function getSigningKey(header: jwt.JwtHeader): Promise<string> {
   });
 }
 
+function getVerifyOptions(): jwt.VerifyOptions {
+  const issuer = process.env.CLERK_ISSUER || process.env.CLERK_JWT_ISSUER;
+  const audienceRaw = process.env.CLERK_AUDIENCE || process.env.CLERK_JWT_AUDIENCE;
+  const audiences = audienceRaw
+    ? audienceRaw.split(',').map((value) => value.trim()).filter(Boolean)
+    : [];
+
+  const options: jwt.VerifyOptions = {
+    algorithms: ['RS256'],
+  };
+
+  if (issuer) {
+    options.issuer = issuer;
+  }
+
+  if (audiences.length === 1) {
+    options.audience = audiences[0];
+  } else if (audiences.length > 1) {
+    options.audience = audiences;
+  }
+
+  return options;
+}
+
 export interface ValidatedUser {
   userId: string;
   email: string;
@@ -80,9 +108,7 @@ export async function validateToken(req: HttpRequest): Promise<ValidatedUser | n
     const signingKey = await getSigningKey(decoded.header);
 
     // Verify token
-    const verified = jwt.verify(token, signingKey, {
-      algorithms: ['RS256'],
-    }) as jwt.JwtPayload;
+    const verified = jwt.verify(token, signingKey, getVerifyOptions()) as jwt.JwtPayload;
 
     // Extract user info from Clerk token claims
     // Clerk tokens have 'sub' as user ID and may have additional claims

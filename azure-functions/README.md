@@ -61,6 +61,12 @@ Add this for Clerk token validation:
 CLERK_JWKS_URL=https://<your-clerk-instance>.clerk.accounts.dev/.well-known/jwks.json
 ```
 
+Optional (recommended) for stricter token validation:
+```
+CLERK_ISSUER=https://<your-clerk-instance>.clerk.accounts.dev
+CLERK_AUDIENCE=<your-expected-audience>
+```
+
 ### Frontend (.env.local)
 ```
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxx

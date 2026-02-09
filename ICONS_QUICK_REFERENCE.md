@@ -156,7 +156,7 @@ du -sh public/icons
 ### Generation failed?
 
 1. Check backend supports `mode: "image"`
-2. Verify `GEMINI_API_KEY` is set
+2. Verify `GEMINI_API_KEY` is set in Function App settings (server-side only)
 3. Check console for errors
 4. Try generating one icon manually
 

@@ -24,7 +24,8 @@ This system automatically generates small, representative icons for every materi
 
 ## Backend API Updates Required
 
-Your Azure Functions backend needs to support image generation. Update your `generate-moodboard` function to handle the new `image` mode:
+Your Azure Functions backend needs to support image generation. Update your `generate-moodboard` function to handle the new `image` mode.
+`GEMINI_API_KEY` must be configured server-side in Function App settings only. Do not expose it in the frontend.
 
 ### Expected Request Format
 
@@ -225,7 +226,7 @@ The MaterialIconManager component provides buttons to:
 ### Icons not generating?
 
 1. Check browser console for errors
-2. Verify `GEMINI_API_KEY` is set in Azure Functions app settings
+2. Verify `GEMINI_API_KEY` is set in Azure Functions app settings (server-side only)
 3. Check that your backend supports the `image` mode
 4. Verify API rate limits haven't been hit
 

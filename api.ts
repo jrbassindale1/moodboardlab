@@ -238,6 +238,43 @@ export async function checkQuota(accessToken: string): Promise<QuotaResponse> {
 }
 
 /**
+ * Consume usage credits without saving a generation record
+ */
+export async function consumeCredits(
+  accessToken: string,
+  payload: {
+    generationType: GenerationType;
+    credits: number;
+    reason?: string;
+  }
+): Promise<{
+  success: boolean;
+  remaining: number;
+  limit: number;
+  used: number;
+  yearMonth?: string;
+}> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/consume-credits`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    throw new Error('Failed to consume credits');
+  }
+  return res.json();
+}
+
+/**
  * Get user's generation history
  */
 export async function getGenerations(

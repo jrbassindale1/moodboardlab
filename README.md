@@ -15,6 +15,6 @@ View your app in AI Studio: https://ai.studio/apps/drive/1uRA61_R6tcEbgBgx3XIO5A
 
 1. Install dependencies:
    `npm install`
-2. Start the Azure Functions backend (locally via `npm start` in `../moodboardlab-functions` or the deployed Function App) with `GEMINI_API_KEY` set in app settings.
+2. Start the Azure Functions backend (locally via `npm start` in `../moodboardlab-functions` or the deployed Function App) with `GEMINI_API_KEY` set in app settings (server-side only; do not expose this in the frontend).
 3. Run the app:
    `npm run dev`

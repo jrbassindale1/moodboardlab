@@ -12,7 +12,7 @@ import {
   LifecycleProfile,
   LifecycleStageKey,
 } from '../lifecycleProfiles';
-import { callGeminiImage, callGeminiText, saveGeneration, saveGenerationAuth, savePdfAuth, generateSustainabilityBriefing } from '../api';
+import { callGeminiImage, callGeminiText, saveGenerationAuth, savePdfAuth, generateSustainabilityBriefing } from '../api';
 import { MaterialOption } from '../types';
 import { useAuth } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
@@ -544,33 +544,25 @@ const Moodboard: React.FC<MoodboardProps> = ({
       board
     };
 
-    // Try authenticated save first, fall back to anonymous save
-    if (isAuthenticated) {
-      try {
-        const token = await getAccessToken();
-        if (token) {
-          await saveGenerationAuth({
-            prompt,
-            imageDataUri,
-            materials: metadata,
-            generationType: 'moodboard'
-          }, token);
-          return;
-        }
-      } catch (err) {
-        console.error('Authenticated save failed, trying anonymous save:', err);
-      }
+    if (!isAuthenticated) {
+      console.warn('Skipping save-generation: user not authenticated.');
+      return;
     }
 
-    // Fallback for anonymous users or if authenticated save failed
     try {
-      await saveGeneration({
+      const token = await getAccessToken();
+      if (!token) {
+        console.warn('Skipping save-generation: missing access token.');
+        return;
+      }
+      await saveGenerationAuth({
         prompt,
         imageDataUri,
-        materials: metadata
-      });
+        materials: metadata,
+        generationType: 'moodboard'
+      }, token);
     } catch (err) {
-      console.error('Failed to save generation to backend', err);
+      console.error('Authenticated save failed:', err);
     }
   };
 
@@ -1384,8 +1376,6 @@ ${JSON.stringify(proseContext)}`;
       try {
         // Determine aspect ratio based on context
         const aspectRatio = '1:1';
-        console.log('[Aspect Ratio]', { source: 'moodboard generation', fixed: '1:1' });
-
         const payload = {
           contents: [
             {
@@ -1408,16 +1398,7 @@ ${JSON.stringify(proseContext)}`;
             imageSize: '1K'
           }
         };
-        console.log('[Gemini prompt]', {
-          mode,
-          promptType: isEditingRender ? 'edit-render' : 'moodboard',
-          prompt
-        });
         const data = await callGeminiImage(payload);
-        console.log('[Gemini response]', {
-          mode: isEditingRender ? 'edit-render' : 'moodboard',
-          data
-        });
         let img: string | null = null;
         let mime: string | null = null;
         const candidates = data?.candidates || [];
@@ -1469,19 +1450,10 @@ ${JSON.stringify(proseContext)}`;
         : mode === 'report-prose'
         ? 'report-prose'
         : 'sustainability';
-    console.log('[Gemini prompt]', { mode, promptType, prompt });
-    if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review' || mode === 'report-prose') {
-      console.log('[Gemini prompt text]', prompt);
-    }
-
     try {
       const data = await callGeminiText(payload, { timeoutMs: options?.requestTimeoutMs });
-      console.log('[Gemini response]', { mode, data });
       const text = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n');
       if (!text) throw new Error('Gemini did not return text.');
-      if (mode === 'sustainability' || mode === 'summary' || mode === 'summary-review' || mode === 'report-prose') {
-        console.log('[Gemini response text]', text);
-      }
       const cleaned = text.replace(/```json|```/g, '').trim();
       const retryAttempt = options?.retryAttempt || 0;
       const canRetry = retryAttempt < 1;

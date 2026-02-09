@@ -13,6 +13,7 @@ import {
   UsageDocument,
   GenerationDocument,
   isCosmosNotFound,
+  isCosmosConflict,
 } from './cosmosClient';
 
 export type GenerationType =
@@ -79,8 +80,10 @@ export async function canUserGenerate(userId: string): Promise<{
  */
 export async function incrementUsage(
   userId: string,
-  generationType: GenerationType
+  generationType: GenerationType,
+  count = 1
 ): Promise<void> {
+  const incrementBy = Number.isFinite(count) ? Math.max(1, Math.round(count)) : 1;
   const yearMonth = getCurrentYearMonth();
   const documentId = getUsageDocumentId(userId, yearMonth);
   const usageContainer = getContainer('usage');
@@ -88,26 +91,25 @@ export async function incrementUsage(
   const now = new Date().toISOString();
 
   try {
-    // Try to read existing document (partition key is userId)
-    const { resource: existing } = await usageContainer
-      .item(documentId, userId)
-      .read<UsageDocument>();
-
-    if (existing) {
-      // Update existing document
-      const updatedCounts = {
-        ...existing.generationCounts,
-        [generationType]: (existing.generationCounts[generationType] || 0) + 1,
-      };
-
-      await usageContainer.item(documentId, userId).replace({
-        ...existing,
-        generationCounts: updatedCounts,
-        totalGenerations: (existing.totalGenerations || 0) + 1,
-        lastUpdatedAt: now,
-      });
-      return;
-    }
+    // Atomic patch when the document already exists
+    await usageContainer.item(documentId, userId).patch([
+      {
+        op: 'incr',
+        path: `/generationCounts/${generationType}`,
+        value: incrementBy,
+      },
+      {
+        op: 'incr',
+        path: '/totalGenerations',
+        value: incrementBy,
+      },
+      {
+        op: 'set',
+        path: '/lastUpdatedAt',
+        value: now,
+      },
+    ]);
+    return;
   } catch (error: unknown) {
     if (!isCosmosNotFound(error)) {
       throw error;
@@ -120,17 +122,41 @@ export async function incrementUsage(
     userId,
     yearMonth,
     generationCounts: {
-      moodboard: generationType === 'moodboard' ? 1 : 0,
-      applyMaterials: generationType === 'applyMaterials' ? 1 : 0,
-      upscale: generationType === 'upscale' ? 1 : 0,
-      materialIcon: generationType === 'materialIcon' ? 1 : 0,
-      sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? 1 : 0,
+      moodboard: generationType === 'moodboard' ? incrementBy : 0,
+      applyMaterials: generationType === 'applyMaterials' ? incrementBy : 0,
+      upscale: generationType === 'upscale' ? incrementBy : 0,
+      materialIcon: generationType === 'materialIcon' ? incrementBy : 0,
+      sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? incrementBy : 0,
     },
-    totalGenerations: 1,
+    totalGenerations: incrementBy,
     lastUpdatedAt: now,
   };
 
-  await usageContainer.items.create(newUsage);
+  try {
+    await usageContainer.items.create(newUsage);
+  } catch (error: unknown) {
+    if (!isCosmosConflict(error)) {
+      throw error;
+    }
+    // Another request created the document; retry the atomic patch.
+    await usageContainer.item(documentId, userId).patch([
+      {
+        op: 'incr',
+        path: `/generationCounts/${generationType}`,
+        value: incrementBy,
+      },
+      {
+        op: 'incr',
+        path: '/totalGenerations',
+        value: incrementBy,
+      },
+      {
+        op: 'set',
+        path: '/lastUpdatedAt',
+        value: now,
+      },
+    ]);
+  }
 }
 
 /**

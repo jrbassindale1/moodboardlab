@@ -4,7 +4,8 @@
 
 ### Step 1: Update Your Backend (Required)
 
-Your Azure Function needs to support image generation. Add this to your `generate-moodboard` function:
+Your Azure Function needs to support image generation. Add this to your `generate-moodboard` function.
+`GEMINI_API_KEY` should be set in Function App settings only (server-side). Do not add it to the frontend.
 
 ```typescript
 // In your Azure Function
@@ -135,7 +136,7 @@ return (
 ## 📋 Checklist
 
 - [ ] Backend updated to support `mode: "image"`
-- [ ] `GEMINI_API_KEY` set in Azure Function App Settings
+- [ ] `GEMINI_API_KEY` set in Azure Function App Settings (server-side only)
 - [ ] Backend deployed to Azure
 - [ ] Frontend app running (`npm run dev`)
 - [ ] MaterialIconManager visible in bottom-right corner

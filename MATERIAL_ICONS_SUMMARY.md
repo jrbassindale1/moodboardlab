@@ -257,7 +257,7 @@ Tips for better icons:
 
 **Check:**
 1. Browser console for errors
-2. `GEMINI_API_KEY` set in Azure Functions
+2. `GEMINI_API_KEY` set in Azure Functions (server-side only)
 3. Backend supports `mode: "image"`
 4. Not hitting API rate limits
 

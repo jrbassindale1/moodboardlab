@@ -111,3 +111,17 @@ export function isCosmosNotFound(error: unknown): boolean {
     err.body?.code === 'NotFound'
   );
 }
+
+export function isCosmosConflict(error: unknown): boolean {
+  const err = error as {
+    code?: number | string;
+    statusCode?: number;
+    body?: { code?: string };
+  };
+  return (
+    err.code === 409 ||
+    err.code === 'Conflict' ||
+    err.statusCode === 409 ||
+    err.body?.code === 'Conflict'
+  );
+}

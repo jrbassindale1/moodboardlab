@@ -17,6 +17,7 @@ A **production-ready material icon system** that:
 ### Step 1: Update Your Backend
 
 Add image generation support to your Azure Function.
+`GEMINI_API_KEY` must be set in the Function App settings only (server-side). Do not expose it in the frontend.
 
 **File: `moodboardlab-functions/src/functions/generate-moodboard.ts`**
 
@@ -355,7 +356,7 @@ curl -X POST https://your-function-app.azurewebsites.net/api/generate-moodboard 
   -d '{"mode":"image","payload":{"prompt":"test brick","aspectRatio":"1:1","numberOfImages":1}}'
 
 # 2. Environment variable set
-# Check Azure Portal → Function App → Configuration → GEMINI_API_KEY
+# Check Azure Portal → Function App → Configuration → GEMINI_API_KEY (server-side only)
 
 # 3. Node modules installed
 npm install
@@ -407,7 +408,7 @@ Check `MaterialIconDisplay.tsx` has the fallback div.
 Before going live:
 
 - [ ] Backend supports image generation (`mode: "image"`)
-- [ ] `GEMINI_API_KEY` set in Azure Function settings
+- [ ] `GEMINI_API_KEY` set in Azure Function settings (server-side only)
 - [ ] Backend deployed and tested
 - [ ] Icons generated (`npm run generate-icons`)
 - [ ] `/public/icons/` contains 200+ PNG files
