@@ -583,7 +583,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                   />
                 </div>
                 <p className="font-sans text-sm text-gray-600">
-                  Drag and drop an image to apply your own base on the next render.
+                  Drag and drop an image to apply your own base on the next render. Line drawings and sketches will give the best results. 
                 </p>
                 <div className="space-y-2">
                   <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600">

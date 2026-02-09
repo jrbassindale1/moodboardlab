@@ -321,7 +321,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                             {attachments.map((pdf) => {
                               const rawUrl = pdf.blobUrl || '';
                               const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
-                              const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Download PDF';
+                              const pdfLabel = isMaterialsSheet
+                                ? 'Materials Sheet'
+                                : 'Download Sustainability Briefing';
                               const pdfButtonClass = isMaterialsSheet
                                 ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
                                 : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors';
