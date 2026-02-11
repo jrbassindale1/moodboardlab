@@ -1844,8 +1844,7 @@ ${JSON.stringify(proseContext)}`;
               Moodboard Lab
             </h1>
             <p className="font-sans text-gray-600 max-w-2xl mt-3">
-              Review the materials you've already selected, then let AI assemble a material key plus UK-focused
-              sustainability analysis.
+              Review the materials you've selected, then let Ai (Nano Banana) assemble a moodboard plus UK-focused sustainability briefing.
             </p>
             <div className="flex flex-wrap gap-3 mt-4">
               <button

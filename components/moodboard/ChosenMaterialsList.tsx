@@ -20,6 +20,13 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
   onRemove,
   onToggleExclude,
 }) => {
+  const helperCopy =
+    board.length < 5
+      ? 'Adding more materials will help Ai produce a better moodboard.'
+      : board.length > 12
+      ? 'Fewer materials will help Ai produce a better moodboard.'
+      : '';
+
   return (
     <>
       <div className="flex items-center gap-3 flex-wrap">
@@ -36,7 +43,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
           )}
         </button>
         <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-          {board.length} item{board.length === 1 ? '' : 's'} selected
+          {board.length} material{board.length === 1 ? '' : 's'} selected
         </span>
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -47,6 +54,9 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
           </button>
         </div>
       </div>
+      {helperCopy ? (
+        <p className="mt-2 font-sans text-xs text-gray-500">{helperCopy}</p>
+      ) : null}
 
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
