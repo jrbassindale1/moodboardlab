@@ -34,7 +34,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
             </h1>
             <p className="font-sans text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed">
               From material intent to convincing visuals in minutes. Curate a material palette, get instant sustainability insight, and generate photorealistic
-              moodboard renders. Upload a reference image to see your palette applied then use simple prompts for deeper rendering.
+              moodboard renders. Upload a reference image to see your palette applied then use simple prompts for deeper rendering. For a limited time sign-up and use for FREE!
             </p>
             <div className="flex flex-wrap gap-4">
               <button
@@ -42,7 +42,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
                 className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
-                <span className="font-mono text-xs uppercase tracking-widest">Start Creating</span>
+                <span className="font-mono text-xs uppercase tracking-widest">Start Curating and Creating Now</span>
               </button>
             </div>
           </div>
