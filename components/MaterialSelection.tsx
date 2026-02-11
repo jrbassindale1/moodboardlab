@@ -710,7 +710,7 @@ IMPORTANT:
                     onClick={() => toggleSection(section.id)}
                     aria-expanded={Boolean(openSections[section.id])}
                     aria-controls={`category-section-${section.id}`}
-                    className="w-full flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500 mt-4 mb-2 hover:text-gray-700"
+                    className="w-full flex items-center justify-between gap-2 font-mono text-sm uppercase tracking-widest text-gray-700 mt-4 mb-2 hover:text-gray-800"
                   >
                     <span>{section.label}</span>
                     <ChevronRight
@@ -745,8 +745,8 @@ IMPORTANT:
                                 }, 400);
                               }
                             }}
-                            className={`block w-full text-left px-2 py-1.5 text-sm font-sans hover:underline ${
-                              selectedCategory === path ? 'font-medium' : ''
+                            className={`block w-full text-left px-2 py-1.5 text-xs font-sans text-gray-500 hover:text-gray-700 hover:underline ${
+                              selectedCategory === path ? 'font-medium text-gray-700' : ''
                             }`}
                           >
                             {child.label}
