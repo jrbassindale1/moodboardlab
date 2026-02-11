@@ -9,6 +9,7 @@ interface ChosenMaterialsListProps {
   setMaterialsAccordionOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onNavigate?: (page: string) => void;
   onRemove: (idx: number) => void;
+  onToggleExclude: (idx: number, value: boolean) => void;
 }
 
 const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
@@ -17,6 +18,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
   setMaterialsAccordionOpen,
   onNavigate,
   onRemove,
+  onToggleExclude,
 }) => {
   return (
     <>
@@ -131,6 +133,16 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                           {item.description}
                         </p>
                       )}
+                      <label className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.excludeFromMoodboardRender)}
+                          onChange={(e) => onToggleExclude(idx, e.target.checked)}
+                          className="h-3 w-3 border-gray-300 text-gray-900"
+                          aria-label={`Exclude ${item.name} from moodboard image`}
+                        />
+                        Exclude from Moodboard Image
+                      </label>
                     </div>
 
                     {/* Remove button */}

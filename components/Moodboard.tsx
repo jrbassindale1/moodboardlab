@@ -225,7 +225,8 @@ const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
     a.category === b.category &&
     a.colorLabel === b.colorLabel &&
     a.colorVariantId === b.colorVariantId &&
-    a.customImage === b.customImage);
+    a.customImage === b.customImage &&
+    a.excludeFromMoodboardRender === b.excludeFromMoodboardRender);
 
 const areBoardsEquivalent = (a: MaterialOption[], b: MaterialOption[]) =>
   a.length === b.length && a.every((item, index) => areBoardItemsEquivalent(item, b[index]));
@@ -507,9 +508,22 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
   };
 
+  const handleToggleExclude = (idxToToggle: number, value: boolean) => {
+    setBoard((prev) =>
+      prev.map((item, idx) =>
+        idx === idxToToggle ? { ...item, excludeFromMoodboardRender: value } : item
+      )
+    );
+  };
+
+  const renderMaterials = useMemo(
+    () => board.filter((item) => !item.excludeFromMoodboardRender),
+    [board]
+  );
+
   const summaryText = useMemo(() => {
-    if (!board.length) return 'No materials selected yet.';
-    const grouped = board.reduce<Record<string, MaterialOption[]>>((acc, mat) => {
+    if (!renderMaterials.length) return 'No materials selected yet.';
+    const grouped = renderMaterials.reduce<Record<string, MaterialOption[]>>((acc, mat) => {
       acc[mat.category] = acc[mat.category] || [];
       acc[mat.category].push(mat);
       return acc;
@@ -518,7 +532,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
     );
     return lines.join('\n');
-  }, [board]);
+  }, [renderMaterials]);
   const sustainabilityPayload = useMemo(() => buildSustainabilityPayload(board), [board]);
 
   const moodboardRenderUrl = moodboardRenderUrlProp ?? moodboardRenderUrlState;
@@ -1039,12 +1053,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Add materials to the moodboard first.');
       return false;
     }
+    if (mode === 'render' && renderMaterials.length === 0) {
+      setError('All materials are excluded from the moodboard image. Uncheck at least one material.');
+      return false;
+    }
     setStatus(mode);
     if (!options?.retryAttempt) setError(null);
 
     // Group materials by category for better AI understanding
+    const materialsForPrompt = mode === 'render' ? renderMaterials : board;
     const materialsByCategory: Record<string, MaterialOption[]> = {};
-    board.forEach((item) => {
+    materialsForPrompt.forEach((item) => {
       if (!materialsByCategory[item.category]) {
         materialsByCategory[item.category] = [];
       }
@@ -1853,6 +1872,7 @@ ${JSON.stringify(proseContext)}`;
               setMaterialsAccordionOpen={setMaterialsAccordionOpen}
               onNavigate={onNavigate}
               onRemove={handleRemove}
+              onToggleExclude={handleToggleExclude}
             />
 
             {board.length > 0 && (

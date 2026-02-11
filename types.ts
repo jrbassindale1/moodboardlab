@@ -118,6 +118,7 @@ export interface MaterialOption {
   colorVariantId?: string; // ID for colored variant (e.g., 'steel-yellow') used to load colored icons
   colorLabel?: string; // Label for the color variant (e.g., 'Yellow')
   coloredIconBlobUrl?: string; // Azure Blob Storage URL for colored icon (server-side storage)
+  excludeFromMoodboardRender?: boolean; // Exclude from moodboard image render
   // Material classification attributes
   materialType?: MaterialType; // Base material composition (e.g., metal, timber, composite)
   materialForm?: MaterialForm[]; // Physical forms available (e.g., sheet, board, tube)
