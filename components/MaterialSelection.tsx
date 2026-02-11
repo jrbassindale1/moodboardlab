@@ -86,7 +86,6 @@ const downscaleImage = (
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
-  const addDisabled = !isAuthenticated;
   const boardRef = useRef<MaterialOption[]>(board);
   const hasScrolledToTop = useRef(false);
   const [isSmallScreen] = useState(() => {
@@ -113,8 +112,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
-  const [sustainabilityAuthNoticeId, setSustainabilityAuthNoticeId] = useState<string | null>(null);
-  const authNoticeTimeoutRef = useRef<number | null>(null);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
@@ -127,28 +124,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     hasScrolledToTop.current = true;
   }, [isSmallScreen]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setSustainabilityMaterial(null);
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => () => {
-    if (authNoticeTimeoutRef.current) {
-      window.clearTimeout(authNoticeTimeoutRef.current);
-    }
-  }, []);
-
-  const showSustainabilityAuthNotice = (materialId: string) => {
-    setSustainabilityAuthNoticeId(materialId);
-    if (authNoticeTimeoutRef.current) {
-      window.clearTimeout(authNoticeTimeoutRef.current);
-    }
-    authNoticeTimeoutRef.current = window.setTimeout(() => {
-      setSustainabilityAuthNoticeId(null);
-    }, 2400);
-  };
 
   useEffect(() => {
     if (!selectedCategory || !selectedCategory.startsWith('Custom>')) return;
@@ -379,9 +354,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     customization?: { tone?: string; label?: string },
     skipModal?: boolean
   ) => {
-    if (!isAuthenticated) {
-      return;
-    }
     // If no customization provided and not skipping modal, just show modal (don't add to board yet)
     if (!customization && !skipModal) {
       setRecentlyAdded(material);
@@ -457,9 +429,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
 
   const handleCreateCustomMaterial = () => {
-    if (!isAuthenticated) {
-      return;
-    }
     if (!customMaterialName.trim()) {
       alert('Please enter a material name');
       return;
@@ -860,11 +829,6 @@ IMPORTANT:
 
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
-            {addDisabled && (
-              <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] font-mono uppercase tracking-widest text-amber-800">
-                Please log in or sign up to add materials to your board.
-              </div>
-            )}
             {/* Page title and sort - only show when category is selected */}
             {selectedCategory && (
               <>
@@ -1071,12 +1035,10 @@ IMPORTANT:
                               setDetectedMaterials([]);
                               setSelectedMaterialIds(new Set());
                             }}
-                            disabled={addDisabled || selectedMaterialIds.size === 0}
-                            className={`flex-1 py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                              addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
-                            }`}
+                            disabled={selectedMaterialIds.size === 0}
+                            className="flex-1 py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-arch-black text-white hover:bg-gray-900"
                           >
-                            {addDisabled ? 'Login to add' : 'Add Selected to Board'}
+                            Add Selected to Board
                           </button>
                         </div>
                       </div>
@@ -1132,12 +1094,9 @@ IMPORTANT:
                     {/* Create Button */}
                     <button
                       onClick={handleCreateCustomMaterial}
-                      disabled={addDisabled}
-                      className={`w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${
-                        addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
-                      }`}
+                      className="w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
                     >
-                      {addDisabled ? 'Login to add' : 'Create & Add to Board'}
+                      Create & Add to Board
                     </button>
                   </div>
                 )}
@@ -1255,40 +1214,26 @@ IMPORTANT:
                           >
                             {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
                           </span>
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!isAuthenticated) {
-                                  showSustainabilityAuthNotice(mat.id);
-                                  return;
-                                }
-                                const fact = buildMaterialFact(mat);
-                                setSustainabilityMaterial({ material: mat, fact });
-                              }}
-                              className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
-                              title="Click to view material sustainability credentials"
-                            >
-                              <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
-                            </button>
-                            {!isAuthenticated && sustainabilityAuthNoticeId === mat.id && (
-                              <div className="absolute right-0 top-full mt-2 w-56 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-mono uppercase tracking-widest text-amber-800 shadow-sm">
-                                You need to be logged in to see material sustainability data.
-                              </div>
-                            )}
-                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const fact = buildMaterialFact(mat);
+                              setSustainabilityMaterial({ material: mat, fact });
+                            }}
+                            className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
+                            title="Click to view material sustainability credentials"
+                          >
+                            <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
+                          </button>
                         </div>
                       )}
 
                       {/* Add to board button */}
                       <button
                         onClick={() => handleAdd(mat)}
-                        disabled={addDisabled}
-                        className={`w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${
-                          addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
-                        }`}
+                        className="w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
                       >
-                        {addDisabled ? 'Login to add' : 'Add to board'}
+                        Add to board
                       </button>
                     </article>
                     );
@@ -1455,12 +1400,9 @@ IMPORTANT:
                     boardRef.current = nextBoard;
                     setRecentlyAdded(null);
                   }}
-                  disabled={addDisabled}
-                  className={`flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors disabled:cursor-not-allowed ${
-                    addDisabled ? 'bg-gray-200 text-gray-500' : 'bg-arch-black text-white hover:bg-gray-900'
-                  }`}
+                  className="flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
                 >
-                  {addDisabled ? 'Login to add' : 'Add to Board'}
+                  Add to Board
                 </button>
               )}
               <button
