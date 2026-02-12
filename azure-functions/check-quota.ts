@@ -16,6 +16,7 @@ import {
   FREE_MONTHLY_LIMIT,
   UsageDocument,
   isCosmosNotFound,
+  isAdminUser,
 } from './shared/cosmosClient';
 
 export async function checkQuota(
@@ -37,6 +38,22 @@ export async function checkQuota(
   const user = authResult as ValidatedUser;
   const yearMonth = getCurrentYearMonth();
   const documentId = getUsageDocumentId(user.userId, yearMonth);
+
+  // Admin users get unlimited credits
+  if (isAdminUser(user.email)) {
+    return {
+      status: 200,
+      body: JSON.stringify({
+        canGenerate: true,
+        remaining: 999999,
+        limit: 999999,
+        used: 0,
+        yearMonth,
+        isAdmin: true,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    };
+  }
 
   try {
     const usageContainer = getContainer('usage');

@@ -16,6 +16,7 @@ import {
   FREE_MONTHLY_LIMIT,
   UsageDocument,
   isCosmosNotFound,
+  isAdminUser,
 } from './shared/cosmosClient';
 import { incrementUsage, GenerationType } from './shared/usageHelpers';
 
@@ -77,7 +78,9 @@ export async function consumeCredits(
     }
 
     const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
-    if (remaining < credits) {
+    const userIsAdmin = isAdminUser(user.email);
+
+    if (!userIsAdmin && remaining < credits) {
       return {
         status: 429,
         headers,

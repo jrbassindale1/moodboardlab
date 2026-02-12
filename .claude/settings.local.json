@@ -16,7 +16,9 @@
       "Bash(npm run optimize-icons:*)",
       "Bash(npm install:*)",
       "Bash(node scripts/generate-lifecycle-insights.mjs:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)"
     ]
   }
 }

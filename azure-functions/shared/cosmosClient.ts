@@ -98,6 +98,15 @@ export function getUsageDocumentId(userId: string, yearMonth?: string): string {
 
 export const FREE_MONTHLY_LIMIT = 10;
 
+// Admin users with unlimited credits
+export const ADMIN_EMAILS: string[] = [
+  'jrbassindale@yahoo.co.uk',
+];
+
+export function isAdminUser(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export function isCosmosNotFound(error: unknown): boolean {
   const err = error as {
     code?: number | string;
