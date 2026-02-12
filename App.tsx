@@ -199,6 +199,7 @@ const App: React.FC = () => {
           <ApplyMaterials
             onNavigate={setCurrentPage}
             board={selectedMaterials}
+            onBoardChange={setSelectedMaterials}
             moodboardRenderUrl={moodboardRenderUrl}
             appliedRenderUrl={appliedRenderUrl}
             onAppliedRenderUrlChange={setAppliedRenderUrl}

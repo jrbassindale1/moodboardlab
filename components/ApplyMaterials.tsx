@@ -8,6 +8,7 @@ import UsageDisplay from './UsageDisplay';
 interface ApplyMaterialsProps {
   onNavigate?: (page: string) => void;
   board: MaterialOption[];
+  onBoardChange?: (items: MaterialOption[]) => void;
   moodboardRenderUrl: string | null;
   appliedRenderUrl: string | null;
   onAppliedRenderUrlChange: (url: string | null) => void;
@@ -143,6 +144,7 @@ const dataUrlToInlineData = (dataUrl: string) => {
 const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onNavigate,
   board,
+  onBoardChange,
   moodboardRenderUrl,
   appliedRenderUrl,
   onAppliedRenderUrlChange
@@ -179,9 +181,24 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const renderMaterials = useMemo(
+    () => board.filter((item) => !item.excludeFromMoodboardRender),
+    [board]
+  );
+  const excludedCount = board.length - renderMaterials.length;
+
+  const handleToggleExclude = (idxToToggle: number, value: boolean) => {
+    if (!onBoardChange) return;
+    onBoardChange(
+      board.map((item, idx) =>
+        idx === idxToToggle ? { ...item, excludeFromMoodboardRender: value } : item
+      )
+    );
+  };
+
   const summaryText = useMemo(() => {
-    if (!board.length) return 'No materials selected yet.';
-    const grouped = board.reduce((acc: Record<string, MaterialOption[]>, mat) => {
+    if (!renderMaterials.length) return 'No materials selected yet.';
+    const grouped = renderMaterials.reduce((acc: Record<string, MaterialOption[]>, mat) => {
       acc[mat.category] = acc[mat.category] || [];
       acc[mat.category].push(mat);
       return acc;
@@ -190,11 +207,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
     );
     return lines.join('\n');
-  }, [board]);
+  }, [renderMaterials]);
 
   const buildMaterialKey = () => {
-    if (!board.length) return 'No materials selected yet.';
-    return board.map((item) => `${item.name} — ${item.finish}`).join('\n');
+    if (!renderMaterials.length) return 'No materials selected yet.';
+    return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
   const persistGeneration = async (imageDataUri: string, prompt: string) => {
@@ -358,6 +375,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('Add materials to the moodboard first.');
       return;
     }
+    if (renderMaterials.length === 0) {
+      setError('All materials are excluded from the render. Uncheck at least one material.');
+      return;
+    }
     const isEditingRender = Boolean(options?.editPrompt && options?.baseImageDataUrl);
     if (!isEditingRender && uploadedImages.length === 0) {
       setError('Upload at least one base image first.');
@@ -369,7 +390,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     setError(null);
 
     const materialsByCategory: Record<string, MaterialOption[]> = {};
-    board.forEach((item) => {
+    renderMaterials.forEach((item) => {
       if (!materialsByCategory[item.category]) {
         materialsByCategory[item.category] = [];
       }
@@ -555,7 +576,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         ) : (
           <>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)]">
               <div className="border border-gray-200 bg-white p-4 space-y-3">
                 <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
                   Current Moodboard
@@ -567,6 +588,56 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
                   />
                 </div>
+              </div>
+
+              <div className="border border-gray-200 bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                    Materials in Render
+                  </div>
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                    {renderMaterials.length}/{board.length} included
+                  </div>
+                </div>
+                <p className="font-sans text-xs text-gray-600">
+                  Tick a material to exclude it from this render. Excluded materials still stay in the sustainability report.
+                </p>
+                {board.length === 0 ? (
+                  <div className="border border-dashed border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-600">
+                    No materials selected yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                    {board.map((item, idx) => (
+                      <label
+                        key={`${item.id}-${idx}`}
+                        className={`flex items-start gap-3 border border-gray-200 p-2 bg-white hover:bg-gray-50 ${
+                          item.excludeFromMoodboardRender ? 'opacity-70' : ''
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(item.excludeFromMoodboardRender)}
+                          onChange={(e) => handleToggleExclude(idx, e.target.checked)}
+                          className="mt-1 h-3 w-3 border-gray-300 text-gray-900"
+                          aria-label={`Exclude ${item.name} from render`}
+                        />
+                        <div className="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0" style={{ backgroundColor: item.tone }} />
+                        <div className="min-w-0">
+                          <div className="font-sans text-sm text-gray-900 truncate">{item.name}</div>
+                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500 truncate">
+                            {item.finish}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                {excludedCount > 0 && (
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                    {excludedCount} excluded from render
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 border-2 border-dashed border-gray-300 bg-gray-50 p-4">
@@ -612,7 +683,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     </div>
                     <button
                       onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-                      disabled={status !== 'idle' || !board.length || dailyRendersRemaining <= 0}
+                      disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || dailyRendersRemaining <= 0}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'upload-1k' ? (

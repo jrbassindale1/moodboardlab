@@ -407,7 +407,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const paletteSummaryRef = useRef<string | null>(null);
   const reportProseRef = useRef<ReportProse | null>(null);
   const [, setSummaryReviewed] = useState(false);
-  const [materialKey, setMaterialKey] = useState<string | null>(null);
   const [moodboardRenderUrlState, setMoodboardRenderUrlState] = useState<string | null>(
     moodboardRenderUrlProp ?? null
   );
@@ -573,8 +572,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   }, [briefingPayloadProp]);
 
   const buildMaterialKey = () => {
-    if (!board.length) return 'No materials selected yet.';
-    return board.map((item) => `${item.name} — ${item.finish}`).join('\n');
+    if (!renderMaterials.length) return 'No materials selected yet.';
+    return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
   const persistGeneration = async (imageDataUri: string, prompt: string) => {
@@ -794,9 +793,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
       ctx.font = '600 18px "Helvetica Neue", Arial, sans-serif';
       ctx.fillText('Material Key', panelX + 20, panelY + 68);
 
-      const list = board.length
-        ? board
-        : (materialKey || buildMaterialKey())
+      const list = renderMaterials.length
+        ? renderMaterials
+        : buildMaterialKey()
             .split('\n')
             .filter(Boolean)
             .map((line, idx) => {
@@ -944,7 +943,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const canGenerate = await ensureQuotaForMoodboard();
     if (!canGenerate) return;
     setIsCreatingMoodboard(true);
-    setMaterialKey(buildMaterialKey());
     setSustainabilityInsights(null);
     setPaletteSummary(null);
     paletteSummaryRef.current = null;
