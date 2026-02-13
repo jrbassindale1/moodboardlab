@@ -1,7 +1,7 @@
 import React from 'react';
 import { SignInButton, UserButton } from '@clerk/clerk-react';
 import { LogIn, Loader2 } from 'lucide-react';
-import { useAuth, clerkPubKey } from '../auth';
+import { useAuth, isClerkAuthEnabled } from '../auth';
 
 interface AuthButtonProps {
   onNavigate?: (page: string) => void;
@@ -11,7 +11,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onNavigate }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
   // Don't show auth button if Clerk isn't configured
-  if (!clerkPubKey) {
+  if (!isClerkAuthEnabled) {
     return null;
   }
 

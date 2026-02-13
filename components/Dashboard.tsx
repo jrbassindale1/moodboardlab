@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
-import { useAuth, useUsage, clerkPubKey } from '../auth';
+import { useAuth, useUsage, isClerkAuthEnabled } from '../auth';
 import { getGenerations } from '../api';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 
@@ -190,7 +190,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           <p className="text-gray-600 mb-8 max-w-md mx-auto">
             Sign in to view your dashboard, track your usage, and access your generation history.
           </p>
-          {clerkPubKey ? (
+          {isClerkAuthEnabled ? (
             <SignInButton mode="modal">
               <button className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 transition-colors">
                 <LogIn className="w-4 h-4" />

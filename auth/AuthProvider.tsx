@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { ClerkProvider, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { clerkPubKey } from './authConfig';
+import { clerkPubKey, isClerkAuthEnabled } from './authConfig';
 
 export interface AuthContextType {
   user: {
@@ -86,15 +86,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, onShowSign
     console.warn('Sign in requested but no handler provided');
   };
 
-  if (!clerkPubKey) {
-    // Return children without auth if no key configured
+  if (!isClerkAuthEnabled) {
+    // Return children without auth when Clerk is not configured or bypass is enabled
     return (
       <AuthContext.Provider
         value={{
           user: null,
           isAuthenticated: false,
           isLoading: false,
-          login: () => console.warn('Clerk not configured - add VITE_CLERK_PUBLISHABLE_KEY to .env.local'),
+          login: () => console.warn('Authentication unavailable in this environment'),
           logout: async () => {},
           getAccessToken: async () => null,
         }}
