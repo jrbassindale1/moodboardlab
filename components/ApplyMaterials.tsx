@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ImageDown, Loader2, Wand2 } from 'lucide-react';
 import { callGeminiImage, saveGenerationAuth, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
-import { useAuth, useUsage } from '../auth';
+import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
@@ -19,46 +19,6 @@ const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
 const MAX_EDIT_TURNS = 3;
-const DAILY_RENDER_LIMIT = 10;
-const QUOTA_STORAGE_KEY = 'moodboard_daily_quota';
-
-interface DailyQuota {
-  count: number;
-  date: string; // ISO date string (YYYY-MM-DD)
-}
-
-const getTodayDateString = (): string => {
-  return new Date().toISOString().split('T')[0];
-};
-
-const getDailyQuota = (): DailyQuota => {
-  try {
-    const stored = localStorage.getItem(QUOTA_STORAGE_KEY);
-    if (stored) {
-      const quota: DailyQuota = JSON.parse(stored);
-      // Reset if it's a new day
-      if (quota.date !== getTodayDateString()) {
-        return { count: 0, date: getTodayDateString() };
-      }
-      return quota;
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return { count: 0, date: getTodayDateString() };
-};
-
-const incrementDailyQuota = (): DailyQuota => {
-  const quota = getDailyQuota();
-  const updated = { count: quota.count + 1, date: getTodayDateString() };
-  localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(updated));
-  return updated;
-};
-
-const getRemainingRenders = (): number => {
-  const quota = getDailyQuota();
-  return Math.max(0, DAILY_RENDER_LIMIT - quota.count);
-};
 
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
@@ -151,7 +111,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
-  const { refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
+  const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate } = useUsage();
 
   const [renderNote, setRenderNote] = useState('');
   const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
@@ -161,7 +121,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const [editTurnCount, setEditTurnCount] = useState(0);
-  const [dailyRendersRemaining, setDailyRendersRemaining] = useState(getRemainingRenders);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
 
   // Reset edit counter only when a NEW moodboard is generated
@@ -171,15 +130,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       prevMoodboardRef.current = moodboardRenderUrl;
     }
   }, [moodboardRenderUrl]);
-
-  // Refresh daily quota on mount and periodically (handles midnight reset)
-  useEffect(() => {
-    setDailyRendersRemaining(getRemainingRenders());
-    const interval = setInterval(() => {
-      setDailyRendersRemaining(getRemainingRenders());
-    }, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
 
   const renderMaterials = useMemo(
     () => board.filter((item) => !item.excludeFromMoodboardRender),
@@ -345,7 +295,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
   }) => {
-    // Check quota - server-side for authenticated users, local for anonymous
+    // Check quota - server-side for authenticated users, shared local quota for anonymous users
     if (isAuthenticated) {
       // Refresh and check server-side quota
       try {
@@ -362,11 +312,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         // Continue with render if quota check fails (graceful degradation)
       }
     } else {
-      // Check local daily quota for anonymous users
-      const currentRemaining = getRemainingRenders();
-      if (currentRemaining <= 0) {
-        setError('Daily render limit reached. Sign in to get 10 free generations per month.');
-        setDailyRendersRemaining(0);
+      if (!canGenerate) {
+        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
         return;
       }
     }
@@ -493,10 +440,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         // Refresh server-side usage count
         await refreshUsage();
       } else {
-        // Increment local daily quota for anonymous users
-        incrementDailyQuota();
+        // Increment shared local anonymous usage count
         incrementLocalUsage();
-        setDailyRendersRemaining(getRemainingRenders());
       }
 
       void persistGeneration(newUrl, prompt);
@@ -560,7 +505,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        <UsageDisplay variant="full" showSignUpPrompt={isAnonymous} />
+        <UsageDisplay variant="full" showSignUpPrompt={!isAuthBypassEnabled && isAnonymous} />
 
         {!moodboardRenderUrl ? (
           <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">
@@ -683,7 +628,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     </div>
                     <button
                       onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-                      disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || dailyRendersRemaining <= 0}
+                      disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'upload-1k' ? (
@@ -739,12 +684,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       value={appliedEditPrompt}
                       onChange={(e) => setAppliedEditPrompt(e.target.value)}
                       placeholder="E.g., increase contrast and add dusk lighting."
-                      disabled={editTurnCount >= MAX_EDIT_TURNS || dailyRendersRemaining <= 0}
+                      disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
                       className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
                     />
                     <button
                       onClick={handleAppliedEdit}
-                      disabled={status !== 'idle' || !appliedRenderUrl || editTurnCount >= MAX_EDIT_TURNS || dailyRendersRemaining <= 0}
+                      disabled={status !== 'idle' || !appliedRenderUrl || editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'edit' ? (

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
-import { getUsage, checkQuota } from '../api';
+import { getUsage } from '../api';
 
 const FREE_MONTHLY_LIMIT = 10;
-const ANONYMOUS_DAILY_LIMIT = 3;
-const ANONYMOUS_QUOTA_KEY = 'moodboard_anon_quota';
+const ANONYMOUS_MONTHLY_LIMIT = 10;
+const ANONYMOUS_QUOTA_KEY = 'moodboard_anon_quota_monthly_v1';
 
 export interface UsageData {
   moodboard: number;
@@ -37,26 +37,28 @@ export const useUsage = (): UsageContextType => {
   return context;
 };
 
-// Helper for anonymous user quota tracking (localStorage)
-function getAnonymousQuota(): { count: number; date: string } {
+const getCurrentYearMonth = (): string => new Date().toISOString().slice(0, 7);
+
+// Helper for anonymous user quota tracking (localStorage, monthly window)
+function getAnonymousQuota(): { count: number; yearMonth: string } {
   try {
     const stored = localStorage.getItem(ANONYMOUS_QUOTA_KEY);
     if (stored) {
       const data = JSON.parse(stored);
-      const today = new Date().toISOString().split('T')[0];
-      if (data.date === today) {
+      const currentYearMonth = getCurrentYearMonth();
+      if (data.yearMonth === currentYearMonth) {
         return data;
       }
     }
   } catch {
     // Ignore parse errors
   }
-  return { count: 0, date: new Date().toISOString().split('T')[0] };
+  return { count: 0, yearMonth: getCurrentYearMonth() };
 }
 
 function setAnonymousQuota(count: number): void {
-  const today = new Date().toISOString().split('T')[0];
-  localStorage.setItem(ANONYMOUS_QUOTA_KEY, JSON.stringify({ count, date: today }));
+  const yearMonth = getCurrentYearMonth();
+  localStorage.setItem(ANONYMOUS_QUOTA_KEY, JSON.stringify({ count, yearMonth }));
 }
 
 interface UsageProviderProps {
@@ -112,7 +114,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
 
   // Calculate remaining and limits based on auth state
   const isAnonymous = !isAuthenticated;
-  const limit = isAnonymous ? ANONYMOUS_DAILY_LIMIT : FREE_MONTHLY_LIMIT;
+  const limit = isAnonymous ? ANONYMOUS_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
   const used = isAnonymous ? anonymousCount : (usage?.total ?? 0);
   const remaining = Math.max(0, limit - used);
   const canGenerate = remaining > 0;

@@ -30,9 +30,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
       }`}>
         <Zap className="w-3 h-3" />
         {isLoading ? '...' : `${remaining}/${limit}`}
-        <span className="hidden sm:inline">
-          {isAnonymous ? 'today' : 'this month'}
-        </span>
+        <span className="hidden sm:inline">this month</span>
       </div>
     );
   }
@@ -45,7 +43,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
     }`}>
       <div className="flex items-center justify-between mb-2">
         <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-          {isAnonymous ? 'Daily Generations' : 'Monthly Generations'}
+          Monthly Generations
         </span>
         <span className={`font-mono text-sm font-medium ${
           isExhausted ? 'text-red-600' :

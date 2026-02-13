@@ -21,7 +21,7 @@ import {
   generateSustainabilityBriefing
 } from '../api';
 import { MaterialOption } from '../types';
-import { useAuth, useUsage } from '../auth';
+import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 
 // Sustainability report utilities
@@ -428,6 +428,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
   const requireAuthForMoodboard = () => {
+    if (isAuthBypassEnabled) return true;
     if (isAuthenticated) return true;
     setError('You need an account to create moodboards. Please sign in to continue.');
     return false;
