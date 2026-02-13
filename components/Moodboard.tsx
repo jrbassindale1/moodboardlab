@@ -1799,6 +1799,7 @@ ${JSON.stringify(proseContext)}`;
             return true;
           }
 
+          
           reportProseRef.current = null;
           console.warn('Gemini returned malformed report prose JSON.', parseError);
           return false;
