@@ -6,7 +6,7 @@ Database: `moodboardlab`
 This is the application-level schema contract for Cosmos DB in this repo. Cosmos itself is schemaless, so this file documents what the code writes and expects.
 
 ## Source of truth
-- Runtime types and container access: `azure-functions/shared/cosmosClient.ts`
+- Runtime types and container access: `azure-functions/src/shared/cosmosClient.ts`
 - Materials normalization/seed shape: `scripts/export-cosmos-material-model.ts`
 - Seed import behavior: `scripts/import-cosmos-seed.ts`
 - Current seed manifest snapshot: `tmp/cosmos-seed/manifest.json`

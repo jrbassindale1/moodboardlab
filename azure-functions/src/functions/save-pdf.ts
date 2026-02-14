@@ -11,10 +11,10 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import { BlobServiceClient } from '@azure/storage-blob';
 import { createHash } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { validateToken } from './shared/validateToken';
-import { saveGenerationRecord, GenerationType } from './shared/usageHelpers';
-import { getContainer, GenerationDocument } from './shared/cosmosClient';
-import { getSasUrlForBlob } from './shared/blobSas';
+import { validateToken } from '../shared/validateToken';
+import { saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
+import { getContainer, GenerationDocument } from '../shared/cosmosClient';
+import { getSasUrlForBlob } from '../shared/blobSas';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';

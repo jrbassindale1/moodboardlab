@@ -9,10 +9,10 @@
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { getContainer, isAdminUser, MaterialDocument } from './shared/cosmosClient';
-import { getSasUrlForBlob } from './shared/blobSas';
-import { getMaterialIconId } from './shared/materialIconMapping';
-import { requireAuth, ValidatedUser } from './shared/validateToken';
+import { getContainer, isAdminUser, MaterialDocument } from '../shared/cosmosClient';
+import { getSasUrlForBlob } from '../shared/blobSas';
+import { getMaterialIconId } from '../shared/materialIconMapping';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
 
 const MATERIAL_ICON_CONTAINER = process.env.MATERIAL_ICON_BLOB_CONTAINER || 'material-icons';
 const CORS_HEADERS = {

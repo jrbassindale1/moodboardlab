@@ -8,7 +8,7 @@
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { requireAuth, ValidatedUser } from './shared/validateToken';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
 import {
   getContainer,
   getUsageDocumentId,
@@ -17,8 +17,8 @@ import {
   UsageDocument,
   isCosmosNotFound,
   isAdminUser,
-} from './shared/cosmosClient';
-import { incrementUsage, GenerationType } from './shared/usageHelpers';
+} from '../shared/cosmosClient';
+import { incrementUsage, GenerationType } from '../shared/usageHelpers';
 
 const MAX_CREDIT_CHARGE = 5;
 

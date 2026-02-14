@@ -11,9 +11,9 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
-import { requireAuth, ValidatedUser } from './shared/validateToken';
-import { incrementUsage, saveGenerationRecord, GenerationType } from './shared/usageHelpers';
-import { getSasUrlForBlob } from './shared/blobSas';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
+import { incrementUsage, saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
+import { getSasUrlForBlob } from '../shared/blobSas';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';

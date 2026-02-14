@@ -12,9 +12,9 @@
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { requireAuth, ValidatedUser } from './shared/validateToken';
-import { getContainer, GenerationDocument } from './shared/cosmosClient';
-import { getSasUrlForBlob } from './shared/blobSas';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
+import { getContainer, GenerationDocument } from '../shared/cosmosClient';
+import { getSasUrlForBlob } from '../shared/blobSas';
 
 export async function generations(
   req: HttpRequest,

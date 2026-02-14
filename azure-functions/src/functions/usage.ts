@@ -1,29 +1,27 @@
 /**
- * Check Quota Function
+ * Usage Function
  *
- * GET /api/check-quota
+ * GET /api/usage
  *
- * Returns the user's current quota status for the month.
+ * Returns the user's detailed usage breakdown for the current month.
  * Requires authentication.
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
-import { requireAuth, ValidatedUser } from './shared/validateToken';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
 import {
   getContainer,
   getUsageDocumentId,
   getCurrentYearMonth,
-  FREE_MONTHLY_LIMIT,
   UsageDocument,
   isCosmosNotFound,
-  isAdminUser,
-} from './shared/cosmosClient';
+} from '../shared/cosmosClient';
 
-export async function checkQuota(
+export async function usage(
   req: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  context.log('Check quota function processed a request.');
+  context.log('Usage function processed a request.');
 
   // Require authentication
   const authResult = await requireAuth(req);
@@ -39,55 +37,43 @@ export async function checkQuota(
   const yearMonth = getCurrentYearMonth();
   const documentId = getUsageDocumentId(user.userId, yearMonth);
 
-  // Admin users get unlimited credits
-  if (isAdminUser(user.email)) {
-    return {
-      status: 200,
-      body: JSON.stringify({
-        canGenerate: true,
-        remaining: 999999,
-        limit: 999999,
-        used: 0,
-        yearMonth,
-        isAdmin: true,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    };
-  }
-
   try {
     const usageContainer = getContainer('usage');
 
-    let totalUsed = 0;
+    let usageData: UsageDocument['generationCounts'] = {
+      moodboard: 0,
+      applyMaterials: 0,
+      upscale: 0,
+      materialIcon: 0,
+      sustainabilityBriefing: 0,
+    };
+    let total = 0;
 
     try {
       // Partition key is userId, document id is "userId:YYYY-MM"
       const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
       if (resource) {
-        totalUsed = resource.totalGenerations || 0;
+        usageData = resource.generationCounts || usageData;
+        total = resource.totalGenerations || 0;
       }
     } catch (error: unknown) {
-      // If document doesn't exist, user has 0 usage
+      // If document doesn't exist, return zeros
       if (!isCosmosNotFound(error)) {
         throw error;
       }
     }
 
-    const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
-
     return {
       status: 200,
       body: JSON.stringify({
-        canGenerate: remaining > 0,
-        remaining,
-        limit: FREE_MONTHLY_LIMIT,
-        used: totalUsed,
+        ...usageData,
+        total,
         yearMonth,
       }),
       headers: { 'Content-Type': 'application/json' },
     };
   } catch (error) {
-    context.error('Error checking quota:', error);
+    context.error('Error fetching usage:', error);
     return {
       status: 500,
       body: JSON.stringify({ error: 'Internal server error' }),
@@ -96,8 +82,8 @@ export async function checkQuota(
   }
 }
 
-app.http('check-quota', {
+app.http('usage', {
   methods: ['GET'],
   authLevel: 'anonymous',
-  handler: checkQuota,
+  handler: usage,
 });
