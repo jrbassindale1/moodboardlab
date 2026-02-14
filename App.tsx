@@ -11,6 +11,7 @@ import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
+import MaterialAdmin from './components/MaterialAdmin';
 import { MaterialOption } from './types';
 import type {
   SustainabilityBriefingPayload,
@@ -215,6 +216,8 @@ const App: React.FC = () => {
         return <Contact />;
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentPage} />;
+      case 'material-admin':
+        return <MaterialAdmin onNavigate={setCurrentPage} />;
       default:
         return <Concept onNavigate={setCurrentPage} />;
     }

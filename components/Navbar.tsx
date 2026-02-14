@@ -17,7 +17,8 @@ const Navbar: React.FC<NavbarProps> = ({
   moodboardReady = false
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
 
   const baseNavItems = [
     { id: 'concept', label: 'Home' },
@@ -25,9 +26,13 @@ const Navbar: React.FC<NavbarProps> = ({
     { id: 'moodboard', label: 'Moodboard Lab' },
     { id: 'apply', label: 'Apply' }
   ];
-  const navItemsDesktop = baseNavItems;
+  const navItemsDesktop = [
+    ...baseNavItems,
+    ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
+  ];
   const navItemsMobile = [
     ...baseNavItems,
+    ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
     ...(isAuthenticated ? [{ id: 'dashboard', label: 'Dashboard' }] : [])
   ];
 

@@ -25,7 +25,10 @@
       "Bash(source:*)",
       "Bash(az cosmosdb list:*)",
       "Bash(curl:*)",
-      "Bash(az functionapp list:*)"
+      "Bash(az functionapp list:*)",
+      "Bash(az functionapp cors add:*)",
+      "Bash(az functionapp config appsettings list:*)",
+      "Bash(az monitor app-insights query:*)"
     ]
   }
 }

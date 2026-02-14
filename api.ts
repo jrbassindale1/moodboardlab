@@ -134,6 +134,42 @@ export async function getMaterials(): Promise<MaterialOption[]> {
   return [];
 }
 
+export async function updateMaterial(
+  accessToken: string,
+  material: Record<string, unknown>
+): Promise<MaterialOption> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/materials`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(material),
+    },
+    30000
+  );
+
+  if (!res.ok) {
+    let message = `Failed to update material (status ${res.status})`;
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(message);
+  }
+
+  const data = await res.json() as { item?: MaterialOption } | MaterialOption;
+  if ('item' in data && data.item) {
+    return data.item;
+  }
+  return data as MaterialOption;
+}
+
 export async function saveGeneration(payload: {
   prompt: string;
   imageDataUri: string;
