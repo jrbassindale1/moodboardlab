@@ -113,10 +113,12 @@ export interface MaterialDocument {
   colorOptions?: Array<{ label: string; tone: string }>;
   supportsColor?: boolean;
   finishOptions?: string[];
+  varietyOptions?: string[];
   treePaths?: string[];
   carbonIntensity?: 'low' | 'medium' | 'high';
   tags?: string[];
   materialType?: string;
+  finishFamily?: string;
   materialForm?: string[];
   materialFunction?: string[];
   manufacturingProcess?: string[];

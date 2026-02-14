@@ -136,7 +136,7 @@ async function listMaterials(): Promise<HttpResponseInit> {
     query: `
       SELECT *
       FROM c
-      ORDER BY c.sortOrder ASC, c.name ASC
+      WHERE c.docType = "material"
     `,
   };
 
@@ -144,8 +144,17 @@ async function listMaterials(): Promise<HttpResponseInit> {
     .query<MaterialDocument>(querySpec)
     .fetchAll();
 
+  const sortedResources = [...resources].sort((a, b) => {
+    const sortA = Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER;
+    const sortB = Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER;
+    if (sortA !== sortB) return sortA - sortB;
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
   const iconBaseUrl = getIconBaseUrl();
-  const itemsWithIcons = resources.map((item) => {
+  const itemsWithIcons = sortedResources.map((item) => {
     if (!item.id || !iconBaseUrl) return item;
     const iconId = getMaterialIconId(item.id);
     const webpBlobUrl = `${iconBaseUrl}/${iconId}.webp`;
@@ -268,6 +277,7 @@ async function updateMaterial(
     keywords: toStringArray(body.keywords, existing.keywords || []),
     tags: toNullableStringArray(body.tags, existing.tags || null) || undefined,
     finishOptions: toNullableStringArray(body.finishOptions, existing.finishOptions || null) || undefined,
+    varietyOptions: toNullableStringArray(body.varietyOptions, existing.varietyOptions || null) || undefined,
     treePaths: toNullableStringArray(body.treePaths, existing.treePaths || null) || undefined,
     colorOptions: normalizeColorOptions(body.colorOptions, existing.colorOptions),
     supportsColor: toBoolean(body.supportsColor, existing.supportsColor),
@@ -275,6 +285,7 @@ async function updateMaterial(
       ? body.carbonIntensity
       : existing.carbonIntensity,
     materialType: toNullableString(body.materialType, existing.materialType || null) || undefined,
+    finishFamily: toNullableString(body.finishFamily, existing.finishFamily || null) || undefined,
     materialForm: toNullableStringArray(body.materialForm, existing.materialForm || null) || undefined,
     materialFunction: toNullableStringArray(body.materialFunction, existing.materialFunction || null) || undefined,
     manufacturingProcess: toNullableStringArray(body.manufacturingProcess, existing.manufacturingProcess || null) || undefined,

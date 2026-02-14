@@ -113,6 +113,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
+  const [selectedVariety, setSelectedVariety] = useState<string | null>(null);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
 
@@ -371,12 +372,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
   const handleAdd = (
     material: MaterialOption,
-    customization?: { tone?: string; label?: string },
+    customization?: { tone?: string; label?: string; variety?: string },
     skipModal?: boolean
   ) => {
     // If no customization provided and not skipping modal, just show modal (don't add to board yet)
     if (!customization && !skipModal) {
       setRecentlyAdded(material);
+      setSelectedVariety(null); // Reset variety when opening modal
       return;
     }
 
@@ -386,27 +388,32 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     // If customization is provided, create a new material with custom finish/tone
     const baseBoard = boardRef.current;
 
-    if (customization) {
-      const labelSuffix = customization.label ? ` — ${customization.label}` : '';
-      const finishText = customization.tone
-        ? `${material.finish}${labelSuffix} (${customization.tone})`
-        : `${material.finish}${labelSuffix}`;
+    // Get variety from customization or from selectedVariety state
+    const varietyToUse = customization?.variety || selectedVariety;
+
+    if (customization || varietyToUse) {
+      const varietyPrefix = varietyToUse ? `${varietyToUse} — ` : '';
+      const labelSuffix = customization?.label ? ` — ${customization.label}` : '';
+      const finishText = customization?.tone
+        ? `${varietyPrefix}${material.finish}${labelSuffix} (${customization.tone})`
+        : `${varietyPrefix}${material.finish}${labelSuffix}`;
 
       // Create a colorVariantId for icon loading (e.g., 'steel-yellow')
-      const colorVariantId = customization.label
+      const colorVariantId = customization?.label
         ? `${material.id}-${customization.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
         : undefined;
 
       materialToAdd = {
         ...material,
-        tone: customization.tone || material.tone,
+        tone: customization?.tone || material.tone,
         finish: finishText,
         colorVariantId,
-        colorLabel: customization.label,
+        colorLabel: customization?.label,
+        selectedVariety: varietyToUse || undefined,
       };
 
       // Trigger colored icon generation in the background and save blob URL
-      if (colorVariantId && customization.label) {
+      if (colorVariantId && customization?.label) {
         // Add material to board immediately
         const newBoard = [...baseBoard, materialToAdd];
         onBoardChange(newBoard);
@@ -428,8 +435,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           console.error('Failed to generate colored icon:', err);
         });
 
-        // Close modal and return early
+        // Close modal and reset variety
         setRecentlyAdded(null);
+        setSelectedVariety(null);
         return;
       }
     }
@@ -443,8 +451,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     onBoardChange(nextBoard);
     boardRef.current = nextBoard;
 
-    // Close the modal after adding
+    // Close the modal and reset variety
     setRecentlyAdded(null);
+    setSelectedVariety(null);
   };
 
 
@@ -710,8 +719,13 @@ IMPORTANT:
 
   const hasColorOptions = Boolean(recentlyAdded?.colorOptions?.length);
   const hasFinishOptions = Boolean(recentlyAdded?.finishOptions?.length);
+  const hasVarietyOptions = Boolean(recentlyAdded?.varietyOptions?.length);
   const hasFreeColor = supportsFreeColor(recentlyAdded);
-  const hasOptions = hasColorOptions || hasFinishOptions || hasFreeColor;
+  const hasOptions = hasColorOptions || hasFinishOptions || hasFreeColor || hasVarietyOptions;
+  // If variety options exist but none selected, we need to pick variety first
+  const needsVarietySelection = hasVarietyOptions && !selectedVariety;
+  // After variety is selected, check if there are still color/finish options to pick
+  const hasColorFinishOptions = hasColorOptions || hasFinishOptions || hasFreeColor;
 
   return (
     <div className="min-h-screen bg-white">
@@ -1278,7 +1292,10 @@ IMPORTANT:
           <div className="relative w-full max-w-lg bg-white shadow-2xl my-auto">
             <div className="max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
             <button
-              onClick={() => setRecentlyAdded(null)}
+              onClick={() => {
+                setRecentlyAdded(null);
+                setSelectedVariety(null);
+              }}
               className="absolute top-3 right-3 p-1 hover:bg-gray-100 transition-colors"
               aria-label="Close"
             >
@@ -1313,14 +1330,47 @@ IMPORTANT:
               {/* Show instruction */}
               <div className="bg-gray-50 border border-gray-200 p-3">
                 <p className="font-sans text-xs text-gray-700">
-                  {hasOptions
+                  {needsVarietySelection
+                    ? 'Select a material variety below, then choose finish options.'
+                    : hasColorFinishOptions
                     ? 'Select a colour or finish option below to add this material to your board.'
+                    : hasOptions && !needsVarietySelection
+                    ? 'Click "Add to Board" below to add this material.'
                     : 'Click "Add to Board" below to add this material.'}
                 </p>
               </div>
 
-              {/* Curated color options */}
-              {hasColorOptions && (
+              {/* Variety options - show first if available */}
+              {hasVarietyOptions && (
+                <div className="border-t border-arch-line pt-4">
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
+                    Material Variety
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {recentlyAdded.varietyOptions?.map((variety, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedVariety(variety)}
+                        className={`border px-3 py-2 transition-colors ${
+                          selectedVariety === variety
+                            ? 'border-black bg-black text-white'
+                            : 'border-gray-200 hover:border-black'
+                        }`}
+                      >
+                        <span className="font-sans text-xs">{variety}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {selectedVariety && (
+                    <p className="font-sans text-xs text-emerald-600 mt-2">
+                      Selected: {selectedVariety}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Curated color options - show after variety is selected (or if no variety options) */}
+              {hasColorOptions && !needsVarietySelection && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     Colour Options
@@ -1350,8 +1400,8 @@ IMPORTANT:
                 </div>
               )}
 
-              {/* RAL palette for free color selection */}
-              {hasFreeColor && (
+              {/* RAL palette for free color selection - show after variety is selected (or if no variety options) */}
+              {hasFreeColor && !needsVarietySelection && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     RAL Colour Options
@@ -1381,8 +1431,8 @@ IMPORTANT:
                 </div>
               )}
 
-              {/* Finish options if available */}
-              {hasFinishOptions && (
+              {/* Finish options if available - show after variety is selected (or if no variety options) */}
+              {hasFinishOptions && !needsVarietySelection && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     Finish Options
@@ -1409,24 +1459,26 @@ IMPORTANT:
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              {/* For materials without options, show Add to Board button */}
-              {!hasOptions && (
+              {/* Show Add to Board button when:
+                  1. No options at all, OR
+                  2. Only variety options exist AND variety has been selected AND no color/finish options */}
+              {(!hasOptions || (hasVarietyOptions && selectedVariety && !hasColorFinishOptions)) && (
                 <button
                   onClick={() => {
-                    // Add the base material without customization
-                    const baseBoard = boardRef.current;
-                    const nextBoard = [...baseBoard, recentlyAdded];
-                    onBoardChange(nextBoard);
-                    boardRef.current = nextBoard;
-                    setRecentlyAdded(null);
+                    // Add the material with selected variety (if any)
+                    handleAdd(recentlyAdded, selectedVariety ? { variety: selectedVariety } : undefined, true);
                   }}
-                  className="flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
+                  disabled={hasVarietyOptions && !selectedVariety}
+                  className="flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add to Board
                 </button>
               )}
               <button
-                onClick={() => setRecentlyAdded(null)}
+                onClick={() => {
+                  setRecentlyAdded(null);
+                  setSelectedVariety(null);
+                }}
                 className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
               >
                 Cancel

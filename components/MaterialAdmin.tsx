@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getMaterials, updateMaterial } from '../api';
 import { useAuth } from '../auth';
 import { isAuthBypassEnabled } from '../auth/authConfig';
-import type { MaterialOption } from '../types';
+import type { FinishFamily, MaterialOption } from '../types';
 
 interface MaterialAdminProps {
   onNavigate: (page: string) => void;
@@ -11,6 +11,47 @@ interface MaterialAdminProps {
 type RiskItem = { risk: string; mitigation: string };
 type HealthRiskLevel = 'low' | 'medium' | 'high' | null;
 type CarbonIntensity = 'low' | 'medium' | 'high' | undefined;
+
+const FINISH_FAMILY_OPTIONS: { value: FinishFamily; label: string }[] = [
+  { value: 'self-finished', label: 'Self-finished / No options' },
+  { value: 'ral', label: 'RAL Classic' },
+  { value: 'ncs', label: 'NCS (Natural Color System)' },
+  { value: 'pantone', label: 'Pantone' },
+  { value: 'bs', label: 'British Standard' },
+  { value: 'timber-stain', label: 'Timber — Stain' },
+  { value: 'timber-oil', label: 'Timber — Oil' },
+  { value: 'timber-lacquer', label: 'Timber — Lacquer' },
+  { value: 'timber-wax', label: 'Timber — Wax' },
+  { value: 'timber-natural', label: 'Timber — Natural' },
+  { value: 'metal-powder-coat', label: 'Metal — Powder Coat' },
+  { value: 'metal-anodised', label: 'Metal — Anodised' },
+  { value: 'metal-galvanised', label: 'Metal — Galvanised' },
+  { value: 'metal-patina', label: 'Metal — Patina' },
+  { value: 'metal-brushed', label: 'Metal — Brushed' },
+  { value: 'metal-polished', label: 'Metal — Polished' },
+  { value: 'stone-polished', label: 'Stone — Polished' },
+  { value: 'stone-honed', label: 'Stone — Honed' },
+  { value: 'stone-flamed', label: 'Stone — Flamed' },
+  { value: 'stone-natural', label: 'Stone — Natural' },
+  { value: 'concrete-polished', label: 'Concrete — Polished' },
+  { value: 'concrete-exposed', label: 'Concrete — Exposed Aggregate' },
+  { value: 'concrete-formed', label: 'Concrete — Board-formed' },
+  { value: 'paint-matte', label: 'Paint — Matte' },
+  { value: 'paint-satin', label: 'Paint — Satin' },
+  { value: 'paint-gloss', label: 'Paint — Gloss' },
+  { value: 'tile-glazed', label: 'Tile — Glazed' },
+  { value: 'tile-unglazed', label: 'Tile — Unglazed' },
+  { value: 'glass-clear', label: 'Glass — Clear' },
+  { value: 'glass-tinted', label: 'Glass — Tinted' },
+  { value: 'glass-frosted', label: 'Glass — Frosted' },
+  { value: 'fabric-natural', label: 'Fabric — Natural' },
+  { value: 'fabric-synthetic', label: 'Fabric — Synthetic' },
+  { value: 'leather', label: 'Leather' },
+  { value: 'vinyl', label: 'Vinyl' },
+  { value: 'laminate', label: 'Laminate (HPL)' },
+  { value: 'veneer', label: 'Veneer' },
+  { value: 'custom', label: 'Custom / Other' },
+];
 
 interface AdminMaterial extends MaterialOption {
   pk?: string;
@@ -339,6 +380,21 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                   </select>
                 </label>
                 <label className="text-xs uppercase tracking-widest font-mono">
+                  Finish Family
+                  <select
+                    value={draft.finishFamily ?? ''}
+                    onChange={(event) => setField('finishFamily', (event.target.value || undefined) as FinishFamily | undefined)}
+                    className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    <option value="">Not set</option>
+                    {FINISH_FAMILY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs uppercase tracking-widest font-mono">
                   Service Life (years)
                   <input
                     type="number"
@@ -349,15 +405,6 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                 </label>
               </div>
 
-              <label className="flex items-center gap-2 text-xs uppercase tracking-widest font-mono">
-                <input
-                  type="checkbox"
-                  checked={Boolean(draft.supportsColor)}
-                  onChange={(event) => setField('supportsColor', event.target.checked)}
-                />
-                Supports Color
-              </label>
-
               <label className="text-xs uppercase tracking-widest font-mono block">
                 Description
                 <textarea
@@ -366,6 +413,77 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                   className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm min-h-24"
                 />
               </label>
+
+              {/* Selection Hierarchy Section */}
+              <div className="border border-blue-200 bg-blue-50 p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs uppercase tracking-widest font-mono text-blue-800 font-semibold">
+                    Selection Hierarchy
+                  </span>
+                  <span className="text-[10px] text-blue-600">
+                    (User selection flow: Variety → Finish Family → Finish Options → Color)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Step 1: Variety Options */}
+                  <div className="bg-white p-3 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Variety Options</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Material subtypes (e.g., stone: Bath, Portland, Carrara)</p>
+                    <textarea
+                      value={joinLines(draft.varietyOptions)}
+                      onChange={(event) => setField('varietyOptions', splitLines(event.target.value))}
+                      placeholder="Bath Stone&#10;Portland Stone&#10;Carrara Marble..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-20"
+                    />
+                  </div>
+
+                  {/* Step 2: Finish Family (already exists as dropdown) */}
+                  <div className="bg-white p-3 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Finish Family</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Standard/system used (e.g., RAL, timber-oil, stone-honed)</p>
+                    <p className="text-[10px] text-amber-600 italic">Set above in the Finish Family dropdown</p>
+                  </div>
+
+                  {/* Step 3: Finish Options */}
+                  <div className="bg-white p-3 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">3</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Finish Options</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Specific finishes available (e.g., Polished, Honed, Flamed)</p>
+                    <textarea
+                      value={joinLines(draft.finishOptions)}
+                      onChange={(event) => setField('finishOptions', splitLines(event.target.value))}
+                      placeholder="Polished&#10;Honed&#10;Flamed&#10;Brushed..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-20"
+                    />
+                  </div>
+
+                  {/* Step 4: Color Options */}
+                  <div className="bg-white p-3 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">4</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Color Options</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Available colors (set in Color Options JSON below, or check Supports Color for full RAL palette)</p>
+                    <label className="flex items-center gap-2 text-xs font-mono">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(draft.supportsColor)}
+                        onChange={(event) => setField('supportsColor', event.target.checked)}
+                      />
+                      Enable full RAL color palette
+                    </label>
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className="text-xs uppercase tracking-widest font-mono">
@@ -381,14 +499,6 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                   <textarea
                     value={joinLines(draft.tags)}
                     onChange={(event) => setField('tags', splitLines(event.target.value))}
-                    className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm min-h-24"
-                  />
-                </label>
-                <label className="text-xs uppercase tracking-widest font-mono">
-                  Finish Options (one per line)
-                  <textarea
-                    value={joinLines(draft.finishOptions)}
-                    onChange={(event) => setField('finishOptions', splitLines(event.target.value))}
                     className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm min-h-24"
                   />
                 </label>
