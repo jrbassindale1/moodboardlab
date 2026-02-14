@@ -435,6 +435,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   };
 
   const ensureQuotaForMoodboard = async () => {
+    // If auth bypass is enabled, skip quota check
+    if (isAuthBypassEnabled) return true;
     if (!isAuthenticated) return false;
     try {
       const token = await getAccessToken();
