@@ -90,7 +90,13 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                   <div className="flex items-center gap-4 p-4">
                     {/* Material swatch/image */}
                     <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden bg-gray-50">
-                      {item.customImage ? (
+                      {item.coloredIconBlobUrl ? (
+                        <img
+                          src={item.coloredIconBlobUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : item.customImage ? (
                         <img
                           src={item.customImage}
                           alt={item.name}

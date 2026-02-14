@@ -822,10 +822,18 @@ IMPORTANT:
                             onDragStart={(e) => handleBasketDragStart(e, material, boardIndex)}
                             className="flex items-center gap-2 p-2 bg-white border border-gray-100 hover:border-gray-300 cursor-move group"
                           >
-                            <div
-                              className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0"
-                              style={{ backgroundColor: material.tone }}
-                            />
+                            {material.coloredIconBlobUrl ? (
+                              <img
+                                src={material.coloredIconBlobUrl}
+                                alt={material.name}
+                                className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0 object-cover"
+                              />
+                            ) : (
+                              <div
+                                className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0"
+                                style={{ backgroundColor: material.tone }}
+                              />
+                            )}
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-sans truncate">{material.name}</p>
                               <p className="text-[10px] font-mono text-gray-500 truncate">{material.finish}</p>
