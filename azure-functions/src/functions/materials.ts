@@ -15,12 +15,25 @@ import { getMaterialIconId } from '../shared/materialIconMapping';
 import { requireAuth, ValidatedUser } from '../shared/validateToken';
 
 const MATERIAL_ICON_CONTAINER = process.env.MATERIAL_ICON_BLOB_CONTAINER || 'material-icons';
+const ADMIN_BYPASS_ENABLED = String(process.env.ADMIN_BYPASS_ENABLED || '').toLowerCase() === 'true';
+const ADMIN_BYPASS_KEY = process.env.ADMIN_BYPASS_KEY || '';
+const ADMIN_BYPASS_ALLOWED_ORIGINS = (process.env.ADMIN_BYPASS_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim().toLowerCase().replace(/\/+$/, ''))
+  .filter(Boolean);
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Key',
 };
+
+function isBypassOriginAllowed(req: HttpRequest): boolean {
+  if (!ADMIN_BYPASS_ALLOWED_ORIGINS.length) return false;
+  const origin = (req.headers.get('origin') || '').trim().toLowerCase().replace(/\/+$/, '');
+  if (!origin) return false;
+  return ADMIN_BYPASS_ALLOWED_ORIGINS.includes(origin);
+}
 
 function getIconBaseUrl(): string | null {
   const explicitBase = process.env.MATERIAL_ICON_BLOB_BASE_URL;
@@ -160,22 +173,34 @@ async function updateMaterial(
   req: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  const authResult = await requireAuth(req);
-  if ('status' in authResult) {
-    return {
-      status: authResult.status,
-      body: authResult.body,
-      headers: CORS_HEADERS,
-    };
-  }
+  const requestAdminKey = (req.headers.get('x-admin-key') || '').trim();
+  const bypassAuthorized =
+    ADMIN_BYPASS_ENABLED &&
+    Boolean(ADMIN_BYPASS_KEY) &&
+    Boolean(requestAdminKey) &&
+    requestAdminKey === ADMIN_BYPASS_KEY &&
+    isBypassOriginAllowed(req);
 
-  const user = authResult as ValidatedUser;
-  if (!isAdminUser(user.email)) {
-    return {
-      status: 403,
-      body: JSON.stringify({ error: 'Forbidden', message: 'Admin access required' }),
-      headers: CORS_HEADERS,
-    };
+  if (!bypassAuthorized) {
+    const authResult = await requireAuth(req);
+    if ('status' in authResult) {
+      return {
+        status: authResult.status,
+        body: authResult.body,
+        headers: CORS_HEADERS,
+      };
+    }
+
+    const user = authResult as ValidatedUser;
+    if (!isAdminUser(user.email)) {
+      return {
+        status: 403,
+        body: JSON.stringify({ error: 'Forbidden', message: 'Admin access required' }),
+        headers: CORS_HEADERS,
+      };
+    }
+  } else {
+    context.log('Materials update authorized via admin bypass key.');
   }
 
   let body: Record<string, unknown>;

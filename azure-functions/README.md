@@ -83,6 +83,16 @@ MATERIAL_ICON_BLOB_CONTAINER=material-icons
 # MATERIAL_ICON_BLOB_BASE_URL=https://<account>.blob.core.windows.net/material-icons
 ```
 
+Optional for staging admin bypass (for endpoints that support it, e.g. `PUT /api/materials`):
+```
+ADMIN_BYPASS_ENABLED=true
+ADMIN_BYPASS_KEY=<long-random-secret>
+ADMIN_BYPASS_ALLOWED_ORIGINS=https://<your-staging-frontend-origin>
+```
+When enabled, send the key in request header:
+`X-Admin-Key: <long-random-secret>`
+Note: bypass is rejected unless the request `Origin` matches one of `ADMIN_BYPASS_ALLOWED_ORIGINS` (comma-separated).
+
 ### Frontend (.env.local)
 ```
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxx
@@ -116,6 +126,23 @@ your-azure-functions-project/
    - Quota is enforced after 10 generations
 5. Verify materials API:
    - `GET /api/materials` returns `{ items: [...] }` from CosmosDB
+6. If using staging bypass:
+   - Keep Clerk disabled in staging frontend (`VITE_DISABLE_AUTH=true`)
+   - Set backend app settings above
+   - Open Material Admin and enter the staging admin key before saving
+
+### Quick toggle script (from this repo)
+
+Use `scripts/toggle-admin-bypass.sh` to switch bypass on/off without editing app settings manually:
+
+```bash
+cp scripts/admin-bypass.env.example scripts/admin-bypass.env
+# edit scripts/admin-bypass.env with app name, resource group, key, origin
+
+bash scripts/toggle-admin-bypass.sh on
+bash scripts/toggle-admin-bypass.sh status
+bash scripts/toggle-admin-bypass.sh off
+```
 
 ## Troubleshooting
 

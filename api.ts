@@ -135,18 +135,28 @@ export async function getMaterials(): Promise<MaterialOption[]> {
 }
 
 export async function updateMaterial(
-  accessToken: string,
-  material: Record<string, unknown>
+  accessToken: string | null,
+  material: Record<string, unknown>,
+  options?: {
+    adminKey?: string;
+  }
 ): Promise<MaterialOption> {
   const API_BASE = getApiBase();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+  if (options?.adminKey?.trim()) {
+    headers['X-Admin-Key'] = options.adminKey.trim();
+  }
+
   const res = await fetchWithTimeout(
     `${API_BASE}/api/materials`,
     {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers,
       body: JSON.stringify(material),
     },
     30000
