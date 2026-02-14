@@ -5,6 +5,7 @@ const ICON_FALLBACKS: Record<string, string> = {
   'lead-cladding': 'zinc-cladding',
   'green-oak-structure': 'glulam-structure',
   'space-frame-structure': 'lightweight-space-frame-infill',
+  'concrete-block-loadbearing': 'concrete-block-wall',
   'aluminium-standing-seam-roof': 'standing-seam-roof',
   'copper-standing-seam-roof': 'standing-seam-roof',
   'stainless-standing-seam-roof': 'standing-seam-roof',

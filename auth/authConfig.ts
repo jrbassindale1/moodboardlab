@@ -13,6 +13,6 @@ if (!clerkPubKey) {
   console.warn('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
 }
 
-if (isAuthBypassEnabled) {
+if (isAuthBypassEnabled && import.meta.env.DEV) {
   console.warn('Authentication bypass is enabled (VITE_DISABLE_AUTH=true)');
 }
