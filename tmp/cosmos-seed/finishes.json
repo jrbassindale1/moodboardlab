@@ -1,0 +1,1444 @@
+[
+  {
+    "id": "finish:painted-steel-select-colour",
+    "pk": "finish",
+    "label": "Painted steel — select colour",
+    "normalizedLabel": "painted-steel-select-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glulam-timber-beams-and-posts",
+    "pk": "finish",
+    "label": "Glulam timber beams and posts",
+    "normalizedLabel": "glulam-timber-beams-and-posts",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fresh-sawn-structural-oak",
+    "pk": "finish",
+    "label": "Fresh-sawn structural oak",
+    "normalizedLabel": "fresh-sawn-structural-oak",
+    "type": "finish"
+  },
+  {
+    "id": "finish:cast-in-place-concrete",
+    "pk": "finish",
+    "label": "Cast-in-place concrete",
+    "normalizedLabel": "cast-in-place-concrete",
+    "type": "finish"
+  },
+  {
+    "id": "finish:hybrid-timber-steel",
+    "pk": "finish",
+    "label": "Hybrid timber + steel",
+    "normalizedLabel": "hybrid-timber-steel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:tubular-steel-space-frame",
+    "pk": "finish",
+    "label": "Tubular steel space frame",
+    "normalizedLabel": "tubular-steel-space-frame",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fsc-clt-panels",
+    "pk": "finish",
+    "label": "FSC CLT panels",
+    "normalizedLabel": "fsc-clt-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:dowel-nail-laminated-timber",
+    "pk": "finish",
+    "label": "Dowel/nail-laminated timber",
+    "normalizedLabel": "dowel-nail-laminated-timber",
+    "type": "finish"
+  },
+  {
+    "id": "finish:ggbs-slag-concrete-mix",
+    "pk": "finish",
+    "label": "GGBS/slag concrete mix",
+    "normalizedLabel": "ggbs-slag-concrete-mix",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stabilised-rammed-earth",
+    "pk": "finish",
+    "label": "Stabilised rammed earth",
+    "normalizedLabel": "stabilised-rammed-earth",
+    "type": "finish"
+  },
+  {
+    "id": "finish:polished-concrete-slab",
+    "pk": "finish",
+    "label": "Polished concrete slab",
+    "normalizedLabel": "polished-concrete-slab",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-lino-sheet",
+    "pk": "finish",
+    "label": "Natural lino sheet",
+    "normalizedLabel": "natural-lino-sheet",
+    "type": "finish"
+  },
+  {
+    "id": "finish:composite-terrazzo-with-plastic-fragments",
+    "pk": "finish",
+    "label": "Composite terrazzo with plastic fragments",
+    "normalizedLabel": "composite-terrazzo-with-plastic-fragments",
+    "type": "finish"
+  },
+  {
+    "id": "finish:recycled-rubber-sheet",
+    "pk": "finish",
+    "label": "Recycled rubber sheet",
+    "normalizedLabel": "recycled-rubber-sheet",
+    "type": "finish"
+  },
+  {
+    "id": "finish:engineered-timber-boards",
+    "pk": "finish",
+    "label": "Engineered timber boards",
+    "normalizedLabel": "engineered-timber-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:modular-low-pile-tiles",
+    "pk": "finish",
+    "label": "Modular low-pile tiles",
+    "normalizedLabel": "modular-low-pile-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:strand-woven-bamboo-blocks",
+    "pk": "finish",
+    "label": "Strand-woven bamboo blocks",
+    "normalizedLabel": "strand-woven-bamboo-blocks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:oiled-cork-planks",
+    "pk": "finish",
+    "label": "Oiled cork planks",
+    "normalizedLabel": "oiled-cork-planks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:reclaimed-oak-softwood-boards",
+    "pk": "finish",
+    "label": "Reclaimed oak/softwood boards",
+    "normalizedLabel": "reclaimed-oak-softwood-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:honed-stone-tiles",
+    "pk": "finish",
+    "label": "Honed stone tiles",
+    "normalizedLabel": "honed-stone-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:recycled-vinyl-planks",
+    "pk": "finish",
+    "label": "Recycled vinyl planks",
+    "normalizedLabel": "recycled-vinyl-planks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:seamless-epoxy-resin",
+    "pk": "finish",
+    "label": "Seamless epoxy resin",
+    "normalizedLabel": "seamless-epoxy-resin",
+    "type": "finish"
+  },
+  {
+    "id": "finish:seamless-mineral-microcement",
+    "pk": "finish",
+    "label": "Seamless mineral microcement",
+    "normalizedLabel": "seamless-mineral-microcement",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glazed-ceramic-tiles",
+    "pk": "finish",
+    "label": "Glazed ceramic tiles",
+    "normalizedLabel": "glazed-ceramic-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:industrial-epoxy-coating",
+    "pk": "finish",
+    "label": "Industrial epoxy coating",
+    "normalizedLabel": "industrial-epoxy-coating",
+    "type": "finish"
+  },
+  {
+    "id": "finish:honed-travertine",
+    "pk": "finish",
+    "label": "Honed travertine",
+    "normalizedLabel": "honed-travertine",
+    "type": "finish"
+  },
+  {
+    "id": "finish:polished-marble",
+    "pk": "finish",
+    "label": "Polished marble",
+    "normalizedLabel": "polished-marble",
+    "type": "finish"
+  },
+  {
+    "id": "finish:engineered-oak-planks",
+    "pk": "finish",
+    "label": "Engineered oak planks",
+    "normalizedLabel": "engineered-oak-planks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:modular-linoleum-tiles",
+    "pk": "finish",
+    "label": "Modular linoleum tiles",
+    "normalizedLabel": "modular-linoleum-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:thermally-broken-aluminum",
+    "pk": "finish",
+    "label": "Thermally broken aluminum",
+    "normalizedLabel": "thermally-broken-aluminum",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-alu-clad",
+    "pk": "finish",
+    "label": "Timber alu-clad",
+    "normalizedLabel": "timber-alu-clad",
+    "type": "finish"
+  },
+  {
+    "id": "finish:high-recycled-content-aluminum",
+    "pk": "finish",
+    "label": "High-recycled-content aluminum",
+    "normalizedLabel": "high-recycled-content-aluminum",
+    "type": "finish"
+  },
+  {
+    "id": "finish:slim-steel-frames",
+    "pk": "finish",
+    "label": "Slim steel frames",
+    "normalizedLabel": "slim-steel-frames",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-polymer-composite",
+    "pk": "finish",
+    "label": "Timber-polymer composite",
+    "normalizedLabel": "timber-polymer-composite",
+    "type": "finish"
+  },
+  {
+    "id": "finish:multi-chamber-upvc",
+    "pk": "finish",
+    "label": "Multi-chamber uPVC",
+    "normalizedLabel": "multi-chamber-upvc",
+    "type": "finish"
+  },
+  {
+    "id": "finish:aluminum-curtain-wall",
+    "pk": "finish",
+    "label": "Aluminum curtain wall",
+    "normalizedLabel": "aluminum-curtain-wall",
+    "type": "finish"
+  },
+  {
+    "id": "finish:structural-glass-with-minimal-framing",
+    "pk": "finish",
+    "label": "Structural glass with minimal framing",
+    "normalizedLabel": "structural-glass-with-minimal-framing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-clay-plaster",
+    "pk": "finish",
+    "label": "Natural clay plaster",
+    "normalizedLabel": "natural-clay-plaster",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-gypsum-board",
+    "pk": "finish",
+    "label": "Painted gypsum board",
+    "normalizedLabel": "painted-gypsum-board",
+    "type": "finish"
+  },
+  {
+    "id": "finish:smooth-plasterboard-finish",
+    "pk": "finish",
+    "label": "Smooth plasterboard finish",
+    "normalizedLabel": "smooth-plasterboard-finish",
+    "type": "finish"
+  },
+  {
+    "id": "finish:birch-plywood-panels",
+    "pk": "finish",
+    "label": "Birch plywood panels",
+    "normalizedLabel": "birch-plywood-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fabric-wrapped-acoustic-panels",
+    "pk": "finish",
+    "label": "Fabric-wrapped acoustic panels",
+    "normalizedLabel": "fabric-wrapped-acoustic-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:frameless-or-framed-glass",
+    "pk": "finish",
+    "label": "Frameless or framed glass",
+    "normalizedLabel": "frameless-or-framed-glass",
+    "type": "finish"
+  },
+  {
+    "id": "finish:exposed-brick-wall",
+    "pk": "finish",
+    "label": "Exposed brick wall",
+    "normalizedLabel": "exposed-brick-wall",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-concrete-block",
+    "pk": "finish",
+    "label": "Painted concrete block",
+    "normalizedLabel": "painted-concrete-block",
+    "type": "finish"
+  },
+  {
+    "id": "finish:low-voc-emulsion",
+    "pk": "finish",
+    "label": "Low-VOC emulsion",
+    "normalizedLabel": "low-voc-emulsion",
+    "type": "finish"
+  },
+  {
+    "id": "finish:matte",
+    "pk": "finish",
+    "label": "Matte",
+    "normalizedLabel": "matte",
+    "type": "finish"
+  },
+  {
+    "id": "finish:satin",
+    "pk": "finish",
+    "label": "Satin",
+    "normalizedLabel": "satin",
+    "type": "finish"
+  },
+  {
+    "id": "finish:gloss",
+    "pk": "finish",
+    "label": "Gloss",
+    "normalizedLabel": "gloss",
+    "type": "finish"
+  },
+  {
+    "id": "finish:custom-emulsion-colour",
+    "pk": "finish",
+    "label": "Custom emulsion colour",
+    "normalizedLabel": "custom-emulsion-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:breathable-ceiling-paint",
+    "pk": "finish",
+    "label": "Breathable ceiling paint",
+    "normalizedLabel": "breathable-ceiling-paint",
+    "type": "finish"
+  },
+  {
+    "id": "finish:custom-ceiling-paint-colour",
+    "pk": "finish",
+    "label": "Custom ceiling paint colour",
+    "normalizedLabel": "custom-ceiling-paint-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:facing-brick",
+    "pk": "finish",
+    "label": "Facing brick",
+    "normalizedLabel": "facing-brick",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fabric-wrapped-baffles",
+    "pk": "finish",
+    "label": "Fabric-wrapped baffles",
+    "normalizedLabel": "fabric-wrapped-baffles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:perforated-metal-with-acoustic-backing",
+    "pk": "finish",
+    "label": "Perforated metal with acoustic backing",
+    "normalizedLabel": "perforated-metal-with-acoustic-backing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-slat-ceiling",
+    "pk": "finish",
+    "label": "Timber slat ceiling",
+    "normalizedLabel": "timber-slat-ceiling",
+    "type": "finish"
+  },
+  {
+    "id": "finish:flush-gypsum-board",
+    "pk": "finish",
+    "label": "Flush gypsum board",
+    "normalizedLabel": "flush-gypsum-board",
+    "type": "finish"
+  },
+  {
+    "id": "finish:open-cell-metal-grid",
+    "pk": "finish",
+    "label": "Open cell metal grid",
+    "normalizedLabel": "open-cell-metal-grid",
+    "type": "finish"
+  },
+  {
+    "id": "finish:tensioned-fabric-membrane",
+    "pk": "finish",
+    "label": "Tensioned fabric membrane",
+    "normalizedLabel": "tensioned-fabric-membrane",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-or-plaster-coffers",
+    "pk": "finish",
+    "label": "Timber or plaster coffers",
+    "normalizedLabel": "timber-or-plaster-coffers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:smooth-plasterboard",
+    "pk": "finish",
+    "label": "Smooth plasterboard",
+    "normalizedLabel": "smooth-plasterboard",
+    "type": "finish"
+  },
+  {
+    "id": "finish:exposed-clt-panels",
+    "pk": "finish",
+    "label": "Exposed CLT panels",
+    "normalizedLabel": "exposed-clt-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:expanded-metal-mesh",
+    "pk": "finish",
+    "label": "Expanded metal mesh",
+    "normalizedLabel": "expanded-metal-mesh",
+    "type": "finish"
+  },
+  {
+    "id": "finish:mineral-fiber-acoustic-tiles",
+    "pk": "finish",
+    "label": "Mineral fiber acoustic tiles",
+    "normalizedLabel": "mineral-fiber-acoustic-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:sealed-exposed-concrete-soffit",
+    "pk": "finish",
+    "label": "Sealed exposed concrete soffit",
+    "normalizedLabel": "sealed-exposed-concrete-soffit",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-slats-on-acoustic-backing",
+    "pk": "finish",
+    "label": "Timber slats on acoustic backing",
+    "normalizedLabel": "timber-slats-on-acoustic-backing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:micro-perforated-metal-panels",
+    "pk": "finish",
+    "label": "Micro-perforated metal panels",
+    "normalizedLabel": "micro-perforated-metal-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:rift-sawn-oak-or-fsc-softwood-slats",
+    "pk": "finish",
+    "label": "Rift-sawn oak or FSC softwood slats",
+    "normalizedLabel": "rift-sawn-oak-or-fsc-softwood-slats",
+    "type": "finish"
+  },
+  {
+    "id": "finish:pressed-terracotta-panels-multiple-clay-mineral-tones",
+    "pk": "finish",
+    "label": "Pressed terracotta panels — multiple clay/mineral tones",
+    "normalizedLabel": "pressed-terracotta-panels-multiple-clay-mineral-tones",
+    "type": "finish"
+  },
+  {
+    "id": "finish:hemp-flax-agri-fibre-acoustic-panels",
+    "pk": "finish",
+    "label": "Hemp/flax/agri-fibre acoustic panels",
+    "normalizedLabel": "hemp-flax-agri-fibre-acoustic-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:oak-faced-acoustic-panels",
+    "pk": "finish",
+    "label": "Oak-faced acoustic panels",
+    "normalizedLabel": "oak-faced-acoustic-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:large-format-porcelain-tiles",
+    "pk": "finish",
+    "label": "Large-format porcelain tiles",
+    "normalizedLabel": "large-format-porcelain-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-fibre-textured-wallpaper",
+    "pk": "finish",
+    "label": "Natural fibre textured wallpaper",
+    "normalizedLabel": "natural-fibre-textured-wallpaper",
+    "type": "finish"
+  },
+  {
+    "id": "finish:solid-oak-slatted-lining",
+    "pk": "finish",
+    "label": "Solid oak slatted lining",
+    "normalizedLabel": "solid-oak-slatted-lining",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-cork-tiles-or-sheets",
+    "pk": "finish",
+    "label": "Natural cork tiles or sheets",
+    "normalizedLabel": "natural-cork-tiles-or-sheets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:upcycled-timber-cladding",
+    "pk": "finish",
+    "label": "Upcycled timber cladding",
+    "normalizedLabel": "upcycled-timber-cladding",
+    "type": "finish"
+  },
+  {
+    "id": "finish:grown-mycelium-acoustic-tiles",
+    "pk": "finish",
+    "label": "Grown mycelium acoustic tiles",
+    "normalizedLabel": "grown-mycelium-acoustic-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:undyed-wool-felt-panels",
+    "pk": "finish",
+    "label": "Undyed wool felt panels",
+    "normalizedLabel": "undyed-wool-felt-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:bamboo-slats-on-acoustic-backing",
+    "pk": "finish",
+    "label": "Bamboo slats on acoustic backing",
+    "normalizedLabel": "bamboo-slats-on-acoustic-backing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:birch-or-oak-plywood",
+    "pk": "finish",
+    "label": "Birch or oak plywood",
+    "normalizedLabel": "birch-or-oak-plywood",
+    "type": "finish"
+  },
+  {
+    "id": "finish:polished-marble-panels",
+    "pk": "finish",
+    "label": "Polished marble panels",
+    "normalizedLabel": "polished-marble-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:leather-wall-tiles",
+    "pk": "finish",
+    "label": "Leather wall tiles",
+    "normalizedLabel": "leather-wall-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:woven-or-expanded-metal-mesh",
+    "pk": "finish",
+    "label": "Woven or expanded metal mesh",
+    "normalizedLabel": "woven-or-expanded-metal-mesh",
+    "type": "finish"
+  },
+  {
+    "id": "finish:back-painted-or-textured-glass",
+    "pk": "finish",
+    "label": "Back-painted or textured glass",
+    "normalizedLabel": "back-painted-or-textured-glass",
+    "type": "finish"
+  },
+  {
+    "id": "finish:seamless-acoustic-plaster",
+    "pk": "finish",
+    "label": "Seamless acoustic plaster",
+    "normalizedLabel": "seamless-acoustic-plaster",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-lime-plaster",
+    "pk": "finish",
+    "label": "Natural lime plaster",
+    "normalizedLabel": "natural-lime-plaster",
+    "type": "finish"
+  },
+  {
+    "id": "finish:polished-moroccan-plaster",
+    "pk": "finish",
+    "label": "Polished Moroccan plaster",
+    "normalizedLabel": "polished-moroccan-plaster",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-secondary-framing",
+    "pk": "finish",
+    "label": "Painted secondary framing",
+    "normalizedLabel": "painted-secondary-framing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-deck-concrete-topping",
+    "pk": "finish",
+    "label": "Steel deck + concrete topping",
+    "normalizedLabel": "steel-deck-concrete-topping",
+    "type": "finish"
+  },
+  {
+    "id": "finish:precast-hollow-core-planks",
+    "pk": "finish",
+    "label": "Precast hollow-core planks",
+    "normalizedLabel": "precast-hollow-core-planks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:engineered-timber-joists",
+    "pk": "finish",
+    "label": "Engineered timber joists",
+    "normalizedLabel": "engineered-timber-joists",
+    "type": "finish"
+  },
+  {
+    "id": "finish:clt-floor-plates",
+    "pk": "finish",
+    "label": "CLT floor plates",
+    "normalizedLabel": "clt-floor-plates",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-infill-beams",
+    "pk": "finish",
+    "label": "Painted infill beams",
+    "normalizedLabel": "painted-infill-beams",
+    "type": "finish"
+  },
+  {
+    "id": "finish:pedestal-access-floor",
+    "pk": "finish",
+    "label": "Pedestal access floor",
+    "normalizedLabel": "pedestal-access-floor",
+    "type": "finish"
+  },
+  {
+    "id": "finish:sawn-or-engineered-timber",
+    "pk": "finish",
+    "label": "Sawn or engineered timber",
+    "normalizedLabel": "sawn-or-engineered-timber",
+    "type": "finish"
+  },
+  {
+    "id": "finish:galvanized-z-c-sections",
+    "pk": "finish",
+    "label": "Galvanized Z/C sections",
+    "normalizedLabel": "galvanized-z-c-sections",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glulam-roof-members",
+    "pk": "finish",
+    "label": "Glulam roof members",
+    "normalizedLabel": "glulam-roof-members",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-or-timber-trusses",
+    "pk": "finish",
+    "label": "Steel or timber trusses",
+    "normalizedLabel": "steel-or-timber-trusses",
+    "type": "finish"
+  },
+  {
+    "id": "finish:clt-roof-plates",
+    "pk": "finish",
+    "label": "CLT roof plates",
+    "normalizedLabel": "clt-roof-plates",
+    "type": "finish"
+  },
+  {
+    "id": "finish:lightweight-steel-space-frame",
+    "pk": "finish",
+    "label": "Lightweight steel space frame",
+    "normalizedLabel": "lightweight-steel-space-frame",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-or-concrete-edge-beams",
+    "pk": "finish",
+    "label": "Steel or concrete edge beams",
+    "normalizedLabel": "steel-or-concrete-edge-beams",
+    "type": "finish"
+  },
+  {
+    "id": "finish:perimeter-spandrel-beams",
+    "pk": "finish",
+    "label": "Perimeter spandrel beams",
+    "normalizedLabel": "perimeter-spandrel-beams",
+    "type": "finish"
+  },
+  {
+    "id": "finish:continuous-ring-beam",
+    "pk": "finish",
+    "label": "Continuous ring beam",
+    "normalizedLabel": "continuous-ring-beam",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-or-precast-lintels",
+    "pk": "finish",
+    "label": "Steel or precast lintels",
+    "normalizedLabel": "steel-or-precast-lintels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:galvanized-shelf-angles",
+    "pk": "finish",
+    "label": "Galvanized shelf angles",
+    "normalizedLabel": "galvanized-shelf-angles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-rods-or-flats",
+    "pk": "finish",
+    "label": "Steel rods or flats",
+    "normalizedLabel": "steel-rods-or-flats",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-bracing",
+    "pk": "finish",
+    "label": "Timber bracing",
+    "normalizedLabel": "timber-bracing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:secondary-bay-bracing",
+    "pk": "finish",
+    "label": "Secondary bay bracing",
+    "normalizedLabel": "secondary-bay-bracing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:deck-or-panel-diaphragms",
+    "pk": "finish",
+    "label": "Deck or panel diaphragms",
+    "normalizedLabel": "deck-or-panel-diaphragms",
+    "type": "finish"
+  },
+  {
+    "id": "finish:shear-panels-or-walls",
+    "pk": "finish",
+    "label": "Shear panels or walls",
+    "normalizedLabel": "shear-panels-or-walls",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-steel-stringers",
+    "pk": "finish",
+    "label": "Painted steel stringers",
+    "normalizedLabel": "painted-steel-stringers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-stair-carriages",
+    "pk": "finish",
+    "label": "Timber stair carriages",
+    "normalizedLabel": "timber-stair-carriages",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-or-timber-trimmers",
+    "pk": "finish",
+    "label": "Steel or timber trimmers",
+    "normalizedLabel": "steel-or-timber-trimmers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-or-steel-treads",
+    "pk": "finish",
+    "label": "Timber or steel treads",
+    "normalizedLabel": "timber-or-steel-treads",
+    "type": "finish"
+  },
+  {
+    "id": "finish:aluminum-or-galvanized-rails",
+    "pk": "finish",
+    "label": "Aluminum or galvanized rails",
+    "normalizedLabel": "aluminum-or-galvanized-rails",
+    "type": "finish"
+  },
+  {
+    "id": "finish:carrier-rails-and-brackets",
+    "pk": "finish",
+    "label": "Carrier rails and brackets",
+    "normalizedLabel": "carrier-rails-and-brackets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:aluminum-curtain-wall-grid",
+    "pk": "finish",
+    "label": "Aluminum curtain wall grid",
+    "normalizedLabel": "aluminum-curtain-wall-grid",
+    "type": "finish"
+  },
+  {
+    "id": "finish:adjustable-bracketry",
+    "pk": "finish",
+    "label": "Adjustable bracketry",
+    "normalizedLabel": "adjustable-bracketry",
+    "type": "finish"
+  },
+  {
+    "id": "finish:steel-balcony-beams",
+    "pk": "finish",
+    "label": "Steel balcony beams",
+    "normalizedLabel": "steel-balcony-beams",
+    "type": "finish"
+  },
+  {
+    "id": "finish:painted-steel-canopy",
+    "pk": "finish",
+    "label": "Painted steel canopy",
+    "normalizedLabel": "painted-steel-canopy",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-pergola-members",
+    "pk": "finish",
+    "label": "Timber pergola members",
+    "normalizedLabel": "timber-pergola-members",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stainless-or-galvanized-rods",
+    "pk": "finish",
+    "label": "Stainless or galvanized rods",
+    "normalizedLabel": "stainless-or-galvanized-rods",
+    "type": "finish"
+  },
+  {
+    "id": "finish:cantilever-support-arms",
+    "pk": "finish",
+    "label": "Cantilever support arms",
+    "normalizedLabel": "cantilever-support-arms",
+    "type": "finish"
+  },
+  {
+    "id": "finish:solid-brick-masonry",
+    "pk": "finish",
+    "label": "Solid brick masonry",
+    "normalizedLabel": "solid-brick-masonry",
+    "type": "finish"
+  },
+  {
+    "id": "finish:concrete-blockwork",
+    "pk": "finish",
+    "label": "Concrete blockwork",
+    "normalizedLabel": "concrete-blockwork",
+    "type": "finish"
+  },
+  {
+    "id": "finish:hempcrete-infill-with-timber-frame",
+    "pk": "finish",
+    "label": "Hempcrete infill with timber frame",
+    "normalizedLabel": "hempcrete-infill-with-timber-frame",
+    "type": "finish"
+  },
+  {
+    "id": "finish:composite-steel-decking-with-concrete",
+    "pk": "finish",
+    "label": "Composite steel decking with concrete",
+    "normalizedLabel": "composite-steel-decking-with-concrete",
+    "type": "finish"
+  },
+  {
+    "id": "finish:precast-concrete-elements",
+    "pk": "finish",
+    "label": "Precast concrete elements",
+    "normalizedLabel": "precast-concrete-elements",
+    "type": "finish"
+  },
+  {
+    "id": "finish:welded-steel-trusses",
+    "pk": "finish",
+    "label": "Welded steel trusses",
+    "normalizedLabel": "welded-steel-trusses",
+    "type": "finish"
+  },
+  {
+    "id": "finish:prestressed-concrete-beams",
+    "pk": "finish",
+    "label": "Prestressed concrete beams",
+    "normalizedLabel": "prestressed-concrete-beams",
+    "type": "finish"
+  },
+  {
+    "id": "finish:permeable-concrete-stone-blocks",
+    "pk": "finish",
+    "label": "Permeable concrete/stone blocks",
+    "normalizedLabel": "permeable-concrete-stone-blocks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:birch-plywood-joinery",
+    "pk": "finish",
+    "label": "Birch plywood joinery",
+    "normalizedLabel": "birch-plywood-joinery",
+    "type": "finish"
+  },
+  {
+    "id": "finish:satin-brass-fixtures",
+    "pk": "finish",
+    "label": "Satin brass fixtures",
+    "normalizedLabel": "satin-brass-fixtures",
+    "type": "finish"
+  },
+  {
+    "id": "finish:zinc-standing-seam-select-finish",
+    "pk": "finish",
+    "label": "Zinc standing seam — select finish",
+    "normalizedLabel": "zinc-standing-seam-select-finish",
+    "type": "finish"
+  },
+  {
+    "id": "finish:prefinished-aluminium-standing-seam-select-ral-colour",
+    "pk": "finish",
+    "label": "Prefinished aluminium standing seam — select RAL colour",
+    "normalizedLabel": "prefinished-aluminium-standing-seam-select-ral-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:copper-standing-seam",
+    "pk": "finish",
+    "label": "Copper standing seam",
+    "normalizedLabel": "copper-standing-seam",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stainless-steel-standing-seam",
+    "pk": "finish",
+    "label": "Stainless steel standing seam",
+    "normalizedLabel": "stainless-steel-standing-seam",
+    "type": "finish"
+  },
+  {
+    "id": "finish:rolled-lead-standing-seam",
+    "pk": "finish",
+    "label": "Rolled lead standing seam",
+    "normalizedLabel": "rolled-lead-standing-seam",
+    "type": "finish"
+  },
+  {
+    "id": "finish:extensive-green-roof",
+    "pk": "finish",
+    "label": "Extensive green roof",
+    "normalizedLabel": "extensive-green-roof",
+    "type": "finish"
+  },
+  {
+    "id": "finish:high-albedo-membrane",
+    "pk": "finish",
+    "label": "High albedo membrane",
+    "normalizedLabel": "high-albedo-membrane",
+    "type": "finish"
+  },
+  {
+    "id": "finish:building-integrated-pv",
+    "pk": "finish",
+    "label": "Building-integrated PV",
+    "normalizedLabel": "building-integrated-pv",
+    "type": "finish"
+  },
+  {
+    "id": "finish:attenuation-roof-with-controlled-outlets",
+    "pk": "finish",
+    "label": "Attenuation roof with controlled outlets",
+    "normalizedLabel": "attenuation-roof-with-controlled-outlets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:interlocking-clay-tiles",
+    "pk": "finish",
+    "label": "Interlocking clay tiles",
+    "normalizedLabel": "interlocking-clay-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-slate-roofing",
+    "pk": "finish",
+    "label": "Natural slate roofing",
+    "normalizedLabel": "natural-slate-roofing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:profiled-metal-tiles",
+    "pk": "finish",
+    "label": "Profiled metal tiles",
+    "normalizedLabel": "profiled-metal-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:single-ply-epdm",
+    "pk": "finish",
+    "label": "Single-ply EPDM",
+    "normalizedLabel": "single-ply-epdm",
+    "type": "finish"
+  },
+  {
+    "id": "finish:white-tpo-single-ply",
+    "pk": "finish",
+    "label": "White TPO single-ply",
+    "normalizedLabel": "white-tpo-single-ply",
+    "type": "finish"
+  },
+  {
+    "id": "finish:bituminous-built-up-layers",
+    "pk": "finish",
+    "label": "Bituminous built-up layers",
+    "normalizedLabel": "bituminous-built-up-layers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:multi-wall-polycarbonate",
+    "pk": "finish",
+    "label": "Multi-wall polycarbonate",
+    "normalizedLabel": "multi-wall-polycarbonate",
+    "type": "finish"
+  },
+  {
+    "id": "finish:rigid-wood-fiber-boards",
+    "pk": "finish",
+    "label": "Rigid wood fiber boards",
+    "normalizedLabel": "rigid-wood-fiber-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:hemp-fiber-batts",
+    "pk": "finish",
+    "label": "Hemp fiber batts",
+    "normalizedLabel": "hemp-fiber-batts",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-wool-batts",
+    "pk": "finish",
+    "label": "Natural wool batts",
+    "normalizedLabel": "natural-wool-batts",
+    "type": "finish"
+  },
+  {
+    "id": "finish:expanded-cork-boards",
+    "pk": "finish",
+    "label": "Expanded cork boards",
+    "normalizedLabel": "expanded-cork-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:recycled-paper-cellulose",
+    "pk": "finish",
+    "label": "Recycled paper cellulose",
+    "normalizedLabel": "recycled-paper-cellulose",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stone-wool-batts",
+    "pk": "finish",
+    "label": "Stone wool batts",
+    "normalizedLabel": "stone-wool-batts",
+    "type": "finish"
+  },
+  {
+    "id": "finish:rigid-foam-insulation",
+    "pk": "finish",
+    "label": "Rigid foam insulation",
+    "normalizedLabel": "rigid-foam-insulation",
+    "type": "finish"
+  },
+  {
+    "id": "finish:ultra-thin-aerogel-blankets",
+    "pk": "finish",
+    "label": "Ultra-thin aerogel blankets",
+    "normalizedLabel": "ultra-thin-aerogel-blankets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:solid-or-veneered-timber",
+    "pk": "finish",
+    "label": "Solid or veneered timber",
+    "normalizedLabel": "solid-or-veneered-timber",
+    "type": "finish"
+  },
+  {
+    "id": "finish:powder-coated-steel",
+    "pk": "finish",
+    "label": "Powder-coated steel",
+    "normalizedLabel": "powder-coated-steel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:anodized-or-powder-coated-aluminum",
+    "pk": "finish",
+    "label": "Anodized or powder-coated aluminum",
+    "normalizedLabel": "anodized-or-powder-coated-aluminum",
+    "type": "finish"
+  },
+  {
+    "id": "finish:grp-composite-with-insulated-core",
+    "pk": "finish",
+    "label": "GRP composite with insulated core",
+    "normalizedLabel": "grp-composite-with-insulated-core",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fire-rated-timber-or-steel",
+    "pk": "finish",
+    "label": "Fire-rated timber or steel",
+    "normalizedLabel": "fire-rated-timber-or-steel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:frameless-or-channel-mounted-glass",
+    "pk": "finish",
+    "label": "Frameless or channel-mounted glass",
+    "normalizedLabel": "frameless-or-channel-mounted-glass",
+    "type": "finish"
+  },
+  {
+    "id": "finish:hardwood-or-softwood-rails",
+    "pk": "finish",
+    "label": "Hardwood or softwood rails",
+    "normalizedLabel": "hardwood-or-softwood-rails",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stainless-steel-cables",
+    "pk": "finish",
+    "label": "Stainless steel cables",
+    "normalizedLabel": "stainless-steel-cables",
+    "type": "finish"
+  },
+  {
+    "id": "finish:loose-gravel-or-aggregate",
+    "pk": "finish",
+    "label": "Loose gravel or aggregate",
+    "normalizedLabel": "loose-gravel-or-aggregate",
+    "type": "finish"
+  },
+  {
+    "id": "finish:resin-bound-aggregate",
+    "pk": "finish",
+    "label": "Resin-bound aggregate",
+    "normalizedLabel": "resin-bound-aggregate",
+    "type": "finish"
+  },
+  {
+    "id": "finish:poured-or-slab-concrete",
+    "pk": "finish",
+    "label": "Poured or slab concrete",
+    "normalizedLabel": "poured-or-slab-concrete",
+    "type": "finish"
+  },
+  {
+    "id": "finish:concrete-or-clay-block-pavers",
+    "pk": "finish",
+    "label": "Concrete or clay block pavers",
+    "normalizedLabel": "concrete-or-clay-block-pavers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:plastic-grid-with-grass",
+    "pk": "finish",
+    "label": "Plastic grid with grass",
+    "normalizedLabel": "plastic-grid-with-grass",
+    "type": "finish"
+  },
+  {
+    "id": "finish:timber-or-composite-boards",
+    "pk": "finish",
+    "label": "Timber or composite boards",
+    "normalizedLabel": "timber-or-composite-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:brick-slip-on-carrier-rails",
+    "pk": "finish",
+    "label": "Brick-slip on carrier rails",
+    "normalizedLabel": "brick-slip-on-carrier-rails",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-stone-cladding",
+    "pk": "finish",
+    "label": "Natural stone cladding",
+    "normalizedLabel": "natural-stone-cladding",
+    "type": "finish"
+  },
+  {
+    "id": "finish:ventilated-stone-panels-on-rails",
+    "pk": "finish",
+    "label": "Ventilated stone panels on rails",
+    "normalizedLabel": "ventilated-stone-panels-on-rails",
+    "type": "finish"
+  },
+  {
+    "id": "finish:factory-made-concrete-panels",
+    "pk": "finish",
+    "label": "Factory-made concrete panels",
+    "normalizedLabel": "factory-made-concrete-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glass-fibre-reinforced-concrete",
+    "pk": "finish",
+    "label": "Glass-fibre reinforced concrete",
+    "normalizedLabel": "glass-fibre-reinforced-concrete",
+    "type": "finish"
+  },
+  {
+    "id": "finish:split-or-sawn-slate-panels",
+    "pk": "finish",
+    "label": "Split or sawn slate panels",
+    "normalizedLabel": "split-or-sawn-slate-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:cast-in-place-hemp-lime",
+    "pk": "finish",
+    "label": "Cast-in-place hemp-lime",
+    "normalizedLabel": "cast-in-place-hemp-lime",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fsc-timber-boards-or-battens",
+    "pk": "finish",
+    "label": "FSC timber boards or battens",
+    "normalizedLabel": "fsc-timber-boards-or-battens",
+    "type": "finish"
+  },
+  {
+    "id": "finish:charred-fsc-timber-boards",
+    "pk": "finish",
+    "label": "Charred FSC timber boards",
+    "normalizedLabel": "charred-fsc-timber-boards",
+    "type": "finish"
+  },
+  {
+    "id": "finish:expanded-cork-panels",
+    "pk": "finish",
+    "label": "Expanded cork panels",
+    "normalizedLabel": "expanded-cork-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:wood-fibre-insulation-with-lime-render",
+    "pk": "finish",
+    "label": "Wood-fibre insulation with lime render",
+    "normalizedLabel": "wood-fibre-insulation-with-lime-render",
+    "type": "finish"
+  },
+  {
+    "id": "finish:insulated-render-system-select-ral-colour",
+    "pk": "finish",
+    "label": "Insulated render system — select RAL colour",
+    "normalizedLabel": "insulated-render-system-select-ral-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:modular-planted-fa-ade",
+    "pk": "finish",
+    "label": "Modular planted façade",
+    "normalizedLabel": "modular-planted-fa-ade",
+    "type": "finish"
+  },
+  {
+    "id": "finish:standing-seam-or-flat-lock-zinc-select-finish",
+    "pk": "finish",
+    "label": "Standing seam or flat-lock zinc — select finish",
+    "normalizedLabel": "standing-seam-or-flat-lock-zinc-select-finish",
+    "type": "finish"
+  },
+  {
+    "id": "finish:prefinished-aluminium-panels-select-ral-colour",
+    "pk": "finish",
+    "label": "Prefinished aluminium panels — select RAL colour",
+    "normalizedLabel": "prefinished-aluminium-panels-select-ral-colour",
+    "type": "finish"
+  },
+  {
+    "id": "finish:copper-sheets-or-shingles",
+    "pk": "finish",
+    "label": "Copper sheets or shingles",
+    "normalizedLabel": "copper-sheets-or-shingles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:stainless-steel-sheets",
+    "pk": "finish",
+    "label": "Stainless steel sheets",
+    "normalizedLabel": "stainless-steel-sheets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:rolled-lead-sheets",
+    "pk": "finish",
+    "label": "Rolled lead sheets",
+    "normalizedLabel": "rolled-lead-sheets",
+    "type": "finish"
+  },
+  {
+    "id": "finish:corten-steel-panels",
+    "pk": "finish",
+    "label": "Corten steel panels",
+    "normalizedLabel": "corten-steel-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:factory-assembled-insulated-metal-panels",
+    "pk": "finish",
+    "label": "Factory-assembled insulated metal panels",
+    "normalizedLabel": "factory-assembled-insulated-metal-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fibre-cement-rainscreen-panels",
+    "pk": "finish",
+    "label": "Fibre cement rainscreen panels",
+    "normalizedLabel": "fibre-cement-rainscreen-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:aluminium-composite-panels",
+    "pk": "finish",
+    "label": "Aluminium composite panels",
+    "normalizedLabel": "aluminium-composite-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:curtain-walling-or-structural-glazing",
+    "pk": "finish",
+    "label": "Curtain walling or structural glazing",
+    "normalizedLabel": "curtain-walling-or-structural-glazing",
+    "type": "finish"
+  },
+  {
+    "id": "finish:etfe-cushions-or-tensile-membrane",
+    "pk": "finish",
+    "label": "ETFE cushions or tensile membrane",
+    "normalizedLabel": "etfe-cushions-or-tensile-membrane",
+    "type": "finish"
+  },
+  {
+    "id": "finish:mixed-native-species",
+    "pk": "finish",
+    "label": "Mixed native species",
+    "normalizedLabel": "mixed-native-species",
+    "type": "finish"
+  },
+  {
+    "id": "finish:meadow-grass-and-wildflowers",
+    "pk": "finish",
+    "label": "Meadow grass and wildflowers",
+    "normalizedLabel": "meadow-grass-and-wildflowers",
+    "type": "finish"
+  },
+  {
+    "id": "finish:water-tolerant-planting",
+    "pk": "finish",
+    "label": "Water-tolerant planting",
+    "normalizedLabel": "water-tolerant-planting",
+    "type": "finish"
+  },
+  {
+    "id": "finish:vertical-planting-system",
+    "pk": "finish",
+    "label": "Vertical planting system",
+    "normalizedLabel": "vertical-planting-system",
+    "type": "finish"
+  },
+  {
+    "id": "finish:mixed-ornamental-species",
+    "pk": "finish",
+    "label": "Mixed ornamental species",
+    "normalizedLabel": "mixed-ornamental-species",
+    "type": "finish"
+  },
+  {
+    "id": "finish:semi-mature-or-standard-trees",
+    "pk": "finish",
+    "label": "Semi-mature or standard trees",
+    "normalizedLabel": "semi-mature-or-standard-trees",
+    "type": "finish"
+  },
+  {
+    "id": "finish:solid-oak-with-oil-finish",
+    "pk": "finish",
+    "label": "Solid oak with oil finish",
+    "normalizedLabel": "solid-oak-with-oil-finish",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fabric-or-leather-upholstery",
+    "pk": "finish",
+    "label": "Fabric or leather upholstery",
+    "normalizedLabel": "fabric-or-leather-upholstery",
+    "type": "finish"
+  },
+  {
+    "id": "finish:birch-plywood-construction",
+    "pk": "finish",
+    "label": "Birch plywood construction",
+    "normalizedLabel": "birch-plywood-construction",
+    "type": "finish"
+  },
+  {
+    "id": "finish:salvaged-timber-with-character",
+    "pk": "finish",
+    "label": "Salvaged timber with character",
+    "normalizedLabel": "salvaged-timber-with-character",
+    "type": "finish"
+  },
+  {
+    "id": "finish:powder-coated-or-timber",
+    "pk": "finish",
+    "label": "Powder-coated or timber",
+    "normalizedLabel": "powder-coated-or-timber",
+    "type": "finish"
+  }
+]

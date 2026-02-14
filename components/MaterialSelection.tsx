@@ -4,10 +4,10 @@ import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
-import { callGeminiText, checkQuota, consumeCredits } from '../api';
+import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
-import { getMaterialIconId } from '../utils/materialIconMapping';
+import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 import { useAuth, useUsage } from '../auth';
 
@@ -103,6 +103,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return initial;
   });
   const [customMaterialMode, setCustomMaterialMode] = useState<CustomMaterialMode>(null);
+  const [materialPalette, setMaterialPalette] = useState<MaterialOption[]>(MATERIAL_PALETTE);
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
@@ -133,6 +134,25 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       setCustomMaterialMode('describe');
     }
   }, [selectedCategory]);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadMaterials = async () => {
+      try {
+        const dbMaterials = await getMaterials();
+        if (!mounted) return;
+        if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
+          setMaterialPalette(dbMaterials);
+        }
+      } catch (error) {
+        console.warn('Falling back to hardcoded material palette:', error);
+      }
+    };
+    void loadMaterials();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Helper to get user-friendly category display names
   const getCategoryDisplayName = (category: MaterialOption['category']): string => {
@@ -247,7 +267,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
 
   // Migrate materials to new category structure
-  const migratedMaterials = useMemo(() => migrateAllMaterials(MATERIAL_PALETTE), []);
+  const migratedMaterials = useMemo(() => migrateAllMaterials(materialPalette), [materialPalette]);
 
   // Organize materials by category path
   const materialsByPath = useMemo(() => {
@@ -1165,7 +1185,7 @@ IMPORTANT:
                 {/* Product Grid */}
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
                   {sortedMaterials.map((mat) => {
-                    const iconId = getMaterialIconId(mat.id);
+                    const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
                     return (
                     <article key={mat.id} className="group space-y-3">
                       {/* Product image/swatch */}
@@ -1174,9 +1194,9 @@ IMPORTANT:
                           <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
                         ) : (
                           <picture>
-                            <source srcSet={`/icons/${iconId}.webp`} type="image/webp" />
+                            <source srcSet={webpUrl} type="image/webp" />
                             <img
-                              src={`/icons/${iconId}.png`}
+                              src={pngUrl}
                               alt={mat.name}
                               className="w-full h-full object-cover"
                               loading="lazy"

@@ -1,0 +1,1549 @@
+[
+  {
+    "id": "mf:steel-frame:finish:painted-steel-select-colour",
+    "pk": "steel-frame",
+    "materialId": "steel-frame",
+    "finishId": "finish:painted-steel-select-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glulam-structure:finish:glulam-timber-beams-and-posts",
+    "pk": "glulam-structure",
+    "materialId": "glulam-structure",
+    "finishId": "finish:glulam-timber-beams-and-posts",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:green-oak-structure:finish:fresh-sawn-structural-oak",
+    "pk": "green-oak-structure",
+    "materialId": "green-oak-structure",
+    "finishId": "finish:fresh-sawn-structural-oak",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:concrete-frame:finish:cast-in-place-concrete",
+    "pk": "concrete-frame",
+    "materialId": "concrete-frame",
+    "finishId": "finish:cast-in-place-concrete",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:hybrid-structure:finish:hybrid-timber-steel",
+    "pk": "hybrid-structure",
+    "materialId": "hybrid-structure",
+    "finishId": "finish:hybrid-timber-steel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:space-frame-structure:finish:tubular-steel-space-frame",
+    "pk": "space-frame-structure",
+    "materialId": "space-frame-structure",
+    "finishId": "finish:tubular-steel-space-frame",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:clt-structure:finish:fsc-clt-panels",
+    "pk": "clt-structure",
+    "materialId": "clt-structure",
+    "finishId": "finish:fsc-clt-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:nlt-structure:finish:dowel-nail-laminated-timber",
+    "pk": "nlt-structure",
+    "materialId": "nlt-structure",
+    "finishId": "finish:dowel-nail-laminated-timber",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:ggbs-concrete:finish:ggbs-slag-concrete-mix",
+    "pk": "ggbs-concrete",
+    "materialId": "ggbs-concrete",
+    "finishId": "finish:ggbs-slag-concrete-mix",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:rammed-earth-structure:finish:stabilised-rammed-earth",
+    "pk": "rammed-earth-structure",
+    "materialId": "rammed-earth-structure",
+    "finishId": "finish:stabilised-rammed-earth",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:polished-concrete:finish:polished-concrete-slab",
+    "pk": "polished-concrete",
+    "materialId": "polished-concrete",
+    "finishId": "finish:polished-concrete-slab",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:lino-floor:finish:natural-lino-sheet",
+    "pk": "lino-floor",
+    "materialId": "lino-floor",
+    "finishId": "finish:natural-lino-sheet",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-terrazzo:finish:composite-terrazzo-with-plastic-fragments",
+    "pk": "recycled-terrazzo",
+    "materialId": "recycled-terrazzo",
+    "finishId": "finish:composite-terrazzo-with-plastic-fragments",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:rubber-floor:finish:recycled-rubber-sheet",
+    "pk": "rubber-floor",
+    "materialId": "rubber-floor",
+    "finishId": "finish:recycled-rubber-sheet",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-flooring:finish:engineered-timber-boards",
+    "pk": "timber-flooring",
+    "materialId": "timber-flooring",
+    "finishId": "finish:engineered-timber-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:grey-carpet:finish:modular-low-pile-tiles",
+    "pk": "grey-carpet",
+    "materialId": "grey-carpet",
+    "finishId": "finish:modular-low-pile-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:bamboo-parquet:finish:strand-woven-bamboo-blocks",
+    "pk": "bamboo-parquet",
+    "materialId": "bamboo-parquet",
+    "finishId": "finish:strand-woven-bamboo-blocks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cork-plank-floor:finish:oiled-cork-planks",
+    "pk": "cork-plank-floor",
+    "materialId": "cork-plank-floor",
+    "finishId": "finish:oiled-cork-planks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:reclaimed-timber-floor:finish:reclaimed-oak-softwood-boards",
+    "pk": "reclaimed-timber-floor",
+    "materialId": "reclaimed-timber-floor",
+    "finishId": "finish:reclaimed-oak-softwood-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stone-paver:finish:honed-stone-tiles",
+    "pk": "stone-paver",
+    "materialId": "stone-paver",
+    "finishId": "finish:honed-stone-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:vinyl-planks:finish:recycled-vinyl-planks",
+    "pk": "vinyl-planks",
+    "materialId": "vinyl-planks",
+    "finishId": "finish:recycled-vinyl-planks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:resin-flooring:finish:seamless-epoxy-resin",
+    "pk": "resin-flooring",
+    "materialId": "resin-flooring",
+    "finishId": "finish:seamless-epoxy-resin",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:microcement-floor:finish:seamless-mineral-microcement",
+    "pk": "microcement-floor",
+    "materialId": "microcement-floor",
+    "finishId": "finish:seamless-mineral-microcement",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:ceramic-tiles:finish:glazed-ceramic-tiles",
+    "pk": "ceramic-tiles",
+    "materialId": "ceramic-tiles",
+    "finishId": "finish:glazed-ceramic-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:epoxy-flooring:finish:industrial-epoxy-coating",
+    "pk": "epoxy-flooring",
+    "materialId": "epoxy-flooring",
+    "finishId": "finish:industrial-epoxy-coating",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:travertine-tiles:finish:honed-travertine",
+    "pk": "travertine-tiles",
+    "materialId": "travertine-tiles",
+    "finishId": "finish:honed-travertine",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:marble-floor:finish:polished-marble",
+    "pk": "marble-floor",
+    "materialId": "marble-floor",
+    "finishId": "finish:polished-marble",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:engineered-oak-floor:finish:engineered-oak-planks",
+    "pk": "engineered-oak-floor",
+    "materialId": "engineered-oak-floor",
+    "finishId": "finish:engineered-oak-planks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:linoleum-tiles:finish:modular-linoleum-tiles",
+    "pk": "linoleum-tiles",
+    "materialId": "linoleum-tiles",
+    "finishId": "finish:modular-linoleum-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aluminum-frame:finish:thermally-broken-aluminum",
+    "pk": "aluminum-frame",
+    "materialId": "aluminum-frame",
+    "finishId": "finish:thermally-broken-aluminum",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-frame:finish:timber-alu-clad",
+    "pk": "timber-frame",
+    "materialId": "timber-frame",
+    "finishId": "finish:timber-alu-clad",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-aluminum-frame:finish:high-recycled-content-aluminum",
+    "pk": "recycled-aluminum-frame",
+    "materialId": "recycled-aluminum-frame",
+    "finishId": "finish:high-recycled-content-aluminum",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-window-frame:finish:slim-steel-frames",
+    "pk": "steel-window-frame",
+    "materialId": "steel-window-frame",
+    "finishId": "finish:slim-steel-frames",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:composite-window-frame:finish:timber-polymer-composite",
+    "pk": "composite-window-frame",
+    "materialId": "composite-window-frame",
+    "finishId": "finish:timber-polymer-composite",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:upvc-window-frame:finish:multi-chamber-upvc",
+    "pk": "upvc-window-frame",
+    "materialId": "upvc-window-frame",
+    "finishId": "finish:multi-chamber-upvc",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:curtain-wall-system:finish:aluminum-curtain-wall",
+    "pk": "curtain-wall-system",
+    "materialId": "curtain-wall-system",
+    "finishId": "finish:aluminum-curtain-wall",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:frameless-glazing:finish:structural-glass-with-minimal-framing",
+    "pk": "frameless-glazing",
+    "materialId": "frameless-glazing",
+    "finishId": "finish:structural-glass-with-minimal-framing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:clay-plaster:finish:natural-clay-plaster",
+    "pk": "clay-plaster",
+    "materialId": "clay-plaster",
+    "finishId": "finish:natural-clay-plaster",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:gypsum-wall:finish:painted-gypsum-board",
+    "pk": "gypsum-wall",
+    "materialId": "gypsum-wall",
+    "finishId": "finish:painted-gypsum-board",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:plasterboard-wall:finish:smooth-plasterboard-finish",
+    "pk": "plasterboard-wall",
+    "materialId": "plasterboard-wall",
+    "finishId": "finish:smooth-plasterboard-finish",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:plywood-panels-wall:finish:birch-plywood-panels",
+    "pk": "plywood-panels-wall",
+    "materialId": "plywood-panels-wall",
+    "finishId": "finish:birch-plywood-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:acoustic-panels-wall:finish:fabric-wrapped-acoustic-panels",
+    "pk": "acoustic-panels-wall",
+    "materialId": "acoustic-panels-wall",
+    "finishId": "finish:fabric-wrapped-acoustic-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glass-partitions:finish:frameless-or-framed-glass",
+    "pk": "glass-partitions",
+    "materialId": "glass-partitions",
+    "finishId": "finish:frameless-or-framed-glass",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:brick-internal:finish:exposed-brick-wall",
+    "pk": "brick-internal",
+    "materialId": "brick-internal",
+    "finishId": "finish:exposed-brick-wall",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:concrete-block-wall:finish:painted-concrete-block",
+    "pk": "concrete-block-wall",
+    "materialId": "concrete-block-wall",
+    "finishId": "finish:painted-concrete-block",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:mineral-microcement:finish:seamless-mineral-microcement",
+    "pk": "mineral-microcement",
+    "materialId": "mineral-microcement",
+    "finishId": "finish:seamless-mineral-microcement",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:standard-wall-paint:finish:low-voc-emulsion",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishId": "finish:low-voc-emulsion",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:standard-wall-paint:finish:matte",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishId": "finish:matte",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:standard-wall-paint:finish:satin",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishId": "finish:satin",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:standard-wall-paint:finish:gloss",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishId": "finish:gloss",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-wall-paint:finish:custom-emulsion-colour",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishId": "finish:custom-emulsion-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:custom-wall-paint:finish:matte",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishId": "finish:matte",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-wall-paint:finish:satin",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishId": "finish:satin",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-wall-paint:finish:gloss",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishId": "finish:gloss",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:standard-ceiling-paint:finish:breathable-ceiling-paint",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishId": "finish:breathable-ceiling-paint",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:standard-ceiling-paint:finish:matte",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishId": "finish:matte",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:standard-ceiling-paint:finish:satin",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishId": "finish:satin",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:standard-ceiling-paint:finish:gloss",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishId": "finish:gloss",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-ceiling-paint:finish:custom-ceiling-paint-colour",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishId": "finish:custom-ceiling-paint-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:custom-ceiling-paint:finish:matte",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishId": "finish:matte",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-ceiling-paint:finish:satin",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishId": "finish:satin",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:custom-ceiling-paint:finish:gloss",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishId": "finish:gloss",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:brick-veneer:finish:facing-brick",
+    "pk": "brick-veneer",
+    "materialId": "brick-veneer",
+    "finishId": "finish:facing-brick",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:acoustic-ceiling-baffles:finish:fabric-wrapped-baffles",
+    "pk": "acoustic-ceiling-baffles",
+    "materialId": "acoustic-ceiling-baffles",
+    "finishId": "finish:fabric-wrapped-baffles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:perforated-metal-ceiling:finish:perforated-metal-with-acoustic-backing",
+    "pk": "perforated-metal-ceiling",
+    "materialId": "perforated-metal-ceiling",
+    "finishId": "finish:perforated-metal-with-acoustic-backing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-slat-ceiling:finish:timber-slat-ceiling",
+    "pk": "timber-slat-ceiling",
+    "materialId": "timber-slat-ceiling",
+    "finishId": "finish:timber-slat-ceiling",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:gypsum-ceiling:finish:flush-gypsum-board",
+    "pk": "gypsum-ceiling",
+    "materialId": "gypsum-ceiling",
+    "finishId": "finish:flush-gypsum-board",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:open-grid-ceiling:finish:open-cell-metal-grid",
+    "pk": "open-grid-ceiling",
+    "materialId": "open-grid-ceiling",
+    "finishId": "finish:open-cell-metal-grid",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stretch-fabric-ceiling:finish:tensioned-fabric-membrane",
+    "pk": "stretch-fabric-ceiling",
+    "materialId": "stretch-fabric-ceiling",
+    "finishId": "finish:tensioned-fabric-membrane",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:coffered-ceiling:finish:timber-or-plaster-coffers",
+    "pk": "coffered-ceiling",
+    "materialId": "coffered-ceiling",
+    "finishId": "finish:timber-or-plaster-coffers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:plasterboard-ceiling:finish:smooth-plasterboard",
+    "pk": "plasterboard-ceiling",
+    "materialId": "plasterboard-ceiling",
+    "finishId": "finish:smooth-plasterboard",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:exposed-clt-ceiling:finish:exposed-clt-panels",
+    "pk": "exposed-clt-ceiling",
+    "materialId": "exposed-clt-ceiling",
+    "finishId": "finish:exposed-clt-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:metal-mesh-ceiling:finish:expanded-metal-mesh",
+    "pk": "metal-mesh-ceiling",
+    "materialId": "metal-mesh-ceiling",
+    "finishId": "finish:expanded-metal-mesh",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:acoustic-tiles-ceiling:finish:mineral-fiber-acoustic-tiles",
+    "pk": "acoustic-tiles-ceiling",
+    "materialId": "acoustic-tiles-ceiling",
+    "finishId": "finish:mineral-fiber-acoustic-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:exposed-concrete-soffit:finish:sealed-exposed-concrete-soffit",
+    "pk": "exposed-concrete-soffit",
+    "materialId": "exposed-concrete-soffit",
+    "finishId": "finish:sealed-exposed-concrete-soffit",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-slat-soffit:finish:timber-slats-on-acoustic-backing",
+    "pk": "timber-slat-soffit",
+    "materialId": "timber-slat-soffit",
+    "finishId": "finish:timber-slats-on-acoustic-backing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:perforated-metal-soffit:finish:micro-perforated-metal-panels",
+    "pk": "perforated-metal-soffit",
+    "materialId": "perforated-metal-soffit",
+    "finishId": "finish:micro-perforated-metal-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-linings:finish:rift-sawn-oak-or-fsc-softwood-slats",
+    "pk": "timber-linings",
+    "materialId": "timber-linings",
+    "finishId": "finish:rift-sawn-oak-or-fsc-softwood-slats",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:terracotta-panels:finish:pressed-terracotta-panels-multiple-clay-mineral-tones",
+    "pk": "terracotta-panels",
+    "materialId": "terracotta-panels",
+    "finishId": "finish:pressed-terracotta-panels-multiple-clay-mineral-tones",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:bio-fibre-panels:finish:hemp-flax-agri-fibre-acoustic-panels",
+    "pk": "bio-fibre-panels",
+    "materialId": "bio-fibre-panels",
+    "finishId": "finish:hemp-flax-agri-fibre-acoustic-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-wall-panels:finish:oak-faced-acoustic-panels",
+    "pk": "timber-wall-panels",
+    "materialId": "timber-wall-panels",
+    "finishId": "finish:oak-faced-acoustic-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:porcelain-tiles:finish:large-format-porcelain-tiles",
+    "pk": "porcelain-tiles",
+    "materialId": "porcelain-tiles",
+    "finishId": "finish:large-format-porcelain-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:textured-wallpaper:finish:natural-fibre-textured-wallpaper",
+    "pk": "textured-wallpaper",
+    "materialId": "textured-wallpaper",
+    "finishId": "finish:natural-fibre-textured-wallpaper",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:fabric-acoustic-panels:finish:fabric-wrapped-acoustic-panels",
+    "pk": "fabric-acoustic-panels",
+    "materialId": "fabric-acoustic-panels",
+    "finishId": "finish:fabric-wrapped-acoustic-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:oak-timber-slats:finish:solid-oak-slatted-lining",
+    "pk": "oak-timber-slats",
+    "materialId": "oak-timber-slats",
+    "finishId": "finish:solid-oak-slatted-lining",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cork-panels:finish:natural-cork-tiles-or-sheets",
+    "pk": "cork-panels",
+    "materialId": "cork-panels",
+    "finishId": "finish:natural-cork-tiles-or-sheets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:reclaimed-boarding:finish:upcycled-timber-cladding",
+    "pk": "reclaimed-boarding",
+    "materialId": "reclaimed-boarding",
+    "finishId": "finish:upcycled-timber-cladding",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:mycelium-tiles:finish:grown-mycelium-acoustic-tiles",
+    "pk": "mycelium-tiles",
+    "materialId": "mycelium-tiles",
+    "finishId": "finish:grown-mycelium-acoustic-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:wool-felt-panels:finish:undyed-wool-felt-panels",
+    "pk": "wool-felt-panels",
+    "materialId": "wool-felt-panels",
+    "finishId": "finish:undyed-wool-felt-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:bamboo-slat-wall:finish:bamboo-slats-on-acoustic-backing",
+    "pk": "bamboo-slat-wall",
+    "materialId": "bamboo-slat-wall",
+    "finishId": "finish:bamboo-slats-on-acoustic-backing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:plywood-panels-finish:finish:birch-or-oak-plywood",
+    "pk": "plywood-panels-finish",
+    "materialId": "plywood-panels-finish",
+    "finishId": "finish:birch-or-oak-plywood",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:marble-panels:finish:polished-marble-panels",
+    "pk": "marble-panels",
+    "materialId": "marble-panels",
+    "finishId": "finish:polished-marble-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:leather-panels:finish:leather-wall-tiles",
+    "pk": "leather-panels",
+    "materialId": "leather-panels",
+    "finishId": "finish:leather-wall-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:metal-mesh-panels:finish:woven-or-expanded-metal-mesh",
+    "pk": "metal-mesh-panels",
+    "materialId": "metal-mesh-panels",
+    "finishId": "finish:woven-or-expanded-metal-mesh",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glass-panels-finish:finish:back-painted-or-textured-glass",
+    "pk": "glass-panels-finish",
+    "materialId": "glass-panels-finish",
+    "finishId": "finish:back-painted-or-textured-glass",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:acoustic-plaster:finish:seamless-acoustic-plaster",
+    "pk": "acoustic-plaster",
+    "materialId": "acoustic-plaster",
+    "finishId": "finish:seamless-acoustic-plaster",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:lime-plaster:finish:natural-lime-plaster",
+    "pk": "lime-plaster",
+    "materialId": "lime-plaster",
+    "finishId": "finish:natural-lime-plaster",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:tadelakt-plaster:finish:polished-moroccan-plaster",
+    "pk": "tadelakt-plaster",
+    "materialId": "tadelakt-plaster",
+    "finishId": "finish:polished-moroccan-plaster",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-steelwork:finish:painted-secondary-framing",
+    "pk": "secondary-steelwork",
+    "materialId": "secondary-steelwork",
+    "finishId": "finish:painted-secondary-framing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:composite-metal-deck-slabs:finish:steel-deck-concrete-topping",
+    "pk": "composite-metal-deck-slabs",
+    "materialId": "composite-metal-deck-slabs",
+    "finishId": "finish:steel-deck-concrete-topping",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:precast-concrete-floor-planks:finish:precast-hollow-core-planks",
+    "pk": "precast-concrete-floor-planks",
+    "materialId": "precast-concrete-floor-planks",
+    "finishId": "finish:precast-hollow-core-planks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-joists-floor-cassettes:finish:engineered-timber-joists",
+    "pk": "timber-joists-floor-cassettes",
+    "materialId": "timber-joists-floor-cassettes",
+    "finishId": "finish:engineered-timber-joists",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:clt-floor-panels:finish:clt-floor-plates",
+    "pk": "clt-floor-panels",
+    "materialId": "clt-floor-panels",
+    "finishId": "finish:clt-floor-plates",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-steel-infill-beams:finish:painted-infill-beams",
+    "pk": "secondary-steel-infill-beams",
+    "materialId": "secondary-steel-infill-beams",
+    "finishId": "finish:painted-infill-beams",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:raised-access-floor-systems:finish:pedestal-access-floor",
+    "pk": "raised-access-floor-systems",
+    "materialId": "raised-access-floor-systems",
+    "finishId": "finish:pedestal-access-floor",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-rafters-purlins:finish:sawn-or-engineered-timber",
+    "pk": "timber-rafters-purlins",
+    "materialId": "timber-rafters-purlins",
+    "finishId": "finish:sawn-or-engineered-timber",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-purlins:finish:galvanized-z-c-sections",
+    "pk": "steel-purlins",
+    "materialId": "steel-purlins",
+    "finishId": "finish:galvanized-z-c-sections",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glulam-roof-beams:finish:glulam-roof-members",
+    "pk": "glulam-roof-beams",
+    "materialId": "glulam-roof-beams",
+    "finishId": "finish:glulam-roof-members",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-trusses:finish:steel-or-timber-trusses",
+    "pk": "secondary-trusses",
+    "materialId": "secondary-trusses",
+    "finishId": "finish:steel-or-timber-trusses",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:clt-roof-panels:finish:clt-roof-plates",
+    "pk": "clt-roof-panels",
+    "materialId": "clt-roof-panels",
+    "finishId": "finish:clt-roof-plates",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:lightweight-space-frame-infill:finish:lightweight-steel-space-frame",
+    "pk": "lightweight-space-frame-infill",
+    "materialId": "lightweight-space-frame-infill",
+    "finishId": "finish:lightweight-steel-space-frame",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:edge-beams:finish:steel-or-concrete-edge-beams",
+    "pk": "edge-beams",
+    "materialId": "edge-beams",
+    "finishId": "finish:steel-or-concrete-edge-beams",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:spandrel-beams:finish:perimeter-spandrel-beams",
+    "pk": "spandrel-beams",
+    "materialId": "spandrel-beams",
+    "finishId": "finish:perimeter-spandrel-beams",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:ring-beams:finish:continuous-ring-beam",
+    "pk": "ring-beams",
+    "materialId": "ring-beams",
+    "finishId": "finish:continuous-ring-beam",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-lintels:finish:steel-or-precast-lintels",
+    "pk": "secondary-lintels",
+    "materialId": "secondary-lintels",
+    "finishId": "finish:steel-or-precast-lintels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:masonry-shelf-angles:finish:galvanized-shelf-angles",
+    "pk": "masonry-shelf-angles",
+    "materialId": "masonry-shelf-angles",
+    "finishId": "finish:galvanized-shelf-angles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cross-bracing-steel:finish:steel-rods-or-flats",
+    "pk": "cross-bracing-steel",
+    "materialId": "cross-bracing-steel",
+    "finishId": "finish:steel-rods-or-flats",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-wind-bracing:finish:timber-bracing",
+    "pk": "timber-wind-bracing",
+    "materialId": "timber-wind-bracing",
+    "finishId": "finish:timber-bracing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:k-x-bracing-secondary:finish:secondary-bay-bracing",
+    "pk": "k-x-bracing-secondary",
+    "materialId": "k-x-bracing-secondary",
+    "finishId": "finish:secondary-bay-bracing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:diaphragm-bracing-elements:finish:deck-or-panel-diaphragms",
+    "pk": "diaphragm-bracing-elements",
+    "materialId": "diaphragm-bracing-elements",
+    "finishId": "finish:deck-or-panel-diaphragms",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-shear-panels:finish:shear-panels-or-walls",
+    "pk": "secondary-shear-panels",
+    "materialId": "secondary-shear-panels",
+    "finishId": "finish:shear-panels-or-walls",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-stair-stringers:finish:painted-steel-stringers",
+    "pk": "steel-stair-stringers",
+    "materialId": "steel-stair-stringers",
+    "finishId": "finish:painted-steel-stringers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-stair-carriages:finish:timber-stair-carriages",
+    "pk": "timber-stair-carriages",
+    "materialId": "timber-stair-carriages",
+    "finishId": "finish:timber-stair-carriages",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stair-landings-trimmers:finish:steel-or-timber-trimmers",
+    "pk": "stair-landings-trimmers",
+    "materialId": "stair-landings-trimmers",
+    "finishId": "finish:steel-or-timber-trimmers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cantilevered-stair-treads:finish:timber-or-steel-treads",
+    "pk": "cantilevered-stair-treads",
+    "materialId": "cantilevered-stair-treads",
+    "finishId": "finish:timber-or-steel-treads",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:facade-support-rails:finish:aluminum-or-galvanized-rails",
+    "pk": "facade-support-rails",
+    "materialId": "facade-support-rails",
+    "finishId": "finish:aluminum-or-galvanized-rails",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:rainscreen-carrier-systems:finish:carrier-rails-and-brackets",
+    "pk": "rainscreen-carrier-systems",
+    "materialId": "rainscreen-carrier-systems",
+    "finishId": "finish:carrier-rails-and-brackets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:curtain-wall-mullions-transoms:finish:aluminum-curtain-wall-grid",
+    "pk": "curtain-wall-mullions-transoms",
+    "materialId": "curtain-wall-mullions-transoms",
+    "finishId": "finish:aluminum-curtain-wall-grid",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-facade-brackets:finish:adjustable-bracketry",
+    "pk": "secondary-facade-brackets",
+    "materialId": "secondary-facade-brackets",
+    "finishId": "finish:adjustable-bracketry",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:balcony-support-beams:finish:steel-balcony-beams",
+    "pk": "balcony-support-beams",
+    "materialId": "balcony-support-beams",
+    "finishId": "finish:steel-balcony-beams",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-canopy-frames:finish:painted-steel-canopy",
+    "pk": "steel-canopy-frames",
+    "materialId": "steel-canopy-frames",
+    "finishId": "finish:painted-steel-canopy",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-pergola-structures:finish:timber-pergola-members",
+    "pk": "timber-pergola-structures",
+    "materialId": "timber-pergola-structures",
+    "finishId": "finish:timber-pergola-members",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:tension-rods-tie-members:finish:stainless-or-galvanized-rods",
+    "pk": "tension-rods-tie-members",
+    "materialId": "tension-rods-tie-members",
+    "finishId": "finish:stainless-or-galvanized-rods",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:secondary-cantilever-arms:finish:cantilever-support-arms",
+    "pk": "secondary-cantilever-arms",
+    "materialId": "secondary-cantilever-arms",
+    "finishId": "finish:cantilever-support-arms",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:brick-loadbearing:finish:solid-brick-masonry",
+    "pk": "brick-loadbearing",
+    "materialId": "brick-loadbearing",
+    "finishId": "finish:solid-brick-masonry",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:concrete-block-loadbearing:finish:concrete-blockwork",
+    "pk": "concrete-block-loadbearing",
+    "materialId": "concrete-block-loadbearing",
+    "finishId": "finish:concrete-blockwork",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:hempcrete-structural:finish:hempcrete-infill-with-timber-frame",
+    "pk": "hempcrete-structural",
+    "materialId": "hempcrete-structural",
+    "finishId": "finish:hempcrete-infill-with-timber-frame",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-concrete-composite:finish:composite-steel-decking-with-concrete",
+    "pk": "steel-concrete-composite",
+    "materialId": "steel-concrete-composite",
+    "finishId": "finish:composite-steel-decking-with-concrete",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:precast-concrete:finish:precast-concrete-elements",
+    "pk": "precast-concrete",
+    "materialId": "precast-concrete",
+    "finishId": "finish:precast-concrete-elements",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-trusses:finish:welded-steel-trusses",
+    "pk": "steel-trusses",
+    "materialId": "steel-trusses",
+    "finishId": "finish:welded-steel-trusses",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:prestressed-concrete:finish:prestressed-concrete-beams",
+    "pk": "prestressed-concrete",
+    "materialId": "prestressed-concrete",
+    "finishId": "finish:prestressed-concrete-beams",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:permeable-paving:finish:permeable-concrete-stone-blocks",
+    "pk": "permeable-paving",
+    "materialId": "permeable-paving",
+    "finishId": "finish:permeable-concrete-stone-blocks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:joinery-built-in:finish:birch-plywood-joinery",
+    "pk": "joinery-built-in",
+    "materialId": "joinery-built-in",
+    "finishId": "finish:birch-plywood-joinery",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:brass-fixtures:finish:satin-brass-fixtures",
+    "pk": "brass-fixtures",
+    "materialId": "brass-fixtures",
+    "finishId": "finish:satin-brass-fixtures",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:standing-seam-roof:finish:zinc-standing-seam-select-finish",
+    "pk": "standing-seam-roof",
+    "materialId": "standing-seam-roof",
+    "finishId": "finish:zinc-standing-seam-select-finish",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aluminium-standing-seam-roof:finish:prefinished-aluminium-standing-seam-select-ral-colour",
+    "pk": "aluminium-standing-seam-roof",
+    "materialId": "aluminium-standing-seam-roof",
+    "finishId": "finish:prefinished-aluminium-standing-seam-select-ral-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:copper-standing-seam-roof:finish:copper-standing-seam",
+    "pk": "copper-standing-seam-roof",
+    "materialId": "copper-standing-seam-roof",
+    "finishId": "finish:copper-standing-seam",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stainless-standing-seam-roof:finish:stainless-steel-standing-seam",
+    "pk": "stainless-standing-seam-roof",
+    "materialId": "stainless-standing-seam-roof",
+    "finishId": "finish:stainless-steel-standing-seam",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:lead-standing-seam-roof:finish:rolled-lead-standing-seam",
+    "pk": "lead-standing-seam-roof",
+    "materialId": "lead-standing-seam-roof",
+    "finishId": "finish:rolled-lead-standing-seam",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:green-roof:finish:extensive-green-roof",
+    "pk": "green-roof",
+    "materialId": "green-roof",
+    "finishId": "finish:extensive-green-roof",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cool-roof:finish:high-albedo-membrane",
+    "pk": "cool-roof",
+    "materialId": "cool-roof",
+    "finishId": "finish:high-albedo-membrane",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:pv-roof:finish:building-integrated-pv",
+    "pk": "pv-roof",
+    "materialId": "pv-roof",
+    "finishId": "finish:building-integrated-pv",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:blue-roof:finish:attenuation-roof-with-controlled-outlets",
+    "pk": "blue-roof",
+    "materialId": "blue-roof",
+    "finishId": "finish:attenuation-roof-with-controlled-outlets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:clay-tiles-roof:finish:interlocking-clay-tiles",
+    "pk": "clay-tiles-roof",
+    "materialId": "clay-tiles-roof",
+    "finishId": "finish:interlocking-clay-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:slate-tiles-roof:finish:natural-slate-roofing",
+    "pk": "slate-tiles-roof",
+    "materialId": "slate-tiles-roof",
+    "finishId": "finish:natural-slate-roofing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:metal-tiles-roof:finish:profiled-metal-tiles",
+    "pk": "metal-tiles-roof",
+    "materialId": "metal-tiles-roof",
+    "finishId": "finish:profiled-metal-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:epdm-membrane:finish:single-ply-epdm",
+    "pk": "epdm-membrane",
+    "materialId": "epdm-membrane",
+    "finishId": "finish:single-ply-epdm",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:tpo-membrane:finish:white-tpo-single-ply",
+    "pk": "tpo-membrane",
+    "materialId": "tpo-membrane",
+    "finishId": "finish:white-tpo-single-ply",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:built-up-roofing:finish:bituminous-built-up-layers",
+    "pk": "built-up-roofing",
+    "materialId": "built-up-roofing",
+    "finishId": "finish:bituminous-built-up-layers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:polycarbonate-roof:finish:multi-wall-polycarbonate",
+    "pk": "polycarbonate-roof",
+    "materialId": "polycarbonate-roof",
+    "finishId": "finish:multi-wall-polycarbonate",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:wood-fiber-insulation:finish:rigid-wood-fiber-boards",
+    "pk": "wood-fiber-insulation",
+    "materialId": "wood-fiber-insulation",
+    "finishId": "finish:rigid-wood-fiber-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:hemp-insulation:finish:hemp-fiber-batts",
+    "pk": "hemp-insulation",
+    "materialId": "hemp-insulation",
+    "finishId": "finish:hemp-fiber-batts",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:sheep-wool-insulation:finish:natural-wool-batts",
+    "pk": "sheep-wool-insulation",
+    "materialId": "sheep-wool-insulation",
+    "finishId": "finish:natural-wool-batts",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cork-insulation:finish:expanded-cork-boards",
+    "pk": "cork-insulation",
+    "materialId": "cork-insulation",
+    "finishId": "finish:expanded-cork-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cellulose-insulation:finish:recycled-paper-cellulose",
+    "pk": "cellulose-insulation",
+    "materialId": "cellulose-insulation",
+    "finishId": "finish:recycled-paper-cellulose",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:mineral-wool:finish:stone-wool-batts",
+    "pk": "mineral-wool",
+    "materialId": "mineral-wool",
+    "finishId": "finish:stone-wool-batts",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:pir-insulation:finish:rigid-foam-insulation",
+    "pk": "pir-insulation",
+    "materialId": "pir-insulation",
+    "finishId": "finish:rigid-foam-insulation",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aerogel-insulation:finish:ultra-thin-aerogel-blankets",
+    "pk": "aerogel-insulation",
+    "materialId": "aerogel-insulation",
+    "finishId": "finish:ultra-thin-aerogel-blankets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-door:finish:solid-or-veneered-timber",
+    "pk": "timber-door",
+    "materialId": "timber-door",
+    "finishId": "finish:solid-or-veneered-timber",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-door:finish:powder-coated-steel",
+    "pk": "steel-door",
+    "materialId": "steel-door",
+    "finishId": "finish:powder-coated-steel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aluminum-door:finish:anodized-or-powder-coated-aluminum",
+    "pk": "aluminum-door",
+    "materialId": "aluminum-door",
+    "finishId": "finish:anodized-or-powder-coated-aluminum",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glass-door:finish:frameless-or-framed-glass",
+    "pk": "glass-door",
+    "materialId": "glass-door",
+    "finishId": "finish:frameless-or-framed-glass",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:composite-door:finish:grp-composite-with-insulated-core",
+    "pk": "composite-door",
+    "materialId": "composite-door",
+    "finishId": "finish:grp-composite-with-insulated-core",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:fire-rated-door:finish:fire-rated-timber-or-steel",
+    "pk": "fire-rated-door",
+    "materialId": "fire-rated-door",
+    "finishId": "finish:fire-rated-timber-or-steel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glass-balustrade:finish:frameless-or-channel-mounted-glass",
+    "pk": "glass-balustrade",
+    "materialId": "glass-balustrade",
+    "finishId": "finish:frameless-or-channel-mounted-glass",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:steel-railing:finish:powder-coated-steel",
+    "pk": "steel-railing",
+    "materialId": "steel-railing",
+    "finishId": "finish:powder-coated-steel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-railing:finish:hardwood-or-softwood-rails",
+    "pk": "timber-railing",
+    "materialId": "timber-railing",
+    "finishId": "finish:hardwood-or-softwood-rails",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cable-railing:finish:stainless-steel-cables",
+    "pk": "cable-railing",
+    "materialId": "cable-railing",
+    "finishId": "finish:stainless-steel-cables",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:mesh-railing:finish:woven-or-expanded-metal-mesh",
+    "pk": "mesh-railing",
+    "materialId": "mesh-railing",
+    "finishId": "finish:woven-or-expanded-metal-mesh",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:gravel-paving:finish:loose-gravel-or-aggregate",
+    "pk": "gravel-paving",
+    "materialId": "gravel-paving",
+    "finishId": "finish:loose-gravel-or-aggregate",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:resin-bound-gravel:finish:resin-bound-aggregate",
+    "pk": "resin-bound-gravel",
+    "materialId": "resin-bound-gravel",
+    "finishId": "finish:resin-bound-aggregate",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:concrete-paving:finish:poured-or-slab-concrete",
+    "pk": "concrete-paving",
+    "materialId": "concrete-paving",
+    "finishId": "finish:poured-or-slab-concrete",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:block-paving:finish:concrete-or-clay-block-pavers",
+    "pk": "block-paving",
+    "materialId": "block-paving",
+    "finishId": "finish:concrete-or-clay-block-pavers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:grass-reinforcement:finish:plastic-grid-with-grass",
+    "pk": "grass-reinforcement",
+    "materialId": "grass-reinforcement",
+    "finishId": "finish:plastic-grid-with-grass",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:decking-external:finish:timber-or-composite-boards",
+    "pk": "decking-external",
+    "materialId": "decking-external",
+    "finishId": "finish:timber-or-composite-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:brick-slip-rainscreen:finish:brick-slip-on-carrier-rails",
+    "pk": "brick-slip-rainscreen",
+    "materialId": "brick-slip-rainscreen",
+    "finishId": "finish:brick-slip-on-carrier-rails",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stone-facade:finish:natural-stone-cladding",
+    "pk": "stone-facade",
+    "materialId": "stone-facade",
+    "finishId": "finish:natural-stone-cladding",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stone-rainscreen:finish:ventilated-stone-panels-on-rails",
+    "pk": "stone-rainscreen",
+    "materialId": "stone-rainscreen",
+    "finishId": "finish:ventilated-stone-panels-on-rails",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:precast-concrete-panels:finish:factory-made-concrete-panels",
+    "pk": "precast-concrete-panels",
+    "materialId": "precast-concrete-panels",
+    "finishId": "finish:factory-made-concrete-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:gfrc-grc-panels:finish:glass-fibre-reinforced-concrete",
+    "pk": "gfrc-grc-panels",
+    "materialId": "gfrc-grc-panels",
+    "finishId": "finish:glass-fibre-reinforced-concrete",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:slate-cladding:finish:split-or-sawn-slate-panels",
+    "pk": "slate-cladding",
+    "materialId": "slate-cladding",
+    "finishId": "finish:split-or-sawn-slate-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:hemp-lime-wall:finish:cast-in-place-hemp-lime",
+    "pk": "hemp-lime-wall",
+    "materialId": "hemp-lime-wall",
+    "finishId": "finish:cast-in-place-hemp-lime",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:timber-rainscreen:finish:fsc-timber-boards-or-battens",
+    "pk": "timber-rainscreen",
+    "materialId": "timber-rainscreen",
+    "finishId": "finish:fsc-timber-boards-or-battens",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:charred-timber-cladding:finish:charred-fsc-timber-boards",
+    "pk": "charred-timber-cladding",
+    "materialId": "charred-timber-cladding",
+    "finishId": "finish:charred-fsc-timber-boards",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cork-rainscreen:finish:expanded-cork-panels",
+    "pk": "cork-rainscreen",
+    "materialId": "cork-rainscreen",
+    "finishId": "finish:expanded-cork-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:wood-fibre-lime-render:finish:wood-fibre-insulation-with-lime-render",
+    "pk": "wood-fibre-lime-render",
+    "materialId": "wood-fibre-lime-render",
+    "finishId": "finish:wood-fibre-insulation-with-lime-render",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:insulated-render-system:finish:insulated-render-system-select-ral-colour",
+    "pk": "insulated-render-system",
+    "materialId": "insulated-render-system",
+    "finishId": "finish:insulated-render-system-select-ral-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:living-green-wall:finish:modular-planted-fa-ade",
+    "pk": "living-green-wall",
+    "materialId": "living-green-wall",
+    "finishId": "finish:modular-planted-fa-ade",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:zinc-cladding:finish:standing-seam-or-flat-lock-zinc-select-finish",
+    "pk": "zinc-cladding",
+    "materialId": "zinc-cladding",
+    "finishId": "finish:standing-seam-or-flat-lock-zinc-select-finish",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aluminium-cladding:finish:prefinished-aluminium-panels-select-ral-colour",
+    "pk": "aluminium-cladding",
+    "materialId": "aluminium-cladding",
+    "finishId": "finish:prefinished-aluminium-panels-select-ral-colour",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:copper-cladding:finish:copper-sheets-or-shingles",
+    "pk": "copper-cladding",
+    "materialId": "copper-cladding",
+    "finishId": "finish:copper-sheets-or-shingles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stainless-cladding:finish:stainless-steel-sheets",
+    "pk": "stainless-cladding",
+    "materialId": "stainless-cladding",
+    "finishId": "finish:stainless-steel-sheets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:lead-cladding:finish:rolled-lead-sheets",
+    "pk": "lead-cladding",
+    "materialId": "lead-cladding",
+    "finishId": "finish:rolled-lead-sheets",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:weathering-steel-cladding:finish:corten-steel-panels",
+    "pk": "weathering-steel-cladding",
+    "materialId": "weathering-steel-cladding",
+    "finishId": "finish:corten-steel-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:insulated-metal-panels:finish:factory-assembled-insulated-metal-panels",
+    "pk": "insulated-metal-panels",
+    "materialId": "insulated-metal-panels",
+    "finishId": "finish:factory-assembled-insulated-metal-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:fibre-cement-panels:finish:fibre-cement-rainscreen-panels",
+    "pk": "fibre-cement-panels",
+    "materialId": "fibre-cement-panels",
+    "finishId": "finish:fibre-cement-rainscreen-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:metal-composite-panels:finish:aluminium-composite-panels",
+    "pk": "metal-composite-panels",
+    "materialId": "metal-composite-panels",
+    "finishId": "finish:aluminium-composite-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:glass-facade:finish:curtain-walling-or-structural-glazing",
+    "pk": "glass-facade",
+    "materialId": "glass-facade",
+    "finishId": "finish:curtain-walling-or-structural-glazing",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:etfe-tensile-facade:finish:etfe-cushions-or-tensile-membrane",
+    "pk": "etfe-tensile-facade",
+    "materialId": "etfe-tensile-facade",
+    "finishId": "finish:etfe-cushions-or-tensile-membrane",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:native-planting:finish:mixed-native-species",
+    "pk": "native-planting",
+    "materialId": "native-planting",
+    "finishId": "finish:mixed-native-species",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:wildflower-meadow:finish:meadow-grass-and-wildflowers",
+    "pk": "wildflower-meadow",
+    "materialId": "wildflower-meadow",
+    "finishId": "finish:meadow-grass-and-wildflowers",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:rain-garden:finish:water-tolerant-planting",
+    "pk": "rain-garden",
+    "materialId": "rain-garden",
+    "finishId": "finish:water-tolerant-planting",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:living-wall-external:finish:vertical-planting-system",
+    "pk": "living-wall-external",
+    "materialId": "living-wall-external",
+    "finishId": "finish:vertical-planting-system",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:ornamental-planting:finish:mixed-ornamental-species",
+    "pk": "ornamental-planting",
+    "materialId": "ornamental-planting",
+    "finishId": "finish:mixed-ornamental-species",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:tree-planting:finish:semi-mature-or-standard-trees",
+    "pk": "tree-planting",
+    "materialId": "tree-planting",
+    "finishId": "finish:semi-mature-or-standard-trees",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:oak-dining-table:finish:solid-oak-with-oil-finish",
+    "pk": "oak-dining-table",
+    "materialId": "oak-dining-table",
+    "finishId": "finish:solid-oak-with-oil-finish",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:upholstered-seating:finish:fabric-or-leather-upholstery",
+    "pk": "upholstered-seating",
+    "materialId": "upholstered-seating",
+    "finishId": "finish:fabric-or-leather-upholstery",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:metal-chair:finish:powder-coated-steel",
+    "pk": "metal-chair",
+    "materialId": "metal-chair",
+    "finishId": "finish:powder-coated-steel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:plywood-furniture:finish:birch-plywood-construction",
+    "pk": "plywood-furniture",
+    "materialId": "plywood-furniture",
+    "finishId": "finish:birch-plywood-construction",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:reclaimed-timber-furniture:finish:salvaged-timber-with-character",
+    "pk": "reclaimed-timber-furniture",
+    "materialId": "reclaimed-timber-furniture",
+    "finishId": "finish:salvaged-timber-with-character",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:modular-shelving:finish:powder-coated-or-timber",
+    "pk": "modular-shelving",
+    "materialId": "modular-shelving",
+    "finishId": "finish:powder-coated-or-timber",
+    "isPrimary": true
+  }
+]

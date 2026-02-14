@@ -8,7 +8,7 @@
 import React from 'react';
 import { MaterialOption } from '../types';
 import { getCachedColoredIcon } from '../hooks/useColoredIconGenerator';
-import { getMaterialIconId } from '../utils/materialIconMapping';
+import { getMaterialIconUrls } from '../utils/materialIconUrls';
 
 interface MaterialIconDisplayProps {
   material: MaterialOption;
@@ -36,18 +36,14 @@ export function MaterialIconDisplay({
     ? getCachedColoredIcon(material.colorVariantId)
     : null;
 
-  // Use colorVariantId if available (and not in blob/cache), otherwise use base material id
-  const staticIconId = getMaterialIconId(material.id);
-  const iconBase = `/icons/${staticIconId}`;
-  const webpUrl = `${iconBase}.webp`;
-  const pngUrl = `${iconBase}.png`;
+  const { webpUrl, pngUrl } = getMaterialIconUrls(material);
   const [iconLoaded, setIconLoaded] = React.useState(false);
   const [iconError, setIconError] = React.useState(false);
 
   React.useEffect(() => {
     setIconLoaded(false);
     setIconError(false);
-  }, [staticIconId, cachedColoredIcon, blobUrl]);
+  }, [webpUrl, pngUrl, cachedColoredIcon, blobUrl]);
 
   return (
     <div

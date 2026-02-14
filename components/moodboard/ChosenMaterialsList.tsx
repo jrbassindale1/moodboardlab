@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShoppingCart, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { MaterialOption } from '../../types';
-import { getMaterialIconId } from '../../utils/materialIconMapping';
+import { getMaterialIconUrls } from '../../utils/materialIconUrls';
 
 interface ChosenMaterialsListProps {
   board: MaterialOption[];
@@ -81,7 +81,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
         ) : (
           <div className="space-y-0 border border-gray-200">
             {board.map((item, idx) => {
-              const iconId = getMaterialIconId(item.id);
+              const { webpUrl, pngUrl } = getMaterialIconUrls(item);
               return (
                 <div
                   key={`${item.id}-${idx}`}
@@ -104,9 +104,9 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                       ) : (
                         <>
                           <picture>
-                            <source srcSet={`/icons/${iconId}.webp`} type="image/webp" />
+                            <source srcSet={webpUrl} type="image/webp" />
                             <img
-                              src={`/icons/${iconId}.png`}
+                              src={pngUrl}
                               alt={item.name}
                               className="w-full h-full object-cover"
                               loading="lazy"

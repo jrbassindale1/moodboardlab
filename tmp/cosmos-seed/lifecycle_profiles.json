@@ -1,0 +1,7706 @@
+[
+  {
+    "id": "lp:steel-frame",
+    "pk": "steel-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-frame",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-columns-beams",
+    "pk": "steel-columns-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-columns-beams",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:rammed-earth-structure",
+    "pk": "rammed-earth-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "rammed-earth-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-flooring",
+    "pk": "timber-flooring",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-flooring",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:glass-door",
+    "pk": "glass-door",
+    "docType": "lifecycleProfile",
+    "materialId": "glass-door",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:acoustic-ceiling-baffles",
+    "pk": "acoustic-ceiling-baffles",
+    "docType": "lifecycleProfile",
+    "materialId": "acoustic-ceiling-baffles",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:concrete-frame",
+    "pk": "concrete-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "concrete-frame",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:rc-columns-beams",
+    "pk": "rc-columns-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "rc-columns-beams",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:glulam-structure",
+    "pk": "glulam-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "glulam-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:green-oak-structure",
+    "pk": "green-oak-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "green-oak-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:glulam-columns-beams",
+    "pk": "glulam-columns-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "glulam-columns-beams",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:clt-structure",
+    "pk": "clt-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "clt-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:brick-veneer",
+    "pk": "brick-veneer",
+    "docType": "lifecycleProfile",
+    "materialId": "brick-veneer",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:polished-concrete",
+    "pk": "polished-concrete",
+    "docType": "lifecycleProfile",
+    "materialId": "polished-concrete",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:hybrid-structure",
+    "pk": "hybrid-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "hybrid-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:space-frame-structure",
+    "pk": "space-frame-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "space-frame-structure",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:nlt-structure",
+    "pk": "nlt-structure",
+    "docType": "lifecycleProfile",
+    "materialId": "nlt-structure",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:ggbs-concrete",
+    "pk": "ggbs-concrete",
+    "docType": "lifecycleProfile",
+    "materialId": "ggbs-concrete",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:lino-floor",
+    "pk": "lino-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "lino-floor",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:recycled-terrazzo",
+    "pk": "recycled-terrazzo",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-terrazzo",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:rubber-floor",
+    "pk": "rubber-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "rubber-floor",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:grey-carpet",
+    "pk": "grey-carpet",
+    "docType": "lifecycleProfile",
+    "materialId": "grey-carpet",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:bamboo-parquet",
+    "pk": "bamboo-parquet",
+    "docType": "lifecycleProfile",
+    "materialId": "bamboo-parquet",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cork-plank-floor",
+    "pk": "cork-plank-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "cork-plank-floor",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:reclaimed-timber-floor",
+    "pk": "reclaimed-timber-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "reclaimed-timber-floor",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:stone-paver",
+    "pk": "stone-paver",
+    "docType": "lifecycleProfile",
+    "materialId": "stone-paver",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:vinyl-planks",
+    "pk": "vinyl-planks",
+    "docType": "lifecycleProfile",
+    "materialId": "vinyl-planks",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:resin-flooring",
+    "pk": "resin-flooring",
+    "docType": "lifecycleProfile",
+    "materialId": "resin-flooring",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:microcement-floor",
+    "pk": "microcement-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "microcement-floor",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:ceramic-tiles",
+    "pk": "ceramic-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "ceramic-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:epoxy-flooring",
+    "pk": "epoxy-flooring",
+    "docType": "lifecycleProfile",
+    "materialId": "epoxy-flooring",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:travertine-tiles",
+    "pk": "travertine-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "travertine-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:marble-floor",
+    "pk": "marble-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "marble-floor",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:engineered-oak-floor",
+    "pk": "engineered-oak-floor",
+    "docType": "lifecycleProfile",
+    "materialId": "engineered-oak-floor",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:linoleum-tiles",
+    "pk": "linoleum-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "linoleum-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:aluminum-frame",
+    "pk": "aluminum-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "aluminum-frame",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-frame",
+    "pk": "timber-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-frame",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:recycled-aluminum-frame",
+    "pk": "recycled-aluminum-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-aluminum-frame",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-window-frame",
+    "pk": "steel-window-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-window-frame",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:composite-window-frame",
+    "pk": "composite-window-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "composite-window-frame",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:upvc-window-frame",
+    "pk": "upvc-window-frame",
+    "docType": "lifecycleProfile",
+    "materialId": "upvc-window-frame",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:curtain-wall-system",
+    "pk": "curtain-wall-system",
+    "docType": "lifecycleProfile",
+    "materialId": "curtain-wall-system",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:frameless-glazing",
+    "pk": "frameless-glazing",
+    "docType": "lifecycleProfile",
+    "materialId": "frameless-glazing",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:clay-plaster",
+    "pk": "clay-plaster",
+    "docType": "lifecycleProfile",
+    "materialId": "clay-plaster",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:gypsum-wall",
+    "pk": "gypsum-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "gypsum-wall",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:plasterboard-wall",
+    "pk": "plasterboard-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "plasterboard-wall",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:plywood-panels-wall",
+    "pk": "plywood-panels-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "plywood-panels-wall",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:acoustic-panels-wall",
+    "pk": "acoustic-panels-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "acoustic-panels-wall",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:glass-partitions",
+    "pk": "glass-partitions",
+    "docType": "lifecycleProfile",
+    "materialId": "glass-partitions",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:brick-internal",
+    "pk": "brick-internal",
+    "docType": "lifecycleProfile",
+    "materialId": "brick-internal",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:concrete-block-wall",
+    "pk": "concrete-block-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "concrete-block-wall",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:mineral-microcement",
+    "pk": "mineral-microcement",
+    "docType": "lifecycleProfile",
+    "materialId": "mineral-microcement",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:standard-wall-paint",
+    "pk": "standard-wall-paint",
+    "docType": "lifecycleProfile",
+    "materialId": "standard-wall-paint",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:custom-wall-paint",
+    "pk": "custom-wall-paint",
+    "docType": "lifecycleProfile",
+    "materialId": "custom-wall-paint",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:standard-ceiling-paint",
+    "pk": "standard-ceiling-paint",
+    "docType": "lifecycleProfile",
+    "materialId": "standard-ceiling-paint",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:custom-ceiling-paint",
+    "pk": "custom-ceiling-paint",
+    "docType": "lifecycleProfile",
+    "materialId": "custom-ceiling-paint",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:perforated-metal-ceiling",
+    "pk": "perforated-metal-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "perforated-metal-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-slat-ceiling",
+    "pk": "timber-slat-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-slat-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:gypsum-ceiling",
+    "pk": "gypsum-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "gypsum-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:open-grid-ceiling",
+    "pk": "open-grid-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "open-grid-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:stretch-fabric-ceiling",
+    "pk": "stretch-fabric-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "stretch-fabric-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:coffered-ceiling",
+    "pk": "coffered-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "coffered-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:plasterboard-ceiling",
+    "pk": "plasterboard-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "plasterboard-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:exposed-clt-ceiling",
+    "pk": "exposed-clt-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "exposed-clt-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:metal-mesh-ceiling",
+    "pk": "metal-mesh-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "metal-mesh-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:acoustic-tiles-ceiling",
+    "pk": "acoustic-tiles-ceiling",
+    "docType": "lifecycleProfile",
+    "materialId": "acoustic-tiles-ceiling",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:exposed-concrete-soffit",
+    "pk": "exposed-concrete-soffit",
+    "docType": "lifecycleProfile",
+    "materialId": "exposed-concrete-soffit",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-slat-soffit",
+    "pk": "timber-slat-soffit",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-slat-soffit",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:perforated-metal-soffit",
+    "pk": "perforated-metal-soffit",
+    "docType": "lifecycleProfile",
+    "materialId": "perforated-metal-soffit",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-linings",
+    "pk": "timber-linings",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-linings",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:bio-fibre-panels",
+    "pk": "bio-fibre-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "bio-fibre-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-wall-panels",
+    "pk": "timber-wall-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-wall-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:porcelain-tiles",
+    "pk": "porcelain-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "porcelain-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:textured-wallpaper",
+    "pk": "textured-wallpaper",
+    "docType": "lifecycleProfile",
+    "materialId": "textured-wallpaper",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:fabric-acoustic-panels",
+    "pk": "fabric-acoustic-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "fabric-acoustic-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:oak-timber-slats",
+    "pk": "oak-timber-slats",
+    "docType": "lifecycleProfile",
+    "materialId": "oak-timber-slats",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cork-panels",
+    "pk": "cork-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "cork-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:reclaimed-boarding",
+    "pk": "reclaimed-boarding",
+    "docType": "lifecycleProfile",
+    "materialId": "reclaimed-boarding",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:mycelium-tiles",
+    "pk": "mycelium-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "mycelium-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:wool-felt-panels",
+    "pk": "wool-felt-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "wool-felt-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:bamboo-slat-wall",
+    "pk": "bamboo-slat-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "bamboo-slat-wall",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:plywood-panels-finish",
+    "pk": "plywood-panels-finish",
+    "docType": "lifecycleProfile",
+    "materialId": "plywood-panels-finish",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:marble-panels",
+    "pk": "marble-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "marble-panels",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:leather-panels",
+    "pk": "leather-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "leather-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:metal-mesh-panels",
+    "pk": "metal-mesh-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "metal-mesh-panels",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:glass-panels-finish",
+    "pk": "glass-panels-finish",
+    "docType": "lifecycleProfile",
+    "materialId": "glass-panels-finish",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:acoustic-plaster",
+    "pk": "acoustic-plaster",
+    "docType": "lifecycleProfile",
+    "materialId": "acoustic-plaster",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:lime-plaster",
+    "pk": "lime-plaster",
+    "docType": "lifecycleProfile",
+    "materialId": "lime-plaster",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:tadelakt-plaster",
+    "pk": "tadelakt-plaster",
+    "docType": "lifecycleProfile",
+    "materialId": "tadelakt-plaster",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-steelwork",
+    "pk": "secondary-steelwork",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-steelwork",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:brick-loadbearing",
+    "pk": "brick-loadbearing",
+    "docType": "lifecycleProfile",
+    "materialId": "brick-loadbearing",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:hempcrete-structural",
+    "pk": "hempcrete-structural",
+    "docType": "lifecycleProfile",
+    "materialId": "hempcrete-structural",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-concrete-composite",
+    "pk": "steel-concrete-composite",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-concrete-composite",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:precast-concrete",
+    "pk": "precast-concrete",
+    "docType": "lifecycleProfile",
+    "materialId": "precast-concrete",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:mass-timber-columns",
+    "pk": "mass-timber-columns",
+    "docType": "lifecycleProfile",
+    "materialId": "mass-timber-columns",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-trusses",
+    "pk": "steel-trusses",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-trusses",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:prestressed-concrete",
+    "pk": "prestressed-concrete",
+    "docType": "lifecycleProfile",
+    "materialId": "prestressed-concrete",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:permeable-paving",
+    "pk": "permeable-paving",
+    "docType": "lifecycleProfile",
+    "materialId": "permeable-paving",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:joinery-built-in",
+    "pk": "joinery-built-in",
+    "docType": "lifecycleProfile",
+    "materialId": "joinery-built-in",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:brass-fixtures",
+    "pk": "brass-fixtures",
+    "docType": "lifecycleProfile",
+    "materialId": "brass-fixtures",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:standing-seam-roof",
+    "pk": "standing-seam-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "standing-seam-roof",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:green-roof",
+    "pk": "green-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "green-roof",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:cool-roof",
+    "pk": "cool-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "cool-roof",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:pv-roof",
+    "pk": "pv-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "pv-roof",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:blue-roof",
+    "pk": "blue-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "blue-roof",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:clay-tiles-roof",
+    "pk": "clay-tiles-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "clay-tiles-roof",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:slate-tiles-roof",
+    "pk": "slate-tiles-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "slate-tiles-roof",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:metal-tiles-roof",
+    "pk": "metal-tiles-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "metal-tiles-roof",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:epdm-membrane",
+    "pk": "epdm-membrane",
+    "docType": "lifecycleProfile",
+    "materialId": "epdm-membrane",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:tpo-membrane",
+    "pk": "tpo-membrane",
+    "docType": "lifecycleProfile",
+    "materialId": "tpo-membrane",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:built-up-roofing",
+    "pk": "built-up-roofing",
+    "docType": "lifecycleProfile",
+    "materialId": "built-up-roofing",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:polycarbonate-roof",
+    "pk": "polycarbonate-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "polycarbonate-roof",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:wood-fiber-insulation",
+    "pk": "wood-fiber-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "wood-fiber-insulation",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:hemp-insulation",
+    "pk": "hemp-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "hemp-insulation",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:sheep-wool-insulation",
+    "pk": "sheep-wool-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "sheep-wool-insulation",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cellulose-insulation",
+    "pk": "cellulose-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "cellulose-insulation",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:mineral-wool",
+    "pk": "mineral-wool",
+    "docType": "lifecycleProfile",
+    "materialId": "mineral-wool",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:pir-insulation",
+    "pk": "pir-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "pir-insulation",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:aerogel-insulation",
+    "pk": "aerogel-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "aerogel-insulation",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-door",
+    "pk": "timber-door",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-door",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-door",
+    "pk": "steel-door",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-door",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:aluminum-door",
+    "pk": "aluminum-door",
+    "docType": "lifecycleProfile",
+    "materialId": "aluminum-door",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:composite-door",
+    "pk": "composite-door",
+    "docType": "lifecycleProfile",
+    "materialId": "composite-door",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:fire-rated-door",
+    "pk": "fire-rated-door",
+    "docType": "lifecycleProfile",
+    "materialId": "fire-rated-door",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:glass-balustrade",
+    "pk": "glass-balustrade",
+    "docType": "lifecycleProfile",
+    "materialId": "glass-balustrade",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-railing",
+    "pk": "steel-railing",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-railing",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-railing",
+    "pk": "timber-railing",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-railing",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cable-railing",
+    "pk": "cable-railing",
+    "docType": "lifecycleProfile",
+    "materialId": "cable-railing",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:mesh-railing",
+    "pk": "mesh-railing",
+    "docType": "lifecycleProfile",
+    "materialId": "mesh-railing",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:gravel-paving",
+    "pk": "gravel-paving",
+    "docType": "lifecycleProfile",
+    "materialId": "gravel-paving",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:resin-bound-gravel",
+    "pk": "resin-bound-gravel",
+    "docType": "lifecycleProfile",
+    "materialId": "resin-bound-gravel",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:concrete-paving",
+    "pk": "concrete-paving",
+    "docType": "lifecycleProfile",
+    "materialId": "concrete-paving",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:block-paving",
+    "pk": "block-paving",
+    "docType": "lifecycleProfile",
+    "materialId": "block-paving",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:grass-reinforcement",
+    "pk": "grass-reinforcement",
+    "docType": "lifecycleProfile",
+    "materialId": "grass-reinforcement",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:decking-external",
+    "pk": "decking-external",
+    "docType": "lifecycleProfile",
+    "materialId": "decking-external",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:clt-loadbearing-walls",
+    "pk": "clt-loadbearing-walls",
+    "docType": "lifecycleProfile",
+    "materialId": "clt-loadbearing-walls",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:masonry-loadbearing",
+    "pk": "masonry-loadbearing",
+    "docType": "lifecycleProfile",
+    "materialId": "masonry-loadbearing",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:brick-slip-rainscreen",
+    "pk": "brick-slip-rainscreen",
+    "docType": "lifecycleProfile",
+    "materialId": "brick-slip-rainscreen",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:stone-facade",
+    "pk": "stone-facade",
+    "docType": "lifecycleProfile",
+    "materialId": "stone-facade",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:precast-concrete-panels",
+    "pk": "precast-concrete-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "precast-concrete-panels",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:gfrc-grc-panels",
+    "pk": "gfrc-grc-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "gfrc-grc-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-rainscreen",
+    "pk": "timber-rainscreen",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-rainscreen",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:wood-fibre-lime-render",
+    "pk": "wood-fibre-lime-render",
+    "docType": "lifecycleProfile",
+    "materialId": "wood-fibre-lime-render",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:insulated-render-system",
+    "pk": "insulated-render-system",
+    "docType": "lifecycleProfile",
+    "materialId": "insulated-render-system",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:living-green-wall",
+    "pk": "living-green-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "living-green-wall",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:weathering-steel-cladding",
+    "pk": "weathering-steel-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "weathering-steel-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:zinc-cladding",
+    "pk": "zinc-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "zinc-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:copper-cladding",
+    "pk": "copper-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "copper-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:aluminium-cladding",
+    "pk": "aluminium-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "aluminium-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:stainless-cladding",
+    "pk": "stainless-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "stainless-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:lead-cladding",
+    "pk": "lead-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "lead-cladding",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:aluminium-standing-seam-roof",
+    "pk": "aluminium-standing-seam-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "aluminium-standing-seam-roof",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:copper-standing-seam-roof",
+    "pk": "copper-standing-seam-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "copper-standing-seam-roof",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:stainless-standing-seam-roof",
+    "pk": "stainless-standing-seam-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "stainless-standing-seam-roof",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:lead-standing-seam-roof",
+    "pk": "lead-standing-seam-roof",
+    "docType": "lifecycleProfile",
+    "materialId": "lead-standing-seam-roof",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:insulated-metal-panels",
+    "pk": "insulated-metal-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "insulated-metal-panels",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:fibre-cement-panels",
+    "pk": "fibre-cement-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "fibre-cement-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:glass-facade",
+    "pk": "glass-facade",
+    "docType": "lifecycleProfile",
+    "materialId": "glass-facade",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:etfe-tensile-facade",
+    "pk": "etfe-tensile-facade",
+    "docType": "lifecycleProfile",
+    "materialId": "etfe-tensile-facade",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 1,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:native-planting",
+    "pk": "native-planting",
+    "docType": "lifecycleProfile",
+    "materialId": "native-planting",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "low"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:wildflower-meadow",
+    "pk": "wildflower-meadow",
+    "docType": "lifecycleProfile",
+    "materialId": "wildflower-meadow",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "low"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:rain-garden",
+    "pk": "rain-garden",
+    "docType": "lifecycleProfile",
+    "materialId": "rain-garden",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "low"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:living-wall-external",
+    "pk": "living-wall-external",
+    "docType": "lifecycleProfile",
+    "materialId": "living-wall-external",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:ornamental-planting",
+    "pk": "ornamental-planting",
+    "docType": "lifecycleProfile",
+    "materialId": "ornamental-planting",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "low"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:tree-planting",
+    "pk": "tree-planting",
+    "docType": "lifecycleProfile",
+    "materialId": "tree-planting",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "low"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "low"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:oak-dining-table",
+    "pk": "oak-dining-table",
+    "docType": "lifecycleProfile",
+    "materialId": "oak-dining-table",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:upholstered-seating",
+    "pk": "upholstered-seating",
+    "docType": "lifecycleProfile",
+    "materialId": "upholstered-seating",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:metal-chair",
+    "pk": "metal-chair",
+    "docType": "lifecycleProfile",
+    "materialId": "metal-chair",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:plywood-furniture",
+    "pk": "plywood-furniture",
+    "docType": "lifecycleProfile",
+    "materialId": "plywood-furniture",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:reclaimed-timber-furniture",
+    "pk": "reclaimed-timber-furniture",
+    "docType": "lifecycleProfile",
+    "materialId": "reclaimed-timber-furniture",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:modular-shelving",
+    "pk": "modular-shelving",
+    "docType": "lifecycleProfile",
+    "materialId": "modular-shelving",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:terracotta-panels",
+    "pk": "terracotta-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "terracotta-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:composite-metal-deck-slabs",
+    "pk": "composite-metal-deck-slabs",
+    "docType": "lifecycleProfile",
+    "materialId": "composite-metal-deck-slabs",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:precast-concrete-floor-planks",
+    "pk": "precast-concrete-floor-planks",
+    "docType": "lifecycleProfile",
+    "materialId": "precast-concrete-floor-planks",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-joists-floor-cassettes",
+    "pk": "timber-joists-floor-cassettes",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-joists-floor-cassettes",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:clt-floor-panels",
+    "pk": "clt-floor-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "clt-floor-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-steel-infill-beams",
+    "pk": "secondary-steel-infill-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-steel-infill-beams",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:raised-access-floor-systems",
+    "pk": "raised-access-floor-systems",
+    "docType": "lifecycleProfile",
+    "materialId": "raised-access-floor-systems",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-rafters-purlins",
+    "pk": "timber-rafters-purlins",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-rafters-purlins",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-purlins",
+    "pk": "steel-purlins",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-purlins",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:glulam-roof-beams",
+    "pk": "glulam-roof-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "glulam-roof-beams",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-trusses",
+    "pk": "secondary-trusses",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-trusses",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:clt-roof-panels",
+    "pk": "clt-roof-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "clt-roof-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:lightweight-space-frame-infill",
+    "pk": "lightweight-space-frame-infill",
+    "docType": "lifecycleProfile",
+    "materialId": "lightweight-space-frame-infill",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:edge-beams",
+    "pk": "edge-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "edge-beams",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:spandrel-beams",
+    "pk": "spandrel-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "spandrel-beams",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:ring-beams",
+    "pk": "ring-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "ring-beams",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-lintels",
+    "pk": "secondary-lintels",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-lintels",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:masonry-shelf-angles",
+    "pk": "masonry-shelf-angles",
+    "docType": "lifecycleProfile",
+    "materialId": "masonry-shelf-angles",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cross-bracing-steel",
+    "pk": "cross-bracing-steel",
+    "docType": "lifecycleProfile",
+    "materialId": "cross-bracing-steel",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-wind-bracing",
+    "pk": "timber-wind-bracing",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-wind-bracing",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:k-x-bracing-secondary",
+    "pk": "k-x-bracing-secondary",
+    "docType": "lifecycleProfile",
+    "materialId": "k-x-bracing-secondary",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:diaphragm-bracing-elements",
+    "pk": "diaphragm-bracing-elements",
+    "docType": "lifecycleProfile",
+    "materialId": "diaphragm-bracing-elements",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-shear-panels",
+    "pk": "secondary-shear-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-shear-panels",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-stair-stringers",
+    "pk": "steel-stair-stringers",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-stair-stringers",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-stair-carriages",
+    "pk": "timber-stair-carriages",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-stair-carriages",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:stair-landings-trimmers",
+    "pk": "stair-landings-trimmers",
+    "docType": "lifecycleProfile",
+    "materialId": "stair-landings-trimmers",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cantilevered-stair-treads",
+    "pk": "cantilevered-stair-treads",
+    "docType": "lifecycleProfile",
+    "materialId": "cantilevered-stair-treads",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:facade-support-rails",
+    "pk": "facade-support-rails",
+    "docType": "lifecycleProfile",
+    "materialId": "facade-support-rails",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:rainscreen-carrier-systems",
+    "pk": "rainscreen-carrier-systems",
+    "docType": "lifecycleProfile",
+    "materialId": "rainscreen-carrier-systems",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:curtain-wall-mullions-transoms",
+    "pk": "curtain-wall-mullions-transoms",
+    "docType": "lifecycleProfile",
+    "materialId": "curtain-wall-mullions-transoms",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-facade-brackets",
+    "pk": "secondary-facade-brackets",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-facade-brackets",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:balcony-support-beams",
+    "pk": "balcony-support-beams",
+    "docType": "lifecycleProfile",
+    "materialId": "balcony-support-beams",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:steel-canopy-frames",
+    "pk": "steel-canopy-frames",
+    "docType": "lifecycleProfile",
+    "materialId": "steel-canopy-frames",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:timber-pergola-structures",
+    "pk": "timber-pergola-structures",
+    "docType": "lifecycleProfile",
+    "materialId": "timber-pergola-structures",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:tension-rods-tie-members",
+    "pk": "tension-rods-tie-members",
+    "docType": "lifecycleProfile",
+    "materialId": "tension-rods-tie-members",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:secondary-cantilever-arms",
+    "pk": "secondary-cantilever-arms",
+    "docType": "lifecycleProfile",
+    "materialId": "secondary-cantilever-arms",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cork-insulation",
+    "pk": "cork-insulation",
+    "docType": "lifecycleProfile",
+    "materialId": "cork-insulation",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:stone-rainscreen",
+    "pk": "stone-rainscreen",
+    "docType": "lifecycleProfile",
+    "materialId": "stone-rainscreen",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:slate-cladding",
+    "pk": "slate-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "slate-cladding",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 4,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:hemp-lime-wall",
+    "pk": "hemp-lime-wall",
+    "docType": "lifecycleProfile",
+    "materialId": "hemp-lime-wall",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:charred-timber-cladding",
+    "pk": "charred-timber-cladding",
+    "docType": "lifecycleProfile",
+    "materialId": "charred-timber-cladding",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:cork-rainscreen",
+    "pk": "cork-rainscreen",
+    "docType": "lifecycleProfile",
+    "materialId": "cork-rainscreen",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:metal-composite-panels",
+    "pk": "metal-composite-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "metal-composite-panels",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  }
+]

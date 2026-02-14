@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-02-14T15:40:46.320Z",
+  "counts": {
+    "materials": 209,
+    "finishes": 206,
+    "finishSets": 189,
+    "materialFinishLinks": 221,
+    "materialFinishSetLinks": 213,
+    "lifecycleProfiles": 214
+  },
+  "containers": {
+    "materials": {
+      "name": "materials",
+      "partitionKey": "/pk"
+    },
+    "finishes": {
+      "name": "finishes",
+      "partitionKey": "/pk"
+    },
+    "finishSets": {
+      "name": "finish_sets",
+      "partitionKey": "/pk"
+    },
+    "materialFinishLinks": {
+      "name": "material_finish_links",
+      "partitionKey": "/pk"
+    },
+    "materialFinishSetLinks": {
+      "name": "material_finish_set_links",
+      "partitionKey": "/pk"
+    },
+    "lifecycleProfiles": {
+      "name": "lifecycle_profiles",
+      "partitionKey": "/pk"
+    }
+  }
+}

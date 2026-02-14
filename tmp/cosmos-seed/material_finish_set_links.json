@@ -1,0 +1,1493 @@
+[
+  {
+    "id": "mfs:steel-frame:fs:colorOptions:c5f0c2016ea5",
+    "pk": "steel-frame",
+    "materialId": "steel-frame",
+    "finishSetId": "fs:colorOptions:c5f0c2016ea5",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glulam-structure:fs:single:495cbdb669d4",
+    "pk": "glulam-structure",
+    "materialId": "glulam-structure",
+    "finishSetId": "fs:single:495cbdb669d4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:green-oak-structure:fs:single:b0ad8e4aa709",
+    "pk": "green-oak-structure",
+    "materialId": "green-oak-structure",
+    "finishSetId": "fs:single:b0ad8e4aa709",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:concrete-frame:fs:single:fecd3d89df4f",
+    "pk": "concrete-frame",
+    "materialId": "concrete-frame",
+    "finishSetId": "fs:single:fecd3d89df4f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:hybrid-structure:fs:single:3c9c8e104ccf",
+    "pk": "hybrid-structure",
+    "materialId": "hybrid-structure",
+    "finishSetId": "fs:single:3c9c8e104ccf",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:space-frame-structure:fs:colorOptions:c5f0c2016ea5",
+    "pk": "space-frame-structure",
+    "materialId": "space-frame-structure",
+    "finishSetId": "fs:colorOptions:c5f0c2016ea5",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:clt-structure:fs:single:ebadd295d405",
+    "pk": "clt-structure",
+    "materialId": "clt-structure",
+    "finishSetId": "fs:single:ebadd295d405",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:nlt-structure:fs:single:26d5fd6a2610",
+    "pk": "nlt-structure",
+    "materialId": "nlt-structure",
+    "finishSetId": "fs:single:26d5fd6a2610",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:ggbs-concrete:fs:single:ba626069488e",
+    "pk": "ggbs-concrete",
+    "materialId": "ggbs-concrete",
+    "finishSetId": "fs:single:ba626069488e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:rammed-earth-structure:fs:colorOptions:f7b50c0ec458",
+    "pk": "rammed-earth-structure",
+    "materialId": "rammed-earth-structure",
+    "finishSetId": "fs:colorOptions:f7b50c0ec458",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:polished-concrete:fs:single:426eb73ac91d",
+    "pk": "polished-concrete",
+    "materialId": "polished-concrete",
+    "finishSetId": "fs:single:426eb73ac91d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:lino-floor:fs:single:e931bd4eaf61",
+    "pk": "lino-floor",
+    "materialId": "lino-floor",
+    "finishSetId": "fs:single:e931bd4eaf61",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:recycled-terrazzo:fs:single:4b136243f127",
+    "pk": "recycled-terrazzo",
+    "materialId": "recycled-terrazzo",
+    "finishSetId": "fs:single:4b136243f127",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:rubber-floor:fs:single:3eda78072e72",
+    "pk": "rubber-floor",
+    "materialId": "rubber-floor",
+    "finishSetId": "fs:single:3eda78072e72",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-flooring:fs:colorOptions:af651c95089e",
+    "pk": "timber-flooring",
+    "materialId": "timber-flooring",
+    "finishSetId": "fs:colorOptions:af651c95089e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:grey-carpet:fs:single:36eb93e4624f",
+    "pk": "grey-carpet",
+    "materialId": "grey-carpet",
+    "finishSetId": "fs:single:36eb93e4624f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:bamboo-parquet:fs:colorOptions:43bb23007ecb",
+    "pk": "bamboo-parquet",
+    "materialId": "bamboo-parquet",
+    "finishSetId": "fs:colorOptions:43bb23007ecb",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cork-plank-floor:fs:single:344ee8373735",
+    "pk": "cork-plank-floor",
+    "materialId": "cork-plank-floor",
+    "finishSetId": "fs:single:344ee8373735",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:reclaimed-timber-floor:fs:single:158b25a28310",
+    "pk": "reclaimed-timber-floor",
+    "materialId": "reclaimed-timber-floor",
+    "finishSetId": "fs:single:158b25a28310",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stone-paver:fs:colorOptions:c39e3cd0fc7e",
+    "pk": "stone-paver",
+    "materialId": "stone-paver",
+    "finishSetId": "fs:colorOptions:c39e3cd0fc7e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:vinyl-planks:fs:single:c320092fd29d",
+    "pk": "vinyl-planks",
+    "materialId": "vinyl-planks",
+    "finishSetId": "fs:single:c320092fd29d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:resin-flooring:fs:single:c51c6707b573",
+    "pk": "resin-flooring",
+    "materialId": "resin-flooring",
+    "finishSetId": "fs:single:c51c6707b573",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:microcement-floor:fs:single:b647a749e8d3",
+    "pk": "microcement-floor",
+    "materialId": "microcement-floor",
+    "finishSetId": "fs:single:b647a749e8d3",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:ceramic-tiles:fs:single:8955f26c437a",
+    "pk": "ceramic-tiles",
+    "materialId": "ceramic-tiles",
+    "finishSetId": "fs:single:8955f26c437a",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:epoxy-flooring:fs:single:05005de460b0",
+    "pk": "epoxy-flooring",
+    "materialId": "epoxy-flooring",
+    "finishSetId": "fs:single:05005de460b0",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:travertine-tiles:fs:single:0e7231a1efd7",
+    "pk": "travertine-tiles",
+    "materialId": "travertine-tiles",
+    "finishSetId": "fs:single:0e7231a1efd7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:marble-floor:fs:single:52a40746cb8f",
+    "pk": "marble-floor",
+    "materialId": "marble-floor",
+    "finishSetId": "fs:single:52a40746cb8f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:engineered-oak-floor:fs:single:05650c28b77e",
+    "pk": "engineered-oak-floor",
+    "materialId": "engineered-oak-floor",
+    "finishSetId": "fs:single:05650c28b77e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:linoleum-tiles:fs:single:2acf8333e9ff",
+    "pk": "linoleum-tiles",
+    "materialId": "linoleum-tiles",
+    "finishSetId": "fs:single:2acf8333e9ff",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:aluminum-frame:fs:single:c85f1ae8d0d9",
+    "pk": "aluminum-frame",
+    "materialId": "aluminum-frame",
+    "finishSetId": "fs:single:c85f1ae8d0d9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-frame:fs:single:354f2431e331",
+    "pk": "timber-frame",
+    "materialId": "timber-frame",
+    "finishSetId": "fs:single:354f2431e331",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:recycled-aluminum-frame:fs:single:af6b2fca54d0",
+    "pk": "recycled-aluminum-frame",
+    "materialId": "recycled-aluminum-frame",
+    "finishSetId": "fs:single:af6b2fca54d0",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-window-frame:fs:single:c43aa278af47",
+    "pk": "steel-window-frame",
+    "materialId": "steel-window-frame",
+    "finishSetId": "fs:single:c43aa278af47",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:composite-window-frame:fs:single:6ed5e57342ae",
+    "pk": "composite-window-frame",
+    "materialId": "composite-window-frame",
+    "finishSetId": "fs:single:6ed5e57342ae",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:upvc-window-frame:fs:single:75f31cf130e4",
+    "pk": "upvc-window-frame",
+    "materialId": "upvc-window-frame",
+    "finishSetId": "fs:single:75f31cf130e4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:curtain-wall-system:fs:single:0d88fe6f818c",
+    "pk": "curtain-wall-system",
+    "materialId": "curtain-wall-system",
+    "finishSetId": "fs:single:0d88fe6f818c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:frameless-glazing:fs:single:0337a13a646d",
+    "pk": "frameless-glazing",
+    "materialId": "frameless-glazing",
+    "finishSetId": "fs:single:0337a13a646d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:clay-plaster:fs:single:af88c4260a03",
+    "pk": "clay-plaster",
+    "materialId": "clay-plaster",
+    "finishSetId": "fs:single:af88c4260a03",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:gypsum-wall:fs:single:faea284e925d",
+    "pk": "gypsum-wall",
+    "materialId": "gypsum-wall",
+    "finishSetId": "fs:single:faea284e925d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:plasterboard-wall:fs:single:0cc2fae98ea3",
+    "pk": "plasterboard-wall",
+    "materialId": "plasterboard-wall",
+    "finishSetId": "fs:single:0cc2fae98ea3",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:plywood-panels-wall:fs:single:61417f3c571e",
+    "pk": "plywood-panels-wall",
+    "materialId": "plywood-panels-wall",
+    "finishSetId": "fs:single:61417f3c571e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:acoustic-panels-wall:fs:single:158dfd34ecc7",
+    "pk": "acoustic-panels-wall",
+    "materialId": "acoustic-panels-wall",
+    "finishSetId": "fs:single:158dfd34ecc7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glass-partitions:fs:single:2af5a73422f9",
+    "pk": "glass-partitions",
+    "materialId": "glass-partitions",
+    "finishSetId": "fs:single:2af5a73422f9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:brick-internal:fs:single:4550bd474c36",
+    "pk": "brick-internal",
+    "materialId": "brick-internal",
+    "finishSetId": "fs:single:4550bd474c36",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:concrete-block-wall:fs:single:95120e231789",
+    "pk": "concrete-block-wall",
+    "materialId": "concrete-block-wall",
+    "finishSetId": "fs:single:95120e231789",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:mineral-microcement:fs:single:b647a749e8d3",
+    "pk": "mineral-microcement",
+    "materialId": "mineral-microcement",
+    "finishSetId": "fs:single:b647a749e8d3",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:standard-wall-paint:fs:ral:d54feb68952c",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:standard-wall-paint:fs:textOptions:34f7dc310ef9",
+    "pk": "standard-wall-paint",
+    "materialId": "standard-wall-paint",
+    "finishSetId": "fs:textOptions:34f7dc310ef9",
+    "isDefault": false
+  },
+  {
+    "id": "mfs:custom-wall-paint:fs:ral:d54feb68952c",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:custom-wall-paint:fs:textOptions:34f7dc310ef9",
+    "pk": "custom-wall-paint",
+    "materialId": "custom-wall-paint",
+    "finishSetId": "fs:textOptions:34f7dc310ef9",
+    "isDefault": false
+  },
+  {
+    "id": "mfs:standard-ceiling-paint:fs:ral:d54feb68952c",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:standard-ceiling-paint:fs:textOptions:34f7dc310ef9",
+    "pk": "standard-ceiling-paint",
+    "materialId": "standard-ceiling-paint",
+    "finishSetId": "fs:textOptions:34f7dc310ef9",
+    "isDefault": false
+  },
+  {
+    "id": "mfs:custom-ceiling-paint:fs:ral:d54feb68952c",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:custom-ceiling-paint:fs:textOptions:34f7dc310ef9",
+    "pk": "custom-ceiling-paint",
+    "materialId": "custom-ceiling-paint",
+    "finishSetId": "fs:textOptions:34f7dc310ef9",
+    "isDefault": false
+  },
+  {
+    "id": "mfs:brick-veneer:fs:colorOptions:16d13db3163d",
+    "pk": "brick-veneer",
+    "materialId": "brick-veneer",
+    "finishSetId": "fs:colorOptions:16d13db3163d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:acoustic-ceiling-baffles:fs:single:e9b720317443",
+    "pk": "acoustic-ceiling-baffles",
+    "materialId": "acoustic-ceiling-baffles",
+    "finishSetId": "fs:single:e9b720317443",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:perforated-metal-ceiling:fs:single:b9353eaa1ff4",
+    "pk": "perforated-metal-ceiling",
+    "materialId": "perforated-metal-ceiling",
+    "finishSetId": "fs:single:b9353eaa1ff4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-slat-ceiling:fs:single:dde002118eae",
+    "pk": "timber-slat-ceiling",
+    "materialId": "timber-slat-ceiling",
+    "finishSetId": "fs:single:dde002118eae",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:gypsum-ceiling:fs:single:ff92a33f0732",
+    "pk": "gypsum-ceiling",
+    "materialId": "gypsum-ceiling",
+    "finishSetId": "fs:single:ff92a33f0732",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:open-grid-ceiling:fs:single:5971d5f40ea6",
+    "pk": "open-grid-ceiling",
+    "materialId": "open-grid-ceiling",
+    "finishSetId": "fs:single:5971d5f40ea6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stretch-fabric-ceiling:fs:single:e31901b7b3b3",
+    "pk": "stretch-fabric-ceiling",
+    "materialId": "stretch-fabric-ceiling",
+    "finishSetId": "fs:single:e31901b7b3b3",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:coffered-ceiling:fs:single:8acac60eb0d7",
+    "pk": "coffered-ceiling",
+    "materialId": "coffered-ceiling",
+    "finishSetId": "fs:single:8acac60eb0d7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:plasterboard-ceiling:fs:single:7a278ec47c92",
+    "pk": "plasterboard-ceiling",
+    "materialId": "plasterboard-ceiling",
+    "finishSetId": "fs:single:7a278ec47c92",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:exposed-clt-ceiling:fs:single:77947ac09847",
+    "pk": "exposed-clt-ceiling",
+    "materialId": "exposed-clt-ceiling",
+    "finishSetId": "fs:single:77947ac09847",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:metal-mesh-ceiling:fs:single:2104c9d2424d",
+    "pk": "metal-mesh-ceiling",
+    "materialId": "metal-mesh-ceiling",
+    "finishSetId": "fs:single:2104c9d2424d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:acoustic-tiles-ceiling:fs:single:5b70f2f5b515",
+    "pk": "acoustic-tiles-ceiling",
+    "materialId": "acoustic-tiles-ceiling",
+    "finishSetId": "fs:single:5b70f2f5b515",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:exposed-concrete-soffit:fs:single:61b28357359c",
+    "pk": "exposed-concrete-soffit",
+    "materialId": "exposed-concrete-soffit",
+    "finishSetId": "fs:single:61b28357359c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-slat-soffit:fs:single:d6c112a5636e",
+    "pk": "timber-slat-soffit",
+    "materialId": "timber-slat-soffit",
+    "finishSetId": "fs:single:d6c112a5636e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:perforated-metal-soffit:fs:single:af1029f967b6",
+    "pk": "perforated-metal-soffit",
+    "materialId": "perforated-metal-soffit",
+    "finishSetId": "fs:single:af1029f967b6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-linings:fs:single:514a3e5b78cb",
+    "pk": "timber-linings",
+    "materialId": "timber-linings",
+    "finishSetId": "fs:single:514a3e5b78cb",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:terracotta-panels:fs:colorOptions:594e1d5b88df",
+    "pk": "terracotta-panels",
+    "materialId": "terracotta-panels",
+    "finishSetId": "fs:colorOptions:594e1d5b88df",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:bio-fibre-panels:fs:single:5beebfcbd5e9",
+    "pk": "bio-fibre-panels",
+    "materialId": "bio-fibre-panels",
+    "finishSetId": "fs:single:5beebfcbd5e9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-wall-panels:fs:single:f7216fd9a50f",
+    "pk": "timber-wall-panels",
+    "materialId": "timber-wall-panels",
+    "finishSetId": "fs:single:f7216fd9a50f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:porcelain-tiles:fs:single:bf39bdd7e303",
+    "pk": "porcelain-tiles",
+    "materialId": "porcelain-tiles",
+    "finishSetId": "fs:single:bf39bdd7e303",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:textured-wallpaper:fs:single:583f5e160a92",
+    "pk": "textured-wallpaper",
+    "materialId": "textured-wallpaper",
+    "finishSetId": "fs:single:583f5e160a92",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:fabric-acoustic-panels:fs:single:158dfd34ecc7",
+    "pk": "fabric-acoustic-panels",
+    "materialId": "fabric-acoustic-panels",
+    "finishSetId": "fs:single:158dfd34ecc7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:oak-timber-slats:fs:single:a1a50caaaac6",
+    "pk": "oak-timber-slats",
+    "materialId": "oak-timber-slats",
+    "finishSetId": "fs:single:a1a50caaaac6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cork-panels:fs:single:c59b314331cd",
+    "pk": "cork-panels",
+    "materialId": "cork-panels",
+    "finishSetId": "fs:single:c59b314331cd",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:reclaimed-boarding:fs:single:3f9368d90597",
+    "pk": "reclaimed-boarding",
+    "materialId": "reclaimed-boarding",
+    "finishSetId": "fs:single:3f9368d90597",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:mycelium-tiles:fs:single:a8025751a902",
+    "pk": "mycelium-tiles",
+    "materialId": "mycelium-tiles",
+    "finishSetId": "fs:single:a8025751a902",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:wool-felt-panels:fs:colorOptions:6af569707bee",
+    "pk": "wool-felt-panels",
+    "materialId": "wool-felt-panels",
+    "finishSetId": "fs:colorOptions:6af569707bee",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:bamboo-slat-wall:fs:colorOptions:d0876ce5db84",
+    "pk": "bamboo-slat-wall",
+    "materialId": "bamboo-slat-wall",
+    "finishSetId": "fs:colorOptions:d0876ce5db84",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:plywood-panels-finish:fs:single:105a75447f6a",
+    "pk": "plywood-panels-finish",
+    "materialId": "plywood-panels-finish",
+    "finishSetId": "fs:single:105a75447f6a",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:marble-panels:fs:single:b813b6738d2b",
+    "pk": "marble-panels",
+    "materialId": "marble-panels",
+    "finishSetId": "fs:single:b813b6738d2b",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:leather-panels:fs:single:40de124244bf",
+    "pk": "leather-panels",
+    "materialId": "leather-panels",
+    "finishSetId": "fs:single:40de124244bf",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:metal-mesh-panels:fs:single:f9be54d0339f",
+    "pk": "metal-mesh-panels",
+    "materialId": "metal-mesh-panels",
+    "finishSetId": "fs:single:f9be54d0339f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glass-panels-finish:fs:single:3d803613ae04",
+    "pk": "glass-panels-finish",
+    "materialId": "glass-panels-finish",
+    "finishSetId": "fs:single:3d803613ae04",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:acoustic-plaster:fs:single:7a9cb9915a2d",
+    "pk": "acoustic-plaster",
+    "materialId": "acoustic-plaster",
+    "finishSetId": "fs:single:7a9cb9915a2d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:lime-plaster:fs:single:10f3ef8053b1",
+    "pk": "lime-plaster",
+    "materialId": "lime-plaster",
+    "finishSetId": "fs:single:10f3ef8053b1",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:tadelakt-plaster:fs:single:3be817d045c0",
+    "pk": "tadelakt-plaster",
+    "materialId": "tadelakt-plaster",
+    "finishSetId": "fs:single:3be817d045c0",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-steelwork:fs:single:71463f2ecce7",
+    "pk": "secondary-steelwork",
+    "materialId": "secondary-steelwork",
+    "finishSetId": "fs:single:71463f2ecce7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:composite-metal-deck-slabs:fs:single:bd27e7c6b42a",
+    "pk": "composite-metal-deck-slabs",
+    "materialId": "composite-metal-deck-slabs",
+    "finishSetId": "fs:single:bd27e7c6b42a",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:precast-concrete-floor-planks:fs:single:44f108e0acfc",
+    "pk": "precast-concrete-floor-planks",
+    "materialId": "precast-concrete-floor-planks",
+    "finishSetId": "fs:single:44f108e0acfc",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-joists-floor-cassettes:fs:single:37cca3b75f25",
+    "pk": "timber-joists-floor-cassettes",
+    "materialId": "timber-joists-floor-cassettes",
+    "finishSetId": "fs:single:37cca3b75f25",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:clt-floor-panels:fs:single:9ea9e1207c14",
+    "pk": "clt-floor-panels",
+    "materialId": "clt-floor-panels",
+    "finishSetId": "fs:single:9ea9e1207c14",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-steel-infill-beams:fs:single:9f4a50149506",
+    "pk": "secondary-steel-infill-beams",
+    "materialId": "secondary-steel-infill-beams",
+    "finishSetId": "fs:single:9f4a50149506",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:raised-access-floor-systems:fs:single:6528b3203956",
+    "pk": "raised-access-floor-systems",
+    "materialId": "raised-access-floor-systems",
+    "finishSetId": "fs:single:6528b3203956",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-rafters-purlins:fs:single:905bebce4f66",
+    "pk": "timber-rafters-purlins",
+    "materialId": "timber-rafters-purlins",
+    "finishSetId": "fs:single:905bebce4f66",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-purlins:fs:single:1d5dcb442d53",
+    "pk": "steel-purlins",
+    "materialId": "steel-purlins",
+    "finishSetId": "fs:single:1d5dcb442d53",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glulam-roof-beams:fs:single:6a807ae47a14",
+    "pk": "glulam-roof-beams",
+    "materialId": "glulam-roof-beams",
+    "finishSetId": "fs:single:6a807ae47a14",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-trusses:fs:single:a97e7fe79aac",
+    "pk": "secondary-trusses",
+    "materialId": "secondary-trusses",
+    "finishSetId": "fs:single:a97e7fe79aac",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:clt-roof-panels:fs:single:df7db4a9081b",
+    "pk": "clt-roof-panels",
+    "materialId": "clt-roof-panels",
+    "finishSetId": "fs:single:df7db4a9081b",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:lightweight-space-frame-infill:fs:single:e13a4f633662",
+    "pk": "lightweight-space-frame-infill",
+    "materialId": "lightweight-space-frame-infill",
+    "finishSetId": "fs:single:e13a4f633662",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:edge-beams:fs:single:47341ccbe9a0",
+    "pk": "edge-beams",
+    "materialId": "edge-beams",
+    "finishSetId": "fs:single:47341ccbe9a0",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:spandrel-beams:fs:single:61d9d71a49d1",
+    "pk": "spandrel-beams",
+    "materialId": "spandrel-beams",
+    "finishSetId": "fs:single:61d9d71a49d1",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:ring-beams:fs:single:0ced58f7d05f",
+    "pk": "ring-beams",
+    "materialId": "ring-beams",
+    "finishSetId": "fs:single:0ced58f7d05f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-lintels:fs:single:766bc3e307de",
+    "pk": "secondary-lintels",
+    "materialId": "secondary-lintels",
+    "finishSetId": "fs:single:766bc3e307de",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:masonry-shelf-angles:fs:single:ce806d1cf8d1",
+    "pk": "masonry-shelf-angles",
+    "materialId": "masonry-shelf-angles",
+    "finishSetId": "fs:single:ce806d1cf8d1",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cross-bracing-steel:fs:single:f7a14ab5d4e8",
+    "pk": "cross-bracing-steel",
+    "materialId": "cross-bracing-steel",
+    "finishSetId": "fs:single:f7a14ab5d4e8",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-wind-bracing:fs:single:56be332706b4",
+    "pk": "timber-wind-bracing",
+    "materialId": "timber-wind-bracing",
+    "finishSetId": "fs:single:56be332706b4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:k-x-bracing-secondary:fs:single:d05f13707180",
+    "pk": "k-x-bracing-secondary",
+    "materialId": "k-x-bracing-secondary",
+    "finishSetId": "fs:single:d05f13707180",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:diaphragm-bracing-elements:fs:single:14858debe701",
+    "pk": "diaphragm-bracing-elements",
+    "materialId": "diaphragm-bracing-elements",
+    "finishSetId": "fs:single:14858debe701",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-shear-panels:fs:single:71f7aff9a342",
+    "pk": "secondary-shear-panels",
+    "materialId": "secondary-shear-panels",
+    "finishSetId": "fs:single:71f7aff9a342",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-stair-stringers:fs:single:515e5d3e1d13",
+    "pk": "steel-stair-stringers",
+    "materialId": "steel-stair-stringers",
+    "finishSetId": "fs:single:515e5d3e1d13",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-stair-carriages:fs:single:7d6646457f97",
+    "pk": "timber-stair-carriages",
+    "materialId": "timber-stair-carriages",
+    "finishSetId": "fs:single:7d6646457f97",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stair-landings-trimmers:fs:single:b288d73603b9",
+    "pk": "stair-landings-trimmers",
+    "materialId": "stair-landings-trimmers",
+    "finishSetId": "fs:single:b288d73603b9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cantilevered-stair-treads:fs:single:bea6501eaf3e",
+    "pk": "cantilevered-stair-treads",
+    "materialId": "cantilevered-stair-treads",
+    "finishSetId": "fs:single:bea6501eaf3e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:facade-support-rails:fs:single:21a74429618f",
+    "pk": "facade-support-rails",
+    "materialId": "facade-support-rails",
+    "finishSetId": "fs:single:21a74429618f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:rainscreen-carrier-systems:fs:single:6c0081d16bc6",
+    "pk": "rainscreen-carrier-systems",
+    "materialId": "rainscreen-carrier-systems",
+    "finishSetId": "fs:single:6c0081d16bc6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:curtain-wall-mullions-transoms:fs:single:854b235aed38",
+    "pk": "curtain-wall-mullions-transoms",
+    "materialId": "curtain-wall-mullions-transoms",
+    "finishSetId": "fs:single:854b235aed38",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-facade-brackets:fs:single:0afe74f2f195",
+    "pk": "secondary-facade-brackets",
+    "materialId": "secondary-facade-brackets",
+    "finishSetId": "fs:single:0afe74f2f195",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:balcony-support-beams:fs:single:62dd96e37548",
+    "pk": "balcony-support-beams",
+    "materialId": "balcony-support-beams",
+    "finishSetId": "fs:single:62dd96e37548",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-canopy-frames:fs:single:f2ff7ca04536",
+    "pk": "steel-canopy-frames",
+    "materialId": "steel-canopy-frames",
+    "finishSetId": "fs:single:f2ff7ca04536",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-pergola-structures:fs:single:df7b373d7717",
+    "pk": "timber-pergola-structures",
+    "materialId": "timber-pergola-structures",
+    "finishSetId": "fs:single:df7b373d7717",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:tension-rods-tie-members:fs:single:684b43928355",
+    "pk": "tension-rods-tie-members",
+    "materialId": "tension-rods-tie-members",
+    "finishSetId": "fs:single:684b43928355",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:secondary-cantilever-arms:fs:single:00bfa214f8ab",
+    "pk": "secondary-cantilever-arms",
+    "materialId": "secondary-cantilever-arms",
+    "finishSetId": "fs:single:00bfa214f8ab",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:brick-loadbearing:fs:colorOptions:831e787b8bb6",
+    "pk": "brick-loadbearing",
+    "materialId": "brick-loadbearing",
+    "finishSetId": "fs:colorOptions:831e787b8bb6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:concrete-block-loadbearing:fs:single:fe96fe86ba85",
+    "pk": "concrete-block-loadbearing",
+    "materialId": "concrete-block-loadbearing",
+    "finishSetId": "fs:single:fe96fe86ba85",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:hempcrete-structural:fs:single:a7078eda39ff",
+    "pk": "hempcrete-structural",
+    "materialId": "hempcrete-structural",
+    "finishSetId": "fs:single:a7078eda39ff",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-concrete-composite:fs:colorOptions:c5f0c2016ea5",
+    "pk": "steel-concrete-composite",
+    "materialId": "steel-concrete-composite",
+    "finishSetId": "fs:colorOptions:c5f0c2016ea5",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:precast-concrete:fs:single:8693b5c1b622",
+    "pk": "precast-concrete",
+    "materialId": "precast-concrete",
+    "finishSetId": "fs:single:8693b5c1b622",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-trusses:fs:colorOptions:c5f0c2016ea5",
+    "pk": "steel-trusses",
+    "materialId": "steel-trusses",
+    "finishSetId": "fs:colorOptions:c5f0c2016ea5",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:prestressed-concrete:fs:single:6a07617d7f29",
+    "pk": "prestressed-concrete",
+    "materialId": "prestressed-concrete",
+    "finishSetId": "fs:single:6a07617d7f29",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:permeable-paving:fs:single:f1bf5e280005",
+    "pk": "permeable-paving",
+    "materialId": "permeable-paving",
+    "finishSetId": "fs:single:f1bf5e280005",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:joinery-built-in:fs:single:f599d220e641",
+    "pk": "joinery-built-in",
+    "materialId": "joinery-built-in",
+    "finishSetId": "fs:single:f599d220e641",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:brass-fixtures:fs:single:82329d4fbbce",
+    "pk": "brass-fixtures",
+    "materialId": "brass-fixtures",
+    "finishSetId": "fs:single:82329d4fbbce",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:standing-seam-roof:fs:colorOptions:fae70aa2fdc9",
+    "pk": "standing-seam-roof",
+    "materialId": "standing-seam-roof",
+    "finishSetId": "fs:colorOptions:fae70aa2fdc9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:aluminium-standing-seam-roof:fs:ral:d54feb68952c",
+    "pk": "aluminium-standing-seam-roof",
+    "materialId": "aluminium-standing-seam-roof",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:copper-standing-seam-roof:fs:colorOptions:d6fbbd59cd3e",
+    "pk": "copper-standing-seam-roof",
+    "materialId": "copper-standing-seam-roof",
+    "finishSetId": "fs:colorOptions:d6fbbd59cd3e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stainless-standing-seam-roof:fs:colorOptions:199a75d23167",
+    "pk": "stainless-standing-seam-roof",
+    "materialId": "stainless-standing-seam-roof",
+    "finishSetId": "fs:colorOptions:199a75d23167",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:lead-standing-seam-roof:fs:colorOptions:074e3baf05c6",
+    "pk": "lead-standing-seam-roof",
+    "materialId": "lead-standing-seam-roof",
+    "finishSetId": "fs:colorOptions:074e3baf05c6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:green-roof:fs:single:6fc9bb367c0f",
+    "pk": "green-roof",
+    "materialId": "green-roof",
+    "finishSetId": "fs:single:6fc9bb367c0f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cool-roof:fs:single:d8f0c2299919",
+    "pk": "cool-roof",
+    "materialId": "cool-roof",
+    "finishSetId": "fs:single:d8f0c2299919",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:pv-roof:fs:single:f9ae35501c67",
+    "pk": "pv-roof",
+    "materialId": "pv-roof",
+    "finishSetId": "fs:single:f9ae35501c67",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:blue-roof:fs:single:a38e2b16e0ba",
+    "pk": "blue-roof",
+    "materialId": "blue-roof",
+    "finishSetId": "fs:single:a38e2b16e0ba",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:clay-tiles-roof:fs:single:3f021a0d2e9c",
+    "pk": "clay-tiles-roof",
+    "materialId": "clay-tiles-roof",
+    "finishSetId": "fs:single:3f021a0d2e9c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:slate-tiles-roof:fs:single:eee8bc4e2985",
+    "pk": "slate-tiles-roof",
+    "materialId": "slate-tiles-roof",
+    "finishSetId": "fs:single:eee8bc4e2985",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:metal-tiles-roof:fs:single:d33a2b959189",
+    "pk": "metal-tiles-roof",
+    "materialId": "metal-tiles-roof",
+    "finishSetId": "fs:single:d33a2b959189",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:epdm-membrane:fs:single:60422ef89e39",
+    "pk": "epdm-membrane",
+    "materialId": "epdm-membrane",
+    "finishSetId": "fs:single:60422ef89e39",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:tpo-membrane:fs:single:a31d585aadbb",
+    "pk": "tpo-membrane",
+    "materialId": "tpo-membrane",
+    "finishSetId": "fs:single:a31d585aadbb",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:built-up-roofing:fs:single:804e353a3141",
+    "pk": "built-up-roofing",
+    "materialId": "built-up-roofing",
+    "finishSetId": "fs:single:804e353a3141",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:polycarbonate-roof:fs:single:c6205421c205",
+    "pk": "polycarbonate-roof",
+    "materialId": "polycarbonate-roof",
+    "finishSetId": "fs:single:c6205421c205",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:wood-fiber-insulation:fs:single:b211714adf60",
+    "pk": "wood-fiber-insulation",
+    "materialId": "wood-fiber-insulation",
+    "finishSetId": "fs:single:b211714adf60",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:hemp-insulation:fs:single:94bf8df5b4a7",
+    "pk": "hemp-insulation",
+    "materialId": "hemp-insulation",
+    "finishSetId": "fs:single:94bf8df5b4a7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:sheep-wool-insulation:fs:single:a87dcb50baf2",
+    "pk": "sheep-wool-insulation",
+    "materialId": "sheep-wool-insulation",
+    "finishSetId": "fs:single:a87dcb50baf2",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cork-insulation:fs:single:9b864c109d85",
+    "pk": "cork-insulation",
+    "materialId": "cork-insulation",
+    "finishSetId": "fs:single:9b864c109d85",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cellulose-insulation:fs:single:38c13cce642c",
+    "pk": "cellulose-insulation",
+    "materialId": "cellulose-insulation",
+    "finishSetId": "fs:single:38c13cce642c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:mineral-wool:fs:single:58892f6a5f1f",
+    "pk": "mineral-wool",
+    "materialId": "mineral-wool",
+    "finishSetId": "fs:single:58892f6a5f1f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:pir-insulation:fs:single:d00512a991fc",
+    "pk": "pir-insulation",
+    "materialId": "pir-insulation",
+    "finishSetId": "fs:single:d00512a991fc",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:aerogel-insulation:fs:single:3cb192ff3293",
+    "pk": "aerogel-insulation",
+    "materialId": "aerogel-insulation",
+    "finishSetId": "fs:single:3cb192ff3293",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-door:fs:single:50b2bb885735",
+    "pk": "timber-door",
+    "materialId": "timber-door",
+    "finishSetId": "fs:single:50b2bb885735",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-door:fs:single:36afb6944c4c",
+    "pk": "steel-door",
+    "materialId": "steel-door",
+    "finishSetId": "fs:single:36afb6944c4c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:aluminum-door:fs:single:d487cbdd7358",
+    "pk": "aluminum-door",
+    "materialId": "aluminum-door",
+    "finishSetId": "fs:single:d487cbdd7358",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glass-door:fs:single:2af5a73422f9",
+    "pk": "glass-door",
+    "materialId": "glass-door",
+    "finishSetId": "fs:single:2af5a73422f9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:composite-door:fs:single:6c0f9a6cd367",
+    "pk": "composite-door",
+    "materialId": "composite-door",
+    "finishSetId": "fs:single:6c0f9a6cd367",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:fire-rated-door:fs:single:bfd95e3b0d06",
+    "pk": "fire-rated-door",
+    "materialId": "fire-rated-door",
+    "finishSetId": "fs:single:bfd95e3b0d06",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glass-balustrade:fs:single:a8063fdf8dfc",
+    "pk": "glass-balustrade",
+    "materialId": "glass-balustrade",
+    "finishSetId": "fs:single:a8063fdf8dfc",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:steel-railing:fs:single:36afb6944c4c",
+    "pk": "steel-railing",
+    "materialId": "steel-railing",
+    "finishSetId": "fs:single:36afb6944c4c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-railing:fs:single:a111f8b24dad",
+    "pk": "timber-railing",
+    "materialId": "timber-railing",
+    "finishSetId": "fs:single:a111f8b24dad",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cable-railing:fs:single:26ad44d851ef",
+    "pk": "cable-railing",
+    "materialId": "cable-railing",
+    "finishSetId": "fs:single:26ad44d851ef",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:mesh-railing:fs:single:f9be54d0339f",
+    "pk": "mesh-railing",
+    "materialId": "mesh-railing",
+    "finishSetId": "fs:single:f9be54d0339f",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:gravel-paving:fs:single:0b13f3235dff",
+    "pk": "gravel-paving",
+    "materialId": "gravel-paving",
+    "finishSetId": "fs:single:0b13f3235dff",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:resin-bound-gravel:fs:single:3b27d8264d3e",
+    "pk": "resin-bound-gravel",
+    "materialId": "resin-bound-gravel",
+    "finishSetId": "fs:single:3b27d8264d3e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:concrete-paving:fs:single:2743ce12cdee",
+    "pk": "concrete-paving",
+    "materialId": "concrete-paving",
+    "finishSetId": "fs:single:2743ce12cdee",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:block-paving:fs:single:82b73aae4be6",
+    "pk": "block-paving",
+    "materialId": "block-paving",
+    "finishSetId": "fs:single:82b73aae4be6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:grass-reinforcement:fs:single:73eaa15327ca",
+    "pk": "grass-reinforcement",
+    "materialId": "grass-reinforcement",
+    "finishSetId": "fs:single:73eaa15327ca",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:decking-external:fs:single:00a528a96662",
+    "pk": "decking-external",
+    "materialId": "decking-external",
+    "finishSetId": "fs:single:00a528a96662",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:brick-slip-rainscreen:fs:single:2f4581eb02e8",
+    "pk": "brick-slip-rainscreen",
+    "materialId": "brick-slip-rainscreen",
+    "finishSetId": "fs:single:2f4581eb02e8",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stone-facade:fs:colorOptions:c39e3cd0fc7e",
+    "pk": "stone-facade",
+    "materialId": "stone-facade",
+    "finishSetId": "fs:colorOptions:c39e3cd0fc7e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stone-rainscreen:fs:colorOptions:c39e3cd0fc7e",
+    "pk": "stone-rainscreen",
+    "materialId": "stone-rainscreen",
+    "finishSetId": "fs:colorOptions:c39e3cd0fc7e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:precast-concrete-panels:fs:single:63e315037172",
+    "pk": "precast-concrete-panels",
+    "materialId": "precast-concrete-panels",
+    "finishSetId": "fs:single:63e315037172",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:gfrc-grc-panels:fs:single:0d6e8da25492",
+    "pk": "gfrc-grc-panels",
+    "materialId": "gfrc-grc-panels",
+    "finishSetId": "fs:single:0d6e8da25492",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:slate-cladding:fs:single:7e4cd305e15c",
+    "pk": "slate-cladding",
+    "materialId": "slate-cladding",
+    "finishSetId": "fs:single:7e4cd305e15c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:hemp-lime-wall:fs:single:3e9eb38a4af9",
+    "pk": "hemp-lime-wall",
+    "materialId": "hemp-lime-wall",
+    "finishSetId": "fs:single:3e9eb38a4af9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:timber-rainscreen:fs:single:f9d72315d9f4",
+    "pk": "timber-rainscreen",
+    "materialId": "timber-rainscreen",
+    "finishSetId": "fs:single:f9d72315d9f4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:charred-timber-cladding:fs:single:83987a247a0a",
+    "pk": "charred-timber-cladding",
+    "materialId": "charred-timber-cladding",
+    "finishSetId": "fs:single:83987a247a0a",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:cork-rainscreen:fs:single:4567b5f0b6bd",
+    "pk": "cork-rainscreen",
+    "materialId": "cork-rainscreen",
+    "finishSetId": "fs:single:4567b5f0b6bd",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:wood-fibre-lime-render:fs:single:ecf2070d5359",
+    "pk": "wood-fibre-lime-render",
+    "materialId": "wood-fibre-lime-render",
+    "finishSetId": "fs:single:ecf2070d5359",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:insulated-render-system:fs:ral:d54feb68952c",
+    "pk": "insulated-render-system",
+    "materialId": "insulated-render-system",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:living-green-wall:fs:single:26b59f6daafb",
+    "pk": "living-green-wall",
+    "materialId": "living-green-wall",
+    "finishSetId": "fs:single:26b59f6daafb",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:zinc-cladding:fs:colorOptions:fae70aa2fdc9",
+    "pk": "zinc-cladding",
+    "materialId": "zinc-cladding",
+    "finishSetId": "fs:colorOptions:fae70aa2fdc9",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:aluminium-cladding:fs:ral:d54feb68952c",
+    "pk": "aluminium-cladding",
+    "materialId": "aluminium-cladding",
+    "finishSetId": "fs:ral:d54feb68952c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:copper-cladding:fs:colorOptions:d6fbbd59cd3e",
+    "pk": "copper-cladding",
+    "materialId": "copper-cladding",
+    "finishSetId": "fs:colorOptions:d6fbbd59cd3e",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:stainless-cladding:fs:colorOptions:199a75d23167",
+    "pk": "stainless-cladding",
+    "materialId": "stainless-cladding",
+    "finishSetId": "fs:colorOptions:199a75d23167",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:lead-cladding:fs:colorOptions:074e3baf05c6",
+    "pk": "lead-cladding",
+    "materialId": "lead-cladding",
+    "finishSetId": "fs:colorOptions:074e3baf05c6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:weathering-steel-cladding:fs:single:662adc2c9d39",
+    "pk": "weathering-steel-cladding",
+    "materialId": "weathering-steel-cladding",
+    "finishSetId": "fs:single:662adc2c9d39",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:insulated-metal-panels:fs:single:1edbedf1d3f2",
+    "pk": "insulated-metal-panels",
+    "materialId": "insulated-metal-panels",
+    "finishSetId": "fs:single:1edbedf1d3f2",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:fibre-cement-panels:fs:single:decbfe6c7253",
+    "pk": "fibre-cement-panels",
+    "materialId": "fibre-cement-panels",
+    "finishSetId": "fs:single:decbfe6c7253",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:metal-composite-panels:fs:single:bfe1ed111da7",
+    "pk": "metal-composite-panels",
+    "materialId": "metal-composite-panels",
+    "finishSetId": "fs:single:bfe1ed111da7",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:glass-facade:fs:single:e86c835c3206",
+    "pk": "glass-facade",
+    "materialId": "glass-facade",
+    "finishSetId": "fs:single:e86c835c3206",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:etfe-tensile-facade:fs:single:268266e3fc73",
+    "pk": "etfe-tensile-facade",
+    "materialId": "etfe-tensile-facade",
+    "finishSetId": "fs:single:268266e3fc73",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:native-planting:fs:single:1b5fb3068adc",
+    "pk": "native-planting",
+    "materialId": "native-planting",
+    "finishSetId": "fs:single:1b5fb3068adc",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:wildflower-meadow:fs:single:afade605c9c1",
+    "pk": "wildflower-meadow",
+    "materialId": "wildflower-meadow",
+    "finishSetId": "fs:single:afade605c9c1",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:rain-garden:fs:single:ee63ea680134",
+    "pk": "rain-garden",
+    "materialId": "rain-garden",
+    "finishSetId": "fs:single:ee63ea680134",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:living-wall-external:fs:single:ad4a8777d857",
+    "pk": "living-wall-external",
+    "materialId": "living-wall-external",
+    "finishSetId": "fs:single:ad4a8777d857",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:ornamental-planting:fs:single:25a32c7d1ada",
+    "pk": "ornamental-planting",
+    "materialId": "ornamental-planting",
+    "finishSetId": "fs:single:25a32c7d1ada",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:tree-planting:fs:single:e42e1edc9d56",
+    "pk": "tree-planting",
+    "materialId": "tree-planting",
+    "finishSetId": "fs:single:e42e1edc9d56",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:oak-dining-table:fs:single:e7530914e31d",
+    "pk": "oak-dining-table",
+    "materialId": "oak-dining-table",
+    "finishSetId": "fs:single:e7530914e31d",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:upholstered-seating:fs:single:84ff442b0bd4",
+    "pk": "upholstered-seating",
+    "materialId": "upholstered-seating",
+    "finishSetId": "fs:single:84ff442b0bd4",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:metal-chair:fs:single:36afb6944c4c",
+    "pk": "metal-chair",
+    "materialId": "metal-chair",
+    "finishSetId": "fs:single:36afb6944c4c",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:plywood-furniture:fs:single:30581a541bc6",
+    "pk": "plywood-furniture",
+    "materialId": "plywood-furniture",
+    "finishSetId": "fs:single:30581a541bc6",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:reclaimed-timber-furniture:fs:single:b633d2c96c26",
+    "pk": "reclaimed-timber-furniture",
+    "materialId": "reclaimed-timber-furniture",
+    "finishSetId": "fs:single:b633d2c96c26",
+    "isDefault": true
+  },
+  {
+    "id": "mfs:modular-shelving:fs:single:b1f17b76ad27",
+    "pk": "modular-shelving",
+    "materialId": "modular-shelving",
+    "finishSetId": "fs:single:b1f17b76ad27",
+    "isDefault": true
+  }
+]

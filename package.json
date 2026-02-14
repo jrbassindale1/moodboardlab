@@ -8,9 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "generate-icons": "tsx scripts/generateIconsToPublic.ts",
-    "optimize-icons": "tsx scripts/optimizeIcons.ts"
+    "optimize-icons": "tsx scripts/optimizeIcons.ts",
+    "export-cosmos-material-model": "tsx scripts/export-cosmos-material-model.ts",
+    "import-cosmos-seed": "tsx scripts/import-cosmos-seed.ts"
   },
   "dependencies": {
+    "@azure/cosmos": "^4.7.0",
     "@clerk/clerk-react": "^5.60.0",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.556.0",

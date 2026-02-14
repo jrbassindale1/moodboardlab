@@ -1,3 +1,5 @@
+import type { MaterialOption } from './types';
+
 // Prod host is the deployed Function App; adjust if you rename the app.
 // Support both Vite (import.meta.env) and Node.js (process.env) environments
 type RequestOptions = {
@@ -40,6 +42,11 @@ export interface QuotaResponse {
   remaining: number;
   limit: number;
   used: number;
+}
+
+export interface MaterialsResponse {
+  items: MaterialOption[];
+  count?: number;
 }
 
 function getApiBase() {
@@ -109,6 +116,23 @@ export const callGeminiText = (payload: unknown, options?: RequestOptions) =>
   callGeminiBackend(payload, "text", options);
 export const callGeminiImage = (payload: unknown, options?: RequestOptions) =>
   callGeminiBackend(payload, "image", options);
+
+export async function getMaterials(): Promise<MaterialOption[]> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(`${API_BASE}/api/materials`, { method: 'GET' }, 15000);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch materials (status ${res.status})`);
+  }
+
+  const data = (await res.json()) as MaterialsResponse | MaterialOption[];
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (Array.isArray(data.items)) {
+    return data.items;
+  }
+  return [];
+}
 
 export async function saveGeneration(payload: {
   prompt: string;

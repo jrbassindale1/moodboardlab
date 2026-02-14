@@ -8,7 +8,8 @@
  *
  * Database structure:
  * - Database: moodboardlab
- * - Containers: users, usage, generations (all with partition key /userId)
+ * - Containers: users, usage, generations, materials, finishes, finish_sets,
+ *               material_finish_links, material_finish_set_links, lifecycle_profiles
  */
 
 import { CosmosClient, Container, Database } from '@azure/cosmos';
@@ -40,7 +41,18 @@ function getDatabase(): Database {
   return database;
 }
 
-export function getContainer(containerName: 'users' | 'usage' | 'generations'): Container {
+export function getContainer(
+  containerName:
+    | 'users'
+    | 'usage'
+    | 'generations'
+    | 'materials'
+    | 'finishes'
+    | 'finish_sets'
+    | 'material_finish_links'
+    | 'material_finish_set_links'
+    | 'lifecycle_profiles'
+): Container {
   if (!containers[containerName]) {
     containers[containerName] = getDatabase().container(containerName);
   }
@@ -83,6 +95,95 @@ export interface GenerationDocument {
   materials?: unknown;
   createdAt: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface MaterialDocument {
+  id: string;
+  pk: string; // category (partition key)
+  docType: 'material';
+  sortOrder: number;
+
+  name: string;
+  tone: string;
+  finish: string;
+  description: string;
+  keywords: string[];
+  category: string;
+
+  colorOptions?: Array<{ label: string; tone: string }>;
+  supportsColor?: boolean;
+  finishOptions?: string[];
+  treePaths?: string[];
+  carbonIntensity?: 'low' | 'medium' | 'high';
+  tags?: string[];
+  materialType?: string;
+  materialForm?: string[];
+  materialFunction?: string[];
+  manufacturingProcess?: string[];
+
+  finishIds: string[];
+  primaryFinishId: string | null;
+  finishSetIds: string[];
+  primaryFinishSetId: string | null;
+  lifecycleProfileId: string | null;
+
+  // Sustainability and specification data
+  insight: string | null;
+  actions: string[] | null;
+  healthRiskLevel: 'low' | 'medium' | 'high' | null;
+  healthConcerns: string[] | null;
+  healthNote: string | null;
+  risks: Array<{ risk: string; mitigation: string }> | null;
+  serviceLife: number | null;
+}
+
+export interface FinishDocument {
+  id: string; // `finish:<normalized-label>`
+  pk: 'finish';
+  label: string;
+  normalizedLabel: string;
+  type: 'finish';
+}
+
+export interface FinishSetDocument {
+  id: string; // `fs:<type>:<hash>`
+  pk: 'finish_set';
+  type: 'ral' | 'colorOptions' | 'textOptions' | 'single';
+  name: string;
+  options: Array<{ label: string; tone?: string }>;
+  signature: string;
+}
+
+export interface MaterialFinishLinkDocument {
+  id: string; // `mf:<materialId>:<finishId>`
+  pk: string; // materialId
+  materialId: string;
+  finishId: string;
+  isPrimary: boolean;
+}
+
+export interface MaterialFinishSetLinkDocument {
+  id: string; // `mfs:<materialId>:<finishSetId>`
+  pk: string; // materialId
+  materialId: string;
+  finishSetId: string;
+  isDefault: boolean;
+}
+
+export interface LifecycleProfileDocument {
+  id: string; // `lp:<materialId>`
+  pk: string; // materialId
+  docType: 'lifecycleProfile';
+  materialId: string;
+  stages: {
+    raw: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    manufacturing: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    transport: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    installation: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    inUse: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    maintenance: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+    endOfLife: { impact: 1 | 2 | 3 | 4 | 5; confidence?: 'high' | 'medium' | 'low' };
+  };
 }
 
 // Helper functions

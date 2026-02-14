@@ -36,7 +36,7 @@ Using your existing `moodboardlab-cosmos` account:
 ### 1. Database
 - Database name: `moodboardlab`
 
-### 2. Containers (already created)
+### 2. Containers
 
 **users** container:
 - Partition key: `/userId`
@@ -46,6 +46,15 @@ Using your existing `moodboardlab-cosmos` account:
 
 **generations** container:
 - Partition key: `/userId`
+
+**materials** container:
+- Partition key: `/category` (recommended) or `/id`
+- Store one material document per item (same shape as frontend `MaterialOption`)
+
+Storage container for material icons:
+- Container name: `material-icons`
+- Upload default icon assets (`.webp` + `.png`) and keep container private
+- API can return SAS-backed URLs for these icons
 
 ## Environment Variables
 
@@ -65,6 +74,13 @@ Optional (recommended) for stricter token validation:
 ```
 CLERK_ISSUER=https://<your-clerk-instance>.clerk.accounts.dev
 CLERK_AUDIENCE=<your-expected-audience>
+```
+
+Optional for material icon URL generation:
+```
+MATERIAL_ICON_BLOB_CONTAINER=material-icons
+# Or set full base (container included), e.g.
+# MATERIAL_ICON_BLOB_BASE_URL=https://<account>.blob.core.windows.net/material-icons
 ```
 
 ### Frontend (.env.local)
@@ -98,6 +114,8 @@ your-azure-functions-project/
    - Usage count increments
    - Generation appears in dashboard
    - Quota is enforced after 10 generations
+5. Verify materials API:
+   - `GET /api/materials` returns `{ items: [...] }` from CosmosDB
 
 ## Troubleshooting
 
