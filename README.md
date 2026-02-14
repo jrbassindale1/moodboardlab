@@ -24,6 +24,9 @@ View your app in AI Studio: https://ai.studio/apps/drive/1uRA61_R6tcEbgBgx3XIO5A
 - `main` deploys to production.
 - `staging` deploys to the Azure Static Web Apps staging environment.
 
+Before copying/deploying backend function changes, run:
+`npm run verify:functions`
+
 Basic flow:
 
 1. Create/update staging branch:

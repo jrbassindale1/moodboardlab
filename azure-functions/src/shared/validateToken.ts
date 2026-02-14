@@ -70,7 +70,7 @@ function getVerifyOptions(): jwt.VerifyOptions {
   if (audiences.length === 1) {
     options.audience = audiences[0];
   } else if (audiences.length > 1) {
-    options.audience = audiences;
+    options.audience = audiences as [string, ...string[]];
   }
 
   return options;

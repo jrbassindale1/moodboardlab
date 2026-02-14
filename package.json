@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "verify:functions": "bash scripts/verify-functions.sh",
+    "typecheck:functions": "tsc -p azure-functions/tsconfig.json --noEmit",
     "generate-icons": "tsx scripts/generateIconsToPublic.ts",
     "optimize-icons": "tsx scripts/optimizeIcons.ts",
     "export-cosmos-material-model": "tsx scripts/export-cosmos-material-model.ts",
@@ -23,14 +25,20 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
+    "@azure/functions": "^4.11.2",
+    "@azure/storage-blob": "^12.31.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
+    "jsonwebtoken": "^9.0.3",
+    "jwks-rsa": "^3.2.2",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
+    "uuid": "^11.1.0",
     "vite": "^6.2.0"
   }
 }

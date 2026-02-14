@@ -11,6 +11,7 @@ This directory contains the Azure Functions code needed to support user authenti
    npm install jsonwebtoken jwks-rsa uuid @azure/cosmos
    npm install -D @types/jsonwebtoken
    ```
+4. **Node.js 20+** (recommended and required by several current Azure SDK packages)
 
 ## Clerk Setup
 
@@ -130,6 +131,19 @@ your-azure-functions-project/
    - Keep Clerk disabled in staging frontend (`VITE_DISABLE_AUTH=true`)
    - Set backend app settings above
    - Open Material Admin and enter the staging admin key before saving
+
+### Pre-deploy safety check (from this repo)
+
+Run before copying/deploying backend changes:
+
+```bash
+npm run verify:functions
+```
+
+This check currently catches:
+- Deprecated Cosmos query option `enableCrossPartitionQuery`
+- TypeScript compatibility in `azure-functions/src`
+- Node.js major version (<20 fails)
 
 ### Quick toggle script (from this repo)
 

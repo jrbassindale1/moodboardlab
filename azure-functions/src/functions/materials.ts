@@ -141,9 +141,7 @@ async function listMaterials(): Promise<HttpResponseInit> {
   };
 
   const { resources } = await materialsContainer.items
-    .query<MaterialDocument>(querySpec, {
-      enableCrossPartitionQuery: true,
-    })
+    .query<MaterialDocument>(querySpec)
     .fetchAll();
 
   const iconBaseUrl = getIconBaseUrl();
@@ -234,7 +232,7 @@ async function updateMaterial(
   };
 
   const { resources } = await materialsContainer.items
-    .query<MaterialDocument>(querySpec, { enableCrossPartitionQuery: true })
+    .query<MaterialDocument>(querySpec)
     .fetchAll();
 
   const existing = resources[0];
@@ -288,7 +286,7 @@ async function updateMaterial(
     insight: toNullableString(body.insight, existing.insight),
     actions: toNullableStringArray(body.actions, existing.actions),
     healthRiskLevel: (body.healthRiskLevel === 'low' || body.healthRiskLevel === 'medium' || body.healthRiskLevel === 'high' || body.healthRiskLevel === null)
-      ? body.healthRiskLevel
+      ? body.healthRiskLevel as 'low' | 'medium' | 'high' | null
       : existing.healthRiskLevel,
     healthConcerns: toNullableStringArray(body.healthConcerns, existing.healthConcerns),
     healthNote: toNullableString(body.healthNote, existing.healthNote),
