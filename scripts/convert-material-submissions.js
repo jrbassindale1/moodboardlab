@@ -233,9 +233,16 @@ function parseRisks(value, errors) {
 }
 
 function normalizeFinishId(value) {
-  const slug = toSlug(value);
-  if (!slug) return null;
-  return slug.startsWith('finish:') ? slug : `finish:${slug}`;
+  const text = String(value || '').trim().toLowerCase();
+  if (!text) return null;
+
+  if (text.startsWith('finish:')) {
+    const normalized = toSlug(text.slice('finish:'.length));
+    return normalized ? `finish:${normalized}` : null;
+  }
+
+  const normalized = toSlug(text);
+  return normalized ? `finish:${normalized}` : null;
 }
 
 function stripUndefined(input) {

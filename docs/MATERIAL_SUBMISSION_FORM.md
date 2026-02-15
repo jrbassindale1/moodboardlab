@@ -201,6 +201,7 @@ Use `docs/MATERIAL_SUBMISSION_TEMPLATE.csv` when you want companies to submit in
 CSV rules:
 - One row = one material.
 - Keep the header row unchanged.
+- Replace the example row with the supplier's real data before conversion.
 - For list fields, separate values with `|` (pipe), not commas.
 - For `colorOptions`, use `Label:#HEX|Label:#HEX`.
 - For `risks`, use `Risk=>Mitigation|Risk=>Mitigation`.
