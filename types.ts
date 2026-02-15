@@ -173,6 +173,10 @@ export interface MaterialOption {
   // Sustainability briefing pre-stored content
   strategicValue?: string; // For low-carbon materials: why this is an excellent choice (1-2 sentences)
   mitigationTip?: string; // For high-carbon materials: practical tip to reduce impact (1-2 sentences)
+  // Structured sustainability actions (replacing legacy 'actions' array)
+  actionDocumentation?: string; // Request for EPD, certification, or sourcing evidence
+  actionVerification?: string; // Specification to verify (recycled content, VOC levels, etc.)
+  actionCircularity?: string; // End-of-life action (take-back, disassembly, reuse)
 }
 
 export interface UploadedImage {

@@ -131,7 +131,10 @@ export interface MaterialDocument {
 
   // Sustainability and specification data
   insight: string | null;
-  actions: string[] | null;
+  actions: string[] | null; // Legacy field - being replaced by structured action fields
+  actionDocumentation: string | null; // Request for EPD, certification, or sourcing evidence
+  actionVerification: string | null; // Specification to verify (recycled content, VOC levels, etc.)
+  actionCircularity: string | null; // End-of-life action (take-back, disassembly, reuse)
   strategicValue: string | null; // For low-carbon materials: why this is an excellent choice
   mitigationTip: string | null; // For high-carbon materials: practical tip to reduce impact
   healthRiskLevel: 'low' | 'medium' | 'high' | null;

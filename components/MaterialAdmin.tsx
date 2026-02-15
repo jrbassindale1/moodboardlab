@@ -63,7 +63,12 @@ interface AdminMaterial extends MaterialOption {
   primaryFinishSetId?: string | null;
   lifecycleProfileId?: string | null;
   insight?: string | null;
-  actions?: string[] | null;
+  actions?: string[] | null; // Legacy field
+  actionDocumentation?: string | null;
+  actionVerification?: string | null;
+  actionCircularity?: string | null;
+  strategicValue?: string | null;
+  mitigationTip?: string | null;
   healthRiskLevel?: HealthRiskLevel;
   healthConcerns?: string[] | null;
   healthNote?: string | null;
@@ -596,15 +601,105 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                 />
               </label>
 
+              {/* Sustainability Briefing Content Section */}
+              <div className="border border-emerald-200 bg-emerald-50 p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs uppercase tracking-widest font-mono text-emerald-800 font-semibold">
+                    Sustainability Briefing Content
+                  </span>
+                  <span className="text-[10px] text-emerald-600">
+                    (Pre-stored content for AI briefing - used instead of generating)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white p-3 border border-emerald-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">⭐</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Strategic Value</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">For low-carbon materials: why this is an excellent choice (1-2 sentences)</p>
+                    <textarea
+                      value={draft.strategicValue ?? ''}
+                      onChange={(event) => setField('strategicValue', event.target.value || null)}
+                      placeholder="e.g., Sequester significant carbon while providing structural integrity..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-20"
+                    />
+                  </div>
+
+                  <div className="bg-white p-3 border border-emerald-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">💡</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Mitigation Tip</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">For high-carbon materials: practical tip to reduce impact (1-2 sentences)</p>
+                    <textarea
+                      value={draft.mitigationTip ?? ''}
+                      onChange={(event) => setField('mitigationTip', event.target.value || null)}
+                      placeholder="e.g., Specify high recycled content and use bolted connections for future reuse..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-20"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sustainability Actions Section */}
+              <div className="border border-green-200 bg-green-50 p-4 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs uppercase tracking-widest font-mono text-green-800 font-semibold">
+                    Sustainability Actions
+                  </span>
+                  <span className="text-[10px] text-green-600">
+                    (Structured actions for specification and procurement)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-white p-3 border border-green-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold">📄</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Documentation</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Request for EPD, certification, or sourcing evidence</p>
+                    <textarea
+                      value={draft.actionDocumentation ?? ''}
+                      onChange={(event) => setField('actionDocumentation', event.target.value || null)}
+                      placeholder="e.g., Provide an EPD (EN 15804) or verified embodied carbon figure..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-16"
+                    />
+                  </div>
+
+                  <div className="bg-white p-3 border border-green-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] flex items-center justify-center font-bold">✓</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Verification</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">Specification to verify (recycled content, VOC levels, etc.)</p>
+                    <textarea
+                      value={draft.actionVerification ?? ''}
+                      onChange={(event) => setField('actionVerification', event.target.value || null)}
+                      placeholder="e.g., Verify recycled content and low-VOC finish specification..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-16"
+                    />
+                  </div>
+
+                  <div className="bg-white p-3 border border-green-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold">♻</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Circularity</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">End-of-life action (take-back, disassembly, reuse)</p>
+                    <textarea
+                      value={draft.actionCircularity ?? ''}
+                      onChange={(event) => setField('actionCircularity', event.target.value || null)}
+                      placeholder="e.g., Confirm take-back scheme and specify bolted connections for disassembly..."
+                      className="w-full border border-gray-300 px-3 py-2 text-sm min-h-16"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label className="text-xs uppercase tracking-widest font-mono">
-                  Actions (one per line)
-                  <textarea
-                    value={joinLines(draft.actions)}
-                    onChange={(event) => setField('actions', splitLines(event.target.value))}
-                    className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm min-h-24"
-                  />
-                </label>
                 <label className="text-xs uppercase tracking-widest font-mono">
                   Health Concerns (one per line)
                   <textarea

@@ -342,7 +342,17 @@ const getPerformanceNote = (material: MaterialOption): string => {
 };
 
 const getSpecActions = (material: MaterialOption): string[] => {
-  // First, check for material-specific actions in JSON
+  // First, check for new structured action fields on the material
+  const structuredActions: string[] = [];
+  if (material.actionDocumentation) structuredActions.push(material.actionDocumentation);
+  if (material.actionVerification) structuredActions.push(material.actionVerification);
+  if (material.actionCircularity) structuredActions.push(material.actionCircularity);
+
+  if (structuredActions.length > 0) {
+    return structuredActions.slice(0, 3);
+  }
+
+  // Second, check for material-specific actions in JSON
   const jsonActions = specificationActions[material.id];
   if (jsonActions && jsonActions.length > 0) {
     return jsonActions.slice(0, 3);

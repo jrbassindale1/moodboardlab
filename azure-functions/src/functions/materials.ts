@@ -296,6 +296,9 @@ async function updateMaterial(
     lifecycleProfileId: toNullableString(body.lifecycleProfileId, existing.lifecycleProfileId),
     insight: toNullableString(body.insight, existing.insight),
     actions: toNullableStringArray(body.actions, existing.actions),
+    actionDocumentation: toNullableString(body.actionDocumentation, existing.actionDocumentation),
+    actionVerification: toNullableString(body.actionVerification, existing.actionVerification),
+    actionCircularity: toNullableString(body.actionCircularity, existing.actionCircularity),
     healthRiskLevel: (body.healthRiskLevel === 'low' || body.healthRiskLevel === 'medium' || body.healthRiskLevel === 'high' || body.healthRiskLevel === null)
       ? body.healthRiskLevel as 'low' | 'medium' | 'high' | null
       : existing.healthRiskLevel,
