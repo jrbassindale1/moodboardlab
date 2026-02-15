@@ -435,9 +435,9 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     Current workflow for this material
                   </p>
                   <div className="text-xs text-gray-600 space-y-1">
-                    <p>1. Variety: {draft.varietyOptions?.length ? `${draft.varietyOptions.length} option(s)` : 'No options configured (step skipped)'}</p>
-                    <p>2. Finish Options: {draft.finishOptions?.length ? `${draft.finishOptions.length} option(s)` : 'No options configured (step skipped)'}</p>
-                    <p>3. Colour Options: {draft.supportsColor ? 'Enabled (full RAL palette)' : `${draft.colorOptions?.length ?? 0} curated option(s)`}</p>
+                    <p>Variety: {draft.varietyOptions?.length ? `${draft.varietyOptions.length} option(s)` : 'Not configured (skipped)'}</p>
+                    <p>Finish Options: {draft.finishOptions?.length ? `${draft.finishOptions.length} option(s)` : 'Not configured (skipped)'}</p>
+                    <p>Colour Options: {draft.supportsColor ? 'Enabled (full RAL palette)' : `${draft.colorOptions?.length ?? 0} curated option(s)`}</p>
                   </div>
                 </div>
 

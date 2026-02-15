@@ -1355,11 +1355,11 @@ IMPORTANT:
               <div className="bg-gray-50 border border-gray-200 p-3">
                 <p className="font-sans text-xs text-gray-700">
                   {needsVarietySelection
-                    ? 'Step 1: Select a material variety.'
+                    ? 'Select a material variety.'
                     : needsFinishSelection
-                    ? 'Step 2: Select a finish option.'
+                    ? 'Select a finish option.'
                     : needsColourSelection
-                    ? 'Step 3: Select a colour option.'
+                    ? 'Select a colour option.'
                     : hasOptions
                     ? 'All required options selected. Click "Add to Board".'
                     : 'Click "Add to Board" below to add this material.'}
@@ -1370,7 +1370,7 @@ IMPORTANT:
               {hasVarietyOptions && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Step 1: Material Variety
+                    Material Variety
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {recentlyAdded.varietyOptions?.map((variety, idx) => (
@@ -1403,7 +1403,7 @@ IMPORTANT:
               {hasFinishOptions && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Step 2: Finish Options
+                    Finish Options
                   </label>
                   <div className={`flex flex-wrap gap-2 ${canSelectFinish ? '' : 'opacity-50 pointer-events-none'}`}>
                     {recentlyAdded.finishOptions?.map((finish, idx) => (
@@ -1440,7 +1440,7 @@ IMPORTANT:
               {hasColorOptions && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Step 3: Colour Options
+                    Colour Options
                   </label>
                   <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${canSelectColour ? '' : 'opacity-50 pointer-events-none'}`}>
                     {recentlyAdded.colorOptions?.map((colorOption, idx) => (
@@ -1478,7 +1478,7 @@ IMPORTANT:
               {hasFreeColor && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Step 3: RAL Colour Options
+                    RAL Colour Options
                   </label>
                   <div className={`grid max-h-80 grid-cols-2 gap-3 overflow-y-auto pr-2 sm:grid-cols-3 ${canSelectColour ? '' : 'opacity-50 pointer-events-none'}`}>
                     {RAL_COLOR_OPTIONS.map((colorOption, idx) => (

@@ -1,0 +1,210 @@
+id,name,category,currentWorkflow,recommendedWorkflow,changed,reason
+fabric-acoustic-panels,Fabric Acoustic Panels,acoustic-panel,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+cable-railing,Cable Railing,balustrade,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+glass-balustrade,Glass Balustrade,balustrade,none,finish,yes,Glass-led product; finish/treatment matters more than colour palette.
+mesh-railing,Mesh Railing,balustrade,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+steel-railing,Steel Railing,balustrade,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+timber-railing,Timber Railing,balustrade,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+acoustic-ceiling-baffles,Acoustic Ceiling Baffles,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+acoustic-tiles-ceiling,Acoustic Ceiling Tiles,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+coffered-ceiling,Coffered Ceiling,ceiling,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+exposed-clt-ceiling,Exposed CLT Ceiling,ceiling,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+exposed-concrete-soffit,Exposed Concrete Soffit,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+gypsum-ceiling,Gypsum Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+metal-mesh-ceiling,Metal Mesh Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+open-grid-ceiling,Open Grid Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+perforated-metal-ceiling,Perforated Metal Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+perforated-metal-soffit,Perforated Metal Soffit,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+plasterboard-ceiling,Plasterboard Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+stretch-fabric-ceiling,Stretch Fabric Ceiling,ceiling,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+timber-slat-ceiling,Timber Slat Ceiling,ceiling,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+timber-slat-soffit,Timber Slat Soffit,ceiling,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+aluminum-door,Aluminum Doors,door,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+composite-door,Composite Doors,door,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+fire-rated-door,Fire-Rated Doors,door,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+glass-door,Glass Doors,door,none,finish,yes,Glass-led product; finish/treatment matters more than colour palette.
+steel-door,Steel Doors,door,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+timber-door,Timber Doors,door,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+aluminium-cladding,Aluminium Cladding,external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+brick-veneer,Brick,external,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+brick-slip-rainscreen,Brick Slip Rainscreen,external,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+charred-timber-cladding,Charred Timber Cladding,external,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+copper-cladding,Copper Cladding,external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+cork-rainscreen,Cork Rainscreen,external,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+etfe-tensile-facade,ETFE / Tensile Façade System,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+fibre-cement-panels,Fibre Cement Panels,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+gfrc-grc-panels,GFRC / GRC Panels,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+glass-facade,Glass Façade System,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+hemp-lime-wall,Hemp-Lime Wall,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+insulated-metal-panels,Insulated Metal Panels,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+insulated-render-system,Insulated Render (Sto-type),external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+lead-cladding,Lead Cladding,external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+living-green-wall,Living Green Wall,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+metal-composite-panels,Metal Composite Panels,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+precast-concrete-panels,Precast Concrete Panels,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+slate-cladding,Slate Cladding,external,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+stainless-cladding,Stainless Steel Cladding,external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+stone-facade,Stone Façade,external,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+stone-rainscreen,Stone Rainscreen,external,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+terracotta-panels,Terracotta Panels,external,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+timber-rainscreen,Timber Rainscreen,external,none,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+weathering-steel-cladding,Weathering Steel Cladding,external,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+wood-fibre-lime-render,Wood-Fibre + Lime Render,external,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+zinc-cladding,Zinc Cladding,external,colour,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+block-paving,Block Paving,external-ground,none,variety -> finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+concrete-paving,Concrete Paving,external-ground,none,finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+decking-external,Decking (Timber/Composite),external-ground,none,variety -> finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+grass-reinforcement,Grass Reinforcement,external-ground,none,finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+gravel-paving,Gravel,external-ground,none,finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+resin-bound-gravel,Resin-Bound Gravel,external-ground,none,finish -> colour,yes,Ground materials usually need texture/finish and tone control for context and slip requirements.
+acoustic-plaster,Acoustic Plaster,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+bamboo-slat-wall,Bamboo Acoustic Slats,finish,colour,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+bio-fibre-panels,Bio-Based Fibre Panels,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+cork-panels,Cork Wall Panels,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+glass-panels-finish,Glass Panels,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+leather-panels,Leather Panels,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+lime-plaster,Lime Plaster,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+marble-panels,Marble Panels,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+metal-mesh-panels,Metal Mesh Panels,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+mycelium-tiles,Mycelium Acoustic Tiles,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+plywood-panels-finish,Plywood Panels,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+reclaimed-boarding,Reclaimed Timber Boarding,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+tadelakt-plaster,Tadelakt Plaster,finish,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+timber-linings,Timber Linings,finish,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+wool-felt-panels,Wool Felt Wall Panels,finish,colour,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+brass-fixtures,Brass Fixtures & Fittings,fixture,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+metal-chair,Metal Chair,fixture,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+modular-shelving,Modular Shelving,fixture,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+oak-dining-table,Oak Dining Table,fixture,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+plywood-furniture,Plywood Furniture,fixture,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+reclaimed-timber-furniture,Reclaimed Timber Furniture,fixture,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+upholstered-seating,Upholstered Seating,fixture,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+bamboo-parquet,Bamboo Parquet,floor,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+ceramic-tiles,Ceramic Tiles,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+cork-plank-floor,Cork Plank Flooring,floor,none,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+engineered-oak-floor,Engineered Oak Flooring,floor,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+epoxy-flooring,Epoxy Flooring,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+grey-carpet,Grey Carpet Tiles,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+lino-floor,Linoleum Flooring,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+linoleum-tiles,Linoleum Tiles,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+marble-floor,Marble Flooring,floor,none,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+microcement-floor,Microcement Flooring,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+polished-concrete,Polished Concrete,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+reclaimed-timber-floor,Reclaimed Timber Floor,floor,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+recycled-terrazzo,Recycled Plastic Terrazzo,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+resin-flooring,Resin Flooring,floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+rubber-floor,Rubber Flooring,floor,variety -> finish -> colour,variety -> finish -> colour,no,"Material family usually selected by subtype, finish texture, and colour tone."
+stone-paver,Stone Pavers,floor,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+timber-flooring,Timber Flooring,floor,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+travertine-tiles,Travertine Tiles,floor,none,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+vinyl-planks,Vinyl Planks (Recycled),floor,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+aerogel-insulation,Aerogel Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+cellulose-insulation,Cellulose Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+cork-insulation,Cork Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+hemp-insulation,Hemp Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+mineral-wool,Mineral Wool,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+pir-insulation,PIR/PUR Boards,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+sheep-wool-insulation,Sheep's Wool Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+wood-fiber-insulation,Wood Fiber Insulation,insulation,none,none,no,Performance-led selection; appearance options are usually not primary.
+joinery-built-in,Built-in Joinery,joinery,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+living-wall-external,Living Wall (External),landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+native-planting,Native Planting,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+ornamental-planting,Ornamental Planting,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+permeable-paving,Permeable Paving,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+rain-garden,Rain Garden,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+tree-planting,Tree Planting,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+wildflower-meadow,Wildflower Meadow,landscape,none,none,no,Performance-led selection; appearance options are usually not primary.
+mineral-microcement,Mineral Microcement,microcement,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+custom-ceiling-paint,Paint – Custom Colour (Ceilings),paint-ceiling,finish -> colour,finish -> colour,no,Paint workflow should always pick sheen then colour.
+standard-ceiling-paint,Paint – Standard (Ceilings),paint-ceiling,finish -> colour,finish -> colour,no,Paint workflow should always pick sheen then colour.
+custom-wall-paint,Paint – Custom Colour (Walls),paint-wall,finish -> colour,finish -> colour,no,Paint workflow should always pick sheen then colour.
+standard-wall-paint,Paint – Standard (Walls),paint-wall,finish -> colour,finish -> colour,no,Paint workflow should always pick sheen then colour.
+aluminium-standing-seam-roof,Aluminium Standing Seam Roof,roof,colour,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+blue-roof,Blue Roof,roof,none,variety -> finish,yes,Roof system choice is mainly system subtype and assembly finish.
+built-up-roofing,Built-Up Roofing,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+clay-tiles-roof,Clay Tiles,roof,none,variety -> finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+cool-roof,Cool Roof Membrane,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+copper-standing-seam-roof,Copper Standing Seam Roof,roof,colour,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+epdm-membrane,EPDM Membrane,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+green-roof,Green Roof,roof,none,variety -> finish,yes,Roof system choice is mainly system subtype and assembly finish.
+lead-standing-seam-roof,Lead Standing Seam Roof,roof,colour,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+metal-tiles-roof,Metal Tiles,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+polycarbonate-roof,Polycarbonate Roof Panels,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+slate-tiles-roof,Slate Tiles,roof,none,variety -> finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+pv-roof,Solar PV Roof,roof,none,variety -> finish,yes,Roof system choice is mainly system subtype and assembly finish.
+stainless-standing-seam-roof,Stainless Steel Standing Seam Roof,roof,colour,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+tpo-membrane,TPO Membrane,roof,none,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+standing-seam-roof,Zinc Standing Seam Roof,roof,colour,finish -> colour,yes,Roof finishes typically require profile/finish and visible colour coordination.
+balcony-support-beams,Balcony Support Beams,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+cantilevered-stair-treads,Cantilevered Stair Treads,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+clt-floor-panels,CLT Floor Panels,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+clt-roof-panels,CLT Roof Panels,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+composite-metal-deck-slabs,Composite Metal Deck Slabs,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+cross-bracing-steel,Cross Bracing (Steel Rods/Flats),structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+clt-structure,Cross-Laminated Timber (CLT),structure,none,none,no,Structural system is typically selected as a fixed product.
+curtain-wall-mullions-transoms,Curtain Wall Mullions and Transoms,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+diaphragm-bracing-elements,Diaphragm Bracing Elements,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+nlt-structure,DLT / NLT Timber,structure,none,none,no,Structural system is typically selected as a fixed product.
+edge-beams,Edge Beams,structure,none,none,no,Structural system is typically selected as a fixed product.
+facade-support-rails,Façade Support Rails,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+glulam-structure,Glulam (Beams + Columns),structure,none,none,no,Structural system is typically selected as a fixed product.
+glulam-roof-beams,Glulam Roof Beams,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+green-oak-structure,Green Oak Structure,structure,none,none,no,Structural system is typically selected as a fixed product.
+hempcrete-structural,Hempcrete Structural,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+hybrid-structure,Hybrid Timber-Steel,structure,none,none,no,Structural system is typically selected as a fixed product.
+k-x-bracing-secondary,K-Bracing / X-Bracing (Secondary Bays),structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+stair-landings-trimmers,Landings and Stair Trimmers,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+lightweight-space-frame-infill,Lightweight Space Frame Infill Members,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+brick-loadbearing,Load-Bearing Masonry (Brick),structure,colour,variety -> finish -> colour,yes,"Material family usually selected by subtype, finish texture, and colour tone."
+concrete-block-loadbearing,Load-Bearing Masonry (Concrete Block),structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+ggbs-concrete,Low-Carbon Concrete,structure,none,none,no,Structural system is typically selected as a fixed product.
+precast-concrete,Precast Concrete,structure,none,none,no,Structural system is typically selected as a fixed product.
+precast-concrete-floor-planks,Precast Concrete Floor Planks,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+prestressed-concrete,Prestressed Concrete,structure,none,none,no,Structural system is typically selected as a fixed product.
+rainscreen-carrier-systems,Rainscreen Carrier Systems,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+raised-access-floor-systems,Raised Access Floor Systems,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+rammed-earth-structure,Rammed Earth Walls,structure,colour,variety -> finish -> colour,yes,"Rammed earth typically varies by mix, surface finish, and earth tone."
+concrete-frame,Reinforced Concrete Frame,structure,none,none,no,Structural system is typically selected as a fixed product.
+ring-beams,Ring Beams,structure,none,none,no,Structural system is typically selected as a fixed product.
+secondary-cantilever-arms,Secondary Cantilever Arms,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+secondary-facade-brackets,Secondary Façade Brackets,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+secondary-lintels,Secondary Lintels,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+secondary-shear-panels,Secondary Shear Panels,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+secondary-steel-infill-beams,Secondary Steel Beams (Infill),structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+secondary-steelwork,Secondary Steelwork,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+secondary-trusses,Secondary Trusses,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+masonry-shelf-angles,Shelf Angles for Masonry Support,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+space-frame-structure,Space Frame,structure,colour,finish -> colour,yes,System typically needs coating/finish and colour selection.
+spandrel-beams,Spandrel Beams,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+steel-canopy-frames,Steel Canopy Frames,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+steel-frame,Steel Frame,structure,colour,finish -> colour,yes,System typically needs coating/finish and colour selection.
+steel-purlins,Steel Purlins (Z or C),structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+steel-stair-stringers,Steel Stair Stringers,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+steel-trusses,Steel Trusses,structure,colour,finish -> colour,yes,System typically needs coating/finish and colour selection.
+steel-concrete-composite,Steel-Concrete Composite Deck,structure,colour,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+tension-rods-tie-members,Tension Rods and Tie Members,structure,none,finish -> colour,yes,Metal structure commonly requires finish and colour/coating selection.
+timber-joists-floor-cassettes,Timber Joists and Floor Cassettes,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+timber-pergola-structures,Timber Pergola Structures,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+timber-rafters-purlins,Timber Rafters and Purlins,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+timber-stair-carriages,Timber Stair Carriages,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+timber-wind-bracing,Timber Wind Bracing,structure,none,none,no,Most structural materials are chosen as fixed assemblies.
+porcelain-tiles,Large-Format Tiles,tile,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+timber-wall-panels,Timber Wall Panels,timber-panel,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+oak-timber-slats,Oak Timber Slats,timber-slat,none,variety -> finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+acoustic-panels-wall,Acoustic Wall Panels,wall-internal,none,finish -> colour,yes,Internal wall finish products often require finish and colour choices.
+brick-internal,Brick (Internal),wall-internal,none,variety -> finish -> colour,yes,"Brick interiors usually vary by brick type, finish, and tone."
+clay-plaster,Clay Plaster,wall-internal,none,finish -> colour,yes,Internal wall finish products often require finish and colour choices.
+concrete-block-wall,Concrete Block Wall,wall-internal,none,none,no,Substrate selection is typically fixed before applied finishes.
+glass-partitions,Glass Partitions,wall-internal,none,finish,yes,Glass-led product; finish/treatment matters more than colour palette.
+gypsum-wall,Gypsum Board Wall,wall-internal,none,none,no,Substrate selection is typically fixed before applied finishes.
+plasterboard-wall,Plasterboard Wall,wall-internal,none,none,no,Substrate selection is typically fixed before applied finishes.
+plywood-panels-wall,Plywood Wall Panels,wall-internal,none,finish -> colour,yes,Internal wall finish products often require finish and colour choices.
+textured-wallpaper,Textured Wallpaper,wallpaper,none,finish -> colour,yes,Architectural finish category generally benefits from full appearance workflow.
+aluminum-frame,Aluminum Window Frame,window,none,finish -> colour,yes,Frame systems generally need finish and colour decisions.
+composite-window-frame,Composite Window Frame,window,none,finish -> colour,yes,Frame systems generally need finish and colour decisions.
+curtain-wall-system,Curtain Wall System,window,none,finish,yes,Glass-led product; finish/treatment matters more than colour palette.
+frameless-glazing,Frameless Glazing,window,none,finish,yes,Glass-led product; finish/treatment matters more than colour palette.
+recycled-aluminum-frame,Recycled Aluminum Frame,window,none,finish -> colour,yes,Frame systems generally need finish and colour decisions.
+steel-window-frame,Steel Window Frame,window,none,finish -> colour,yes,System typically needs coating/finish and colour selection.
+timber-frame,Timber Window Frame,window,none,finish -> colour,yes,Frame systems generally need finish and colour decisions.
+upvc-window-frame,uPVC Window Frame,window,none,finish -> colour,yes,Frame systems generally need finish and colour decisions.
