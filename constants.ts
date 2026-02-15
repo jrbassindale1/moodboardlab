@@ -284,6 +284,15 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     keywords: ['rubber', 'recycled', 'floor'],
     category: 'floor',
     carbonIntensity: 'low',
+    varietyOptions: ['Recycled Rubber', 'Virgin Rubber', 'Cork-rubber Composite'],
+    finishOptions: ['Smooth', 'Studded', 'Textured'],
+    colorOptions: [
+      { label: 'Charcoal', tone: '#3f4146' },
+      { label: 'Mid Grey', tone: '#666970' },
+      { label: 'Clay Red', tone: '#a2624f' },
+      { label: 'Moss Green', tone: '#5d6a57' },
+      { label: 'Slate Blue', tone: '#5f6e7f' }
+    ],
     materialType: 'polymer',
     materialForm: ['sheet', 'tile'],
     materialFunction: ['surface', 'acoustic'],

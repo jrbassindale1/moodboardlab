@@ -423,11 +423,22 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
               <div className="border border-blue-200 bg-blue-50 p-4 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs uppercase tracking-widest font-mono text-blue-800 font-semibold">
-                    Selection Hierarchy
+                    Selection Workflow
                   </span>
                   <span className="text-[10px] text-blue-600">
-                    (User selection flow: Variety → Finish Family → Finish Options → Color)
+                    (Materials page order: Variety → Finish Options → Colour Options)
                   </span>
+                </div>
+
+                <div className="bg-white p-3 border border-blue-100">
+                  <p className="text-[11px] font-mono text-gray-700 uppercase tracking-widest mb-2">
+                    Current workflow for this material
+                  </p>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p>1. Variety: {draft.varietyOptions?.length ? `${draft.varietyOptions.length} option(s)` : 'No options configured (step skipped)'}</p>
+                    <p>2. Finish Options: {draft.finishOptions?.length ? `${draft.finishOptions.length} option(s)` : 'No options configured (step skipped)'}</p>
+                    <p>3. Colour Options: {draft.supportsColor ? 'Enabled (full RAL palette)' : `${draft.colorOptions?.length ?? 0} curated option(s)`}</p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -446,20 +457,10 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     />
                   </div>
 
-                  {/* Step 2: Finish Family (already exists as dropdown) */}
+                  {/* Step 2: Finish Options */}
                   <div className="bg-white p-3 border border-blue-100">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">2</span>
-                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Finish Family</span>
-                    </div>
-                    <p className="text-[10px] text-gray-500 mb-2">Standard/system used (e.g., RAL, timber-oil, stone-honed)</p>
-                    <p className="text-[10px] text-amber-600 italic">Set above in the Finish Family dropdown</p>
-                  </div>
-
-                  {/* Step 3: Finish Options */}
-                  <div className="bg-white p-3 border border-blue-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">3</span>
                       <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Finish Options</span>
                     </div>
                     <p className="text-[10px] text-gray-500 mb-2">Specific finishes available (e.g., Polished, Honed, Flamed)</p>
@@ -471,13 +472,13 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     />
                   </div>
 
-                  {/* Step 4: Color Options */}
+                  {/* Step 3: Color Options */}
                   <div className="bg-white p-3 border border-blue-100">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">4</span>
-                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Color Options</span>
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">3</span>
+                      <span className="text-xs uppercase tracking-widest font-mono text-gray-700">Colour Options</span>
                     </div>
-                    <p className="text-[10px] text-gray-500 mb-2">Available colors (set in Color Options JSON below, or check Supports Color for full RAL palette)</p>
+                    <p className="text-[10px] text-gray-500 mb-2">Available colours (set in Colour Options JSON below, or enable full RAL palette)</p>
                     <label className="flex items-center gap-2 text-xs font-mono">
                       <input
                         type="checkbox"
@@ -733,7 +734,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
               </label>
 
               <label className="text-xs uppercase tracking-widest font-mono block">
-                Color Options (JSON array)
+                Colour Options (JSON array)
                 <textarea
                   value={colorOptionsJson}
                   onChange={(event) => setColorOptionsJson(event.target.value)}
