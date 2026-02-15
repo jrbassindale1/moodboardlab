@@ -303,6 +303,8 @@ async function updateMaterial(
     healthNote: toNullableString(body.healthNote, existing.healthNote),
     risks: normalizeRisks(body.risks, existing.risks),
     serviceLife: toNullableInteger(body.serviceLife, existing.serviceLife),
+    strategicValue: toNullableString(body.strategicValue, existing.strategicValue),
+    mitigationTip: toNullableString(body.mitigationTip, existing.mitigationTip),
   };
 
   if (existing.pk === next.pk) {

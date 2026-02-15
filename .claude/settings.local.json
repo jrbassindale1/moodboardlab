@@ -29,7 +29,8 @@
       "Bash(az functionapp cors add:*)",
       "Bash(az functionapp config appsettings list:*)",
       "Bash(az monitor app-insights query:*)",
-      "Bash(node scripts/update-materials-finish-family.js:*)"
+      "Bash(node scripts/update-materials-finish-family.js:*)",
+      "Bash(node scripts/update-materials-sustainability-content-2.js:*)"
     ]
   }
 }

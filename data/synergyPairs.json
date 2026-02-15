@@ -1,0 +1,85 @@
+{
+  "_comment": "Pre-defined material synergy pairs for sustainability briefing. Each synergy explains how two materials complement each other architecturally and environmentally.",
+  "synergies": [
+    {
+      "materials": ["clt-structure", "timber-linings"],
+      "explanation": "Mass timber structure with timber linings creates a cohesive biogenic carbon strategy, sequestering CO2 while reducing reliance on concrete and steel."
+    },
+    {
+      "materials": ["clt-structure", "sheep-wool-insulation"],
+      "explanation": "Combining CLT structure with natural wool insulation maximises biogenic carbon storage and creates excellent hygroscopic moisture management."
+    },
+    {
+      "materials": ["timber-joists-floor-cassettes", "cellulose-insulation"],
+      "explanation": "Timber floor cassettes with cellulose insulation pairs structural carbon sequestration with recycled newspaper-based insulation for a low-embodied-carbon floor build-up."
+    },
+    {
+      "materials": ["exposed-concrete-soffit", "timber-slat-ceiling"],
+      "explanation": "Exposed concrete thermal mass paired with timber slat ceiling balances passive heating/cooling with visual warmth and partial carbon offsetting."
+    },
+    {
+      "materials": ["steel-frame", "secondary-steelwork"],
+      "explanation": "Using recycled steel for both primary and secondary structure maximises circular economy benefits when high recycled content (85%+) is specified throughout."
+    },
+    {
+      "materials": ["rammed-earth-structure", "lime-plaster"],
+      "explanation": "Rammed earth walls with lime plaster create a breathable, low-carbon envelope that improves with age through carbonation."
+    },
+    {
+      "materials": ["stone-paver", "ggbs-concrete"],
+      "explanation": "Natural stone combined with low-carbon concrete sub-base addresses sustainability while providing durable, low-maintenance surfaces."
+    },
+    {
+      "materials": ["curtain-wall-system", "timber-slat-soffit"],
+      "explanation": "High-performance glazing with timber soffit optimises daylighting while the timber provides visual warmth and carbon storage to offset glazing impact."
+    },
+    {
+      "materials": ["brick-veneer", "sheep-wool-insulation"],
+      "explanation": "Traditional brick aesthetics with natural wool insulation provide excellent thermal performance and breathability with reduced synthetic materials."
+    },
+    {
+      "materials": ["cork-plank-floor", "timber-wall-panels"],
+      "explanation": "Cork flooring's natural thermal properties complement timber wall panels, creating an interior palette of renewable, carbon-storing materials."
+    },
+    {
+      "materials": ["lino-floor", "timber-wall-panels"],
+      "explanation": "Linoleum flooring with timber wall panels creates an interior palette of natural, renewable materials with low VOC emissions."
+    },
+    {
+      "materials": ["glulam-structure", "timber-rafters-purlins"],
+      "explanation": "Glulam primary structure with timber roof framing creates an all-timber structural system, maximising carbon sequestration and enabling prefabrication."
+    },
+    {
+      "materials": ["clt-floor-panels", "glulam-structure"],
+      "explanation": "CLT floors with glulam beams create an all-timber structural system, maximising carbon sequestration and enabling prefabrication."
+    },
+    {
+      "materials": ["clay-plaster", "timber-joists-floor-cassettes"],
+      "explanation": "Clay plaster walls with timber floor structure combine moisture-regulating finishes with carbon-storing structure for healthy indoor environments."
+    },
+    {
+      "materials": ["recycled-terrazzo", "ggbs-concrete"],
+      "explanation": "Recycled aggregate terrazzo on low-carbon concrete base reduces concrete's embodied carbon while diverting waste from landfill."
+    },
+    {
+      "materials": ["acoustic-ceiling-baffles", "exposed-clt-ceiling"],
+      "explanation": "Acoustic baffles on exposed CLT ceiling provide sound control while maintaining the visual impact and carbon benefits of mass timber."
+    },
+    {
+      "materials": ["bamboo-parquet", "cork-panels"],
+      "explanation": "Bamboo flooring with cork wall panels combines two rapidly renewable materials with excellent acoustic and thermal properties."
+    },
+    {
+      "materials": ["wool-felt-panels", "timber-slat-ceiling"],
+      "explanation": "Wool felt acoustic panels with timber slat ceiling create biophilic interiors using natural materials with complementary acoustic properties."
+    },
+    {
+      "materials": ["mycelium-tiles", "bio-fibre-panels"],
+      "explanation": "Mycelium tiles with bio-fibre panels combine two carbon-negative materials grown from agricultural waste for pioneering low-carbon interiors."
+    },
+    {
+      "materials": ["reclaimed-timber-floor", "reclaimed-boarding"],
+      "explanation": "Reclaimed timber throughout extends carbon storage indefinitely while eliminating new material impacts and celebrating material history."
+    }
+  ]
+}

@@ -5,6 +5,7 @@
 
 import type { MaterialOption } from '../types';
 import { getLifecycleProfile } from '../data';
+import synergyPairsData from '../data/synergyPairs.json';
 
 // Types for Sustainability Briefing
 
@@ -24,6 +25,13 @@ export interface MaterialBriefingData {
     endOfLife: number;
   };
   totalScore: number;
+  strategicValue?: string; // Pre-stored value for low-carbon materials
+  mitigationTip?: string; // Pre-stored tip for high-carbon materials
+}
+
+export interface SynergyPair {
+  materials: [string, string];
+  explanation: string;
 }
 
 export interface SustainabilityBriefingPayload {
@@ -37,6 +45,7 @@ export interface SustainabilityBriefingPayload {
     maintenance: number;
     endOfLife: number;
   };
+  knownSynergies?: SynergyPair[]; // Pre-defined synergies matching the current palette
   projectName?: string;
 }
 
@@ -130,6 +139,27 @@ function getMaterialLifecycleScores(material: MaterialOption): MaterialBriefingD
 }
 
 /**
+ * Find synergy pairs that match the given material IDs
+ */
+function findMatchingSynergies(materialIds: string[]): SynergyPair[] {
+  const idSet = new Set(materialIds);
+  const matchingSynergies: SynergyPair[] = [];
+
+  for (const synergy of synergyPairsData.synergies) {
+    const [mat1, mat2] = synergy.materials;
+    // Check if both materials in the synergy are in our palette
+    if (idSet.has(mat1) && idSet.has(mat2)) {
+      matchingSynergies.push({
+        materials: [mat1, mat2],
+        explanation: synergy.explanation,
+      });
+    }
+  }
+
+  return matchingSynergies;
+}
+
+/**
  * Calculate total impact score from lifecycle scores
  */
 function calculateTotalScore(scores: MaterialBriefingData['lifecycleScores']): number {
@@ -151,6 +181,7 @@ function calculateTotalScore(scores: MaterialBriefingData['lifecycleScores']): n
 
 /**
  * Prepare material data payload for Gemini API
+ * Includes pre-stored strategicValue/mitigationTip and matching synergies
  */
 export function prepareBriefingPayload(
   materials: MaterialOption[],
@@ -166,6 +197,9 @@ export function prepareBriefingPayload(
       category: material.category,
       lifecycleScores,
       totalScore: calculateTotalScore(lifecycleScores),
+      // Include pre-stored sustainability content if available
+      strategicValue: material.strategicValue,
+      mitigationTip: material.mitigationTip,
     };
   });
 
@@ -188,26 +222,36 @@ export function prepareBriefingPayload(
     });
   }
 
+  // Find synergy pairs that match materials in the current palette
+  const materialIds = materials.map((m) => m.id);
+  const knownSynergies = findMatchingSynergies(materialIds);
+
   return {
     materials: materialData,
     averageScores,
+    knownSynergies: knownSynergies.length > 0 ? knownSynergies : undefined,
     projectName,
   };
 }
 
 /**
  * Generate the system instruction for Gemini
+ * Uses pre-stored strategicValue/mitigationTip when available
  */
 export function getSustainabilityBriefingSystemInstruction(): string {
   return `You are an expert Sustainability Consultant specializing in architectural material selection.
 Analyze the provided list of materials and their lifecycle impact scores.
 
+IMPORTANT: Some materials include pre-stored "strategicValue" (for heroes) or "mitigationTip" (for challenges).
+When these are provided, USE THEM EXACTLY as given. Only generate new text if the field is missing.
+The payload may also include "knownSynergies" - pre-defined material pairs that work well together. Prefer these over generating new synergies.
+
 Rules for your JSON response:
 1. Headline: Create a 3-word 'Project Persona' based on the material mix (e.g., "Biophilic Modern Efficiency", "Industrial Heritage Revival").
 2. Summary: Write exactly 3 sentences as an architectural narrative about the carbon strategy. Be specific about the material choices.
-3. Heroes: Pick exactly 2 materials with the lowest impact/carbon scores. For each, explain their 'Strategic Value' in 1-2 sentences.
-4. Challenges: Pick exactly 2 materials with the highest impact scores. For each, provide a practical 'Mitigation Tip' in 1-2 sentences.
-5. Synergies: Identify 2 pairs of materials that work well together (e.g., thermal mass + insulation, timber structure + natural finishes). Explain how they complement each other.
+3. Heroes: Pick exactly 2 materials with the lowest impact/carbon scores. Use the material's pre-stored "strategicValue" if provided; otherwise generate 1-2 sentences.
+4. Challenges: Pick exactly 2 materials with the highest impact scores. Use the material's pre-stored "mitigationTip" if provided; otherwise generate 1-2 sentences.
+5. Synergies: Check if any pairs from "knownSynergies" match materials in the palette. If matches found, use those explanations. Otherwise identify 2 pairs that work well together.
 6. Return ONLY valid JSON matching this exact structure:
 {
   "headline": "Three Word Persona",

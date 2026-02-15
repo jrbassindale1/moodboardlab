@@ -132,6 +132,8 @@ export interface MaterialDocument {
   // Sustainability and specification data
   insight: string | null;
   actions: string[] | null;
+  strategicValue: string | null; // For low-carbon materials: why this is an excellent choice
+  mitigationTip: string | null; // For high-carbon materials: practical tip to reduce impact
   healthRiskLevel: 'low' | 'medium' | 'high' | null;
   healthConcerns: string[] | null;
   healthNote: string | null;
