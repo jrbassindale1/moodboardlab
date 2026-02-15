@@ -170,6 +170,9 @@ export interface MaterialOption {
   materialFunction?: MaterialFunction[]; // Primary functions (e.g., structural, surface)
   manufacturingProcess?: ManufacturingProcess[]; // How the material is processed
   finishFamily?: FinishFamily; // Finish family/standard (e.g., RAL, timber-oil, stone-honed)
+  // Sustainability briefing pre-stored content
+  strategicValue?: string; // For low-carbon materials: why this is an excellent choice (1-2 sentences)
+  mitigationTip?: string; // For high-carbon materials: practical tip to reduce impact (1-2 sentences)
 }
 
 export interface UploadedImage {
