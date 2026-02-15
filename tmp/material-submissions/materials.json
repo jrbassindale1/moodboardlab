@@ -1,0 +1,84 @@
+[
+  {
+    "id": "engineered-oak-flooring",
+    "pk": "interiors",
+    "docType": "material",
+    "sortOrder": 999,
+    "name": "Engineered Oak Flooring",
+    "tone": "#A67C52",
+    "finish": "Oiled oak planks",
+    "description": "Engineered oak planks for interior floors with warm tone and durable wear layer.",
+    "keywords": [
+      "oak",
+      "timber",
+      "flooring",
+      "interior"
+    ],
+    "category": "interiors",
+    "colorOptions": [
+      {
+        "label": "Natural",
+        "tone": "#A67C52"
+      },
+      {
+        "label": "Dark Stain",
+        "tone": "#6F4E37"
+      }
+    ],
+    "supportsColor": false,
+    "finishOptions": [
+      "Oiled",
+      "Lacquered"
+    ],
+    "varietyOptions": [
+      "Wide plank",
+      "Herringbone"
+    ],
+    "treePaths": [
+      "Interiors>Floors"
+    ],
+    "carbonIntensity": "medium",
+    "tags": [
+      "supplier-submitted"
+    ],
+    "materialType": "timber",
+    "finishFamily": "timber-oil",
+    "materialForm": [
+      "board"
+    ],
+    "materialFunction": [
+      "finish"
+    ],
+    "manufacturingProcess": [
+      "pressed veneer over ply core"
+    ],
+    "finishIds": [
+      "finish:finish-oiled-oak-planks"
+    ],
+    "primaryFinishId": "finish:finish-oiled-oak-planks",
+    "finishSetIds": [],
+    "primaryFinishSetId": null,
+    "lifecycleProfileId": null,
+    "insight": "Moderate manufacturing impact; long service life supports low replacement frequency.",
+    "actions": [
+      "Request EPD",
+      "Confirm FSC chain of custody"
+    ],
+    "strategicValue": null,
+    "mitigationTip": null,
+    "healthRiskLevel": null,
+    "healthConcerns": null,
+    "healthNote": null,
+    "risks": [
+      {
+        "risk": "Surface wear in high traffic",
+        "mitigation": "Specify harder top coat and maintenance plan"
+      },
+      {
+        "risk": "Moisture movement",
+        "mitigation": "Control substrate moisture before install"
+      }
+    ],
+    "serviceLife": 30
+  }
+]

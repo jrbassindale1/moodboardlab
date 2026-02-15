@@ -193,3 +193,34 @@ Examples:
 - `finishIds[0]` matches `primaryFinishId`.
 - `colorOptions` entries use valid hex values.
 - Nullable fields are either valid values or `null` (not empty object).
+
+## 7) CSV template for suppliers
+
+Use `docs/MATERIAL_SUBMISSION_TEMPLATE.csv` when you want companies to submit in spreadsheet format.
+
+CSV rules:
+- One row = one material.
+- Keep the header row unchanged.
+- For list fields, separate values with `|` (pipe), not commas.
+- For `colorOptions`, use `Label:#HEX|Label:#HEX`.
+- For `risks`, use `Risk=>Mitigation|Risk=>Mitigation`.
+
+## 8) Convert completed CSV into Cosmos JSON
+
+Run:
+
+```bash
+npm run convert-material-submissions -- \
+  --in docs/MATERIAL_SUBMISSION_TEMPLATE.csv \
+  --out tmp/material-submissions/materials.json \
+  --report tmp/material-submissions/report.json
+```
+
+What you get:
+- `tmp/material-submissions/materials.json`: ready-to-insert material documents.
+- `tmp/material-submissions/report.json`: row-by-row warnings and submitter metadata.
+
+Then import records manually in Cosmos Data Explorer:
+- Database: `moodboardlab`
+- Container: `materials`
+- Ensure each item has `pk` equal to `category`
