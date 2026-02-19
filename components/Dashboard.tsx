@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
-import { useAuth, useUsage, isClerkAuthEnabled } from '../auth';
+import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
 import { getGenerations } from '../api';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 
@@ -95,7 +95,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const hasFetchedLatestMoodboardsRef = useRef(false);
   const limit_per_page = 12;
   const normalizedUserEmail = (user?.email || '').toLowerCase();
-  const canViewStagingInsights = normalizedUserEmail === STAGING_INSIGHTS_EMAIL;
+  const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
+  const canAccessDashboard = isAuthenticated || isPreviewMode;
+  const canViewStagingInsights = normalizedUserEmail === STAGING_INSIGHTS_EMAIL || isPreviewMode;
 
   const displayItems = useMemo(() => {
     const pdfByBoardKey = new Map<string, Map<PdfBucket, Generation>>();
@@ -250,7 +252,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     }
   };
 
-  if (!isAuthenticated) {
+  if (!canAccessDashboard) {
     return (
       <div className="w-full min-h-screen pt-20 bg-white">
         <div className="max-w-screen-lg mx-auto px-6 py-12 text-center">
@@ -281,6 +283,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
       <div className="max-w-screen-2xl mx-auto px-6 py-12 space-y-8">
+        {isPreviewMode && (
+          <div className="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Preview mode: authentication is bypassed in this environment. Dashboard data is hidden, but layout and UI changes are visible.
+          </div>
+        )}
+
         {/* Header */}
         <div className="border-b border-gray-200 pb-6">
           <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
@@ -339,6 +347,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
               <div className="flex items-center justify-center py-8 border border-gray-200">
                 <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
               </div>
+            ) : isPreviewMode ? (
+              <div className="border border-dashed border-gray-300 p-6 text-sm text-gray-600">
+                Preview mode active. Sign in with {STAGING_INSIGHTS_EMAIL} to load real moodboards.
+              </div>
             ) : latestMoodboardsError ? (
               <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 {latestMoodboardsError}
@@ -386,6 +398,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          ) : isPreviewMode ? (
+            <div className="border border-dashed border-gray-300 p-8 text-center">
+              <Image className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600">Preview mode active. Sign in to load generation history.</p>
             </div>
           ) : generations.length === 0 ? (
             <div className="border border-dashed border-gray-300 p-8 text-center">
