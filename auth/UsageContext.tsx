@@ -2,6 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useAuth } from './AuthProvider';
 import { getUsage, checkQuota } from '../api';
 
+type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+
+// Generation types that don't count towards the user's free limit
+const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
+
 const FREE_MONTHLY_LIMIT = 10;
 const ANONYMOUS_DAILY_LIMIT = 3;
 const ANONYMOUS_QUOTA_KEY = 'moodboard_anon_quota';
@@ -23,7 +28,7 @@ interface UsageContextType {
   isLoading: boolean;
   refreshUsage: () => Promise<void>;
   canGenerate: boolean;
-  incrementLocalUsage: (count?: number) => void;
+  incrementLocalUsage: (count?: number, generationType?: GenerationType) => void;
   isAnonymous: boolean;
 }
 
@@ -100,9 +105,13 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
     }
   }, [isAuthenticated, authLoading, refreshUsage]);
 
-  // Increment local anonymous usage
-  const incrementLocalUsage = useCallback((count = 1) => {
+  // Increment local anonymous usage (skips free generation types like materialIcon)
+  const incrementLocalUsage = useCallback((count = 1, generationType?: GenerationType) => {
     if (!isAuthenticated) {
+      // Skip counting for free generation types
+      if (generationType && FREE_GENERATION_TYPES.includes(generationType)) {
+        return;
+      }
       const incrementBy = Number.isFinite(count) ? Math.max(1, Math.round(count)) : 1;
       const newCount = anonymousCount + incrementBy;
       setAnonymousCount(newCount);

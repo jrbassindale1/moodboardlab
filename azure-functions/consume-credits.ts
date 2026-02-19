@@ -18,7 +18,7 @@ import {
   isCosmosNotFound,
   isAdminUser,
 } from './shared/cosmosClient';
-import { incrementUsage, GenerationType } from './shared/usageHelpers';
+import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from './shared/usageHelpers';
 
 const MAX_CREDIT_CHARGE = 5;
 
@@ -79,8 +79,10 @@ export async function consumeCredits(
 
     const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
     const userIsAdmin = isAdminUser(user.email);
+    const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
 
-    if (!userIsAdmin && remaining < credits) {
+    // Skip quota check for free generation types (e.g., materialIcon)
+    if (!userIsAdmin && !isFreeGeneration && remaining < credits) {
       return {
         status: 429,
         headers,
@@ -101,9 +103,10 @@ export async function consumeCredits(
       headers,
       body: JSON.stringify({
         success: true,
-        remaining: Math.max(0, remaining - credits),
+        // Free generation types don't affect the remaining count
+        remaining: isFreeGeneration ? remaining : Math.max(0, remaining - credits),
         limit: FREE_MONTHLY_LIMIT,
-        used: totalUsed + credits,
+        used: isFreeGeneration ? totalUsed : totalUsed + credits,
         yearMonth,
       }),
     };

@@ -1,3 +1,10 @@
+// Google Analytics gtag global
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 export interface ProjectImage {
   id: string;
   url: string; // In a real scenario, this would be the local path to the user's images
