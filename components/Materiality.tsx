@@ -8,6 +8,7 @@ import {
 } from '../constants';
 import { callGeminiImage } from '../api';
 import { MaterialOption } from '../types';
+import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 
 const BASE_RENDER_PROMPT =
   'Generate a Photo-realistic super detailed vray rendering showing contemporary architecture design with super realistic details and soft shadows, atmospheric lighting, extremely detailed materials, soft shadows, atmospheric depth. No illustration, no linework, no cartoon style. Match the realism and style of a vray, photograpghic render.';
@@ -373,10 +374,10 @@ const Materiality: React.FC = () => {
                 {mat.name}
               </div>
               <div className="font-mono text-[11px] uppercase tracking-widest">
-                {mat.finish}
+                {formatFinishForDisplay(mat.finish)}
               </div>
               <p className="font-sans text-sm text-gray-600 mt-1">
-                {mat.description}
+                {formatDescriptionForDisplay(mat.description)}
               </p>
             </div>
           </div>
@@ -414,12 +415,6 @@ const Materiality: React.FC = () => {
                 value={steelColor}
                 onChange={(e) => setSteelColor(e.target.value)}
                 className="w-12 h-10 border border-gray-300"
-              />
-              <input
-                type="text"
-                value={steelColor}
-                onChange={(e) => setSteelColor(e.target.value)}
-                className="flex-1 border border-gray-300 px-3 py-2 font-mono text-sm"
               />
             </div>
             <p className="font-mono text-[11px] text-gray-500 uppercase tracking-widest">
@@ -460,10 +455,10 @@ const Materiality: React.FC = () => {
               {mat.name}
             </div>
             <div className="font-mono text-[11px] uppercase tracking-widest">
-              {mat.finish}
+              {formatFinishForDisplay(mat.finish)}
             </div>
             <p className="font-sans text-sm text-gray-600 mt-1">
-              {mat.description}
+              {formatDescriptionForDisplay(mat.description)}
             </p>
           </div>
         </div>

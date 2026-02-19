@@ -9,6 +9,7 @@ import React from 'react';
 import { MaterialOption } from '../types';
 import { getCachedColoredIcon } from '../hooks/useColoredIconGenerator';
 import { getMaterialIconUrls } from '../utils/materialIconUrls';
+import { formatFinishForDisplay } from '../utils/materialDisplay';
 
 interface MaterialIconDisplayProps {
   material: MaterialOption;
@@ -130,7 +131,7 @@ export function MaterialIconDisplay({
       {showName && (
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{material.name}</div>
-          <div className="text-xs text-gray-500 truncate">{material.finish}</div>
+          <div className="text-xs text-gray-500 truncate">{formatFinishForDisplay(material.finish)}</div>
         </div>
       )}
     </div>

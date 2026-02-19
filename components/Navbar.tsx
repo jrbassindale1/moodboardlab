@@ -18,14 +18,15 @@ const Navbar: React.FC<NavbarProps> = ({
   moodboardReady = false
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk' || isAuthBypassEnabled;
 
   const baseNavItems = [
     { id: 'concept', label: 'Home' },
     { id: 'materials', label: 'Materials' },
     { id: 'moodboard', label: 'Moodboard Lab' },
-    { id: 'apply', label: 'Apply' }
+    { id: 'apply', label: 'Apply' },
+    { id: 'dashboard', label: 'Dashboard' }
   ];
   const navItemsDesktop = [
     ...baseNavItems,
@@ -34,7 +35,6 @@ const Navbar: React.FC<NavbarProps> = ({
   const navItemsMobile = [
     ...baseNavItems,
     ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
-    ...(isAuthenticated ? [{ id: 'dashboard', label: 'Dashboard' }] : [])
   ];
 
   const handleNavigate = (page: string) => {
@@ -98,7 +98,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Auth Button */}
-          <AuthButton onNavigate={onNavigate} />
+          <AuthButton />
 
           <button
             className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"

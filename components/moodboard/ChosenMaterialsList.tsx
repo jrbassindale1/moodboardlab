@@ -2,6 +2,7 @@ import React from 'react';
 import { ShoppingCart, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { MaterialOption } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
+import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
 
 interface ChosenMaterialsListProps {
   board: MaterialOption[];
@@ -104,7 +105,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                         />
                       ) : item.colorOptions ||
                         item.supportsColor ||
-                        item.finish.includes('(#') ||
+                        item.colorLabel ||
                         item.finish.includes('—') ? (
                         <div className="w-full h-full" style={{ backgroundColor: item.tone }} />
                       ) : (
@@ -142,11 +143,11 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                         {item.name}
                       </h4>
                       <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-1">
-                        {item.finish}
+                        {formatFinishForDisplay(item.finish)}
                       </p>
                       {item.description && (
                         <p className="font-sans text-xs text-gray-500 line-clamp-2">
-                          {item.description}
+                          {formatDescriptionForDisplay(item.description)}
                         </p>
                       )}
                       <label className="mt-2 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500">

@@ -10,6 +10,7 @@ import { MATERIAL_PALETTE } from '../constants';
 import { MaterialGrid, MaterialIconDisplay } from './MaterialIconDisplay';
 import { useMaterialIcons } from '../hooks/useMaterialIcons';
 import { MaterialOption } from '../types';
+import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 
 export function MaterialIconDemo() {
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialOption | null>(null);
@@ -212,10 +213,10 @@ export function MaterialIconDemo() {
               {selectedMaterial.name}
             </h2>
             <p style={{ color: '#666', marginTop: '8px' }}>
-              {selectedMaterial.description}
+              {formatDescriptionForDisplay(selectedMaterial.description)}
             </p>
             <div style={{ marginTop: '16px', fontSize: '14px' }}>
-              <strong>Finish:</strong> {selectedMaterial.finish}
+              <strong>Finish:</strong> {formatFinishForDisplay(selectedMaterial.finish)}
             </div>
             <div style={{ marginTop: '8px', fontSize: '14px' }}>
               <strong>Category:</strong> {selectedMaterial.category}

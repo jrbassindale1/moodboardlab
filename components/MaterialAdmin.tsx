@@ -356,7 +356,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                   />
                 </label>
                 <label className="text-xs uppercase tracking-widest font-mono">
-                  Tone (HEX)
+                  Tone (Swatch Value)
                   <input
                     value={draft.tone}
                     onChange={(event) => setField('tone', event.target.value)}

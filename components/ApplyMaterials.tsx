@@ -4,6 +4,7 @@ import { callGeminiImage, saveGenerationAuth, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
+import { formatFinishForDisplay } from '../utils/materialDisplay';
 import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
@@ -348,25 +349,33 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const perMaterialLines = Object.entries(materialsByCategory)
       .map(([category, items]) => {
         const categoryHeader = `\n[${category.toUpperCase()}]`;
-        const itemLines = items.map((item) => {
-          const finishHasColorInfo = item.finish.includes(' — ') ||
-                                      item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
-                                      item.finish.toLowerCase().includes('colour') ||
-                                      item.finish.toLowerCase().includes('color') ||
-                                      item.finish.toLowerCase().includes('select');
+        const itemLines = items
+          .map((item) => {
+            const finishHasColorInfo =
+              Boolean(item.colorLabel) ||
+              item.finish.includes(' — ') ||
+              item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
+              item.finish.toLowerCase().includes('colour') ||
+              item.finish.toLowerCase().includes('color') ||
+              item.finish.toLowerCase().includes('select');
 
-          let colorInfo = '';
-          if (finishHasColorInfo) {
-            const labelMatch = item.finish.match(/ — ([^(]+)/);
-            if (labelMatch) {
-              colorInfo = ` | color: ${labelMatch[1].trim()}`;
-            } else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
-              colorInfo = ` | color: ${item.tone}`;
+            let colorInfo = '';
+            if (finishHasColorInfo) {
+              if (item.colorLabel) {
+                colorInfo = ` | color: ${item.colorLabel}`;
+              } else {
+                const labelMatch = item.finish.match(/ — ([^(]+)/);
+                if (labelMatch) {
+                  colorInfo = ` | color: ${labelMatch[1].trim()}`;
+                } else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
+                  colorInfo = ` | color: ${item.tone}`;
+                }
+              }
             }
-          }
 
-          return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
-        }).join('\n');
+            return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
+          })
+          .join('\n');
         return `${categoryHeader}\n${itemLines}`;
       })
       .join('\n');
@@ -584,7 +593,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                         <div className="min-w-0">
                           <div className="font-sans text-sm text-gray-900 truncate">{item.name}</div>
                           <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500 truncate">
-                            {item.finish}
+                            {formatFinishForDisplay(item.finish)}
                           </div>
                         </div>
                       </label>

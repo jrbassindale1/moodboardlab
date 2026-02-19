@@ -1086,7 +1086,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
           // - finish contains hex in parentheses like "(#ffffff)"
           // - finish contains "colour" or "color" (paint materials)
           // - finish contains "select" (materials that require color selection)
-          const finishHasColorInfo = item.finish.includes(' — ') ||
+          const finishHasColorInfo = Boolean(item.colorLabel) ||
+                                      item.finish.includes(' — ') ||
                                       item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
                                       item.finish.toLowerCase().includes('colour') ||
                                       item.finish.toLowerCase().includes('color') ||
@@ -1095,14 +1096,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
           // For materials with explicit color selection, extract and include the color
           let colorInfo = '';
           if (finishHasColorInfo) {
-            // If finish has a color label (e.g., "— White"), extract it
-            const labelMatch = item.finish.match(/ — ([^(]+)/);
-            if (labelMatch) {
-              colorInfo = ` | color: ${labelMatch[1].trim()}`;
-            }
-            // Otherwise if it has a hex color in parentheses, use that
-            else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
-              colorInfo = ` | color: ${item.tone}`;
+            if (item.colorLabel) {
+              colorInfo = ` | color: ${item.colorLabel}`;
+            } else {
+              // If finish has a color label (e.g., "— White"), extract it
+              const labelMatch = item.finish.match(/ — ([^(]+)/);
+              if (labelMatch) {
+                colorInfo = ` | color: ${labelMatch[1].trim()}`;
+              }
+              // Otherwise if it has a hex color in parentheses, use that
+              else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
+                colorInfo = ` | color: ${item.tone}`;
+              }
             }
           }
 

@@ -8,6 +8,7 @@ import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconUrls } from '../utils/materialIconUrls';
+import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 import { useAuth, useUsage } from '../auth';
 
@@ -471,7 +472,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
       const finishBody = finishParts.filter(Boolean).join(' — ');
       const finishWithVariety = varietyToUse ? `${varietyToUse} — ${finishBody}` : finishBody;
-      const finishText = colorToneToUse ? `${finishWithVariety} (${colorToneToUse})` : finishWithVariety;
+      const finishText = finishWithVariety;
 
       // Create a colorVariantId for icon loading (e.g., 'steel-yellow')
       const colorVariantId = colorLabelToUse
@@ -966,7 +967,9 @@ IMPORTANT:
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-sans truncate">{material.name}</p>
-                              <p className="text-[10px] font-mono text-gray-500 truncate">{material.finish}</p>
+                              <p className="text-[10px] font-mono text-gray-500 truncate">
+                                {formatFinishForDisplay(material.finish)}
+                              </p>
                             </div>
                             <button
                               onClick={() => onBoardChange(board.filter((_, i) => i !== boardIndex))}
@@ -1139,9 +1142,11 @@ IMPORTANT:
                                 />
                                 <div className="flex-1">
                                   <h5 className="font-display uppercase tracking-wide text-sm">{mat.name}</h5>
-                                  <p className="text-xs text-gray-600 font-sans">{mat.finish}</p>
+                                  <p className="text-xs text-gray-600 font-sans">{formatFinishForDisplay(mat.finish)}</p>
                                   {mat.description && (
-                                    <p className="text-xs text-gray-500 font-sans mt-1">{mat.description}</p>
+                                    <p className="text-xs text-gray-500 font-sans mt-1">
+                                      {formatDescriptionForDisplay(mat.description)}
+                                    </p>
                                   )}
                                 </div>
                               </div>
@@ -1359,9 +1364,13 @@ IMPORTANT:
                       {/* Product info */}
                       <div className="space-y-2">
                         <h3 className="font-display uppercase tracking-wide text-sm">{mat.name}</h3>
-                        <p className="text-xs text-gray-600 font-sans line-clamp-2">{mat.finish}</p>
+                        <p className="text-xs text-gray-600 font-sans line-clamp-2">
+                          {formatFinishForDisplay(mat.finish)}
+                        </p>
                         {mat.description && (
-                          <p className="text-xs text-gray-500 font-sans line-clamp-2">{mat.description}</p>
+                          <p className="text-xs text-gray-500 font-sans line-clamp-2">
+                            {formatDescriptionForDisplay(mat.description)}
+                          </p>
                         )}
                       </div>
 
@@ -1462,10 +1471,12 @@ IMPORTANT:
                 <div className="flex-1">
                   <div className="font-display uppercase tracking-wide text-sm">{recentlyAdded.name}</div>
                   <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1">
-                    {recentlyAdded.finish}
+                    {formatFinishForDisplay(recentlyAdded.finish)}
                   </div>
                   {recentlyAdded.description && (
-                    <p className="font-sans text-xs text-gray-600 mt-2">{recentlyAdded.description}</p>
+                    <p className="font-sans text-xs text-gray-600 mt-2">
+                      {formatDescriptionForDisplay(recentlyAdded.description)}
+                    </p>
                   )}
                 </div>
               </div>

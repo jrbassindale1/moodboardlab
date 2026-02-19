@@ -3,11 +3,7 @@ import { SignInButton, UserButton } from '@clerk/clerk-react';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useAuth, isClerkAuthEnabled } from '../auth';
 
-interface AuthButtonProps {
-  onNavigate?: (page: string) => void;
-}
-
-const AuthButton: React.FC<AuthButtonProps> = ({ onNavigate }) => {
+const AuthButton: React.FC = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
   // Don't show auth button if Clerk isn't configured
@@ -25,13 +21,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({ onNavigate }) => {
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => onNavigate?.('dashboard')}
-          className="hidden md:block font-mono text-[11px] uppercase tracking-widest text-gray-600 hover:text-black transition-colors"
-        >
-          Dashboard
-        </button>
+      <div className="flex items-center">
         <UserButton
           afterSignOutUrl="/"
           appearance={{
