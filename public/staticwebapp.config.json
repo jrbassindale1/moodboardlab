@@ -1,0 +1,16 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/api/*",
+      "/assets/*",
+      "/icons/*",
+      "/videos/*",
+      "/favicon.ico",
+      "/favicon.png",
+      "/apple-touch-icon.png",
+      "/manifest.webmanifest",
+      "/ads.txt"
+    ]
+  }
+}

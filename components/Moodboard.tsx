@@ -23,6 +23,7 @@ import {
 import { MaterialOption } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
+import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 
 // Sustainability report utilities
 import type {
@@ -1109,6 +1110,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const isEditingRender = mode === 'render' && options?.editPrompt && options?.baseImageDataUrl;
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
+    const moodboardEditViewGuidance = getRenderViewGuidance(options?.editPrompt || '');
 
     // Build sustainability prompt with lifecycle fingerprints (enhanced schema)
     const buildSustainabilityPrompt = () => buildSustainabilityPromptText(sustainabilityPayload);
@@ -1423,7 +1425,7 @@ ${JSON.stringify(proseContext)}`;
       : mode === 'report-prose'
       ? buildReportProsePrompt()
       : isEditingRender
-        ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
+        ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${moodboardEditViewGuidance.styleDirective}\n- ${moodboardEditViewGuidance.cameraDirective}\n- ${moodboardEditViewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
     if (mode === 'render') {
