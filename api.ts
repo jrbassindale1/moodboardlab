@@ -50,11 +50,15 @@ export interface MaterialsResponse {
 }
 
 function getApiBase() {
-  // Always use production API - local Azure Functions not typically available
-  // To use local backend, set VITE_USE_LOCAL_API=true in .env.local
+  // To use local backend, set VITE_USE_LOCAL_API=true in .env.local.
+  // In Vite dev, use a same-origin proxy path to avoid CORS failures.
   const useLocalApi = typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_LOCAL_API === 'true';
   if (useLocalApi) {
     return "http://localhost:7071";
+  }
+  const isViteDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+  if (isViteDev) {
+    return "/__api_proxy__";
   }
   return "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net";
 }
