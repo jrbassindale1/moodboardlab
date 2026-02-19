@@ -57,6 +57,37 @@ body {
   animation: fade-out 0.4s ease-out forwards;
 }
 
+@keyframes fly-to-board {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--fly-x)), calc(-50% + var(--fly-y))) scale(0.2);
+    opacity: 0;
+  }
+}
+
+.animate-fly-to-board {
+  animation: fly-to-board 0.62s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@keyframes cart-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.04);
+  }
+  65% {
+    transform: scale(0.98);
+  }
+}
+
+.animate-cart-pulse {
+  animation: cart-pulse 0.36s ease-out;
+}
+
 /* Print styles for Sustainability Briefing A4 export */
 @media print {
   /* Hide everything except the report */

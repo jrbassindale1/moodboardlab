@@ -18,6 +18,14 @@ interface MaterialSelectionProps {
 }
 
 type CustomMaterialMode = 'upload' | 'describe' | 'analyse' | null;
+type FlyToBoardAnimation = {
+  key: number;
+  startX: number;
+  startY: number;
+  deltaX: number;
+  deltaY: number;
+  tone: string;
+};
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
@@ -87,6 +95,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const { isAuthenticated, getAccessToken } = useAuth();
   const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
   const boardRef = useRef<MaterialOption[]>(board);
+  const cartButtonRef = useRef<HTMLButtonElement | null>(null);
+  const animationTimeoutRef = useRef<number | null>(null);
   const hasScrolledToTop = useRef(false);
   const [isSmallScreen] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -116,12 +126,65 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [selectedVariety, setSelectedVariety] = useState<string | null>(null);
   const [selectedFinishOption, setSelectedFinishOption] = useState<string | null>(null);
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
+  const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
+  const [isCartPulsing, setIsCartPulsing] = useState(false);
   const supportsFreeColor = (material?: MaterialOption | null) =>
     Boolean(material?.supportsColor && !material?.colorOptions?.length);
+  const hasSelectableOptions = (material?: MaterialOption | null) =>
+    Boolean(
+      material?.varietyOptions?.length ||
+      material?.finishOptions?.length ||
+      material?.colorOptions?.length ||
+      supportsFreeColor(material)
+    );
+  const triggerAddFeedback = (sourceElement?: HTMLElement | null, tone = '#4b5563') => {
+    if (typeof window === 'undefined') return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (animationTimeoutRef.current) {
+      window.clearTimeout(animationTimeoutRef.current);
+    }
+
+    setIsCartPulsing(false);
+    window.requestAnimationFrame(() => setIsCartPulsing(true));
+
+    if (!prefersReducedMotion && sourceElement && cartButtonRef.current) {
+      const sourceRect = sourceElement.getBoundingClientRect();
+      const targetRect = cartButtonRef.current.getBoundingClientRect();
+      const startX = sourceRect.left + sourceRect.width / 2;
+      const startY = sourceRect.top + sourceRect.height / 2;
+      const endX = targetRect.left + targetRect.width / 2;
+      const endY = targetRect.top + targetRect.height / 2;
+      setFlyToBoardAnimation({
+        key: Date.now(),
+        startX,
+        startY,
+        deltaX: endX - startX,
+        deltaY: endY - startY,
+        tone,
+      });
+    } else {
+      setFlyToBoardAnimation(null);
+    }
+
+    animationTimeoutRef.current = window.setTimeout(() => {
+      setFlyToBoardAnimation(null);
+      setIsCartPulsing(false);
+      animationTimeoutRef.current = null;
+    }, 620);
+  };
 
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
+
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        window.clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isSmallScreen || hasScrolledToTop.current) return;
@@ -377,10 +440,11 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const handleAdd = (
     material: MaterialOption,
     customization?: { tone?: string; colorLabel?: string; finishOption?: string; variety?: string },
-    skipModal?: boolean
+    skipModal?: boolean,
+    sourceElement?: HTMLElement | null
   ) => {
-    // If no customization provided and not skipping modal, just show modal (don't add to board yet)
-    if (!customization && !skipModal) {
+    // Only show the options modal when this material actually has selectable options.
+    if (!customization && !skipModal && hasSelectableOptions(material)) {
       setRecentlyAdded(material);
       setSelectedVariety(null); // Reset variety when opening modal
       setSelectedFinishOption(null);
@@ -463,6 +527,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     const nextBoard = [...baseBoard, materialToAdd];
     onBoardChange(nextBoard);
     boardRef.current = nextBoard;
+    triggerAddFeedback(sourceElement, materialToAdd.tone || '#4b5563');
 
     // Close the modal and reset variety
     setRecentlyAdded(null);
@@ -823,10 +888,11 @@ IMPORTANT:
             </div>
 
             {/* Board summary */}
-            <div className="border-t border-gray-200 pt-6">
+            <div className="border-t border-gray-200 pt-6 lg:sticky lg:top-24 lg:z-20 lg:bg-white">
               <button
+                ref={cartButtonRef}
                 onClick={() => onNavigate('moodboard')}
-                className="w-full flex items-center justify-between p-3 border border-gray-200 hover:border-black transition-colors mb-4"
+                className={`w-full flex items-center justify-between p-3 border border-gray-200 hover:border-black transition-colors mb-4 ${isCartPulsing ? 'animate-cart-pulse' : ''}`}
               >
                 <div className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
@@ -1293,7 +1359,7 @@ IMPORTANT:
 
                       {/* Add to board button */}
                       <button
-                        onClick={() => handleAdd(mat)}
+                        onClick={(e) => handleAdd(mat, undefined, undefined, e.currentTarget)}
                         className="w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
                       >
                         Add to board
@@ -1314,6 +1380,23 @@ IMPORTANT:
           </main>
         </div>
       </div>
+
+      {flyToBoardAnimation && (
+        <div
+          key={flyToBoardAnimation.key}
+          aria-hidden
+          className="pointer-events-none fixed z-[60] h-3.5 w-3.5 rounded-full border border-black/20 shadow-sm animate-fly-to-board"
+          style={
+            {
+              left: `${flyToBoardAnimation.startX}px`,
+              top: `${flyToBoardAnimation.startY}px`,
+              backgroundColor: flyToBoardAnimation.tone,
+              ['--fly-x' as any]: `${flyToBoardAnimation.deltaX}px`,
+              ['--fly-y' as any]: `${flyToBoardAnimation.deltaY}px`,
+            } as React.CSSProperties
+          }
+        />
+      )}
 
       {/* Added to board modal */}
       {recentlyAdded && (
