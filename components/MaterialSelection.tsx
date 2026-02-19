@@ -129,14 +129,35 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
-  const supportsFreeColor = (material?: MaterialOption | null) =>
-    Boolean(material?.supportsColor && !material?.colorOptions?.length);
+  const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf)/i;
+  const NATURAL_METAL_FINISH_RE = /(galvan|exposed|stainless|anodis|mill|natural metal|weathering|corten)/i;
+  const getColorSelectionMode = (
+    material?: MaterialOption | null,
+    finishOption?: string | null
+  ): 'none' | 'curated' | 'ral' => {
+    if (!material) return 'none';
+    const hasCuratedColors = Boolean(material.colorOptions?.length);
+    const hasRalPalette = Boolean(material.supportsColor);
+
+    if (!hasCuratedColors && !hasRalPalette) return 'none';
+    if (!hasRalPalette) return 'curated';
+    if (!hasCuratedColors) return 'ral';
+
+    // Materials with both curated colors and RAL are finish-dependent.
+    const finish = (finishOption || '').trim();
+    if (!finish) return 'curated';
+    if (PAINTED_FINISH_RE.test(finish)) return 'ral';
+    if (NATURAL_METAL_FINISH_RE.test(finish)) return 'curated';
+    return 'curated';
+  };
+  const supportsFreeColor = (material?: MaterialOption | null, finishOption?: string | null) =>
+    getColorSelectionMode(material, finishOption) === 'ral';
   const hasSelectableOptions = (material?: MaterialOption | null) =>
     Boolean(
       material?.varietyOptions?.length ||
       material?.finishOptions?.length ||
       material?.colorOptions?.length ||
-      supportsFreeColor(material)
+      supportsFreeColor(material, selectedFinishOption)
     );
   const triggerAddFeedback = (sourceElement?: HTMLElement | null, tone = '#4b5563') => {
     if (typeof window === 'undefined') return;
@@ -374,7 +395,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!tokens.length) return materialsByPath;
 
     const matchesSearch = (mat: MaterialOption) => {
-      const hasRalChoices = supportsFreeColor(mat);
+      const hasRalChoices = Boolean(mat.supportsColor);
       const haystack = [
         mat.name,
         mat.finish,
@@ -550,7 +571,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
     const requiresVariety = Boolean(recentlyAdded.varietyOptions?.length);
     const requiresFinish = Boolean(recentlyAdded.finishOptions?.length);
-    const requiresColor = Boolean(recentlyAdded.colorOptions?.length || supportsFreeColor(recentlyAdded));
+    const requiresColor = getColorSelectionMode(recentlyAdded, finishOptionToUse) !== 'none';
 
     const isReady =
       (!requiresVariety || Boolean(varietyToUse)) &&
@@ -842,11 +863,13 @@ IMPORTANT:
   const hasColorOptions = Boolean(recentlyAdded?.colorOptions?.length);
   const hasFinishOptions = Boolean(recentlyAdded?.finishOptions?.length);
   const hasVarietyOptions = Boolean(recentlyAdded?.varietyOptions?.length);
-  const hasFreeColor = supportsFreeColor(recentlyAdded);
+  const colorSelectionMode = getColorSelectionMode(recentlyAdded, selectedFinishOption);
+  const hasFreeColor = colorSelectionMode === 'ral';
+  const hasCuratedColourStep = colorSelectionMode === 'curated' && hasColorOptions;
   // If variety options exist but none selected, we need to pick variety first
   const needsVarietySelection = hasVarietyOptions && !selectedVariety;
   const needsFinishSelection = hasFinishOptions && !selectedFinishOption;
-  const hasColourStep = hasColorOptions || hasFreeColor;
+  const hasColourStep = hasCuratedColourStep || hasFreeColor;
   const canSelectFinish = !needsVarietySelection;
   const canSelectColour = !needsVarietySelection && (!hasFinishOptions || !needsFinishSelection);
   const needsColourSelection = hasColourStep && !selectedColorOption;
@@ -1574,7 +1597,7 @@ IMPORTANT:
               )}
 
               {/* Curated color options - step 3 */}
-              {hasColorOptions && (
+              {hasCuratedColourStep && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     Colour Options
