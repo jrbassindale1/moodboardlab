@@ -129,7 +129,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
-  const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf)/i;
+  const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf|polyester)/i;
   const NATURAL_METAL_FINISH_RE = /(galvan|exposed|stainless|anodis|mill|natural metal|weathering|corten)/i;
   const getColorSelectionMode = (
     material?: MaterialOption | null,
@@ -1349,7 +1349,7 @@ IMPORTANT:
             ) : (
               <>
                 {/* Product Grid */}
-                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
+                <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
                   {sortedMaterials.map((mat) => {
                     const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
                     return (
