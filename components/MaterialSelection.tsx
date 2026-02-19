@@ -536,6 +536,40 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     setSelectedColorOption(null);
   };
 
+  const maybeAutoAddFromModal = (overrides?: {
+    variety?: string | null;
+    finishOption?: string | null;
+    colorOption?: { label: string; tone: string } | null;
+  }) => {
+    if (!recentlyAdded) return;
+
+    const varietyToUse = overrides?.variety ?? selectedVariety;
+    const finishOptionToUse = overrides?.finishOption ?? selectedFinishOption;
+    const colorOptionToUse = overrides?.colorOption ?? selectedColorOption;
+
+    const requiresVariety = Boolean(recentlyAdded.varietyOptions?.length);
+    const requiresFinish = Boolean(recentlyAdded.finishOptions?.length);
+    const requiresColor = Boolean(recentlyAdded.colorOptions?.length || supportsFreeColor(recentlyAdded));
+
+    const isReady =
+      (!requiresVariety || Boolean(varietyToUse)) &&
+      (!requiresFinish || Boolean(finishOptionToUse)) &&
+      (!requiresColor || Boolean(colorOptionToUse));
+
+    if (!isReady) return;
+
+    handleAdd(
+      recentlyAdded,
+      {
+        variety: varietyToUse || undefined,
+        finishOption: finishOptionToUse || undefined,
+        colorLabel: colorOptionToUse?.label,
+        tone: colorOptionToUse?.tone,
+      },
+      true
+    );
+  };
+
 
   const handleCreateCustomMaterial = () => {
     if (!customMaterialName.trim()) {
@@ -808,7 +842,6 @@ IMPORTANT:
   const hasFinishOptions = Boolean(recentlyAdded?.finishOptions?.length);
   const hasVarietyOptions = Boolean(recentlyAdded?.varietyOptions?.length);
   const hasFreeColor = supportsFreeColor(recentlyAdded);
-  const hasOptions = hasColorOptions || hasFinishOptions || hasFreeColor || hasVarietyOptions;
   // If variety options exist but none selected, we need to pick variety first
   const needsVarietySelection = hasVarietyOptions && !selectedVariety;
   const needsFinishSelection = hasFinishOptions && !selectedFinishOption;
@@ -816,10 +849,6 @@ IMPORTANT:
   const canSelectFinish = !needsVarietySelection;
   const canSelectColour = !needsVarietySelection && (!hasFinishOptions || !needsFinishSelection);
   const needsColourSelection = hasColourStep && !selectedColorOption;
-  const isSelectionComplete =
-    (!hasVarietyOptions || Boolean(selectedVariety)) &&
-    (!hasFinishOptions || Boolean(selectedFinishOption)) &&
-    (!hasColourStep || Boolean(selectedColorOption));
 
   return (
     <div className="min-h-screen bg-white">
@@ -1450,9 +1479,7 @@ IMPORTANT:
                     ? 'Select a finish option.'
                     : needsColourSelection
                     ? 'Select a colour option.'
-                    : hasOptions
-                    ? 'All required options selected. Click "Add to Board".'
-                    : 'Click "Add to Board" below to add this material.'}
+                    : 'This material is added automatically.'}
                 </p>
               </div>
 
@@ -1470,6 +1497,11 @@ IMPORTANT:
                           setSelectedVariety(variety);
                           setSelectedFinishOption(null);
                           setSelectedColorOption(null);
+                          maybeAutoAddFromModal({
+                            variety,
+                            finishOption: null,
+                            colorOption: null,
+                          });
                         }}
                         className={`border px-3 py-2 transition-colors ${
                           selectedVariety === variety
@@ -1502,6 +1534,10 @@ IMPORTANT:
                         onClick={() => {
                           setSelectedFinishOption(finish);
                           setSelectedColorOption(null);
+                          maybeAutoAddFromModal({
+                            finishOption: finish,
+                            colorOption: null,
+                          });
                         }}
                         className={`border px-3 py-2 transition-colors ${
                           selectedFinishOption === finish
@@ -1538,6 +1574,9 @@ IMPORTANT:
                         key={idx}
                         onClick={() => {
                           setSelectedColorOption(colorOption);
+                          maybeAutoAddFromModal({
+                            colorOption,
+                          });
                         }}
                         className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
                         title={`Select ${colorOption.label}`}
@@ -1576,6 +1615,9 @@ IMPORTANT:
                         key={idx}
                         onClick={() => {
                           setSelectedColorOption(colorOption);
+                          maybeAutoAddFromModal({
+                            colorOption,
+                          });
                         }}
                         className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
                         title={`Select ${colorOption.label}`}
@@ -1600,43 +1642,11 @@ IMPORTANT:
                     </p>
                   )}
                   <p className="font-sans text-xs text-gray-500 mt-2">
-                    Select a colour, then click Add to Board.
+                    Select a colour to add this material.
                   </p>
                 </div>
               )}
 
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={() => {
-                  handleAdd(
-                    recentlyAdded,
-                    {
-                      variety: selectedVariety || undefined,
-                      finishOption: selectedFinishOption || undefined,
-                      colorLabel: selectedColorOption?.label,
-                      tone: selectedColorOption?.tone,
-                    },
-                    true
-                  );
-                }}
-                disabled={hasOptions && !isSelectionComplete}
-                className="flex-1 px-4 py-3 uppercase font-mono text-[11px] tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add to Board
-              </button>
-              <button
-                onClick={() => {
-                  setRecentlyAdded(null);
-                  setSelectedVariety(null);
-                  setSelectedFinishOption(null);
-                  setSelectedColorOption(null);
-                }}
-                className="flex-1 px-4 py-3 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black transition-colors"
-              >
-                Cancel
-              </button>
             </div>
             </div>
           </div>
