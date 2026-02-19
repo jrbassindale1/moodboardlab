@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
 import { getGenerations } from '../api';
+import type { MaterialOption } from '../types';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 
 interface Generation {
@@ -15,6 +16,12 @@ interface Generation {
 
 interface DashboardProps {
   onNavigate?: (page: string) => void;
+  onRestoreGeneration?: (payload: {
+    targetPage: 'moodboard' | 'apply';
+    board: MaterialOption[];
+    generationImageUrl: string | null;
+    sourceType: Generation['type'];
+  }) => void;
 }
 
 type BoardItemLike = {
@@ -34,6 +41,35 @@ const STAGING_INSIGHTS_EMAIL = 'jrbassindale@yahoo.co.uk';
 const LATEST_MOODBOARDS_LIMIT = 10;
 const LATEST_MOODBOARDS_PAGE_SIZE = 50;
 const LATEST_MOODBOARDS_MAX_PAGES = 5;
+const PREVIEW_SAMPLE_BOARD: MaterialOption[] = [
+  {
+    id: 'preview-concrete',
+    name: 'Concrete',
+    tone: '#B4B4B0',
+    finish: 'Smooth cast',
+    description: 'Sample preview material for dashboard restore flow.',
+    keywords: ['preview', 'concrete'],
+    category: 'structure',
+  },
+  {
+    id: 'preview-oak-floor',
+    name: 'Oak flooring',
+    tone: '#A88157',
+    finish: 'Matte oil',
+    description: 'Sample preview material for dashboard restore flow.',
+    keywords: ['preview', 'timber', 'floor'],
+    category: 'floor',
+  },
+  {
+    id: 'preview-plaster',
+    name: 'Lime plaster',
+    tone: '#E7E1D6',
+    finish: 'Fine trowel',
+    description: 'Sample preview material for dashboard restore flow.',
+    keywords: ['preview', 'plaster', 'wall'],
+    category: 'wall-internal',
+  },
+];
 
 const isPdfGeneration = (gen: Generation): boolean => {
   if (!gen.blobUrl) return false;
@@ -81,7 +117,37 @@ const getBoardKey = (materials?: unknown): string | null => {
   return parts.join('::');
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
+const toMaterialOption = (value: unknown): MaterialOption | null => {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  if (typeof raw.id !== 'string' || !raw.id.trim()) return null;
+
+  const keywords = Array.isArray(raw.keywords)
+    ? raw.keywords.filter((keyword): keyword is string => typeof keyword === 'string')
+    : [];
+
+  return {
+    ...(raw as Partial<MaterialOption>),
+    id: raw.id,
+    name: typeof raw.name === 'string' ? raw.name : 'Material',
+    tone: typeof raw.tone === 'string' ? raw.tone : '#9ca3af',
+    finish: typeof raw.finish === 'string' ? raw.finish : '',
+    description: typeof raw.description === 'string' ? raw.description : '',
+    keywords,
+    category: (typeof raw.category === 'string' ? raw.category : 'finish') as MaterialOption['category'],
+  };
+};
+
+const extractBoardFromMaterials = (materials?: unknown): MaterialOption[] => {
+  if (!materials || typeof materials !== 'object') return [];
+  const board = (materials as { board?: unknown }).board;
+  if (!Array.isArray(board)) return [];
+  return board
+    .map(toMaterialOption)
+    .filter((item): item is MaterialOption => Boolean(item));
+};
+
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
@@ -98,6 +164,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
   const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
   const canAccessDashboard = isAuthenticated || isPreviewMode;
   const canViewStagingInsights = normalizedUserEmail === STAGING_INSIGHTS_EMAIL || isPreviewMode;
+  const previewDisplayItems = useMemo(() => {
+    if (!isPreviewMode) return [];
+    const now = Date.now();
+    const previewGenerations: Generation[] = [
+      {
+        id: 'preview-moodboard-1',
+        type: 'moodboard',
+        createdAt: new Date(now - 5 * 60 * 1000).toISOString(),
+        prompt: 'Preview moodboard generation',
+        materials: { board: PREVIEW_SAMPLE_BOARD },
+      },
+      {
+        id: 'preview-apply-1',
+        type: 'applyMaterials',
+        createdAt: new Date(now - 12 * 60 * 1000).toISOString(),
+        prompt: 'Preview apply generation',
+        materials: { board: PREVIEW_SAMPLE_BOARD },
+      },
+    ];
+
+    return previewGenerations.map((gen) => ({ gen, attachments: [] as Generation[] }));
+  }, [isPreviewMode]);
 
   const displayItems = useMemo(() => {
     const pdfByBoardKey = new Map<string, Map<PdfBucket, Generation>>();
@@ -252,6 +340,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     }
   };
 
+  const handleRestoreGeneration = (gen: Generation) => {
+    if (!onRestoreGeneration) return;
+    const board = extractBoardFromMaterials(gen.materials);
+    if (!board.length) return;
+
+    const targetPage =
+      gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+    if (!targetPage) return;
+
+    onRestoreGeneration({
+      targetPage,
+      board,
+      generationImageUrl: gen.blobUrl || null,
+      sourceType: gen.type,
+    });
+  };
+
   if (!canAccessDashboard) {
     return (
       <div className="w-full min-h-screen pt-20 bg-white">
@@ -399,15 +504,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
-          ) : isPreviewMode ? (
+          ) : (isPreviewMode ? previewDisplayItems : displayItems).length === 0 ? (
             <div className="border border-dashed border-gray-300 p-8 text-center">
               <Image className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600">Preview mode active. Sign in to load generation history.</p>
-            </div>
-          ) : generations.length === 0 ? (
-            <div className="border border-dashed border-gray-300 p-8 text-center">
-              <Image className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 mb-4">No generations yet.</p>
+              <p className="text-gray-600 mb-4">{isPreviewMode ? 'No preview generations available.' : 'No generations yet.'}</p>
               <button
                 onClick={() => onNavigate?.('moodboard')}
                 className="px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest"
@@ -417,8 +517,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
             </div>
           ) : (
             <>
+              {isPreviewMode && (
+                <div className="mb-4 border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  Preview sample data shown so you can test the restore buttons without live generation history.
+                </div>
+              )}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {displayItems.map(({ gen, attachments }) => {
+                {(isPreviewMode ? previewDisplayItems : displayItems).map(({ gen, attachments }) => {
+                  const targetPage =
+                    gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+                  const restoreLabel =
+                    gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                  const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
+                  const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+
                   return (
                     <div
                       key={gen.id}
@@ -480,6 +592,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
                                 </a>
                               ) : null;
                             })}
+                          </div>
+                        )}
+                        {restoreLabel && (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => handleRestoreGeneration(gen)}
+                              disabled={!canRestore}
+                              className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
+                                canRestore
+                                  ? 'border-gray-300 text-gray-700 hover:border-black hover:text-black'
+                                  : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                              }`}
+                              title={
+                                canRestore
+                                  ? undefined
+                                  : 'This generation does not include reusable material data.'
+                              }
+                            >
+                              {restoreLabel}
+                            </button>
                           </div>
                         )}
                       </div>

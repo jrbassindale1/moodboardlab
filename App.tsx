@@ -176,6 +176,31 @@ const App: React.FC = () => {
     };
   }, [isHelpOpen]);
 
+  const handleRestoreGeneration = ({
+    targetPage,
+    board,
+    generationImageUrl,
+    sourceType,
+  }: {
+    targetPage: 'moodboard' | 'apply';
+    board: MaterialOption[];
+    generationImageUrl: string | null;
+    sourceType: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+  }) => {
+    setSelectedMaterials(board);
+
+    if (targetPage === 'moodboard') {
+      setMoodboardRenderUrl(generationImageUrl);
+      setCurrentPage('moodboard');
+      return;
+    }
+
+    if (generationImageUrl && (sourceType === 'applyMaterials' || sourceType === 'upscale')) {
+      setAppliedRenderUrl(generationImageUrl);
+    }
+    setCurrentPage('apply');
+  };
+
   const renderPage = () => {
     switch(currentPage) {
       case 'concept':
@@ -225,7 +250,7 @@ const App: React.FC = () => {
       case 'contact':
         return <Contact />;
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentPage} />;
+        return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
       case 'material-admin':
         return <MaterialAdmin onNavigate={setCurrentPage} />;
       default:
