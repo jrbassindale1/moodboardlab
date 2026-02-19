@@ -655,6 +655,13 @@ IMPORTANT:
       setDetectedMaterials(detectedMats);
       // Select all materials by default
       setSelectedMaterialIds(new Set(detectedMats.map(mat => mat.id)));
+
+      // Track material detection in Google Analytics
+      window.gtag?.('event', 'generate_detection', {
+        event_category: 'generation',
+        event_label: 'materialIcon',
+        value: detectedMats.length,
+      });
     } catch (err) {
       console.error('Material detection error:', err);
       setDetectionError('Failed to analyse materials. Please try again.');
