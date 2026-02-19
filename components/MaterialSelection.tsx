@@ -6,7 +6,6 @@ import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api';
 import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
-import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
@@ -619,26 +618,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
     handleAdd(customMaterial, undefined, true);
 
-    // Generate an AI thumbnail in the background based on the description
-    generateMaterialIcon({
-      id: customMaterial.id,
-      name: customMaterial.name,
-      description: customMaterial.description,
-      tone: customMaterial.tone,
-      finish: customMaterial.finish,
-      keywords: customMaterial.keywords,
-    }).then(icon => {
-      const updated = boardRef.current.map(item =>
-        item.id === customMaterial.id
-          ? { ...item, customImage: icon.dataUri }
-          : item
-      );
-      onBoardChange(updated);
-      boardRef.current = updated;
-    }).catch(err => {
-      console.error('Failed to generate custom material thumbnail:', err);
-    });
-
     // Reset form
     setCustomMaterialMode(null);
     setCustomMaterialName('');
@@ -1204,28 +1183,6 @@ IMPORTANT:
                               const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
                               selectedMaterials.forEach((mat) => handleAdd(mat, undefined, true));
 
-                              // Generate AI thumbnails for detected materials in the background
-                              selectedMaterials.forEach((mat) => {
-                                generateMaterialIcon({
-                                  id: mat.id,
-                                  name: mat.name,
-                                  description: mat.description,
-                                  tone: mat.tone,
-                                  finish: mat.finish,
-                                  keywords: mat.keywords,
-                                }).then(icon => {
-                                  const updated = boardRef.current.map(item =>
-                                    item.id === mat.id
-                                      ? { ...item, customImage: icon.dataUri }
-                                      : item
-                                  );
-                                  onBoardChange(updated);
-                                  boardRef.current = updated;
-                                }).catch(err => {
-                                  console.error(`Failed to generate thumbnail for ${mat.name}:`, err);
-                                });
-                              });
-
                               setCustomMaterialMode('analyse');
                               setDetectionImage(null);
                               setDetectedMaterials([]);
@@ -1496,11 +1453,36 @@ IMPORTANT:
 
             <div className="space-y-4">
               <div className="flex items-start gap-4">
-                <div
-                  className="w-16 h-16 border border-arch-line flex-shrink-0"
-                  style={{ backgroundColor: recentlyAdded.tone }}
-                  aria-hidden
-                />
+                {/* Material Icon */}
+                {(() => {
+                  const { webpUrl, pngUrl } = getMaterialIconUrls(recentlyAdded);
+                  return (
+                    <div className="w-20 h-20 border border-arch-line overflow-hidden bg-arch-gray flex-shrink-0">
+                      {recentlyAdded.customImage ? (
+                        <img src={recentlyAdded.customImage} alt={recentlyAdded.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <picture>
+                          <source srcSet={webpUrl} type="image/webp" />
+                          <img
+                            src={pngUrl}
+                            alt={recentlyAdded.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const fallback = target.parentElement?.nextElementSibling as HTMLElement | null;
+                              if (fallback) fallback.style.display = 'block';
+                            }}
+                          />
+                        </picture>
+                      )}
+                      <div
+                        className="w-full h-full hidden"
+                        style={{ backgroundColor: recentlyAdded.tone }}
+                      />
+                    </div>
+                  );
+                })()}
                 <div className="flex-1">
                   <div className="font-display uppercase tracking-wide text-sm">{recentlyAdded.name}</div>
                   <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1">
