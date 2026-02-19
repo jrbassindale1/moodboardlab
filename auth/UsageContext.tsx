@@ -7,6 +7,11 @@ type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon
 // Generation types that don't count towards the user's free limit
 const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
 
+type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+
+// Generation types that don't count towards the user's free limit
+const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
+
 const FREE_MONTHLY_LIMIT = 10;
 const ANONYMOUS_MONTHLY_LIMIT = 10;
 const ANONYMOUS_QUOTA_KEY = 'moodboard_anon_quota_monthly_v1';
