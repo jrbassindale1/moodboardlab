@@ -926,6 +926,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
       onBriefingMaterialsKeyChange?.(getBriefingMaterialsKey(board));
       onBriefingInvalidatedMessageChange?.(null);
       setMaterialsAccordionOpen(false);
+      // Track sustainability briefing generation in Google Analytics
+      window.gtag?.('event', 'generate_briefing', {
+        event_category: 'generation',
+        event_label: 'sustainabilityBriefing',
+      });
       return true;
     } catch (err) {
       console.error('[Sustainability Briefing] Generation failed:', err);
@@ -1475,6 +1480,11 @@ ${JSON.stringify(proseContext)}`;
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
         void persistGeneration(newUrl, prompt);
+        // Track moodboard generation in Google Analytics
+        window.gtag?.('event', 'generate_image', {
+          event_category: 'generation',
+          event_label: 'moodboard',
+        });
         return true;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');

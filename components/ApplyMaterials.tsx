@@ -441,6 +441,13 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
       onAppliedRenderUrlChange(newUrl);
 
+      // Track apply materials generation in Google Analytics
+      const eventLabel = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
+      window.gtag?.('event', 'generate_image', {
+        event_category: 'generation',
+        event_label: eventLabel,
+      });
+
       // Update quota tracking based on auth status
       if (isAuthenticated) {
         // Refresh server-side usage count
