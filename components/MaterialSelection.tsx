@@ -117,6 +117,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [materialPalette, setMaterialPalette] = useState<MaterialOption[]>(MATERIAL_PALETTE);
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
+  const [isUsingFallbackPalette, setIsUsingFallbackPalette] = useState(false);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
@@ -129,14 +130,35 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
-  const supportsFreeColor = (material?: MaterialOption | null) =>
-    Boolean(material?.supportsColor && !material?.colorOptions?.length);
+  const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf|polyester)/i;
+  const NATURAL_METAL_FINISH_RE = /(galvan|exposed|stainless|anodis|mill|natural metal|weathering|corten)/i;
+  const getColorSelectionMode = (
+    material?: MaterialOption | null,
+    finishOption?: string | null
+  ): 'none' | 'curated' | 'ral' => {
+    if (!material) return 'none';
+    const hasCuratedColors = Boolean(material.colorOptions?.length);
+    const hasRalPalette = Boolean(material.supportsColor);
+
+    if (!hasCuratedColors && !hasRalPalette) return 'none';
+    if (!hasRalPalette) return 'curated';
+    if (!hasCuratedColors) return 'ral';
+
+    // Materials with both curated colors and RAL are finish-dependent.
+    const finish = (finishOption || '').trim();
+    if (!finish) return 'curated';
+    if (PAINTED_FINISH_RE.test(finish)) return 'ral';
+    if (NATURAL_METAL_FINISH_RE.test(finish)) return 'curated';
+    return 'curated';
+  };
+  const supportsFreeColor = (material?: MaterialOption | null, finishOption?: string | null) =>
+    getColorSelectionMode(material, finishOption) === 'ral';
   const hasSelectableOptions = (material?: MaterialOption | null) =>
     Boolean(
       material?.varietyOptions?.length ||
       material?.finishOptions?.length ||
       material?.colorOptions?.length ||
-      supportsFreeColor(material)
+      supportsFreeColor(material, selectedFinishOption)
     );
   const triggerAddFeedback = (sourceElement?: HTMLElement | null, tone = '#4b5563') => {
     if (typeof window === 'undefined') return;
@@ -210,9 +232,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         if (!mounted) return;
         if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
           setMaterialPalette(dbMaterials);
+          setIsUsingFallbackPalette(false);
+          return;
         }
+        setIsUsingFallbackPalette(true);
       } catch (error) {
         console.warn('Falling back to hardcoded material palette:', error);
+        setIsUsingFallbackPalette(true);
       }
     };
     void loadMaterials();
@@ -243,7 +269,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       'acoustic-panel': 'Acoustic Panels',
       'timber-slat': 'Timber Slats',
       'exposed-structure': 'Exposed Structure',
-      'joinery': 'Joinery',
+      'joinery': 'Internal Walls',
       'fixture': 'Fixtures & Fittings',
       'landscape': 'Landscaping',
       'insulation': 'Insulation',
@@ -295,7 +321,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       'acoustic-panel': 'Acoustic Panels',
       'timber-slat': 'Timber Slats',
       'exposed-structure': 'Exposed Structure',
-      'joinery': 'Joinery',
+      'joinery': 'Internal Walls',
       'fixture': 'Fixtures & Fittings',
       'landscape': 'Landscaping',
       'insulation': 'Insulation',
@@ -374,7 +400,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!tokens.length) return materialsByPath;
 
     const matchesSearch = (mat: MaterialOption) => {
-      const hasRalChoices = supportsFreeColor(mat);
+      const hasRalChoices = Boolean(mat.supportsColor);
       const haystack = [
         mat.name,
         mat.finish,
@@ -550,7 +576,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
     const requiresVariety = Boolean(recentlyAdded.varietyOptions?.length);
     const requiresFinish = Boolean(recentlyAdded.finishOptions?.length);
-    const requiresColor = Boolean(recentlyAdded.colorOptions?.length || supportsFreeColor(recentlyAdded));
+    const requiresColor = getColorSelectionMode(recentlyAdded, finishOptionToUse) !== 'none';
 
     const isReady =
       (!requiresVariety || Boolean(varietyToUse)) &&
@@ -706,7 +732,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 2. finish: The finish or surface treatment, INCLUDING the color in the description (e.g., "Oiled oak planks in warm honey tone", "Polished concrete slab in light grey")
 3. description: A detailed 1-2 sentence description of the material and its characteristics
 4. tone: A hex color code representing the EXACT dominant color of the material as seen in the photo (e.g., "#d8b185" for natural oak, "#c5c0b5" for light grey concrete). CRITICAL: Analyze the actual color in the image carefully.
-5. category: One of these categories: floor, structure, finish, wall-internal, external, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, joinery, fixture, landscape, insulation, door, balustrade, external-ground
+5. category: One of these categories: floor, structure, finish, wall-internal, external, ceiling, window, roof, paint-wall, paint-ceiling, plaster, microcement, timber-panel, tile, wallpaper, acoustic-panel, timber-slat, fixture, landscape, insulation, door, balustrade, external-ground
 6. keywords: An array of 3-5 relevant keywords describing the material (e.g., ["timber", "flooring", "oak", "natural"])
 7. carbonIntensity: Either "low", "medium", or "high" based on the material's embodied carbon (e.g., timber is "low", zinc cladding is "medium", concrete is "high")
 
@@ -842,11 +868,13 @@ IMPORTANT:
   const hasColorOptions = Boolean(recentlyAdded?.colorOptions?.length);
   const hasFinishOptions = Boolean(recentlyAdded?.finishOptions?.length);
   const hasVarietyOptions = Boolean(recentlyAdded?.varietyOptions?.length);
-  const hasFreeColor = supportsFreeColor(recentlyAdded);
+  const colorSelectionMode = getColorSelectionMode(recentlyAdded, selectedFinishOption);
+  const hasFreeColor = colorSelectionMode === 'ral';
+  const hasCuratedColourStep = colorSelectionMode === 'curated' && hasColorOptions;
   // If variety options exist but none selected, we need to pick variety first
   const needsVarietySelection = hasVarietyOptions && !selectedVariety;
   const needsFinishSelection = hasFinishOptions && !selectedFinishOption;
-  const hasColourStep = hasColorOptions || hasFreeColor;
+  const hasColourStep = hasCuratedColourStep || hasFreeColor;
   const canSelectFinish = !needsVarietySelection;
   const canSelectColour = !needsVarietySelection && (!hasFinishOptions || !needsFinishSelection);
   const needsColourSelection = hasColourStep && !selectedColorOption;
@@ -861,6 +889,11 @@ IMPORTANT:
             {/* Categories */}
             <div className="space-y-1">
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
+              {isUsingFallbackPalette && (
+                <p className="mb-3 border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-mono uppercase tracking-wide text-amber-800">
+                  Live database unavailable. Showing fallback materials.
+                </p>
+              )}
               {CATEGORIES.map((section) => (
                 <div key={section.id} className="space-y-1">
                   <button
@@ -1326,7 +1359,7 @@ IMPORTANT:
             ) : (
               <>
                 {/* Product Grid */}
-                <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
+                <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
                   {sortedMaterials.map((mat) => {
                     const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
                     return (
@@ -1574,7 +1607,7 @@ IMPORTANT:
               )}
 
               {/* Curated color options - step 3 */}
-              {hasColorOptions && (
+              {hasCuratedColourStep && (
                 <div className="border-t border-arch-line pt-4">
                   <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
                     Colour Options

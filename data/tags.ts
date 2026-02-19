@@ -67,7 +67,7 @@ export const OLD_TO_NEW_CATEGORY_MAPPING: Record<
     tags: [],
   },
   'Internal>Joinery & Furniture': {
-    newPath: 'Interiors>Joinery',
+    newPath: 'Interiors>Walls',
     tags: [],
   },
 };

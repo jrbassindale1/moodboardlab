@@ -5,6 +5,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
+import type { PatchOperation } from '@azure/cosmos';
 import {
   getContainer,
   getUsageDocumentId,
@@ -96,7 +97,7 @@ export async function incrementUsage(
 
   try {
     // Atomic patch when the document already exists
-    const patchOps: Array<{ op: string; path: string; value: string | number }> = [
+    const patchOps: PatchOperation[] = [
       {
         op: 'incr',
         path: `/generationCounts/${generationType}`,
@@ -150,7 +151,7 @@ export async function incrementUsage(
       throw error;
     }
     // Another request created the document; retry the atomic patch.
-    const retryOps: Array<{ op: string; path: string; value: string | number }> = [
+    const retryOps: PatchOperation[] = [
       {
         op: 'incr',
         path: `/generationCounts/${generationType}`,

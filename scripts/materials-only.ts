@@ -743,7 +743,7 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     description: 'Prefinished oak-faced panels with integrated acoustic fleece; ideal for walls and joinery fronts.',
     keywords: ['timber', 'panel', 'acoustic'],
     category: 'timber-panel',
-    treePaths: ['Internal>Timber Panels', 'Internal>Joinery & Furniture'],
+    treePaths: ['Internal>Timber Panels'],
     carbonIntensity: 'low'
   },
   {
@@ -1414,13 +1414,13 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
   },
   {
     id: 'joinery-built-in',
-    name: 'Built-in Joinery',
+    name: 'Built-in Joinery (Birch Plywood)',
     tone: '#cfa87b',
     finish: 'Birch plywood joinery',
     description: 'Birch plywood joinery elements with clear matte lacquer; integrated shelving and benches.',
     keywords: ['joinery', 'furniture', 'birch'],
-    category: 'joinery',
-    treePaths: ['Internal>Joinery & Furniture'],
+    category: 'wall-internal',
+    treePaths: ['Internal>Walls'],
     carbonIntensity: 'low'
   },
   {

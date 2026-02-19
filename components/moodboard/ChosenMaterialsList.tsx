@@ -51,7 +51,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
             onClick={() => onNavigate?.('materials')}
             className="px-3 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
           >
-            Edit materials
+            Back to materials list
           </button>
         </div>
       </div>

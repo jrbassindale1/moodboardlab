@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "verify:functions": "bash scripts/verify-functions.sh",
     "typecheck:functions": "tsc -p azure-functions/tsconfig.json --noEmit",
+    "sync:functions": "bash scripts/sync-functions-to-backend.sh",
+    "sync:functions:dry": "bash scripts/sync-functions-to-backend.sh --dry-run",
     "generate-icons": "tsx scripts/generateIconsToPublic.ts",
     "optimize-icons": "tsx scripts/optimizeIcons.ts",
     "export-cosmos-material-model": "tsx scripts/export-cosmos-material-model.ts",
