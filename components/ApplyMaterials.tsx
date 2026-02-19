@@ -28,6 +28,28 @@ const dataUrlSizeBytes = (dataUrl: string) => {
   return Math.floor((base64.length * 3) / 4) - padding;
 };
 
+const isDataUri = (value: string) => value.startsWith('data:');
+
+const blobToDataUrl = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+const resolveImageSourceToDataUrl = async (source: string): Promise<string> => {
+  if (!source) throw new Error('Missing base image source.');
+  if (isDataUri(source)) return source;
+
+  const response = await fetch(source);
+  if (!response.ok) {
+    throw new Error(`Could not load base image (status ${response.status}).`);
+  }
+  const blob = await response.blob();
+  return blobToDataUrl(blob);
+};
+
 const downscaleImage = (
   dataUrl: string,
   targetMime = RESIZE_MIME,
@@ -296,7 +318,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     baseImageDataUrl?: string;
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
-  }) => {
+  }): Promise<boolean> => {
     // Check quota - server-side for authenticated users, shared local quota for anonymous users
     if (isAuthenticated) {
       // Refresh and check server-side quota
@@ -306,7 +328,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           const quotaCheck = await checkQuota(token);
           if (!quotaCheck.canGenerate) {
             setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
-            return;
+            return false;
           }
         }
       } catch (err) {
@@ -316,22 +338,22 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     } else {
       if (!canGenerate) {
         setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
-        return;
+        return false;
       }
     }
 
     if (!board.length) {
       setError('Add materials to the moodboard first.');
-      return;
+      return false;
     }
     if (renderMaterials.length === 0) {
       setError('All materials are excluded from the render. Uncheck at least one material.');
-      return;
+      return false;
     }
     const isEditingRender = Boolean(options?.editPrompt && options?.baseImageDataUrl);
     if (!isEditingRender && uploadedImages.length === 0) {
       setError('Upload at least one base image first.');
-      return;
+      return false;
     }
 
     setStatus('render');
@@ -394,10 +416,21 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
     try {
+      let baseImageDataUrl: string | null = options?.baseImageDataUrl ?? null;
+      if (isEditingRender && baseImageDataUrl && !isDataUri(baseImageDataUrl)) {
+        try {
+          baseImageDataUrl = await resolveImageSourceToDataUrl(baseImageDataUrl);
+        } catch (loadErr) {
+          const msg =
+            loadErr instanceof Error ? loadErr.message : 'Could not load the selected render for editing.';
+          throw new Error(`${msg} Try downloading and re-uploading the image.`);
+        }
+      }
+
       const imageSize = options?.imageSize ?? '1K';
       let aspectRatio = '1:1';
-      if (isEditingRender && options?.baseImageDataUrl) {
-        const inferredRatio = await inferAspectRatioFromDataUrl(options.baseImageDataUrl);
+      if (isEditingRender && baseImageDataUrl) {
+        const inferredRatio = await inferAspectRatioFromDataUrl(baseImageDataUrl);
         if (inferredRatio) {
           aspectRatio = inferredRatio;
         }
@@ -413,8 +446,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           {
             parts: [
               { text: prompt },
-              ...(isEditingRender && options?.baseImageDataUrl
-                ? [dataUrlToInlineData(options.baseImageDataUrl)]
+              ...(isEditingRender && baseImageDataUrl
+                ? [dataUrlToInlineData(baseImageDataUrl)]
                 : uploadedImages.map((img) => dataUrlToInlineData(img.dataUrl)))
             ]
           }
@@ -467,8 +500,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
 
       void persistGeneration(newUrl, prompt);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+      return false;
     } finally {
       setStatus('idle');
       setRenderingMode(null);
@@ -489,13 +524,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError(`Edit limit reached (${MAX_EDIT_TURNS} edits). Generate a new moodboard to get more edits.`);
       return;
     }
-    await runApplyRender({
+    const wasUpdated = await runApplyRender({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
       renderMode: 'edit'
     });
-    setEditTurnCount((prev) => prev + 1);
-    setAppliedEditPrompt('');
+    if (wasUpdated) {
+      setEditTurnCount((prev) => prev + 1);
+      setAppliedEditPrompt('');
+    }
   };
 
 

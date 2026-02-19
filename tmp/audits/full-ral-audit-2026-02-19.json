@@ -1,0 +1,959 @@
+{
+  "generatedAt": "2026-02-19T20:23:58.962Z",
+  "asOfDate": "2026-02-19",
+  "totals": {
+    "materials": 209,
+    "fullRal": 67,
+    "likelyCorrect": 37,
+    "likelyQuestionable": 19,
+    "needsManualReview": 11
+  },
+  "fullRalMaterials": [
+    {
+      "id": "polished-concrete",
+      "name": "Polished Concrete",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Polished concrete slab"
+    },
+    {
+      "id": "lino-floor",
+      "name": "Linoleum Flooring",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Natural lino sheet"
+    },
+    {
+      "id": "recycled-terrazzo",
+      "name": "Recycled Plastic Terrazzo",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Composite terrazzo with plastic fragments"
+    },
+    {
+      "id": "grey-carpet",
+      "name": "Grey Carpet Tiles",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Modular low-pile tiles"
+    },
+    {
+      "id": "vinyl-planks",
+      "name": "Vinyl Planks (Recycled)",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Recycled vinyl planks"
+    },
+    {
+      "id": "resin-flooring",
+      "name": "Resin Flooring",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Seamless epoxy resin"
+    },
+    {
+      "id": "microcement-floor",
+      "name": "Microcement Flooring",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Seamless mineral microcement"
+    },
+    {
+      "id": "ceramic-tiles",
+      "name": "Ceramic Tiles",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Glazed ceramic tiles"
+    },
+    {
+      "id": "epoxy-flooring",
+      "name": "Epoxy Flooring",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Industrial epoxy coating"
+    },
+    {
+      "id": "engineered-oak-floor",
+      "name": "Engineered Oak Flooring",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Engineered oak planks"
+    },
+    {
+      "id": "linoleum-tiles",
+      "name": "Linoleum Tiles",
+      "category": "floor",
+      "finishFamily": null,
+      "finish": "Modular linoleum tiles"
+    },
+    {
+      "id": "aluminum-frame",
+      "name": "Aluminum Window Frame",
+      "category": "window",
+      "finishFamily": "metal-anodised",
+      "finish": "Thermally broken aluminum"
+    },
+    {
+      "id": "recycled-aluminum-frame",
+      "name": "Recycled Aluminum Frame",
+      "category": "window",
+      "finishFamily": "metal-anodised",
+      "finish": "High-recycled-content aluminum"
+    },
+    {
+      "id": "steel-window-frame",
+      "name": "Steel Window Frame",
+      "category": "window",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Slim steel frames"
+    },
+    {
+      "id": "upvc-window-frame",
+      "name": "uPVC Window Frame",
+      "category": "window",
+      "finishFamily": null,
+      "finish": "Multi-chamber uPVC"
+    },
+    {
+      "id": "mineral-microcement",
+      "name": "Mineral Microcement",
+      "category": "microcement",
+      "finishFamily": null,
+      "finish": "Seamless mineral microcement"
+    },
+    {
+      "id": "standard-wall-paint",
+      "name": "Paint – Standard (Walls)",
+      "category": "paint-wall",
+      "finishFamily": "paint-matte",
+      "finish": "Low-VOC emulsion"
+    },
+    {
+      "id": "custom-wall-paint",
+      "name": "Paint – Custom Colour (Walls)",
+      "category": "paint-wall",
+      "finishFamily": "paint-matte",
+      "finish": "Custom emulsion colour"
+    },
+    {
+      "id": "standard-ceiling-paint",
+      "name": "Paint – Standard (Ceilings)",
+      "category": "paint-ceiling",
+      "finishFamily": "paint-matte",
+      "finish": "Breathable ceiling paint"
+    },
+    {
+      "id": "custom-ceiling-paint",
+      "name": "Paint – Custom Colour (Ceilings)",
+      "category": "paint-ceiling",
+      "finishFamily": "paint-matte",
+      "finish": "Custom ceiling paint colour"
+    },
+    {
+      "id": "perforated-metal-ceiling",
+      "name": "Perforated Metal Ceiling",
+      "category": "ceiling",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Perforated metal with acoustic backing"
+    },
+    {
+      "id": "gypsum-ceiling",
+      "name": "Gypsum Ceiling",
+      "category": "ceiling",
+      "finishFamily": "paint-matte",
+      "finish": "Flush gypsum board"
+    },
+    {
+      "id": "open-grid-ceiling",
+      "name": "Open Grid Ceiling",
+      "category": "ceiling",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Open cell metal grid"
+    },
+    {
+      "id": "plasterboard-ceiling",
+      "name": "Plasterboard Ceiling",
+      "category": "ceiling",
+      "finishFamily": "paint-matte",
+      "finish": "Smooth plasterboard"
+    },
+    {
+      "id": "metal-mesh-ceiling",
+      "name": "Metal Mesh Ceiling",
+      "category": "ceiling",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Expanded metal mesh"
+    },
+    {
+      "id": "acoustic-tiles-ceiling",
+      "name": "Acoustic Ceiling Tiles",
+      "category": "ceiling",
+      "finishFamily": null,
+      "finish": "Mineral fiber acoustic tiles"
+    },
+    {
+      "id": "exposed-concrete-soffit",
+      "name": "Exposed Concrete Soffit",
+      "category": "ceiling",
+      "finishFamily": null,
+      "finish": "Sealed exposed concrete soffit"
+    },
+    {
+      "id": "perforated-metal-soffit",
+      "name": "Perforated Metal Soffit",
+      "category": "ceiling",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Micro-perforated metal panels"
+    },
+    {
+      "id": "bio-fibre-panels",
+      "name": "Bio-Based Fibre Panels",
+      "category": "finish",
+      "finishFamily": null,
+      "finish": "Hemp/flax/agri-fibre acoustic panels"
+    },
+    {
+      "id": "porcelain-tiles",
+      "name": "Large-Format Tiles",
+      "category": "tile",
+      "finishFamily": null,
+      "finish": "Large-format porcelain tiles"
+    },
+    {
+      "id": "metal-mesh-panels",
+      "name": "Metal Mesh Panels",
+      "category": "finish",
+      "finishFamily": "metal-brushed",
+      "finish": "Woven or expanded metal mesh"
+    },
+    {
+      "id": "acoustic-plaster",
+      "name": "Acoustic Plaster",
+      "category": "finish",
+      "finishFamily": null,
+      "finish": "Seamless acoustic plaster"
+    },
+    {
+      "id": "secondary-steelwork",
+      "name": "Secondary Steelwork",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Painted secondary framing"
+    },
+    {
+      "id": "composite-metal-deck-slabs",
+      "name": "Composite Metal Deck Slabs",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Steel deck + concrete topping"
+    },
+    {
+      "id": "secondary-steel-infill-beams",
+      "name": "Secondary Steel Beams (Infill)",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Painted infill beams"
+    },
+    {
+      "id": "steel-purlins",
+      "name": "Steel Purlins (Z or C)",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Galvanized Z/C sections"
+    },
+    {
+      "id": "lightweight-space-frame-infill",
+      "name": "Lightweight Space Frame Infill Members",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Lightweight steel space frame"
+    },
+    {
+      "id": "secondary-lintels",
+      "name": "Secondary Lintels",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Steel or precast lintels"
+    },
+    {
+      "id": "cross-bracing-steel",
+      "name": "Cross Bracing (Steel Rods/Flats)",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Steel rods or flats"
+    },
+    {
+      "id": "steel-stair-stringers",
+      "name": "Steel Stair Stringers",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Painted steel stringers"
+    },
+    {
+      "id": "facade-support-rails",
+      "name": "Façade Support Rails",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Aluminum or galvanized rails"
+    },
+    {
+      "id": "balcony-support-beams",
+      "name": "Balcony Support Beams",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Steel balcony beams"
+    },
+    {
+      "id": "steel-canopy-frames",
+      "name": "Steel Canopy Frames",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Painted steel canopy"
+    },
+    {
+      "id": "tension-rods-tie-members",
+      "name": "Tension Rods and Tie Members",
+      "category": "structure",
+      "finishFamily": null,
+      "finish": "Stainless or galvanized rods"
+    },
+    {
+      "id": "brass-fixtures",
+      "name": "Brass Fixtures & Fittings",
+      "category": "fixture",
+      "finishFamily": null,
+      "finish": "Satin brass fixtures"
+    },
+    {
+      "id": "aluminium-standing-seam-roof",
+      "name": "Aluminium Standing Seam Roof",
+      "category": "roof",
+      "finishFamily": "ral",
+      "finish": "Prefinished aluminium standing seam — select RAL colour"
+    },
+    {
+      "id": "cool-roof",
+      "name": "Cool Roof Membrane",
+      "category": "roof",
+      "finishFamily": null,
+      "finish": "High albedo membrane"
+    },
+    {
+      "id": "metal-tiles-roof",
+      "name": "Metal Tiles",
+      "category": "roof",
+      "finishFamily": "ral",
+      "finish": "Profiled metal tiles"
+    },
+    {
+      "id": "epdm-membrane",
+      "name": "EPDM Membrane",
+      "category": "roof",
+      "finishFamily": null,
+      "finish": "Single-ply EPDM"
+    },
+    {
+      "id": "tpo-membrane",
+      "name": "TPO Membrane",
+      "category": "roof",
+      "finishFamily": null,
+      "finish": "White TPO single-ply"
+    },
+    {
+      "id": "built-up-roofing",
+      "name": "Built-Up Roofing",
+      "category": "roof",
+      "finishFamily": null,
+      "finish": "Bituminous built-up layers"
+    },
+    {
+      "id": "polycarbonate-roof",
+      "name": "Polycarbonate Roof Panels",
+      "category": "roof",
+      "finishFamily": null,
+      "finish": "Multi-wall polycarbonate"
+    },
+    {
+      "id": "steel-door",
+      "name": "Steel Doors",
+      "category": "door",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Powder-coated steel"
+    },
+    {
+      "id": "aluminum-door",
+      "name": "Aluminum Doors",
+      "category": "door",
+      "finishFamily": "metal-anodised",
+      "finish": "Anodized or powder-coated aluminum"
+    },
+    {
+      "id": "steel-railing",
+      "name": "Steel Railing",
+      "category": "balustrade",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Powder-coated steel"
+    },
+    {
+      "id": "mesh-railing",
+      "name": "Mesh Railing",
+      "category": "balustrade",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Woven or expanded metal mesh"
+    },
+    {
+      "id": "precast-concrete-panels",
+      "name": "Precast Concrete Panels",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "Factory-made concrete panels"
+    },
+    {
+      "id": "hemp-lime-wall",
+      "name": "Hemp-Lime Wall",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "Cast-in-place hemp-lime"
+    },
+    {
+      "id": "insulated-render-system",
+      "name": "Insulated Render (Sto-type)",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "Insulated render system — select RAL colour"
+    },
+    {
+      "id": "living-green-wall",
+      "name": "Living Green Wall",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "Modular planted façade"
+    },
+    {
+      "id": "aluminium-cladding",
+      "name": "Aluminium Cladding",
+      "category": "external",
+      "finishFamily": "ral",
+      "finish": "Prefinished aluminium panels — select RAL colour"
+    },
+    {
+      "id": "insulated-metal-panels",
+      "name": "Insulated Metal Panels",
+      "category": "external",
+      "finishFamily": "ral",
+      "finish": "Factory-assembled insulated metal panels"
+    },
+    {
+      "id": "fibre-cement-panels",
+      "name": "Fibre Cement Panels",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "Fibre cement rainscreen panels"
+    },
+    {
+      "id": "metal-composite-panels",
+      "name": "Metal Composite Panels",
+      "category": "external",
+      "finishFamily": "ral",
+      "finish": "Aluminium composite panels"
+    },
+    {
+      "id": "etfe-tensile-facade",
+      "name": "ETFE / Tensile Façade System",
+      "category": "external",
+      "finishFamily": null,
+      "finish": "ETFE cushions or tensile membrane"
+    },
+    {
+      "id": "metal-chair",
+      "name": "Metal Chair",
+      "category": "fixture",
+      "finishFamily": "metal-powder-coat",
+      "finish": "Powder-coated steel"
+    },
+    {
+      "id": "modular-shelving",
+      "name": "Modular Shelving",
+      "category": "fixture",
+      "finishFamily": null,
+      "finish": "Powder-coated or timber"
+    }
+  ],
+  "judgement": {
+    "likelyCorrect": [
+      {
+        "id": "lino-floor",
+        "name": "Linoleum Flooring",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Natural lino sheet"
+      },
+      {
+        "id": "microcement-floor",
+        "name": "Microcement Flooring",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Seamless mineral microcement"
+      },
+      {
+        "id": "linoleum-tiles",
+        "name": "Linoleum Tiles",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Modular linoleum tiles"
+      },
+      {
+        "id": "aluminum-frame",
+        "name": "Aluminum Window Frame",
+        "category": "window",
+        "finishFamily": "metal-anodised",
+        "finish": "Thermally broken aluminum"
+      },
+      {
+        "id": "recycled-aluminum-frame",
+        "name": "Recycled Aluminum Frame",
+        "category": "window",
+        "finishFamily": "metal-anodised",
+        "finish": "High-recycled-content aluminum"
+      },
+      {
+        "id": "steel-window-frame",
+        "name": "Steel Window Frame",
+        "category": "window",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Slim steel frames"
+      },
+      {
+        "id": "mineral-microcement",
+        "name": "Mineral Microcement",
+        "category": "microcement",
+        "finishFamily": null,
+        "finish": "Seamless mineral microcement"
+      },
+      {
+        "id": "standard-wall-paint",
+        "name": "Paint – Standard (Walls)",
+        "category": "paint-wall",
+        "finishFamily": "paint-matte",
+        "finish": "Low-VOC emulsion"
+      },
+      {
+        "id": "custom-wall-paint",
+        "name": "Paint – Custom Colour (Walls)",
+        "category": "paint-wall",
+        "finishFamily": "paint-matte",
+        "finish": "Custom emulsion colour"
+      },
+      {
+        "id": "standard-ceiling-paint",
+        "name": "Paint – Standard (Ceilings)",
+        "category": "paint-ceiling",
+        "finishFamily": "paint-matte",
+        "finish": "Breathable ceiling paint"
+      },
+      {
+        "id": "custom-ceiling-paint",
+        "name": "Paint – Custom Colour (Ceilings)",
+        "category": "paint-ceiling",
+        "finishFamily": "paint-matte",
+        "finish": "Custom ceiling paint colour"
+      },
+      {
+        "id": "perforated-metal-ceiling",
+        "name": "Perforated Metal Ceiling",
+        "category": "ceiling",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Perforated metal with acoustic backing"
+      },
+      {
+        "id": "gypsum-ceiling",
+        "name": "Gypsum Ceiling",
+        "category": "ceiling",
+        "finishFamily": "paint-matte",
+        "finish": "Flush gypsum board"
+      },
+      {
+        "id": "open-grid-ceiling",
+        "name": "Open Grid Ceiling",
+        "category": "ceiling",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Open cell metal grid"
+      },
+      {
+        "id": "plasterboard-ceiling",
+        "name": "Plasterboard Ceiling",
+        "category": "ceiling",
+        "finishFamily": "paint-matte",
+        "finish": "Smooth plasterboard"
+      },
+      {
+        "id": "metal-mesh-ceiling",
+        "name": "Metal Mesh Ceiling",
+        "category": "ceiling",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Expanded metal mesh"
+      },
+      {
+        "id": "acoustic-tiles-ceiling",
+        "name": "Acoustic Ceiling Tiles",
+        "category": "ceiling",
+        "finishFamily": null,
+        "finish": "Mineral fiber acoustic tiles"
+      },
+      {
+        "id": "perforated-metal-soffit",
+        "name": "Perforated Metal Soffit",
+        "category": "ceiling",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Micro-perforated metal panels"
+      },
+      {
+        "id": "bio-fibre-panels",
+        "name": "Bio-Based Fibre Panels",
+        "category": "finish",
+        "finishFamily": null,
+        "finish": "Hemp/flax/agri-fibre acoustic panels"
+      },
+      {
+        "id": "metal-mesh-panels",
+        "name": "Metal Mesh Panels",
+        "category": "finish",
+        "finishFamily": "metal-brushed",
+        "finish": "Woven or expanded metal mesh"
+      },
+      {
+        "id": "secondary-steelwork",
+        "name": "Secondary Steelwork",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Painted secondary framing"
+      },
+      {
+        "id": "secondary-steel-infill-beams",
+        "name": "Secondary Steel Beams (Infill)",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Painted infill beams"
+      },
+      {
+        "id": "cross-bracing-steel",
+        "name": "Cross Bracing (Steel Rods/Flats)",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Steel rods or flats"
+      },
+      {
+        "id": "steel-stair-stringers",
+        "name": "Steel Stair Stringers",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Painted steel stringers"
+      },
+      {
+        "id": "steel-canopy-frames",
+        "name": "Steel Canopy Frames",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Painted steel canopy"
+      },
+      {
+        "id": "aluminium-standing-seam-roof",
+        "name": "Aluminium Standing Seam Roof",
+        "category": "roof",
+        "finishFamily": "ral",
+        "finish": "Prefinished aluminium standing seam — select RAL colour"
+      },
+      {
+        "id": "metal-tiles-roof",
+        "name": "Metal Tiles",
+        "category": "roof",
+        "finishFamily": "ral",
+        "finish": "Profiled metal tiles"
+      },
+      {
+        "id": "steel-door",
+        "name": "Steel Doors",
+        "category": "door",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Powder-coated steel"
+      },
+      {
+        "id": "aluminum-door",
+        "name": "Aluminum Doors",
+        "category": "door",
+        "finishFamily": "metal-anodised",
+        "finish": "Anodized or powder-coated aluminum"
+      },
+      {
+        "id": "steel-railing",
+        "name": "Steel Railing",
+        "category": "balustrade",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Powder-coated steel"
+      },
+      {
+        "id": "mesh-railing",
+        "name": "Mesh Railing",
+        "category": "balustrade",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Woven or expanded metal mesh"
+      },
+      {
+        "id": "insulated-render-system",
+        "name": "Insulated Render (Sto-type)",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "Insulated render system — select RAL colour"
+      },
+      {
+        "id": "aluminium-cladding",
+        "name": "Aluminium Cladding",
+        "category": "external",
+        "finishFamily": "ral",
+        "finish": "Prefinished aluminium panels — select RAL colour"
+      },
+      {
+        "id": "insulated-metal-panels",
+        "name": "Insulated Metal Panels",
+        "category": "external",
+        "finishFamily": "ral",
+        "finish": "Factory-assembled insulated metal panels"
+      },
+      {
+        "id": "metal-composite-panels",
+        "name": "Metal Composite Panels",
+        "category": "external",
+        "finishFamily": "ral",
+        "finish": "Aluminium composite panels"
+      },
+      {
+        "id": "metal-chair",
+        "name": "Metal Chair",
+        "category": "fixture",
+        "finishFamily": "metal-powder-coat",
+        "finish": "Powder-coated steel"
+      },
+      {
+        "id": "modular-shelving",
+        "name": "Modular Shelving",
+        "category": "fixture",
+        "finishFamily": null,
+        "finish": "Powder-coated or timber"
+      }
+    ],
+    "likelyQuestionable": [
+      {
+        "id": "polished-concrete",
+        "name": "Polished Concrete",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Polished concrete slab"
+      },
+      {
+        "id": "recycled-terrazzo",
+        "name": "Recycled Plastic Terrazzo",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Composite terrazzo with plastic fragments"
+      },
+      {
+        "id": "grey-carpet",
+        "name": "Grey Carpet Tiles",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Modular low-pile tiles"
+      },
+      {
+        "id": "vinyl-planks",
+        "name": "Vinyl Planks (Recycled)",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Recycled vinyl planks"
+      },
+      {
+        "id": "ceramic-tiles",
+        "name": "Ceramic Tiles",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Glazed ceramic tiles"
+      },
+      {
+        "id": "exposed-concrete-soffit",
+        "name": "Exposed Concrete Soffit",
+        "category": "ceiling",
+        "finishFamily": null,
+        "finish": "Sealed exposed concrete soffit"
+      },
+      {
+        "id": "porcelain-tiles",
+        "name": "Large-Format Tiles",
+        "category": "tile",
+        "finishFamily": null,
+        "finish": "Large-format porcelain tiles"
+      },
+      {
+        "id": "acoustic-plaster",
+        "name": "Acoustic Plaster",
+        "category": "finish",
+        "finishFamily": null,
+        "finish": "Seamless acoustic plaster"
+      },
+      {
+        "id": "composite-metal-deck-slabs",
+        "name": "Composite Metal Deck Slabs",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Steel deck + concrete topping"
+      },
+      {
+        "id": "cool-roof",
+        "name": "Cool Roof Membrane",
+        "category": "roof",
+        "finishFamily": null,
+        "finish": "High albedo membrane"
+      },
+      {
+        "id": "epdm-membrane",
+        "name": "EPDM Membrane",
+        "category": "roof",
+        "finishFamily": null,
+        "finish": "Single-ply EPDM"
+      },
+      {
+        "id": "tpo-membrane",
+        "name": "TPO Membrane",
+        "category": "roof",
+        "finishFamily": null,
+        "finish": "White TPO single-ply"
+      },
+      {
+        "id": "built-up-roofing",
+        "name": "Built-Up Roofing",
+        "category": "roof",
+        "finishFamily": null,
+        "finish": "Bituminous built-up layers"
+      },
+      {
+        "id": "polycarbonate-roof",
+        "name": "Polycarbonate Roof Panels",
+        "category": "roof",
+        "finishFamily": null,
+        "finish": "Multi-wall polycarbonate"
+      },
+      {
+        "id": "precast-concrete-panels",
+        "name": "Precast Concrete Panels",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "Factory-made concrete panels"
+      },
+      {
+        "id": "hemp-lime-wall",
+        "name": "Hemp-Lime Wall",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "Cast-in-place hemp-lime"
+      },
+      {
+        "id": "living-green-wall",
+        "name": "Living Green Wall",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "Modular planted façade"
+      },
+      {
+        "id": "fibre-cement-panels",
+        "name": "Fibre Cement Panels",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "Fibre cement rainscreen panels"
+      },
+      {
+        "id": "etfe-tensile-facade",
+        "name": "ETFE / Tensile Façade System",
+        "category": "external",
+        "finishFamily": null,
+        "finish": "ETFE cushions or tensile membrane"
+      }
+    ],
+    "needsManualReview": [
+      {
+        "id": "resin-flooring",
+        "name": "Resin Flooring",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Seamless epoxy resin"
+      },
+      {
+        "id": "epoxy-flooring",
+        "name": "Epoxy Flooring",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Industrial epoxy coating"
+      },
+      {
+        "id": "engineered-oak-floor",
+        "name": "Engineered Oak Flooring",
+        "category": "floor",
+        "finishFamily": null,
+        "finish": "Engineered oak planks"
+      },
+      {
+        "id": "upvc-window-frame",
+        "name": "uPVC Window Frame",
+        "category": "window",
+        "finishFamily": null,
+        "finish": "Multi-chamber uPVC"
+      },
+      {
+        "id": "steel-purlins",
+        "name": "Steel Purlins (Z or C)",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Galvanized Z/C sections"
+      },
+      {
+        "id": "lightweight-space-frame-infill",
+        "name": "Lightweight Space Frame Infill Members",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Lightweight steel space frame"
+      },
+      {
+        "id": "secondary-lintels",
+        "name": "Secondary Lintels",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Steel or precast lintels"
+      },
+      {
+        "id": "facade-support-rails",
+        "name": "Façade Support Rails",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Aluminum or galvanized rails"
+      },
+      {
+        "id": "balcony-support-beams",
+        "name": "Balcony Support Beams",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Steel balcony beams"
+      },
+      {
+        "id": "tension-rods-tie-members",
+        "name": "Tension Rods and Tie Members",
+        "category": "structure",
+        "finishFamily": null,
+        "finish": "Stainless or galvanized rods"
+      },
+      {
+        "id": "brass-fixtures",
+        "name": "Brass Fixtures & Fittings",
+        "category": "fixture",
+        "finishFamily": null,
+        "finish": "Satin brass fixtures"
+      }
+    ]
+  }
+}

@@ -24,8 +24,21 @@ View your app in AI Studio: https://ai.studio/apps/drive/1uRA61_R6tcEbgBgx3XIO5A
 - `main` deploys to production.
 - `staging` deploys to the Azure Static Web Apps staging environment.
 
-Before copying/deploying backend function changes, run:
+Before syncing/deploying backend function changes, run:
 `npm run verify:functions`
+
+If your real Azure Functions deployment lives in `../moodboardlab-functions`, sync from this repo with:
+`npm run sync:functions`
+
+Optional:
+- Dry run only: `npm run sync:functions:dry`
+- Custom backend path: `FUNCTIONS_REPO_PATH=/path/to/backend-repo npm run sync:functions`
+
+Notes:
+- The sync command updates `src/functions` and `src/shared` in the backend repo.
+- It intentionally does not overwrite `src/index.ts` unless you run:
+  `bash scripts/sync-functions-to-backend.sh --include-index`
+- After syncing, it runs `npm run build` in the backend repo so config/version mismatches show up immediately.
 
 Basic flow:
 
