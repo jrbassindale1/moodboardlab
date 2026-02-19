@@ -117,6 +117,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [materialPalette, setMaterialPalette] = useState<MaterialOption[]>(MATERIAL_PALETTE);
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
+  const [isUsingFallbackPalette, setIsUsingFallbackPalette] = useState(false);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
@@ -231,9 +232,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         if (!mounted) return;
         if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
           setMaterialPalette(dbMaterials);
+          setIsUsingFallbackPalette(false);
+          return;
         }
+        setIsUsingFallbackPalette(true);
       } catch (error) {
         console.warn('Falling back to hardcoded material palette:', error);
+        setIsUsingFallbackPalette(true);
       }
     };
     void loadMaterials();
@@ -884,6 +889,11 @@ IMPORTANT:
             {/* Categories */}
             <div className="space-y-1">
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
+              {isUsingFallbackPalette && (
+                <p className="mb-3 border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-mono uppercase tracking-wide text-amber-800">
+                  Live database unavailable. Showing fallback materials.
+                </p>
+              )}
               {CATEGORIES.map((section) => (
                 <div key={section.id} className="space-y-1">
                   <button
