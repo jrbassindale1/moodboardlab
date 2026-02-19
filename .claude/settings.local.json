@@ -19,9 +19,8 @@
       "Bash(npm uninstall:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Google Analytics and make material icons free\n\n- Add GA4 tracking to index.html with SPA page view tracking in App.tsx\n- Exclude materialIcon from counting towards user''s 10 free monthly creations\n- Update backend \\(usageHelpers, consume-credits\\) to skip quota for free generation types\n- Update frontend UsageContext to skip counting materialIcon for anonymous users\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git commit:*)",
+      "Bash(git restore:*)"
     ]
   }
 }
