@@ -39,7 +39,6 @@ export const CATEGORIES: Category[] = [
       { id: 'floors', label: 'Floors' },
       { id: 'walls', label: 'Walls' },
       { id: 'ceilings', label: 'Ceilings' },
-      { id: 'joinery', label: 'Joinery' },
       { id: 'doors', label: 'Doors' },
       { id: 'fixtures-fittings', label: 'Fixtures & Fittings' },
     ],
