@@ -83,6 +83,16 @@ const App: React.FC = () => {
     briefingCacheRef.current = readBriefingCache();
   }, []);
 
+  // Track page views in Google Analytics
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'page_view', {
+        page_path: `/${currentPage}`,
+        page_title: currentPage.charAt(0).toUpperCase() + currentPage.slice(1),
+      });
+    }
+  }, [currentPage]);
+
   useEffect(() => {
     if (boardCacheRestoredRef.current) return;
     boardCacheRestoredRef.current = true;

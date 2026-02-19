@@ -23,6 +23,9 @@ export type GenerationType =
   | 'materialIcon'
   | 'sustainabilityBriefing';
 
+// Generation types that don't count towards the user's monthly free limit
+export const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
+
 function stripDataUrls(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(stripDataUrls);
@@ -89,18 +92,14 @@ export async function incrementUsage(
   const usageContainer = getContainer('usage');
 
   const now = new Date().toISOString();
+  const countsTowardsLimit = !FREE_GENERATION_TYPES.includes(generationType);
 
   try {
     // Atomic patch when the document already exists
-    await usageContainer.item(documentId, userId).patch([
+    const patchOps: Array<{ op: string; path: string; value: string | number }> = [
       {
         op: 'incr',
         path: `/generationCounts/${generationType}`,
-        value: incrementBy,
-      },
-      {
-        op: 'incr',
-        path: '/totalGenerations',
         value: incrementBy,
       },
       {
@@ -108,7 +107,18 @@ export async function incrementUsage(
         path: '/lastUpdatedAt',
         value: now,
       },
-    ]);
+    ];
+
+    // Only increment totalGenerations for types that count towards the limit
+    if (countsTowardsLimit) {
+      patchOps.push({
+        op: 'incr',
+        path: '/totalGenerations',
+        value: incrementBy,
+      });
+    }
+
+    await usageContainer.item(documentId, userId).patch(patchOps);
     return;
   } catch (error: unknown) {
     if (!isCosmosNotFound(error)) {
@@ -128,7 +138,8 @@ export async function incrementUsage(
       materialIcon: generationType === 'materialIcon' ? incrementBy : 0,
       sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? incrementBy : 0,
     },
-    totalGenerations: incrementBy,
+    // Only count towards limit for non-free generation types
+    totalGenerations: countsTowardsLimit ? incrementBy : 0,
     lastUpdatedAt: now,
   };
 
@@ -139,15 +150,10 @@ export async function incrementUsage(
       throw error;
     }
     // Another request created the document; retry the atomic patch.
-    await usageContainer.item(documentId, userId).patch([
+    const retryOps: Array<{ op: string; path: string; value: string | number }> = [
       {
         op: 'incr',
         path: `/generationCounts/${generationType}`,
-        value: incrementBy,
-      },
-      {
-        op: 'incr',
-        path: '/totalGenerations',
         value: incrementBy,
       },
       {
@@ -155,7 +161,17 @@ export async function incrementUsage(
         path: '/lastUpdatedAt',
         value: now,
       },
-    ]);
+    ];
+
+    if (countsTowardsLimit) {
+      retryOps.push({
+        op: 'incr',
+        path: '/totalGenerations',
+        value: incrementBy,
+      });
+    }
+
+    await usageContainer.item(documentId, userId).patch(retryOps);
   }
 }
 

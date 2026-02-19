@@ -675,7 +675,7 @@ IMPORTANT:
           console.error('Failed to consume credits:', err);
         }
       } else if (isAnonymous) {
-        incrementLocalUsage(DETECTION_CREDIT_COST);
+        incrementLocalUsage(DETECTION_CREDIT_COST, 'materialIcon');
       }
 
       if (materials.length === 0) {
