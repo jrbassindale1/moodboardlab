@@ -78,7 +78,7 @@ export async function consumeCredits(
     }
 
     const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
-    const userIsAdmin = isAdminUser(user.email);
+    const userIsAdmin = isAdminUser(user.email, user.userId);
     const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
 
     // Skip quota check for free generation types (e.g., materialIcon)

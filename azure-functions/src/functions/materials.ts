@@ -199,7 +199,7 @@ async function updateMaterial(
     }
 
     const user = authResult as ValidatedUser;
-    if (!isAdminUser(user.email)) {
+    if (!isAdminUser(user.email, user.userId)) {
       return {
         status: 403,
         body: JSON.stringify({ error: 'Forbidden', message: 'Admin access required' }),

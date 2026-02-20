@@ -71,6 +71,12 @@ Add this for Clerk token validation:
 CLERK_JWKS_URL=https://<your-clerk-instance>.clerk.accounts.dev/.well-known/jwks.json
 ```
 
+Optional but recommended if session JWTs do not include `email`:
+```
+CLERK_SECRET_KEY=sk_live_xxxxx
+```
+Used to resolve the user email from Clerk API when needed for admin checks.
+
 Optional (recommended) for stricter token validation:
 ```
 CLERK_ISSUER=https://<your-clerk-instance>.clerk.accounts.dev
@@ -93,6 +99,11 @@ ADMIN_BYPASS_ALLOWED_ORIGINS=https://<your-staging-frontend-origin>
 When enabled, send the key in request header:
 `X-Admin-Key: <long-random-secret>`
 Note: bypass is rejected unless the request `Origin` matches one of `ADMIN_BYPASS_ALLOWED_ORIGINS` (comma-separated).
+
+Optional for admin checks by Clerk user ID (comma-separated):
+```
+ADMIN_USER_IDS=user_abc123,user_def456
+```
 
 ### Frontend (.env.local)
 ```

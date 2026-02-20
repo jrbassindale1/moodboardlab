@@ -211,8 +211,23 @@ export const ADMIN_EMAILS: string[] = [
   'jrbassindale@yahoo.co.uk',
 ];
 
-export function isAdminUser(email: string): boolean {
-  return ADMIN_EMAILS.includes(email.toLowerCase());
+const ADMIN_USER_IDS: string[] = (process.env.ADMIN_USER_IDS || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+export function isAdminUser(email?: string | null, userId?: string | null): boolean {
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (normalizedEmail && ADMIN_EMAILS.includes(normalizedEmail)) {
+    return true;
+  }
+
+  const normalizedUserId = typeof userId === 'string' ? userId.trim() : '';
+  if (normalizedUserId && ADMIN_USER_IDS.includes(normalizedUserId)) {
+    return true;
+  }
+
+  return false;
 }
 
 export function isCosmosNotFound(error: unknown): boolean {

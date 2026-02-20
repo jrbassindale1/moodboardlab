@@ -40,7 +40,7 @@ export async function checkQuota(
   const documentId = getUsageDocumentId(user.userId, yearMonth);
 
   // Admin users get unlimited credits
-  if (isAdminUser(user.email)) {
+  if (isAdminUser(user.email, user.userId)) {
     return {
       status: 200,
       body: JSON.stringify({
