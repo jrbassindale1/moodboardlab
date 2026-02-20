@@ -20,7 +20,10 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(git commit:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(git add -A)"
     ]
   }
 }

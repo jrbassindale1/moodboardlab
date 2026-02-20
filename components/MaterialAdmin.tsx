@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { RefreshCw, Check, X } from 'lucide-react';
 import { getMaterials, updateMaterial } from '../api';
 import { useAuth } from '../auth';
 import { isAuthBypassEnabled } from '../auth/authConfig';
+import { generateMaterialIcon } from '../utils/materialIconGenerator';
+import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import type { FinishFamily, MaterialOption } from '../types';
 
 interface MaterialAdminProps {
@@ -114,6 +117,8 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     if (typeof window === 'undefined') return '';
     return window.localStorage.getItem(ADMIN_KEY_STORAGE_KEY) || '';
   });
+  const [isRegeneratingIcon, setIsRegeneratingIcon] = useState(false);
+  const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -171,6 +176,8 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     setRisksJson(JSON.stringify(cloned.risks ?? [], null, 2));
     setMessage(null);
     setError(null);
+    setPreviewIconUrl(null);
+    setIsRegeneratingIcon(false);
   };
 
   const setField = <K extends keyof AdminMaterial>(key: K, value: AdminMaterial[K]) => {
@@ -229,6 +236,40 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleRegenerateIcon = async () => {
+    if (!draft) return;
+    setIsRegeneratingIcon(true);
+    setPreviewIconUrl(null);
+    try {
+      const icon = await generateMaterialIcon({
+        materialId: draft.id,
+        materialName: draft.name,
+        description: draft.description,
+        tone: draft.tone,
+      });
+      if (icon?.url) {
+        setPreviewIconUrl(icon.url);
+      } else {
+        setError('Failed to generate icon - no URL returned');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate icon');
+    } finally {
+      setIsRegeneratingIcon(false);
+    }
+  };
+
+  const handleApplyIcon = () => {
+    if (!previewIconUrl) return;
+    setField('customImage', previewIconUrl);
+    setPreviewIconUrl(null);
+    setMessage('Icon applied - remember to save the material');
+  };
+
+  const handleDiscardIcon = () => {
+    setPreviewIconUrl(null);
   };
 
   if (isLoading) {
@@ -324,6 +365,106 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
               )}
               {message && <p className="text-sm text-emerald-700">{message}</p>}
               {error && <p className="text-sm text-red-600">{error}</p>}
+
+              {/* Material Icon Section */}
+              <div className="border border-purple-200 bg-purple-50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs uppercase tracking-widest font-mono text-purple-800 font-semibold">
+                    Material Icon
+                  </span>
+                  <span className="text-[10px] text-purple-600">
+                    (AI-generated thumbnail for material display)
+                  </span>
+                </div>
+                <div className="flex items-start gap-4">
+                  {/* Current Icon */}
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-widest text-gray-500">Current</span>
+                    <div className="w-24 h-24 border border-gray-300 overflow-hidden bg-white flex-shrink-0">
+                      {(() => {
+                        const { webpUrl, pngUrl } = getMaterialIconUrls(draft);
+                        return draft.customImage ? (
+                          <img src={draft.customImage} alt={draft.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <picture>
+                            <source srcSet={webpUrl} type="image/webp" />
+                            <img
+                              src={pngUrl}
+                              alt={draft.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.nextElementSibling as HTMLElement | null;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          </picture>
+                        );
+                      })()}
+                      <div
+                        className="w-full h-full hidden items-center justify-center"
+                        style={{ backgroundColor: draft.tone }}
+                      >
+                        <span className="text-[8px] uppercase tracking-widest text-white/70">No icon</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preview Icon (if regenerating) */}
+                  {previewIconUrl && (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-[10px] uppercase tracking-widest text-purple-600 font-semibold">Preview</span>
+                      <div className="w-24 h-24 border-2 border-purple-400 overflow-hidden bg-white flex-shrink-0">
+                        <img src={previewIconUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Controls */}
+                  <div className="flex flex-col gap-2 pt-5">
+                    {!previewIconUrl ? (
+                      <button
+                        onClick={handleRegenerateIcon}
+                        disabled={isRegeneratingIcon}
+                        className="flex items-center gap-2 px-3 py-2 border border-purple-300 bg-white text-xs font-mono uppercase tracking-widest hover:bg-purple-100 disabled:opacity-60"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${isRegeneratingIcon ? 'animate-spin' : ''}`} />
+                        {isRegeneratingIcon ? 'Generating...' : 'Regenerate Icon'}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          onClick={handleApplyIcon}
+                          className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white text-xs font-mono uppercase tracking-widest hover:bg-emerald-700"
+                        >
+                          <Check className="w-4 h-4" />
+                          Apply
+                        </button>
+                        <button
+                          onClick={handleDiscardIcon}
+                          className="flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white text-xs font-mono uppercase tracking-widest hover:bg-gray-100"
+                        >
+                          <X className="w-4 h-4" />
+                          Discard
+                        </button>
+                      </>
+                    )}
+                    {draft.customImage && !previewIconUrl && (
+                      <button
+                        onClick={() => {
+                          setField('customImage', undefined);
+                          setMessage('Custom icon removed - remember to save');
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 border border-red-300 bg-white text-red-600 text-xs font-mono uppercase tracking-widest hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                        Remove Custom
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label className="text-xs uppercase tracking-widest font-mono">
