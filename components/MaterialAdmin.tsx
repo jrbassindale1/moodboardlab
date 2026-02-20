@@ -421,10 +421,16 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     <div className="w-24 h-24 border border-gray-300 overflow-hidden bg-white flex-shrink-0">
                       {(() => {
                         const { webpUrl, pngUrl } = getMaterialIconUrls(draft);
+                        const iconKey = draft.customImage || draft.iconWebpUrl || pngUrl;
                         return draft.customImage ? (
-                          <img src={draft.customImage} alt={draft.name} className="w-full h-full object-cover" />
+                          <img
+                            key={iconKey}
+                            src={draft.customImage}
+                            alt={draft.name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
-                          <picture>
+                          <picture key={iconKey}>
                             <source srcSet={webpUrl} type="image/webp" />
                             <img
                               src={pngUrl}
