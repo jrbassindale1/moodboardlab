@@ -236,6 +236,41 @@ export async function saveColoredIcon(payload: {
 }
 
 /**
+ * Save material icon to blob storage as PNG and WebP
+ * Requires admin key for authorization
+ */
+export async function saveMaterialIcon(payload: {
+  materialId: string;
+  imageBase64: string;
+  adminKey: string;
+}): Promise<{
+  success: boolean;
+  materialId: string;
+  pngUrl: string;
+  webpUrl: string;
+}> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(`${API_BASE}/api/save-material-icon`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": payload.adminKey,
+    },
+    body: JSON.stringify({
+      materialId: payload.materialId,
+      imageBase64: payload.imageBase64,
+    })
+  }, 60000);
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to save material icon: ${errorText}`);
+  }
+
+  return res.json();
+}
+
+/**
  * Generate a sustainability briefing using Gemini API
  * Uses the 'text' mode with the system instruction embedded in the prompt
  */

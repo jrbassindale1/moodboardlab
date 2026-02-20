@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Check, X } from 'lucide-react';
-import { getMaterials, updateMaterial } from '../api';
+import { getMaterials, updateMaterial, saveMaterialIcon } from '../api';
 import { useAuth } from '../auth';
 import { isAuthBypassEnabled } from '../auth/authConfig';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
@@ -119,6 +119,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
   });
   const [isRegeneratingIcon, setIsRegeneratingIcon] = useState(false);
   const [previewIconUrl, setPreviewIconUrl] = useState<string | null>(null);
+  const [isSavingIcon, setIsSavingIcon] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -178,6 +179,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     setError(null);
     setPreviewIconUrl(null);
     setIsRegeneratingIcon(false);
+    setIsSavingIcon(false);
   };
 
   const setField = <K extends keyof AdminMaterial>(key: K, value: AdminMaterial[K]) => {
@@ -244,15 +246,17 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     setPreviewIconUrl(null);
     try {
       const icon = await generateMaterialIcon({
-        materialId: draft.id,
-        materialName: draft.name,
-        description: draft.description,
+        id: draft.id,
+        name: draft.name,
+        description: draft.description || '',
         tone: draft.tone,
+        finish: draft.finish,
+        keywords: draft.keywords,
       });
-      if (icon?.url) {
-        setPreviewIconUrl(icon.url);
+      if (icon?.dataUri) {
+        setPreviewIconUrl(icon.dataUri);
       } else {
-        setError('Failed to generate icon - no URL returned');
+        setError('Failed to generate icon - no image returned');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate icon');
@@ -261,11 +265,45 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     }
   };
 
-  const handleApplyIcon = () => {
-    if (!previewIconUrl) return;
-    setField('customImage', previewIconUrl);
-    setPreviewIconUrl(null);
-    setMessage('Icon applied - remember to save the material');
+  const handleApplyIcon = async () => {
+    if (!previewIconUrl || !draft) return;
+
+    // If we have an admin key, try to save to blob storage
+    if (adminKey.trim()) {
+      setIsSavingIcon(true);
+      setError(null);
+      try {
+        const result = await saveMaterialIcon({
+          materialId: draft.id,
+          imageBase64: previewIconUrl,
+          adminKey: adminKey.trim(),
+        });
+
+        // Update draft with permanent blob URLs
+        setDraft(prev => prev ? {
+          ...prev,
+          iconPngUrl: result.pngUrl,
+          iconWebpUrl: result.webpUrl,
+          customImage: undefined, // Clear customImage since we have permanent URLs
+        } : prev);
+
+        setPreviewIconUrl(null);
+        setMessage('Icon saved to blob storage - remember to save the material');
+      } catch (err) {
+        // Fall back to customImage if blob storage fails
+        console.error('Blob storage save failed:', err);
+        setField('customImage', previewIconUrl);
+        setPreviewIconUrl(null);
+        setMessage('Icon applied locally (blob storage unavailable) - remember to save');
+      } finally {
+        setIsSavingIcon(false);
+      }
+    } else {
+      // No admin key, just set as customImage
+      setField('customImage', previewIconUrl);
+      setPreviewIconUrl(null);
+      setMessage('Icon applied - remember to save the material');
+    }
   };
 
   const handleDiscardIcon = () => {
@@ -436,14 +474,20 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                       <>
                         <button
                           onClick={handleApplyIcon}
-                          className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white text-xs font-mono uppercase tracking-widest hover:bg-emerald-700"
+                          disabled={isSavingIcon}
+                          className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white text-xs font-mono uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-60"
                         >
-                          <Check className="w-4 h-4" />
-                          Apply
+                          {isSavingIcon ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
+                          {isSavingIcon ? 'Saving...' : 'Apply & Save'}
                         </button>
                         <button
                           onClick={handleDiscardIcon}
-                          className="flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white text-xs font-mono uppercase tracking-widest hover:bg-gray-100"
+                          disabled={isSavingIcon}
+                          className="flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white text-xs font-mono uppercase tracking-widest hover:bg-gray-100 disabled:opacity-60"
                         >
                           <X className="w-4 h-4" />
                           Discard

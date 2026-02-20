@@ -23,7 +23,8 @@
       "Bash(git restore:*)",
       "Bash(git merge:*)",
       "Bash(git push:*)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(npm run typecheck:functions:*)"
     ]
   }
 }
