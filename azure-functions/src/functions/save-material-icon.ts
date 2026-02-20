@@ -9,11 +9,19 @@
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
-import sharp from 'sharp';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const ICONS_CONTAINER = 'material-icons';
 const ADMIN_KEY = process.env.ADMIN_KEY || '';
+let sharpLoader: Promise<unknown> | null = null;
+
+async function getSharp(): Promise<any> {
+  if (!sharpLoader) {
+    sharpLoader = import('sharp');
+  }
+  const module = await sharpLoader as { default?: any };
+  return module.default ?? module;
+}
 
 async function uploadIconToBlob(
   materialId: string,
@@ -33,6 +41,7 @@ async function uploadIconToBlob(
   // Convert base64 to buffer
   const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
   const inputBuffer = Buffer.from(base64Data, 'base64');
+  const sharp = await getSharp();
 
   // Save PNG
   const pngBlobName = `${materialId}.png`;
