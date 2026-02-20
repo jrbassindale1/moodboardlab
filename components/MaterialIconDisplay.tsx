@@ -32,7 +32,9 @@ export function MaterialIconDisplay({
   // 3. Static icon from /public/icons/
   // 4. Color swatch fallback
 
-  const blobUrl = material.coloredIconBlobUrl;
+  const blobUrl = material.coloredIconBlobUrl?.startsWith('data:')
+    ? material.coloredIconBlobUrl
+    : null;
   const cachedColoredIcon = !blobUrl && material.colorVariantId
     ? getCachedColoredIcon(material.colorVariantId)
     : null;

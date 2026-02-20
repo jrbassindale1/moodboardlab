@@ -3,6 +3,7 @@ import { ShoppingCart, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
 import { MaterialOption } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
+import { getCachedColoredIcon } from '../../hooks/useColoredIconGenerator';
 
 interface ChosenMaterialsListProps {
   board: MaterialOption[];
@@ -83,6 +84,9 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
           <div className="space-y-0 border border-gray-200">
             {board.map((item, idx) => {
               const { webpUrl, pngUrl } = getMaterialIconUrls(item);
+              const coloredIconDataUri = item.coloredIconBlobUrl?.startsWith('data:')
+                ? item.coloredIconBlobUrl
+                : (item.colorVariantId ? getCachedColoredIcon(item.colorVariantId) : null);
               return (
                 <div
                   key={`${item.id}-${idx}`}
@@ -91,9 +95,9 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                   <div className="flex items-center gap-4 p-4">
                     {/* Material swatch/image */}
                     <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden bg-gray-50">
-                      {item.coloredIconBlobUrl ? (
+                      {coloredIconDataUri ? (
                         <img
-                          src={item.coloredIconBlobUrl}
+                          src={coloredIconDataUri}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />

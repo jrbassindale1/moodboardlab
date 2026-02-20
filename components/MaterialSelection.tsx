@@ -522,11 +522,11 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
         // Generate and save icon in background
         generateColoredIcon(materialToAdd).then(result => {
-          if (result?.blobUrl) {
+          if (result?.dataUri || result?.blobUrl) {
             // Update the material with the blob URL
             const updatedBoard = boardRef.current.map(item =>
               item.colorVariantId === colorVariantId
-                ? { ...item, coloredIconBlobUrl: result.blobUrl }
+                ? { ...item, coloredIconBlobUrl: result.dataUri || result.blobUrl }
                 : item
             );
             onBoardChange(updatedBoard);
