@@ -5,6 +5,7 @@ import { MaterialOption, UploadedImage } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { formatFinishForDisplay } from '../utils/materialDisplay';
+import { trackEvent } from '../utils/analytics';
 import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
@@ -485,7 +486,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       // Track apply materials generation in Google Analytics
       const eventLabel = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
-      window.gtag?.('event', 'generate_image', {
+      trackEvent('apply_palette_to_image', {
+        render_mode: eventLabel,
+        material_count: renderMaterials.length,
+      });
+      trackEvent('generate_image', {
         event_category: 'generation',
         event_label: eventLabel,
       });

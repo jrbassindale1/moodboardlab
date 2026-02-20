@@ -24,6 +24,7 @@ import { MaterialOption } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
+import { trackEvent } from '../utils/analytics';
 
 // Sustainability report utilities
 import type {
@@ -676,6 +677,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
       if (doc) {
         // Save locally
         doc.save('sustainability-briefing.pdf');
+        trackEvent('download_pdf', {
+          pdf_type: 'sustainability_briefing',
+          source: 'moodboard',
+        });
 
         // Save to backend for authenticated users
         if (isAuthenticated) {
@@ -706,6 +711,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
       if (doc) {
         // Save locally
         doc.save('materials-sheet.pdf');
+        trackEvent('download_pdf', {
+          pdf_type: 'materials_sheet',
+          source: 'moodboard',
+        });
 
         // Save to backend for authenticated users
         if (isAuthenticated) {
@@ -927,7 +936,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       onBriefingInvalidatedMessageChange?.(null);
       setMaterialsAccordionOpen(false);
       // Track sustainability briefing generation in Google Analytics
-      window.gtag?.('event', 'generate_briefing', {
+      trackEvent('generate_briefing', {
         event_category: 'generation',
         event_label: 'sustainabilityBriefing',
       });
@@ -1485,8 +1494,12 @@ ${JSON.stringify(proseContext)}`;
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
         void persistGeneration(newUrl, prompt);
+        trackEvent('generate_moodboard', {
+          mode: isEditingRender ? 'edit' : 'new',
+          material_count: renderMaterials.length,
+        });
         // Track moodboard generation in Google Analytics
-        window.gtag?.('event', 'generate_image', {
+        trackEvent('generate_image', {
           event_category: 'generation',
           event_label: 'moodboard',
         });

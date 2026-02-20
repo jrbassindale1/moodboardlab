@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Lock, Mail, MessageSquare } from 'lucide-react';
+import { trackEvent } from '../utils/analytics';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -49,6 +50,11 @@ const Contact: React.FC = () => {
       `${formData.message.trim()}`
     );
 
+    trackEvent('contact', {
+      channel: 'contact_form',
+      has_reply_email: Boolean(formData.email.trim()),
+      has_workspace: Boolean(formData.workspace.trim()),
+    });
     window.location.href = `mailto:${secureEmail}?subject=${subject}&body=${body}`;
     setStatus('success');
     setError(null);

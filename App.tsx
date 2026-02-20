@@ -18,6 +18,7 @@ import type {
   SustainabilityBriefingResponse,
 } from './utils/sustainabilityBriefing';
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
+import { trackPageView } from './utils/analytics';
 
 const BRIEFING_CACHE_KEY = 'moodboard_sustainability_briefing_v1';
 const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
@@ -85,12 +86,10 @@ const App: React.FC = () => {
 
   // Track page views in Google Analytics
   useEffect(() => {
-    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-      window.gtag('event', 'page_view', {
-        page_path: `/${currentPage}`,
-        page_title: currentPage.charAt(0).toUpperCase() + currentPage.slice(1),
-      });
-    }
+    trackPageView(
+      `/${currentPage}`,
+      currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
+    );
   }, [currentPage]);
 
   useEffect(() => {

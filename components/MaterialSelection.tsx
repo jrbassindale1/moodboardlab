@@ -10,6 +10,7 @@ import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 import { useAuth, useUsage } from '../auth';
+import { trackEvent } from '../utils/analytics';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -463,6 +464,21 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       return itemTone === candidateTone && itemFinish === candidateFinish;
     });
 
+  const trackAddToBoard = (material: MaterialOption, boardCount: number) => {
+    const source = material.isCustom
+      ? 'custom'
+      : material.id.startsWith('detected-')
+        ? 'photo_detection'
+        : 'catalog';
+    trackEvent('add_to_board', {
+      material_id: material.id,
+      material_category: material.category,
+      board_count: boardCount,
+      is_first_material: boardCount === 1,
+      source,
+    });
+  };
+
   const handleAdd = (
     material: MaterialOption,
     customization?: { tone?: string; colorLabel?: string; finishOption?: string; variety?: string },
@@ -519,6 +535,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         const newBoard = [...baseBoard, materialToAdd];
         onBoardChange(newBoard);
         boardRef.current = newBoard;
+        trackAddToBoard(materialToAdd, newBoard.length);
 
         // Generate and save icon in background
         generateColoredIcon(materialToAdd).then(result => {
@@ -554,6 +571,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     onBoardChange(nextBoard);
     boardRef.current = nextBoard;
     triggerAddFeedback(sourceElement, materialToAdd.tone || '#4b5563');
+    trackAddToBoard(materialToAdd, nextBoard.length);
 
     // Close the modal and reset variety
     setRecentlyAdded(null);
@@ -806,7 +824,7 @@ IMPORTANT:
       setSelectedMaterialIds(new Set(detectedMats.map(mat => mat.id)));
 
       // Track material detection in Google Analytics
-      window.gtag?.('event', 'generate_detection', {
+      trackEvent('generate_detection', {
         event_category: 'generation',
         event_label: 'materialIcon',
         value: detectedMats.length,

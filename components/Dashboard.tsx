@@ -4,6 +4,7 @@ import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../a
 import { getGenerations } from '../api';
 import type { MaterialOption } from '../types';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
+import { trackEvent } from '../utils/analytics';
 
 interface Generation {
   id: string;
@@ -586,6 +587,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                   href={rawUrl}
                                   download={isMaterialsSheet ? 'materials-sheet.pdf' : 'sustainability-briefing.pdf'}
                                   className={pdfButtonClass}
+                                  onClick={() =>
+                                    trackEvent('download_pdf', {
+                                      pdf_type: isMaterialsSheet
+                                        ? 'materials_sheet'
+                                        : 'sustainability_briefing',
+                                      source: 'dashboard',
+                                    })
+                                  }
                                 >
                                   <Download className="w-3.5 h-3.5" />
                                   {pdfLabel}
