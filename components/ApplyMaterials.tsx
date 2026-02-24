@@ -21,7 +21,7 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
-const MAX_EDIT_TURNS = 3;
+const MAX_EDIT_TURNS = 6;
 
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
