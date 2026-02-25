@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Menu, ShoppingCart, X } from 'lucide-react';
 import AuthButton from './AuthButton';
 import { useAuth } from '../auth';
-import { isAuthBypassEnabled } from '../auth/authConfig';
 
 interface NavbarProps {
   currentPage: string;
@@ -19,7 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
-  const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk' || isAuthBypassEnabled;
+  const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
 
   const baseNavItems = [
     { id: 'concept', label: 'Home' },

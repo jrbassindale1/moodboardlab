@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ImageDown, Loader2, Wand2 } from 'lucide-react';
+import { AlertTriangle, ImageDown, Loader2, Wand2 } from 'lucide-react';
 import { callGeminiImage, saveGenerationAuth, checkQuota } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { formatFinishForDisplay } from '../utils/materialDisplay';
 import { trackEvent } from '../utils/analytics';
+import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
 import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
@@ -143,6 +144,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const [editTurnCount, setEditTurnCount] = useState(0);
@@ -360,6 +362,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     setStatus('render');
     setRenderingMode(options?.renderMode ?? null);
     setError(null);
+    setImageModelFallbackWarning(null);
 
     const materialsByCategory: Record<string, MaterialOption[]> = {};
     renderMaterials.forEach((item) => {
@@ -465,6 +468,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       };
 
       const data = await callGeminiImage(payload);
+      const fallbackUsed = isImageModelFallbackUsed(data);
+      setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
       let img: string | null = null;
       let mime: string | null = null;
       const candidates = data?.candidates || [];
@@ -566,6 +571,13 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         {error && (
           <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             <span>{error}</span>
+          </div>
+        )}
+
+        {imageModelFallbackWarning && (
+          <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-[2px]" />
+            <span>{imageModelFallbackWarning}</span>
           </div>
         )}
 

@@ -22,9 +22,9 @@ import {
 } from '../api';
 import { MaterialOption } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
-import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { trackEvent } from '../utils/analytics';
+import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
 
 // Sustainability report utilities
 import type {
@@ -422,6 +422,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
   const [error, setError] = useState<string | null>(null);
+  const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
@@ -469,44 +470,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   useEffect(() => {
     onBoardChange?.(board);
   }, [board, onBoardChange]);
-
-  // Generate AI thumbnails for custom/detected materials that are missing them
-  const generatingIdsRef = useRef<Set<string>>(new Set());
-  useEffect(() => {
-    const materialsNeedingThumbnails = board.filter(
-      item =>
-        !item.customImage &&
-        (item.id.startsWith('custom-') || item.id.startsWith('detected-'))
-    );
-
-    if (materialsNeedingThumbnails.length === 0) return;
-
-    materialsNeedingThumbnails.forEach(mat => {
-      if (generatingIdsRef.current.has(mat.id)) return;
-      generatingIdsRef.current.add(mat.id);
-
-      generateMaterialIcon({
-        id: mat.id,
-        name: mat.name,
-        description: mat.description,
-        tone: mat.tone,
-        finish: mat.finish,
-        keywords: mat.keywords,
-      }).then(icon => {
-        setBoard(prev =>
-          prev.map(item =>
-            item.id === mat.id
-              ? { ...item, customImage: icon.dataUri }
-              : item
-          )
-        );
-      }).catch(err => {
-        console.error(`Failed to generate thumbnail for ${mat.name}:`, err);
-      }).finally(() => {
-        generatingIdsRef.current.delete(mat.id);
-      });
-    });
-  }, [board]);
 
   const handleRemove = (idxToRemove: number) => {
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
@@ -958,6 +921,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return;
     }
     setError(null);
+    setImageModelFallbackWarning(null);
     const canGenerate = await ensureQuotaForMoodboard();
     if (!canGenerate) return;
     setIsCreatingMoodboard(true);
@@ -1075,6 +1039,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
     setStatus(mode);
     if (!options?.retryAttempt) setError(null);
+    if (mode === 'render' && !options?.retryAttempt) {
+      setImageModelFallbackWarning(null);
+    }
 
     // Group materials by category for better AI understanding
     const materialsForPrompt = mode === 'render' ? renderMaterials : board;
@@ -1475,6 +1442,8 @@ ${JSON.stringify(proseContext)}`;
           }
         };
         const data = await callGeminiImage(payload);
+        const fallbackUsed = isImageModelFallbackUsed(data);
+        setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
         let img: string | null = null;
         let mime: string | null = null;
         const candidates = data?.candidates || [];
@@ -1951,6 +1920,13 @@ ${JSON.stringify(proseContext)}`;
               <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 <AlertCircle className="w-4 h-4 mt-[2px]" />
                 <span>{error}</span>
+              </div>
+            )}
+
+            {imageModelFallbackWarning && (
+              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <AlertTriangle className="w-4 h-4 mt-[2px]" />
+                <span>{imageModelFallbackWarning}</span>
               </div>
             )}
 

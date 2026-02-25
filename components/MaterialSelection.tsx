@@ -5,7 +5,6 @@ import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api';
-import { generateColoredIcon } from '../hooks/useColoredIconGenerator';
 import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
@@ -528,38 +527,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         colorLabel: colorLabelToUse,
         selectedVariety: varietyToUse || undefined,
       };
-
-      // Trigger colored icon generation in the background and save blob URL
-      if (colorVariantId && colorLabelToUse && colorToneToUse) {
-        // Add material to board immediately
-        const newBoard = [...baseBoard, materialToAdd];
-        onBoardChange(newBoard);
-        boardRef.current = newBoard;
-        trackAddToBoard(materialToAdd, newBoard.length);
-
-        // Generate and save icon in background
-        generateColoredIcon(materialToAdd).then(result => {
-          if (result?.dataUri || result?.blobUrl) {
-            // Update the material with the blob URL
-            const updatedBoard = boardRef.current.map(item =>
-              item.colorVariantId === colorVariantId
-                ? { ...item, coloredIconBlobUrl: result.dataUri || result.blobUrl }
-                : item
-            );
-            onBoardChange(updatedBoard);
-            boardRef.current = updatedBoard;
-          }
-        }).catch(err => {
-          console.error('Failed to generate colored icon:', err);
-        });
-
-        // Close modal and reset variety
-        setRecentlyAdded(null);
-        setSelectedVariety(null);
-        setSelectedFinishOption(null);
-        setSelectedColorOption(null);
-        return;
-      }
     }
 
     if (isDuplicateSelection(materialToAdd, baseBoard)) {

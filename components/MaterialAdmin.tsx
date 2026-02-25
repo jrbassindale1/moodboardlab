@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Check, X } from 'lucide-react';
 import { getMaterials, updateMaterial, saveMaterialIcon } from '../api';
 import { useAuth } from '../auth';
-import { isAuthBypassEnabled } from '../auth/authConfig';
 import { generateMaterialIcon } from '../utils/materialIconGenerator';
 import { getMaterialIconUrls } from '../utils/materialIconUrls';
 import type { FinishFamily, MaterialOption } from '../types';
@@ -100,8 +99,8 @@ const cloneMaterial = (material: AdminMaterial): AdminMaterial => {
 const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
   const { user, isAuthenticated, isLoading, getAccessToken } = useAuth();
   const isAdmin = Boolean(user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
-  const canUseBypass = isAuthBypassEnabled;
-  const canAccessAdmin = isAdmin || canUseBypass;
+  const canAccessAdmin = isAuthenticated && isAdmin;
+  const canGenerateIcons = isAuthenticated && isAdmin;
 
   const [materials, setMaterials] = useState<AdminMaterial[]>([]);
   const [selectedId, setSelectedId] = useState('');
@@ -205,16 +204,9 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
         throw new Error('Risks JSON must be an array');
       }
 
-      let token: string | null = null;
-      if (!canUseBypass) {
-        token = await getAccessToken();
-        if (!token) {
-          throw new Error('Authentication token unavailable. Please sign in again.');
-        }
-      }
-
-      if (canUseBypass && !adminKey.trim()) {
-        throw new Error('Enter the staging admin key before saving.');
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Authentication token unavailable. Please sign in again.');
       }
 
       const payload: Record<string, unknown> = {
@@ -224,9 +216,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
         risks: risksParsed,
       };
 
-      const updated = (await updateMaterial(token, payload, {
-        adminKey: canUseBypass ? adminKey : undefined,
-      })) as AdminMaterial;
+      const updated = (await updateMaterial(token, payload)) as AdminMaterial;
 
       setMaterials((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
       setDraft(cloneMaterial(updated));
@@ -242,8 +232,13 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
 
   const handleRegenerateIcon = async () => {
     if (!draft) return;
+    if (!canGenerateIcons) {
+      setError('Icon generation is restricted to signed-in admin users in Material Admin.');
+      return;
+    }
     setIsRegeneratingIcon(true);
     setPreviewIconUrl(null);
+    setError(null);
     try {
       const icon = await generateMaterialIcon({
         id: draft.id,
@@ -314,7 +309,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
     return <section className="pt-28 px-6 max-w-screen-xl mx-auto">Loading authentication...</section>;
   }
 
-  if (!canUseBypass && !isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <section className="pt-28 px-6 max-w-screen-xl mx-auto">
         <h2 className="font-display text-2xl uppercase tracking-widest">Material Admin</h2>
@@ -340,11 +335,6 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
           <p className="text-xs font-mono uppercase tracking-widest text-gray-500 mt-1">
             Edit material data and save directly to Cosmos
           </p>
-          {canUseBypass && (
-            <p className="text-xs font-mono uppercase tracking-widest text-amber-700 mt-2">
-              Staging mode: using admin bypass key instead of Clerk login
-            </p>
-          )}
         </div>
         <button
           onClick={() => onNavigate('materials')}
@@ -389,18 +379,16 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
 
           {draft && (
             <div className="space-y-5">
-              {canUseBypass && (
-                <label className="text-xs uppercase tracking-widest font-mono block">
-                  Staging Admin Key
-                  <input
-                    type="password"
-                    value={adminKey}
-                    onChange={(event) => setAdminKey(event.target.value)}
-                    placeholder="Enter x-admin-key value"
-                    className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm"
-                  />
-                </label>
-              )}
+              <label className="text-xs uppercase tracking-widest font-mono block">
+                Admin Icon Key (optional)
+                <input
+                  type="password"
+                  value={adminKey}
+                  onChange={(event) => setAdminKey(event.target.value)}
+                  placeholder="Enter x-admin-key to save icons to blob storage"
+                  className="mt-1 w-full border border-gray-300 px-3 py-2 text-sm"
+                />
+              </label>
               {message && <p className="text-sm text-emerald-700">{message}</p>}
               {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -414,6 +402,11 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     (AI-generated thumbnail for material display)
                   </span>
                 </div>
+                {!canGenerateIcons && (
+                  <p className="mb-3 text-[11px] font-mono uppercase tracking-widest text-purple-700">
+                    Sign in as an approved admin account to generate icons.
+                  </p>
+                )}
                 <div className="flex items-start gap-4">
                   {/* Current Icon */}
                   <div className="flex flex-col items-center gap-2">
@@ -470,7 +463,7 @@ const MaterialAdmin: React.FC<MaterialAdminProps> = ({ onNavigate }) => {
                     {!previewIconUrl ? (
                       <button
                         onClick={handleRegenerateIcon}
-                        disabled={isRegeneratingIcon}
+                        disabled={isRegeneratingIcon || !canGenerateIcons}
                         className="flex items-center gap-2 px-3 py-2 border border-purple-300 bg-white text-xs font-mono uppercase tracking-widest hover:bg-purple-100 disabled:opacity-60"
                       >
                         <RefreshCw className={`w-4 h-4 ${isRegeneratingIcon ? 'animate-spin' : ''}`} />
