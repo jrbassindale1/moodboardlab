@@ -71,6 +71,47 @@ Add this for Clerk token validation:
 CLERK_JWKS_URL=https://<your-clerk-instance>.clerk.accounts.dev/.well-known/jwks.json
 ```
 
+Required for image generation:
+```
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Optional image model overrides:
+```
+# Defaults to gpt-image-1.5
+OPENAI_IMAGE_MODEL=gpt-image-1.5
+# Used only when the primary model is rate-limited/unavailable
+OPENAI_IMAGE_FALLBACK_MODEL=gpt-image-1
+```
+
+Required for paid credit packs (Stripe):
+```
+STRIPE_SECRET_KEY=sk_live_xxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxx
+```
+
+Optional Stripe price IDs (if omitted, checkout uses inline GBP prices):
+```
+STRIPE_PRICE_ID_CREDITS_50=price_xxxxx
+STRIPE_PRICE_ID_CREDITS_100=price_xxxxx
+```
+
+Optional app URL fallback for checkout redirects:
+```
+APP_BASE_URL=https://moodboard-lab.com
+```
+
+Optional: mark paying customers for Nano Banana Pro access (comma-separated):
+```
+PRO_CUSTOMER_EMAILS=user1@example.com,user2@example.com
+PRO_CUSTOMER_USER_IDS=user_abc123,user_def456
+```
+
+Required for Gemini text endpoints (used by text-generation flows):
+```
+GEMINI_API_KEY=<your-gemini-api-key>
+```
+
 Optional but recommended if session JWTs do not include `email`:
 ```
 CLERK_SECRET_KEY=sk_live_xxxxx
@@ -138,7 +179,11 @@ your-azure-functions-project/
    - Quota is enforced after 10 generations
 5. Verify materials API:
    - `GET /api/materials` returns `{ items: [...] }` from CosmosDB
-6. If using staging bypass:
+6. Verify billing flow:
+   - `POST /api/create-checkout-session` creates Stripe checkout links for `credits_50` and `credits_100`
+   - Stripe webhook calls `POST /api/stripe-webhook`
+   - successful payment credits the user's balance (50 credits for £10, 110 credits for £20)
+7. If using staging bypass:
    - Keep Clerk disabled in staging frontend (`VITE_DISABLE_AUTH=true`)
    - Set backend app settings above
    - Open Material Admin and enter the staging admin key before saving

@@ -14,7 +14,12 @@ import {
   getUsageDocumentId,
   getCurrentYearMonth,
   UsageDocument,
+  UserDocument,
   isCosmosNotFound,
+  isAdminUser,
+  isProUser,
+  FREE_MONTHLY_LIMIT,
+  getPaidCreditBalance,
 } from '../shared/cosmosClient';
 
 export async function usage(
@@ -36,6 +41,7 @@ export async function usage(
   const user = authResult as ValidatedUser;
   const yearMonth = getCurrentYearMonth();
   const documentId = getUsageDocumentId(user.userId, yearMonth);
+  const userIsAdmin = isAdminUser(user.email, user.userId);
 
   try {
     const usageContainer = getContainer('usage');
@@ -48,6 +54,11 @@ export async function usage(
       sustainabilityBriefing: 0,
     };
     let total = 0;
+    let tier: 'free' | 'pro' = 'free';
+
+    if (userIsAdmin || isProUser(user.email, user.userId)) {
+      tier = 'pro';
+    }
 
     try {
       // Partition key is userId, document id is "userId:YYYY-MM"
@@ -63,11 +74,39 @@ export async function usage(
       }
     }
 
+    if (tier === 'free') {
+      try {
+        const usersContainer = getContainer('users');
+        const userTierQuery = {
+          query: 'SELECT TOP 1 c.tier FROM c WHERE c.userId = @userId',
+          parameters: [{ name: '@userId', value: user.userId }],
+        };
+        const { resources } = await usersContainer.items
+          .query<Pick<UserDocument, 'tier'>>(userTierQuery, { partitionKey: user.userId })
+          .fetchAll();
+        if (resources[0]?.tier === 'pro') {
+          tier = 'pro';
+        }
+      } catch (tierError: unknown) {
+        context.warn('Could not resolve user tier from users container', tierError);
+      }
+    }
+
+    const freeRemaining = userIsAdmin ? FREE_MONTHLY_LIMIT : Math.max(0, FREE_MONTHLY_LIMIT - total);
+    const paidCredits = userIsAdmin ? 999999 : await getPaidCreditBalance(user.userId);
+    const availableCredits = userIsAdmin ? 999999 : freeRemaining + paidCredits;
+
     return {
       status: 200,
       body: JSON.stringify({
         ...usageData,
         total,
+        tier,
+        freeRemaining,
+        freeUsed: Math.min(total, FREE_MONTHLY_LIMIT),
+        freeLimit: FREE_MONTHLY_LIMIT,
+        paidCredits,
+        availableCredits,
         yearMonth,
       }),
       headers: { 'Content-Type': 'application/json' },

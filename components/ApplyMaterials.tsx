@@ -330,7 +330,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         if (token) {
           const quotaCheck = await checkQuota(token);
           if (!quotaCheck.canGenerate) {
-            setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+            setError('No credits available. Buy a credit pack or wait for your free monthly reset.');
             return false;
           }
         }
@@ -340,7 +340,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
     } else {
       if (!canGenerate) {
-        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+        setError('No credits available. Buy a credit pack or wait for your free monthly reset.');
         return false;
       }
     }
@@ -485,7 +485,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         }
         if (img) break;
       }
-      if (!img) throw new Error('Gemini did not return an image payload.');
+      if (!img) throw new Error('Image backend did not return an image payload.');
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
       onAppliedRenderUrlChange(newUrl);
 
@@ -512,7 +512,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       void persistGeneration(newUrl, prompt);
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+      setError(err instanceof Error ? err.message : 'Could not reach the image generation backend.');
       return false;
     } finally {
       setStatus('idle');

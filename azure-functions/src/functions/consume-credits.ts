@@ -17,6 +17,8 @@ import {
   UsageDocument,
   isCosmosNotFound,
   isAdminUser,
+  getPaidCreditBalance,
+  consumePaidCredits,
 } from '../shared/cosmosClient';
 import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from '../shared/usageHelpers';
 
@@ -77,26 +79,42 @@ export async function consumeCredits(
       }
     }
 
-    const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
     const userIsAdmin = isAdminUser(user.email, user.userId);
+    const freeRemaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    const paidCredits = userIsAdmin ? 999999 : await getPaidCreditBalance(user.userId);
+    const availableCredits = freeRemaining + paidCredits;
     const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
+    const paidCreditsToConsume =
+      !userIsAdmin && !isFreeGeneration
+        ? Math.max(0, credits - freeRemaining)
+        : 0;
 
     // Skip quota check for free generation types (e.g., materialIcon)
-    if (!userIsAdmin && !isFreeGeneration && remaining < credits) {
+    if (!userIsAdmin && !isFreeGeneration && availableCredits < credits) {
       return {
         status: 429,
         headers,
         body: JSON.stringify({
-          error: 'Monthly generation limit reached.',
-          remaining,
+          error: 'Not enough credits available.',
+          remaining: availableCredits,
           limit: FREE_MONTHLY_LIMIT,
           used: totalUsed,
+          freeRemaining,
+          paidCredits,
+          availableCredits,
           yearMonth,
         }),
       };
     }
 
     await incrementUsage(user.userId, generationType, credits);
+    let paidCreditsRemaining: number | null = null;
+    if (paidCreditsToConsume > 0) {
+      const debitResult = await consumePaidCredits(user.userId, paidCreditsToConsume);
+      if (debitResult.success) {
+        paidCreditsRemaining = debitResult.balance;
+      }
+    }
 
     return {
       status: 200,
@@ -104,9 +122,16 @@ export async function consumeCredits(
       body: JSON.stringify({
         success: true,
         // Free generation types don't affect the remaining count
-        remaining: isFreeGeneration ? remaining : Math.max(0, remaining - credits),
+        remaining: isFreeGeneration ? availableCredits : Math.max(0, availableCredits - credits),
         limit: FREE_MONTHLY_LIMIT,
         used: isFreeGeneration ? totalUsed : totalUsed + credits,
+        freeRemaining: isFreeGeneration
+          ? freeRemaining
+          : Math.max(0, FREE_MONTHLY_LIMIT - (totalUsed + credits)),
+        paidCredits: paidCreditsRemaining ?? paidCredits,
+        availableCredits: isFreeGeneration
+          ? availableCredits
+          : Math.max(0, availableCredits - credits),
         yearMonth,
       }),
     };

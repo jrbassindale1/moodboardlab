@@ -14,10 +14,11 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
   showSignUpPrompt = true,
   onSignIn
 }) => {
-  const { isAuthenticated, login } = useAuth();
-  const { remaining, limit, isLoading, isAnonymous } = useUsage();
+  const { login } = useAuth();
+  const { remaining, limit, isLoading, isAnonymous, paidCredits, freeRemaining, freeLimit } = useUsage();
 
-  const percentage = ((limit - remaining) / limit) * 100;
+  const denominator = Math.max(1, limit);
+  const percentage = ((denominator - remaining) / denominator) * 100;
   const isLow = remaining <= 3;
   const isExhausted = remaining <= 0;
 
@@ -29,8 +30,8 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
         'bg-gray-100 text-gray-700'
       }`}>
         <Zap className="w-3 h-3" />
-        {isLoading ? '...' : `${remaining}/${limit}`}
-        <span className="hidden sm:inline">this month</span>
+        {isLoading ? '...' : isAnonymous ? `${remaining}/${limit}` : `${remaining} credits`}
+        <span className="hidden sm:inline">{isAnonymous ? 'this month' : 'available'}</span>
       </div>
     );
   }
@@ -43,14 +44,14 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
     }`}>
       <div className="flex items-center justify-between mb-2">
         <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-          Monthly Generations
+          {isAnonymous ? 'Monthly Generations' : 'Available Credits'}
         </span>
         <span className={`font-mono text-sm font-medium ${
           isExhausted ? 'text-red-600' :
           isLow ? 'text-amber-600' :
           'text-gray-700'
         }`}>
-          {isLoading ? '...' : `${remaining} / ${limit} remaining`}
+          {isLoading ? '...' : isAnonymous ? `${remaining} / ${limit} remaining` : `${remaining} credits`}
         </span>
       </div>
 
@@ -64,6 +65,17 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
           style={{ width: `${percentage}%` }}
         />
       </div>
+
+      {!isAnonymous && (
+        <p className="text-xs text-gray-600 mb-1">
+          Free monthly credits: {freeRemaining}/{freeLimit}
+        </p>
+      )}
+      {!isAnonymous && (
+        <p className="text-xs text-gray-600">
+          Paid credit balance: {paidCredits}
+        </p>
+      )}
 
       {isAnonymous && showSignUpPrompt && (
         <div className="pt-3 border-t border-gray-200">
@@ -81,7 +93,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
 
       {isExhausted && !isAnonymous && (
         <p className="text-xs text-red-600 mt-2">
-          You've used all your generations this month. Your limit resets on the 1st.
+          No credits left. Buy a credit pack or wait for your free monthly reset.
         </p>
       )}
     </div>

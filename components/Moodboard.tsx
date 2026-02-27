@@ -16,6 +16,7 @@ import {
   callGeminiImage,
   callGeminiText,
   checkQuota,
+  createCheckoutSession,
   saveGenerationAuth,
   savePdfAuth,
   generateSustainabilityBriefing
@@ -48,6 +49,8 @@ import {
 } from '../utils/sustainabilityBriefing';
 
 type BoardItem = MaterialOption;
+type RenderQuality = 'low' | 'medium' | 'high';
+type MoodboardModelVariant = 'nano-banana' | 'nano-banana-pro';
 
 // Use enhanced sustainability insight type from types/sustainability.ts
 type SustainabilityInsight = EnhancedSustainabilityInsight;
@@ -75,6 +78,13 @@ type MoodboardFlowProgress = {
 };
 
 const MOODBOARD_FLOW_TOTAL_STEPS = 2;
+const DEFAULT_RENDER_QUALITY: RenderQuality = 'medium';
+const DEFAULT_MODEL_VARIANT: MoodboardModelVariant = 'nano-banana';
+const QUALITY_CREDIT_COST: Record<RenderQuality, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
 const CUSTOM_PAINT_IDS = new Set(['custom-wall-paint', 'custom-ceiling-paint']);
 const GENERIC_COLOUR_SEGMENT_RE =
   /\b(multiple|select|choose|chosen|custom|palette|colou?r|color|tone|finish|texture|variant|option|options|ral|hex\/rgb)\b/i;
@@ -400,7 +410,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
-  const { refreshUsage } = useUsage();
+  const { refreshUsage, usage, availableCredits } = useUsage();
 
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
@@ -426,10 +436,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
+  const [renderQuality, setRenderQuality] = useState<RenderQuality>(DEFAULT_RENDER_QUALITY);
+  const [modelVariant, setModelVariant] = useState<MoodboardModelVariant>(DEFAULT_MODEL_VARIANT);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
+  const [checkoutLoadingPack, setCheckoutLoadingPack] = useState<'credits_50' | 'credits_100' | null>(null);
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
     if (isAuthenticated) return true;
@@ -437,7 +450,28 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return false;
   };
 
-  const ensureQuotaForMoodboard = async () => {
+  const isPaidCustomer = Boolean(usage?.tier === 'pro') || isAuthBypassEnabled;
+
+  useEffect(() => {
+    if (!isPaidCustomer && modelVariant === 'nano-banana-pro') {
+      setModelVariant('nano-banana');
+    }
+  }, [isPaidCustomer, modelVariant]);
+
+  const getMoodboardCreditCost = (action: 'create' | 'edit'): number => {
+    if (modelVariant === 'nano-banana-pro') {
+      return 10;
+    }
+    const baseCost = QUALITY_CREDIT_COST[renderQuality];
+    // First moodboard at medium quality has a discounted first-run credit cost.
+    const isFirstMediumMoodboard =
+      action === 'create' &&
+      renderQuality === 'medium' &&
+      (usage?.moodboard ?? 0) <= 0;
+    return isFirstMediumMoodboard ? 1 : baseCost;
+  };
+
+  const ensureQuotaForMoodboard = async (requiredCredits: number) => {
     // If auth bypass is enabled, skip quota check
     if (isAuthBypassEnabled) return true;
     if (!isAuthenticated) return false;
@@ -448,8 +482,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
         return false;
       }
       const quota = await checkQuota(token);
-      if (!quota.canGenerate) {
-        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+      const availableCredits = quota.availableCredits ?? quota.remaining ?? 0;
+      if (!quota.canGenerate && availableCredits <= 0) {
+        setError('No credits available. Buy a credit pack or wait for your free monthly reset.');
+        return false;
+      }
+      if (availableCredits < requiredCredits) {
+        setError(
+          `Not enough credits for this quality setting. Required: ${requiredCredits}, available: ${availableCredits}.`
+        );
         return false;
       }
       return true;
@@ -457,6 +498,37 @@ const Moodboard: React.FC<MoodboardProps> = ({
       console.error('Quota check failed:', err);
       setError('Could not verify your remaining credits. Please try again.');
       return false;
+    }
+  };
+
+  const handleBuyCredits = async (packId: 'credits_50' | 'credits_100') => {
+    if (!isAuthenticated) {
+      setError('Please sign in to buy credits.');
+      return;
+    }
+
+    setCheckoutLoadingPack(packId);
+    setError(null);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setError('Please sign in again before starting checkout.');
+        return;
+      }
+
+      const origin = window.location.origin;
+      const checkout = await createCheckoutSession(token, {
+        packId,
+        successUrl: `${origin}/?billing=success`,
+        cancelUrl: `${origin}/?billing=cancel`,
+      });
+
+      window.location.assign(checkout.url);
+    } catch (checkoutError) {
+      console.error('Failed to start checkout:', checkoutError);
+      setError(checkoutError instanceof Error ? checkoutError.message : 'Could not start checkout.');
+    } finally {
+      setCheckoutLoadingPack(null);
     }
   };
 
@@ -544,7 +616,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
-  const persistGeneration = async (imageDataUri: string, prompt: string) => {
+  const persistGeneration = async (
+    imageDataUri: string,
+    prompt: string,
+    options?: {
+      creditCost?: number;
+      quality?: RenderQuality;
+      modelVariant?: MoodboardModelVariant;
+    }
+  ) => {
     const metadata = {
       renderMode: 'moodboard',
       materialKey: buildMaterialKey(),
@@ -569,7 +649,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
         prompt,
         imageDataUri,
         materials: metadata,
-        generationType: 'moodboard'
+        generationType: 'moodboard',
+        credits: options?.creditCost,
+        imageQuality: options?.quality,
+        modelVariant: options?.modelVariant,
       }, token);
       await refreshUsage();
     } catch (err) {
@@ -916,13 +999,18 @@ const Moodboard: React.FC<MoodboardProps> = ({
     if (!requireAuthForMoodboard()) {
       return;
     }
+    if (modelVariant === 'nano-banana-pro' && !isPaidCustomer) {
+      setError('Nano Banana Pro is available for paying customers only.');
+      return;
+    }
     if (!board.length) {
       setError('Add materials to the moodboard first.');
       return;
     }
     setError(null);
     setImageModelFallbackWarning(null);
-    const canGenerate = await ensureQuotaForMoodboard();
+    const creditCost = getMoodboardCreditCost('create');
+    const canGenerate = await ensureQuotaForMoodboard(creditCost);
     if (!canGenerate) return;
     setIsCreatingMoodboard(true);
     setSustainabilityInsights(null);
@@ -945,7 +1033,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
         state: 'running'
       });
 
-      const renderOk = await runGemini('render', { onRender: setMoodboardRenderUrl });
+      const renderOk = await runGemini('render', {
+        onRender: setMoodboardRenderUrl,
+        renderCreditCost: creditCost,
+      });
 
       if (!renderOk) {
         setFlowProgress({
@@ -992,6 +1083,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
     if (!requireAuthForMoodboard()) {
       return;
     }
+    if (modelVariant === 'nano-banana-pro' && !isPaidCustomer) {
+      setError('Nano Banana Pro is available for paying customers only.');
+      return;
+    }
     const trimmed = moodboardEditPrompt.trim();
     if (!moodboardRenderUrl) {
       setError('Generate a moodboard render first.');
@@ -1001,14 +1096,16 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Add text instructions to update the moodboard render.');
       return;
     }
-    const canGenerate = await ensureQuotaForMoodboard();
+    const creditCost = getMoodboardCreditCost('edit');
+    const canGenerate = await ensureQuotaForMoodboard(creditCost);
     if (!canGenerate) return;
     setIsCreatingMoodboard(true);
     try {
       await runGemini('render', {
         onRender: setMoodboardRenderUrl,
         baseImageDataUrl: moodboardRenderUrl,
-        editPrompt: trimmed
+        editPrompt: trimmed,
+        renderCreditCost: creditCost,
       });
     } finally {
       setIsCreatingMoodboard(false);
@@ -1024,6 +1121,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       baseImageDataUrl?: string;
       summaryDraft?: string;
       requestTimeoutMs?: number;
+      renderCreditCost?: number;
     }
   ): Promise<boolean> => {
     if (mode === 'render' && !requireAuthForMoodboard()) {
@@ -1417,6 +1515,8 @@ ${JSON.stringify(proseContext)}`;
     if (mode === 'render') {
       // Image render call
       try {
+        const effectiveRenderQuality: RenderQuality =
+          modelVariant === 'nano-banana-pro' ? 'high' : renderQuality;
         // Determine aspect ratio based on context
         const aspectRatio = '1:1';
         const payload = {
@@ -1433,12 +1533,14 @@ ${JSON.stringify(proseContext)}`;
           generationConfig: {
             temperature: 0.35,
             candidateCount: 1,
-            // Newer Gemini endpoints reject image MIME hints here; request image-only output via response modalities instead.
+            // Request image-only output from the backend.
             responseModalities: ['IMAGE']
           },
           imageConfig: {
             aspectRatio,
-            imageSize: '1K'
+            imageSize: '1K',
+            quality: effectiveRenderQuality,
+            modelVariant,
           }
         };
         const data = await callGeminiImage(payload);
@@ -1459,10 +1561,16 @@ ${JSON.stringify(proseContext)}`;
           }
           if (img) break;
         }
-        if (!img) throw new Error('Gemini did not return an image payload.');
+        if (!img) throw new Error('Image backend did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
-        void persistGeneration(newUrl, prompt);
+        const renderCreditCost =
+          options?.renderCreditCost ?? getMoodboardCreditCost(isEditingRender ? 'edit' : 'create');
+        void persistGeneration(newUrl, prompt, {
+          creditCost: renderCreditCost,
+          quality: effectiveRenderQuality,
+          modelVariant,
+        });
         trackEvent('generate_moodboard', {
           mode: isEditingRender ? 'edit' : 'new',
           material_count: renderMaterials.length,
@@ -1474,7 +1582,7 @@ ${JSON.stringify(proseContext)}`;
         });
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+        setError(err instanceof Error ? err.message : 'Could not reach the image generation backend.');
         return false;
       } finally {
         setStatus('idle');
@@ -1835,6 +1943,9 @@ ${JSON.stringify(proseContext)}`;
   };
 
   const isRenderInFlight = status === 'render' && isCreatingMoodboard;
+  const createRenderCreditCost = getMoodboardCreditCost('create');
+  const isFirstMediumMoodboardDiscountActive =
+    modelVariant === 'nano-banana' && renderQuality === 'medium' && (usage?.moodboard ?? 0) <= 0;
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
@@ -1877,7 +1988,47 @@ ${JSON.stringify(proseContext)}`;
 
             {board.length > 0 && (
               <div className="space-y-3">
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-end gap-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                      Model
+                    </span>
+                    <select
+                      value={modelVariant}
+                      onChange={(event) => {
+                        const nextModel = event.target.value as MoodboardModelVariant;
+                        if (nextModel === 'nano-banana-pro' && !isPaidCustomer) {
+                          setError('Nano Banana Pro is available for paying customers only.');
+                          return;
+                        }
+                        setModelVariant(nextModel);
+                      }}
+                      disabled={isCreatingMoodboard || status !== 'idle'}
+                      className="px-3 py-2 border border-gray-300 bg-white text-sm font-sans disabled:bg-gray-100"
+                    >
+                      <option value="nano-banana">Nano Banana</option>
+                      <option value="nano-banana-pro" disabled={!isPaidCustomer}>
+                        Nano Banana Pro (paying customers only)
+                      </option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                      Render Quality
+                    </span>
+                    <select
+                      value={renderQuality}
+                      onChange={(event) => setRenderQuality(event.target.value as RenderQuality)}
+                      disabled={isCreatingMoodboard || status !== 'idle' || modelVariant === 'nano-banana-pro'}
+                      className="px-3 py-2 border border-gray-300 bg-white text-sm font-sans disabled:bg-gray-100"
+                    >
+                      <option value="low">Low (1 credit)</option>
+                      <option value="medium">
+                        Medium ({isFirstMediumMoodboardDiscountActive ? '1' : '2'} credits)
+                      </option>
+                      <option value="high">High (3 credits)</option>
+                    </select>
+                  </label>
                   <button
                     onClick={runMoodboardFlow}
                     disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
@@ -1895,7 +2046,38 @@ ${JSON.stringify(proseContext)}`;
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={() => handleBuyCredits('credits_50')}
+                    disabled={checkoutLoadingPack !== null || !isAuthenticated || isCreatingMoodboard || status !== 'idle'}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    {checkoutLoadingPack === 'credits_50' && <Loader2 className="w-3 h-3 animate-spin" />}
+                    Buy 50 (£10)
+                  </button>
+                  <button
+                    onClick={() => handleBuyCredits('credits_100')}
+                    disabled={checkoutLoadingPack !== null || !isAuthenticated || isCreatingMoodboard || status !== 'idle'}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    {checkoutLoadingPack === 'credits_100' && <Loader2 className="w-3 h-3 animate-spin" />}
+                    Buy 110 (£20)
+                  </button>
                 </div>
+                <p className="text-xs text-gray-600 font-sans">
+                  This render will use <strong>{createRenderCreditCost} credit{createRenderCreditCost !== 1 ? 's' : ''}</strong>.
+                  {isFirstMediumMoodboardDiscountActive
+                    ? ' First moodboard at medium quality is discounted to 1 credit.'
+                    : ''}
+                  {modelVariant === 'nano-banana-pro'
+                    ? ' Nano Banana Pro is billed at 10 credits and uses premium settings.'
+                    : ''}
+                  {' '}Available now: <strong>{availableCredits}</strong>.
+                </p>
+                {!isPaidCustomer && (
+                  <p className="text-xs text-amber-700 font-sans">
+                    Nano Banana Pro is only available for paying customers.
+                  </p>
+                )}
                 {flowProgress && (
                   <div
                     className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${

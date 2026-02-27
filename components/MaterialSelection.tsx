@@ -675,7 +675,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           return;
         }
         const quota = await checkQuota(token);
-        if (quota.remaining < DETECTION_CREDIT_COST) {
+        const availableCredits = quota.availableCredits ?? quota.remaining ?? 0;
+        if (availableCredits < DETECTION_CREDIT_COST) {
           setDetectionError('Not enough credits. This action costs 2 credits.');
           return;
         }

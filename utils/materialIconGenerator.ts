@@ -1,8 +1,8 @@
 /**
  * Material Icon Generator
  *
- * Generates small, representative icons for materials using the Gemini API
- * with Imagen 3 for consistent, familiar visual representations.
+ * Generates small, representative icons for materials using the image backend
+ * for consistent, familiar visual representations.
  */
 
 import { callGeminiImage } from '../api';
@@ -54,7 +54,7 @@ Requirements:
 }
 
 /**
- * Generate a single material icon using Gemini Imagen
+ * Generate a single material icon
  */
 
 export async function generateMaterialIcon(
@@ -70,7 +70,7 @@ export async function generateMaterialIcon(
     });
 
     if (!response.images || response.images.length === 0) {
-      throw new Error('No image returned from Gemini');
+      throw new Error('No image returned from the image backend');
     }
 
     // Assuming the API returns base64 or data URI

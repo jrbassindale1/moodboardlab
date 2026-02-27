@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
-import { getGenerations } from '../api';
+import { createCheckoutSession, getGenerations } from '../api';
 import type { MaterialOption } from '../types';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
@@ -150,7 +150,7 @@ const extractBoardFromMaterials = (materials?: unknown): MaterialOption[] => {
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
-  const { usage, remaining, limit } = useUsage();
+  const { usage, availableCredits, paidCredits, freeRemaining, freeLimit, refreshUsage } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [latestMoodboards, setLatestMoodboards] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,6 +158,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
   const [latestMoodboardsError, setLatestMoodboardsError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [checkoutLoadingPack, setCheckoutLoadingPack] = useState<'credits_50' | 'credits_100' | null>(null);
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
   const hasFetchedLatestMoodboardsRef = useRef(false);
   const limit_per_page = 12;
@@ -325,6 +327,54 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
     fetchLatestMoodboards();
   }, [isAuthenticated, canViewStagingInsights, getAccessToken]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const billingState = params.get('billing');
+    if (billingState === 'success') {
+      setBillingMessage('Payment received. Credits are now available on your account.');
+      void refreshUsage();
+      params.delete('billing');
+      const next = params.toString();
+      const updatedUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', updatedUrl);
+    } else if (billingState === 'cancel') {
+      setBillingMessage('Checkout was cancelled.');
+      params.delete('billing');
+      const next = params.toString();
+      const updatedUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', updatedUrl);
+    }
+  }, [refreshUsage]);
+
+  const handleBuyCredits = async (packId: 'credits_50' | 'credits_100') => {
+    if (!isAuthenticated) return;
+
+    setBillingMessage(null);
+    setCheckoutLoadingPack(packId);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setBillingMessage('Please sign in again before purchasing credits.');
+        return;
+      }
+
+      const origin = window.location.origin;
+      const response = await createCheckoutSession(token, {
+        packId,
+        successUrl: `${origin}/?billing=success`,
+        cancelUrl: `${origin}/?billing=cancel`,
+      });
+
+      window.location.assign(response.url);
+    } catch (error) {
+      console.error('Failed to start checkout:', error);
+      setBillingMessage(error instanceof Error ? error.message : 'Could not start checkout.');
+    } finally {
+      setCheckoutLoadingPack(null);
+    }
+  };
+
   const loadMore = async () => {
     if (!isAuthenticated || !hasMore) return;
 
@@ -406,14 +456,30 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
         </div>
 
         {/* Usage Stats */}
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-5 gap-6">
           <div className="border border-gray-200 p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-              Remaining This Month
+              Available Credits
             </div>
             <div className="font-display text-4xl font-bold">
-              {remaining}{' '}
-              <span className="text-gray-400 text-2xl">/ {limit}</span>
+              {availableCredits}
+            </div>
+          </div>
+          <div className="border border-gray-200 p-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
+              Paid Credits
+            </div>
+            <div className="font-display text-4xl font-bold">
+              {paidCredits}
+            </div>
+          </div>
+          <div className="border border-gray-200 p-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
+              Free This Month
+            </div>
+            <div className="font-display text-4xl font-bold">
+              {freeRemaining}
+              <span className="text-gray-400 text-2xl"> / {freeLimit}</span>
             </div>
           </div>
           <div className="border border-gray-200 p-6">
@@ -432,14 +498,41 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
               {usage?.applyMaterials ?? 0}
             </div>
           </div>
-          <div className="border border-gray-200 p-6">
-            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-              Total This Month
-            </div>
-            <div className="font-display text-4xl font-bold">
-              {usage?.total ?? 0}
-            </div>
+        </div>
+
+        <div className="border border-gray-200 p-6 space-y-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-2xl font-bold uppercase tracking-tight">
+              Buy Credits
+            </h2>
+            <p className="text-sm text-gray-600">
+              Keep your 10 free monthly credits and top up any time.
+            </p>
           </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => handleBuyCredits('credits_50')}
+              disabled={!isAuthenticated || checkoutLoadingPack !== null}
+              className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest disabled:bg-gray-300 disabled:border-gray-300"
+            >
+              {checkoutLoadingPack === 'credits_50' && <Loader2 className="w-4 h-4 animate-spin" />}
+              50 Credits - £10
+            </button>
+            <button
+              onClick={() => handleBuyCredits('credits_100')}
+              disabled={!isAuthenticated || checkoutLoadingPack !== null}
+              className="inline-flex items-center gap-2 px-4 py-3 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              {checkoutLoadingPack === 'credits_100' && <Loader2 className="w-4 h-4 animate-spin" />}
+              110 Credits - £20
+            </button>
+          </div>
+          {billingMessage && (
+            <p className="text-sm text-gray-700">{billingMessage}</p>
+          )}
+          <p className="text-xs text-gray-500">
+            Credits are charged per render quality: low 1, medium 2, high 3. Nano Banana Pro costs 10 credits.
+          </p>
         </div>
 
         {/* Generation History */}

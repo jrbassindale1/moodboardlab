@@ -17,6 +17,7 @@ import {
   UsageDocument,
   isCosmosNotFound,
   isAdminUser,
+  getPaidCreditBalance,
 } from '../shared/cosmosClient';
 
 export async function checkQuota(
@@ -48,6 +49,11 @@ export async function checkQuota(
         remaining: 999999,
         limit: 999999,
         used: 0,
+        freeRemaining: FREE_MONTHLY_LIMIT,
+        freeUsed: 0,
+        freeLimit: FREE_MONTHLY_LIMIT,
+        paidCredits: 999999,
+        availableCredits: 999999,
         yearMonth,
         isAdmin: true,
       }),
@@ -73,15 +79,22 @@ export async function checkQuota(
       }
     }
 
-    const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    const freeRemaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    const paidCredits = await getPaidCreditBalance(user.userId);
+    const availableCredits = freeRemaining + paidCredits;
 
     return {
       status: 200,
       body: JSON.stringify({
-        canGenerate: remaining > 0,
-        remaining,
+        canGenerate: availableCredits > 0,
+        remaining: availableCredits,
         limit: FREE_MONTHLY_LIMIT,
         used: totalUsed,
+        freeRemaining,
+        freeUsed: Math.min(totalUsed, FREE_MONTHLY_LIMIT),
+        freeLimit: FREE_MONTHLY_LIMIT,
+        paidCredits,
+        availableCredits,
         yearMonth,
       }),
       headers: { 'Content-Type': 'application/json' },

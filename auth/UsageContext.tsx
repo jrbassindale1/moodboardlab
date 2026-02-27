@@ -18,11 +18,21 @@ export interface UsageData {
   materialIcon: number;
   sustainabilityBriefing: number;
   total: number;
+  tier?: 'free' | 'pro';
+  freeRemaining?: number;
+  freeUsed?: number;
+  freeLimit?: number;
+  paidCredits?: number;
+  availableCredits?: number;
   yearMonth?: string;
 }
 
 interface UsageContextType {
   usage: UsageData | null;
+  availableCredits: number;
+  paidCredits: number;
+  freeRemaining: number;
+  freeLimit: number;
   remaining: number;
   limit: number;
   isLoading: boolean;
@@ -123,15 +133,27 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
 
   // Calculate remaining and limits based on auth state
   const isAnonymous = !isAuthenticated;
-  const limit = isAnonymous ? ANONYMOUS_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
-  const used = isAnonymous ? anonymousCount : (usage?.total ?? 0);
-  const remaining = Math.max(0, limit - used);
-  const canGenerate = remaining > 0;
+  const anonymousRemaining = Math.max(0, ANONYMOUS_MONTHLY_LIMIT - anonymousCount);
+  const freeLimit = isAnonymous ? ANONYMOUS_MONTHLY_LIMIT : (usage?.freeLimit ?? FREE_MONTHLY_LIMIT);
+  const freeRemaining = isAnonymous
+    ? anonymousRemaining
+    : (usage?.freeRemaining ?? Math.max(0, freeLimit - (usage?.total ?? 0)));
+  const paidCredits = isAnonymous ? 0 : (usage?.paidCredits ?? 0);
+  const availableCredits = isAnonymous
+    ? anonymousRemaining
+    : (usage?.availableCredits ?? (freeRemaining + paidCredits));
+  const remaining = availableCredits;
+  const limit = isAnonymous ? ANONYMOUS_MONTHLY_LIMIT : Math.max(availableCredits, freeLimit + paidCredits);
+  const canGenerate = availableCredits > 0;
 
   return (
     <UsageContext.Provider
       value={{
         usage,
+        availableCredits,
+        paidCredits,
+        freeRemaining,
+        freeLimit,
         remaining,
         limit,
         isLoading,

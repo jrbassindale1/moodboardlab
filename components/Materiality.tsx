@@ -263,7 +263,7 @@ const Materiality: React.FC = () => {
         data?.promptFeedback?.blockReason ||
         data?.promptFeedback?.block_reason ||
         data?.prompt_feedback?.block_reason;
-      const blockMessage = blockReason ? `Gemini safety block: ${blockReason}` : null;
+      const blockMessage = blockReason ? `Image safety block: ${blockReason}` : null;
 
       const candidates = data?.candidates || [];
       for (const candidate of candidates) {
@@ -303,12 +303,12 @@ const Materiality: React.FC = () => {
       }
 
       if (!imageData) {
-        console.error('Gemini response (no image found):', data);
+        console.error('Image response (no image found):', data);
         const readableError =
           blockMessage ||
           finishSummary ||
           textFallback ||
-          'Gemini did not return an image payload.';
+          'Image backend did not return an image payload.';
         throw new Error(readableError);
       }
 
@@ -316,8 +316,8 @@ const Materiality: React.FC = () => {
     } catch (err) {
       setError(
         err instanceof Error
-          ? `${err.message} — ensure the Function App has GEMINI_API_KEY set and an image-capable Gemini model configured.`
-          : 'Failed to generate image from the backend. Ensure the model supports image output.'
+          ? `${err.message} — ensure the Function App has OPENAI_API_KEY set and an OpenAI image model configured.`
+          : 'Failed to generate image from the backend. Ensure the image model is configured correctly.'
       );
       setGeneratedImage(null);
     } finally {

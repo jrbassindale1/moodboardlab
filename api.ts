@@ -20,6 +20,12 @@ export interface UsageData {
   materialIcon: number;
   sustainabilityBriefing: number;
   total: number;
+  tier?: 'free' | 'pro';
+  freeRemaining?: number;
+  freeUsed?: number;
+  freeLimit?: number;
+  paidCredits?: number;
+  availableCredits?: number;
   yearMonth?: string;
 }
 
@@ -42,6 +48,20 @@ export interface QuotaResponse {
   remaining: number;
   limit: number;
   used: number;
+  freeRemaining?: number;
+  freeUsed?: number;
+  freeLimit?: number;
+  paidCredits?: number;
+  availableCredits?: number;
+}
+
+export interface CheckoutSessionResponse {
+  url: string;
+  sessionId: string;
+  packId: 'credits_50' | 'credits_100';
+  credits: number;
+  amountPence: number;
+  currency: string;
 }
 
 export interface MaterialsResponse {
@@ -189,6 +209,9 @@ export async function saveGeneration(payload: {
   imageDataUri: string;
   materials?: any;
   userId?: string;
+  credits?: number;
+  imageQuality?: 'low' | 'medium' | 'high';
+  modelVariant?: 'nano-banana' | 'nano-banana-pro';
 }) {
   const SAVE_URL = getSaveUrl();
   const res = await fetchWithTimeout(SAVE_URL, {
@@ -199,7 +222,10 @@ export async function saveGeneration(payload: {
       imageBase64: payload.imageDataUri,
       mimeType: payload.imageDataUri.split(";")[0].replace("data:", ""),
       materials: payload.materials ?? {},
-      userId: payload.userId ?? "anon"
+      userId: payload.userId ?? "anon",
+      credits: payload.credits,
+      imageQuality: payload.imageQuality,
+      modelVariant: payload.modelVariant,
     })
   }, 45000);
 
@@ -347,6 +373,45 @@ export async function checkQuota(accessToken: string): Promise<QuotaResponse> {
 }
 
 /**
+ * Create a Stripe checkout session for a credit pack purchase
+ */
+export async function createCheckoutSession(
+  accessToken: string,
+  payload: {
+    packId: 'credits_50' | 'credits_100';
+    successUrl?: string;
+    cancelUrl?: string;
+  }
+): Promise<CheckoutSessionResponse> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/create-checkout-session`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    20000
+  );
+
+  if (!res.ok) {
+    let message = `Failed to create checkout session (status ${res.status})`;
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.error || data.message || message;
+    } catch {
+      // ignore json parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
  * Consume usage credits without saving a generation record
  */
 export async function consumeCredits(
@@ -361,6 +426,9 @@ export async function consumeCredits(
   remaining: number;
   limit: number;
   used: number;
+  freeRemaining?: number;
+  paidCredits?: number;
+  availableCredits?: number;
   yearMonth?: string;
 }> {
   const API_BASE = getApiBase();
@@ -463,6 +531,9 @@ export async function saveGenerationAuth(
     imageDataUri: string;
     materials?: unknown;
     generationType: GenerationType;
+    credits?: number;
+    imageQuality?: 'low' | 'medium' | 'high';
+    modelVariant?: 'nano-banana' | 'nano-banana-pro';
   },
   accessToken: string
 ) {
@@ -481,6 +552,9 @@ export async function saveGenerationAuth(
         mimeType: payload.imageDataUri.split(";")[0].replace("data:", ""),
         materials: payload.materials ?? {},
         generationType: payload.generationType,
+        credits: payload.credits,
+        imageQuality: payload.imageQuality,
+        modelVariant: payload.modelVariant,
       }),
     },
     45000
