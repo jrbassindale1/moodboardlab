@@ -16,7 +16,6 @@ import {
   callGeminiImage,
   callGeminiText,
   checkQuota,
-  createCheckoutSession,
   saveGenerationAuth,
   savePdfAuth,
   generateSustainabilityBriefing
@@ -442,7 +441,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
-  const [checkoutLoadingPack, setCheckoutLoadingPack] = useState<'credits_50' | 'credits_100' | null>(null);
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
     if (isAuthenticated) return true;
@@ -498,37 +496,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       console.error('Quota check failed:', err);
       setError('Could not verify your remaining credits. Please try again.');
       return false;
-    }
-  };
-
-  const handleBuyCredits = async (packId: 'credits_50' | 'credits_100') => {
-    if (!isAuthenticated) {
-      setError('Please sign in to buy credits.');
-      return;
-    }
-
-    setCheckoutLoadingPack(packId);
-    setError(null);
-    try {
-      const token = await getAccessToken();
-      if (!token) {
-        setError('Please sign in again before starting checkout.');
-        return;
-      }
-
-      const origin = window.location.origin;
-      const checkout = await createCheckoutSession(token, {
-        packId,
-        successUrl: `${origin}/?billing=success`,
-        cancelUrl: `${origin}/?billing=cancel`,
-      });
-
-      window.location.assign(checkout.url);
-    } catch (checkoutError) {
-      console.error('Failed to start checkout:', checkoutError);
-      setError(checkoutError instanceof Error ? checkoutError.message : 'Could not start checkout.');
-    } finally {
-      setCheckoutLoadingPack(null);
     }
   };
 
@@ -2046,22 +2013,6 @@ ${JSON.stringify(proseContext)}`;
                       </>
                     )}
                   </button>
-                  <button
-                    onClick={() => handleBuyCredits('credits_50')}
-                    disabled={checkoutLoadingPack !== null || !isAuthenticated || isCreatingMoodboard || status !== 'idle'}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900 disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    {checkoutLoadingPack === 'credits_50' && <Loader2 className="w-3 h-3 animate-spin" />}
-                    Buy 50 (£10)
-                  </button>
-                  <button
-                    onClick={() => handleBuyCredits('credits_100')}
-                    disabled={checkoutLoadingPack !== null || !isAuthenticated || isCreatingMoodboard || status !== 'idle'}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900 disabled:bg-gray-100 disabled:text-gray-400"
-                  >
-                    {checkoutLoadingPack === 'credits_100' && <Loader2 className="w-3 h-3 animate-spin" />}
-                    Buy 110 (£20)
-                  </button>
                 </div>
                 <p className="text-xs text-gray-600 font-sans">
                   This render will use <strong>{createRenderCreditCost} credit{createRenderCreditCost !== 1 ? 's' : ''}</strong>.
@@ -2073,6 +2024,14 @@ ${JSON.stringify(proseContext)}`;
                     : ''}
                   {' '}Available now: <strong>{availableCredits}</strong>.
                 </p>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => onNavigate?.('dashboard')}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900"
+                  >
+                    Top Up In Dashboard
+                  </button>
+                )}
                 {!isPaidCustomer && (
                   <p className="text-xs text-amber-700 font-sans">
                     Nano Banana Pro is only available for paying customers.

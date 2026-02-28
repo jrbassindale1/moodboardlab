@@ -533,6 +533,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
           <p className="text-xs text-gray-500">
             Credits are charged per render quality: low 1, medium 2, high 3. Nano Banana Pro costs 10 credits.
           </p>
+          <div className="pt-2 border-t border-gray-200">
+            <p className="text-xs text-gray-600 mb-2">
+              Need enterprise volume or unlimited usage?
+            </p>
+            <button
+              onClick={() => onNavigate?.('contact')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 bg-white text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:border-gray-900 hover:text-gray-900"
+            >
+              Contact For Enterprise
+            </button>
+          </div>
         </div>
 
         {/* Generation History */}
