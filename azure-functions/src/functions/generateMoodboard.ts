@@ -5,7 +5,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_TEXT_URL =
   process.env.GEMINI_TEXT_ENDPOINT ||
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
-const PRIMARY_GEMINI_IMAGE_MODEL = "gemini-3-pro-image-preview";
+const PRIMARY_GEMINI_IMAGE_MODEL = "gemini-3.1-flash-image-preview";
 const FALLBACK_GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL || PRIMARY_GEMINI_IMAGE_MODEL;
 
