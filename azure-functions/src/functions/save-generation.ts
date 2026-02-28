@@ -17,27 +17,85 @@ import { getSasUrlForBlob } from '../shared/blobSas';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';
+const BLOB_UPLOAD_CONTAINER = process.env.BLOB_UPLOAD_CONTAINER || BLOB_CONTAINER;
+
+type UploadArchiveCandidate = {
+  id?: string;
+  name?: string;
+  mimeType?: string;
+  sizeBytes?: number;
+  originalSizeBytes?: number;
+  width?: number;
+  height?: number;
+  dataUrl?: string;
+};
+
+type UploadArchiveRecord = Omit<UploadArchiveCandidate, 'dataUrl'> & {
+  id: string;
+  mimeType: string;
+  blobUrl: string;
+  archivedAt: string;
+};
+
+type UploadToBlobOptions = {
+  containerName?: string;
+  blobName?: string;
+};
+
+function getExtensionFromMime(mimeType: string): string {
+  if (mimeType.includes('png')) return 'png';
+  if (mimeType.includes('webp')) return 'webp';
+  if (mimeType.includes('gif')) return 'gif';
+  if (mimeType.includes('avif')) return 'avif';
+  return 'jpg';
+}
+
+function extractBase64Data(value: string): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed.includes('base64,')) return trimmed;
+  return trimmed.split('base64,').pop() || '';
+}
+
+function sanitizePathSegment(value: string): string {
+  const normalized = value.trim().replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-');
+  return normalized.replace(/^-+|-+$/g, '').slice(0, 80);
+}
+
+function asFiniteNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
 
 async function uploadToBlob(
   imageBase64: string,
-  mimeType: string
+  mimeType: string,
+  options?: UploadToBlobOptions
 ): Promise<string> {
   if (!BLOB_CONNECTION_STRING) {
     throw new Error('AZURE_STORAGE_CONNECTION_STRING not configured');
   }
 
   const blobServiceClient = BlobServiceClient.fromConnectionString(BLOB_CONNECTION_STRING);
-  const containerClient = blobServiceClient.getContainerClient(BLOB_CONTAINER);
+  const containerName = options?.containerName || BLOB_CONTAINER;
+  const containerClient = blobServiceClient.getContainerClient(containerName);
 
   // Ensure container exists (no public access - storage account doesn't allow it)
   await containerClient.createIfNotExists();
 
   // Generate unique blob name
-  const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
-  const blobName = `${uuidv4()}.${extension}`;
+  const extension = getExtensionFromMime(mimeType);
+  const blobName = options?.blobName || `${uuidv4()}.${extension}`;
 
   // Convert base64 to buffer
-  const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+  const base64Data = extractBase64Data(imageBase64);
   const buffer = Buffer.from(base64Data, 'base64');
 
   // Upload blob
@@ -47,6 +105,77 @@ async function uploadToBlob(
   });
 
   return blockBlobClient.url;
+}
+
+async function archiveUploadImages(
+  materials: unknown,
+  userId: string,
+  generationType: GenerationType | undefined,
+  context: InvocationContext
+): Promise<unknown> {
+  if (!isObject(materials)) return materials;
+
+  const rawUploads = materials.uploads;
+  if (!Array.isArray(rawUploads) || rawUploads.length === 0) {
+    return materials;
+  }
+
+  const generationLabel = generationType || 'generation';
+  const safeUserId = sanitizePathSegment(userId) || 'user';
+  const batchId = uuidv4();
+  const archivedUploads: UploadArchiveRecord[] = [];
+
+  for (let index = 0; index < rawUploads.length; index += 1) {
+    const item = rawUploads[index];
+    if (!isObject(item)) continue;
+
+    const candidate: UploadArchiveCandidate = item as UploadArchiveCandidate;
+    const dataUrl = asString(candidate.dataUrl);
+    if (!dataUrl || !dataUrl.startsWith('data:')) {
+      continue;
+    }
+
+    const detectedMime = asString(candidate.mimeType);
+    const mimeFromDataUrlMatch = dataUrl.match(/^data:([^;]+);base64,/i);
+    const mimeType = (detectedMime || mimeFromDataUrlMatch?.[1] || 'image/png').toLowerCase();
+    const extension = getExtensionFromMime(mimeType);
+    const safeId = sanitizePathSegment(asString(candidate.id) || `upload-${index + 1}`) || `upload-${index + 1}`;
+    const blobName = `uploads/${safeUserId}/${generationLabel}/${batchId}/${safeId}.${extension}`;
+
+    try {
+      const blobUrl = await uploadToBlob(dataUrl, mimeType, {
+        containerName: BLOB_UPLOAD_CONTAINER,
+        blobName,
+      });
+      archivedUploads.push({
+        id: asString(candidate.id) || `upload-${index + 1}`,
+        name: asString(candidate.name),
+        mimeType,
+        sizeBytes: asFiniteNumber(candidate.sizeBytes),
+        originalSizeBytes: asFiniteNumber(candidate.originalSizeBytes),
+        width: asFiniteNumber(candidate.width),
+        height: asFiniteNumber(candidate.height),
+        blobUrl,
+        archivedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      context.warn('Failed to archive uploaded source image', {
+        userId,
+        generationType: generationLabel,
+        uploadId: candidate.id || `upload-${index + 1}`,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  const nextMaterials: Record<string, unknown> = { ...materials };
+  nextMaterials.uploads = archivedUploads;
+  nextMaterials.uploadArchive = {
+    container: BLOB_UPLOAD_CONTAINER,
+    path: `uploads/${safeUserId}/${generationLabel}/${batchId}/`,
+    count: archivedUploads.length,
+  };
+  return nextMaterials;
 }
 
 export async function saveGeneration(
@@ -103,6 +232,12 @@ export async function saveGeneration(
     // Upload to blob storage
     const blobUrl = await uploadToBlob(imageBase64, mimeType || 'image/png');
     const blobUrlWithSas = getSasUrlForBlob(blobUrl);
+    const materialsWithArchivedUploads = await archiveUploadImages(
+      materials,
+      userId,
+      generationType,
+      context
+    );
 
     // Save to their history and increment usage when generation type is provided
     if (generationType) {
@@ -111,7 +246,7 @@ export async function saveGeneration(
         generationType,
         prompt || '',
         blobUrl,
-        materials
+        materialsWithArchivedUploads
       );
       await incrementUsage(userId, generationType);
       context.log(`Saved generation record and incremented usage for ${userId}`);

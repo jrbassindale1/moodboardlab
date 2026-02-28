@@ -37,7 +37,7 @@ type ImageRequestResult<T> = {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type"
+  "Access-Control-Allow-Headers": "Content-Type, Authorization"
 };
 
 const buildPromptPayload = (prompt?: string, systemPrompt?: string) => {
@@ -149,9 +149,10 @@ async function runImageRequestWithFallback<T>(
     }
 
     ctx.warn(
-      `Image model ${imageModel} hit quota/rate limits. Retrying once with ${FALLBACK_GEMINI_IMAGE_MODEL}.`
+      `[FALLBACK] Primary model ${imageModel} hit quota/rate limits. Switching to fallback: ${FALLBACK_GEMINI_IMAGE_MODEL}`
     );
     const result = await runner(FALLBACK_GEMINI_IMAGE_MODEL);
+    ctx.log(`[FALLBACK] Successfully generated image using fallback model: ${FALLBACK_GEMINI_IMAGE_MODEL}`);
     return {
       result,
       fallbackUsed: true,
@@ -163,6 +164,7 @@ async function runImageRequestWithFallback<T>(
 async function generateImageWithGemini(payload: ImageGenerationPayload, ctx: InvocationContext) {
   const { prompt } = payload;
   const imageModel = resolveImageModel(ctx);
+  ctx.log(`[Image Generation] Using model: ${imageModel}`);
 
   const runWithModel = async (modelName: string) => {
     const model = genAI.getGenerativeModel({
@@ -266,6 +268,14 @@ export async function generateMoodboardHandler(
       } else {
         // Complex generation: moodboard (always 1:1) or material application (preserve input aspect ratio)
         const imageModel = resolveImageModel(ctx);
+
+        // Detect if this is an apply materials request (has input image) or moodboard generation
+        const hasInputImage = Array.isArray(rawPayload.contents) &&
+          rawPayload.contents.some((c: any) =>
+            Array.isArray(c?.parts) && c.parts.some((p: any) => p?.inlineData || p?.inline_data)
+          );
+        const generationType = hasInputImage ? 'Apply Materials' : 'Moodboard';
+        ctx.log(`[${generationType}] Using model: ${imageModel}`);
 
         // Extract imageConfig if provided
         const imageConfig = rawPayload.imageConfig || {};

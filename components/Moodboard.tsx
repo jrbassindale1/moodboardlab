@@ -544,12 +544,21 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
-  const persistGeneration = async (imageDataUri: string, prompt: string) => {
+  const persistGeneration = async (
+    imageDataUri: string,
+    prompt: string,
+    generationMeta?: {
+      imageModelUsed?: string;
+      imageFallbackUsed?: boolean;
+    }
+  ) => {
     const metadata = {
       renderMode: 'moodboard',
       materialKey: buildMaterialKey(),
       summary: summaryText,
       generatedPrompt: prompt,
+      imageModelUsed: generationMeta?.imageModelUsed || undefined,
+      imageFallbackUsed: generationMeta?.imageFallbackUsed,
       sustainabilityInsights: sustainabilityInsightsRef.current || undefined,
       board
     };
@@ -1443,6 +1452,7 @@ ${JSON.stringify(proseContext)}`;
         };
         const data = await callGeminiImage(payload);
         const fallbackUsed = isImageModelFallbackUsed(data);
+        const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
         setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
         let img: string | null = null;
         let mime: string | null = null;
@@ -1462,7 +1472,10 @@ ${JSON.stringify(proseContext)}`;
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
         options?.onRender?.(newUrl);
-        void persistGeneration(newUrl, prompt);
+        void persistGeneration(newUrl, prompt, {
+          imageModelUsed: modelUsed,
+          imageFallbackUsed: fallbackUsed
+        });
         trackEvent('generate_moodboard', {
           mode: isEditingRender ? 'edit' : 'new',
           material_count: renderMaterials.length,

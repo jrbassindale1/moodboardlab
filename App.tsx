@@ -130,8 +130,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Strip icon URLs before caching - they contain SAS tokens that expire after 24 hours
+    const boardWithoutIconUrls = selectedMaterials.map(
+      ({ iconWebpUrl, iconPngUrl, ...rest }) => rest
+    );
     const cache: BoardCache = {
-      board: selectedMaterials,
+      board: boardWithoutIconUrls as MaterialOption[],
       savedAt: new Date().toISOString(),
     };
     try {

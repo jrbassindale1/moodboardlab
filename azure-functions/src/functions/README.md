@@ -11,7 +11,6 @@ This directory contains the Azure Functions code needed to support user authenti
    npm install jsonwebtoken jwks-rsa uuid @azure/cosmos
    npm install -D @types/jsonwebtoken
    ```
-4. **Node.js 20+** (recommended and required by several current Azure SDK packages)
 
 ## Clerk Setup
 
@@ -71,12 +70,6 @@ Add this for Clerk token validation:
 CLERK_JWKS_URL=https://<your-clerk-instance>.clerk.accounts.dev/.well-known/jwks.json
 ```
 
-Optional but recommended if session JWTs do not include `email`:
-```
-CLERK_SECRET_KEY=sk_live_xxxxx
-```
-Used to resolve the user email from Clerk API when needed for admin checks.
-
 Optional (recommended) for stricter token validation:
 ```
 CLERK_ISSUER=https://<your-clerk-instance>.clerk.accounts.dev
@@ -88,28 +81,6 @@ Optional for material icon URL generation:
 MATERIAL_ICON_BLOB_CONTAINER=material-icons
 # Or set full base (container included), e.g.
 # MATERIAL_ICON_BLOB_BASE_URL=https://<account>.blob.core.windows.net/material-icons
-```
-
-Optional for separating archived source uploads from generated renders:
-```
-BLOB_CONTAINER=generations
-BLOB_UPLOAD_CONTAINER=generation-uploads
-```
-If `BLOB_UPLOAD_CONTAINER` is omitted, uploads are still archived under an `uploads/...` path inside `BLOB_CONTAINER`.
-
-Optional for staging admin bypass (for endpoints that support it, e.g. `PUT /api/materials`):
-```
-ADMIN_BYPASS_ENABLED=true
-ADMIN_BYPASS_KEY=<long-random-secret>
-ADMIN_BYPASS_ALLOWED_ORIGINS=https://<your-staging-frontend-origin>
-```
-When enabled, send the key in request header:
-`X-Admin-Key: <long-random-secret>`
-Note: bypass is rejected unless the request `Origin` matches one of `ADMIN_BYPASS_ALLOWED_ORIGINS` (comma-separated).
-
-Optional for admin checks by Clerk user ID (comma-separated):
-```
-ADMIN_USER_IDS=user_abc123,user_def456
 ```
 
 ### Frontend (.env.local)
@@ -145,36 +116,6 @@ your-azure-functions-project/
    - Quota is enforced after 10 generations
 5. Verify materials API:
    - `GET /api/materials` returns `{ items: [...] }` from CosmosDB
-6. If using staging bypass:
-   - Keep Clerk disabled in staging frontend (`VITE_DISABLE_AUTH=true`)
-   - Set backend app settings above
-   - Open Material Admin and enter the staging admin key before saving
-
-### Pre-deploy safety check (from this repo)
-
-Run before copying/deploying backend changes:
-
-```bash
-npm run verify:functions
-```
-
-This check currently catches:
-- Deprecated Cosmos query option `enableCrossPartitionQuery`
-- TypeScript compatibility in `azure-functions/src`
-- Node.js major version (<20 fails)
-
-### Quick toggle script (from this repo)
-
-Use `scripts/toggle-admin-bypass.sh` to switch bypass on/off without editing app settings manually:
-
-```bash
-cp scripts/admin-bypass.env.example scripts/admin-bypass.env
-# edit scripts/admin-bypass.env with app name, resource group, key, origin
-
-bash scripts/toggle-admin-bypass.sh on
-bash scripts/toggle-admin-bypass.sh status
-bash scripts/toggle-admin-bypass.sh off
-```
 
 ## Troubleshooting
 

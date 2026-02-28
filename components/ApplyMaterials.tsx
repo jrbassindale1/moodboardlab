@@ -191,12 +191,21 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
   };
 
-  const persistGeneration = async (imageDataUri: string, prompt: string) => {
+  const persistGeneration = async (
+    imageDataUri: string,
+    prompt: string,
+    generationMeta?: {
+      imageModelUsed?: string;
+      imageFallbackUsed?: boolean;
+    }
+  ) => {
     const trimmedNote = renderNote.trim();
     const metadata = {
       renderMode: 'apply-to-upload',
       materialKey: buildMaterialKey(),
       summary: summaryText,
+      imageModelUsed: generationMeta?.imageModelUsed || undefined,
+      imageFallbackUsed: generationMeta?.imageFallbackUsed,
       renderNote: trimmedNote || undefined,
       userNote: trimmedNote || undefined,
       generatedPrompt: prompt,
@@ -469,6 +478,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       const data = await callGeminiImage(payload);
       const fallbackUsed = isImageModelFallbackUsed(data);
+      const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
       setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
       let img: string | null = null;
       let mime: string | null = null;
@@ -509,7 +519,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         incrementLocalUsage();
       }
 
-      void persistGeneration(newUrl, prompt);
+      void persistGeneration(newUrl, prompt, {
+        imageModelUsed: modelUsed,
+        imageFallbackUsed: fallbackUsed
+      });
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');

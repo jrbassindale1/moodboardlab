@@ -16,6 +16,26 @@ import { requireAuth, ValidatedUser } from '../shared/validateToken';
 import { getContainer, GenerationDocument } from '../shared/cosmosClient';
 import { getSasUrlForBlob } from '../shared/blobSas';
 
+function hydrateBlobUrlsWithSas(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => hydrateBlobUrlsWithSas(item));
+  }
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const source = value as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(source)) {
+    if (typeof val === 'string' && (key === 'blobUrl' || key.endsWith('BlobUrl'))) {
+      next[key] = getSasUrlForBlob(val);
+      continue;
+    }
+    next[key] = hydrateBlobUrlsWithSas(val);
+  }
+  return next;
+}
+
 export async function generations(
   req: HttpRequest,
   context: InvocationContext
@@ -44,9 +64,9 @@ export async function generations(
     const generationsContainer = getContainer('generations');
 
     // Query for user's generations, ordered by createdAt descending
-    const querySpec = {
-      query: `
-        SELECT c.id, c.type, c.blobUrl, c.createdAt, c.prompt, c.materials
+      const querySpec = {
+        query: `
+        SELECT c.id, c.type, c.blobUrl, c.createdAt, c.prompt, c.materials, c.metadata
         FROM c
         WHERE c.userId = @userId
         ORDER BY c.createdAt DESC
@@ -71,6 +91,8 @@ export async function generations(
     const itemsWithSas = items.map((item) => ({
       ...item,
       blobUrl: item.blobUrl ? getSasUrlForBlob(item.blobUrl) : item.blobUrl,
+      materials: hydrateBlobUrlsWithSas(item.materials),
+      metadata: hydrateBlobUrlsWithSas(item.metadata),
     }));
 
     return {
