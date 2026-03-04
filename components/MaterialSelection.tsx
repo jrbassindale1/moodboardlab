@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, Search, ShoppingCart, X, Camera, Leaf } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
@@ -340,24 +340,6 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     setDraggedMaterial(null);
   };
 
-  // List of available videos
-  const videos = useMemo(() => [
-    '/videos/source.mp4',
-    '/videos/source-2.mp4',
-    '/videos/source-3.mp4',
-    '/videos/source-4.mp4',
-    '/videos/source-5.mp4',
-    '/videos/20251218_1111_New Video_simple_compose_01kcrjfnqsfazsdbqetst98mdm.mp4',
-    '/videos/Cinematic_Study_of_Architectural_Materials.mp4',
-    '/videos/Cinematographic_Studies_of_Architectural_Materials.mp4',
-    '/videos/Visual_Style_and_Materiality_Video.mp4',
-  ], []);
-
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(() =>
-    Math.floor(Math.random() * videos.length)
-  );
-  const [isVideoTransitioning, setIsVideoTransitioning] = useState(false);
-
   // Migrate materials to new category structure
   const migratedMaterials = useMemo(() => migrateAllMaterials(materialPalette), [materialPalette]);
 
@@ -392,46 +374,49 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
 
   // Filter materials by search
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const searchTokens = useMemo(() => normalizedSearch.split(/\s+/).filter(Boolean), [normalizedSearch]);
   const ralColorLabels = useMemo(() => RAL_COLOR_OPTIONS.map((color) => color.label), []);
+  const materialMatchesSearch = useCallback((mat: MaterialOption) => {
+    if (!searchTokens.length) return true;
+    const hasRalChoices = Boolean(mat.supportsColor);
+    const haystack = [
+      mat.name,
+      mat.finish,
+      mat.description,
+      mat.category,
+      ...(mat.keywords || []),
+      ...(mat.tags || []),
+      ...(mat.colorOptions?.map((c) => c.label) || []),
+      ...(hasRalChoices ? ralColorLabels : []),
+    ]
+      .join(' ')
+      .toLowerCase();
+    return searchTokens.every((token) => haystack.includes(token));
+  }, [searchTokens, ralColorLabels]);
 
   const filteredMaterialsByPath: Record<string, MaterialOption[]> = useMemo(() => {
-    const tokens = normalizedSearch.split(/\s+/).filter(Boolean);
-    if (!tokens.length) return materialsByPath;
-
-    const matchesSearch = (mat: MaterialOption) => {
-      const hasRalChoices = Boolean(mat.supportsColor);
-      const haystack = [
-        mat.name,
-        mat.finish,
-        mat.description,
-        mat.category,
-        ...(mat.keywords || []),
-        ...(mat.tags || []),
-        ...(mat.colorOptions?.map((c) => c.label) || []),
-        ...(hasRalChoices ? ralColorLabels : []),
-      ]
-        .join(' ')
-        .toLowerCase();
-      return tokens.every((token) => haystack.includes(token));
-    };
+    if (!searchTokens.length) return materialsByPath;
 
     const next: Record<string, MaterialOption[]> = {};
     Object.entries(materialsByPath).forEach(([path, list]) => {
-      const filtered = list.filter((item) => matchesSearch(item));
+      const filtered = list.filter((item) => materialMatchesSearch(item));
       if (filtered.length > 0) {
         next[path] = filtered;
       }
     });
     return next;
-  }, [normalizedSearch, materialsByPath, ralColorLabels]);
+  }, [searchTokens, materialsByPath, materialMatchesSearch]);
 
-  // Get materials for selected category only
+  // Use category browsing when a category is selected, otherwise search the full library.
   const displayedMaterials = useMemo(() => {
-    if (!selectedCategory) {
+    if (selectedCategory) {
+      return filteredMaterialsByPath[selectedCategory] || [];
+    }
+    if (!searchTokens.length) {
       return [];
     }
-    return filteredMaterialsByPath[selectedCategory] || [];
-  }, [selectedCategory, filteredMaterialsByPath]);
+    return migratedMaterials.filter((mat) => materialMatchesSearch(mat));
+  }, [selectedCategory, filteredMaterialsByPath, searchTokens, migratedMaterials, materialMatchesSearch]);
 
   // Sort materials
   const sortedMaterials = useMemo(() => {
@@ -825,6 +810,8 @@ IMPORTANT:
   };
 
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
+  const isLibrarySearchMode = !selectedCategory && searchTokens.length > 0;
+  const showMaterialGrid = Boolean(selectedCategory || isLibrarySearchMode);
   const toggleSection = (sectionId: string) => {
     setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
@@ -987,33 +974,47 @@ IMPORTANT:
 
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
-            {/* Page title and sort - only show when category is selected */}
-            {selectedCategory && (
+            {/* Page title + search */}
+            {!isCustomCategory && (
               <>
                 <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
                   <div>
-                    <h1 className="text-3xl font-display uppercase tracking-tight mb-2">{getCategoryLabel()}</h1>
-                    {!isCustomCategory && (
-                      <p className="text-sm text-gray-600 font-sans">
-                        {sortedMaterials.length} product{sortedMaterials.length === 1 ? '' : 's'}
-                      </p>
-                    )}
+                    <h1 className="text-3xl font-display uppercase tracking-tight mb-2">
+                      {selectedCategory ? getCategoryLabel() : 'Material Library'}
+                    </h1>
+                    <p className="text-sm text-gray-600 font-sans">
+                      {selectedCategory
+                        ? `${sortedMaterials.length} product${sortedMaterials.length === 1 ? '' : 's'}`
+                        : searchTokens.length
+                        ? `${sortedMaterials.length} result${sortedMaterials.length === 1 ? '' : 's'} across all categories`
+                        : 'Search the whole library or choose a category to browse materials.'}
+                    </p>
                   </div>
+                  {selectedCategory && (
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="px-3 py-1.5 border border-gray-200 text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-black hover:border-black transition-colors"
+                    >
+                      Search Whole Library
+                    </button>
+                  )}
                 </div>
 
                 {/* Search bar */}
-                {!isCustomCategory && (
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="search"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search materials..."
-                      className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
-                    />
-                  </div>
-                )}
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={
+                      selectedCategory
+                        ? 'Search materials in this category...'
+                        : 'Search the whole material library...'
+                    }
+                    className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
+                  />
+                </div>
               </>
             )}
 
@@ -1239,66 +1240,7 @@ IMPORTANT:
                   </div>
                 )}
               </div>
-            ) : !selectedCategory ? (
-              /* Empty state when no category selected - Video showcase */
-              <div className={`${isFadingOut ? 'animate-fade-out' : ''}`}>
-                {isSmallScreen ? (
-                  <div className="mx-auto w-full max-w-full border border-arch-line p-8 text-center">
-                    <p className="text-gray-700 font-sans text-base">
-                      Choose a category to browse materials.
-                    </p>
-                  </div>
-                ) : (
-                  /* Material video showcase */
-                  <div className="relative mx-auto w-full overflow-hidden rounded-lg bg-black aspect-square max-w-full lg:max-w-2xl">
-                    <video
-                      key={currentVideoIndex}
-                      autoPlay
-                      muted
-                      playsInline
-                      loop={false}
-                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                        isVideoTransitioning ? 'opacity-0' : 'opacity-100'
-                      }`}
-                      style={{
-                        objectPosition: 'center center',
-                      }}
-                      onLoadedData={(e: React.SyntheticEvent<HTMLVideoElement>) => {
-                        const video = e.currentTarget;
-                        video.playbackRate = 0.5;
-
-                        // Force move to next video after 7 seconds
-                        setTimeout(() => {
-                          setIsVideoTransitioning(true);
-                          setTimeout(() => {
-                            const nextIndex = Math.floor(Math.random() * videos.length);
-                            setCurrentVideoIndex(nextIndex);
-                            setIsVideoTransitioning(false);
-                          }, 1000);
-                        }, 7000);
-                      }}
-                      onEnded={() => {
-                        setIsVideoTransitioning(true);
-                        setTimeout(() => {
-                          const nextIndex = Math.floor(Math.random() * videos.length);
-                          setCurrentVideoIndex(nextIndex);
-                          setIsVideoTransitioning(false);
-                        }, 1000);
-                      }}
-                    >
-                      <source src={videos[currentVideoIndex]} type="video/mp4" />
-                    </video>
-
-                    {/* Overlay text */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <p className="text-white font-sans text-lg text-center px-6">
-                        Choose a category to browse materials
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
+            ) : showMaterialGrid ? (
               <>
                 {/* Product Grid */}
                 <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
@@ -1338,6 +1280,11 @@ IMPORTANT:
 
                       {/* Product info */}
                       <div className="space-y-2">
+                        {isLibrarySearchMode && (
+                          <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
+                            {getCategoryDisplayName(mat.category)}
+                          </p>
+                        )}
                         <h3 className="font-display uppercase tracking-wide text-sm">{mat.name}</h3>
                         <p className="text-xs text-gray-600 font-sans line-clamp-2">
                           {formatFinishForDisplay(mat.finish)}
@@ -1385,11 +1332,15 @@ IMPORTANT:
                 {/* Empty state when no results */}
                 {sortedMaterials.length === 0 && (
                   <div className="text-center py-16">
-                    <p className="text-gray-600 font-sans">No materials found in this category.</p>
+                    <p className="text-gray-600 font-sans">
+                      {selectedCategory
+                        ? 'No materials found in this category.'
+                        : `No materials found for "${searchTerm.trim()}".`}
+                    </p>
                   </div>
                 )}
               </>
-            )}
+            ) : null}
           </main>
         </div>
       </div>
