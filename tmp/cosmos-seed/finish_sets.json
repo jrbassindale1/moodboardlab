@@ -1002,16 +1002,51 @@
     "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Composite terrazzo with plastic fragments\",\"tone\":null}]}"
   },
   {
-    "id": "fs:single:3eda78072e72",
+    "id": "fs:colorOptions:1b9c52c2bdff",
     "pk": "finish_set",
-    "type": "single",
-    "name": "Single Finish",
+    "type": "colorOptions",
+    "name": "Material Colour Set",
     "options": [
       {
-        "label": "Recycled rubber sheet"
+        "label": "Charcoal",
+        "tone": "#3f4146"
+      },
+      {
+        "label": "Mid Grey",
+        "tone": "#666970"
+      },
+      {
+        "label": "Clay Red",
+        "tone": "#a2624f"
+      },
+      {
+        "label": "Moss Green",
+        "tone": "#5d6a57"
+      },
+      {
+        "label": "Slate Blue",
+        "tone": "#5f6e7f"
       }
     ],
-    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Recycled rubber sheet\",\"tone\":null}]}"
+    "signature": "{\"type\":\"colorOptions\",\"options\":[{\"label\":\"Charcoal\",\"tone\":\"#3f4146\"},{\"label\":\"Mid Grey\",\"tone\":\"#666970\"},{\"label\":\"Clay Red\",\"tone\":\"#a2624f\"},{\"label\":\"Moss Green\",\"tone\":\"#5d6a57\"},{\"label\":\"Slate Blue\",\"tone\":\"#5f6e7f\"}]}"
+  },
+  {
+    "id": "fs:textOptions:3570e449a8a6",
+    "pk": "finish_set",
+    "type": "textOptions",
+    "name": "Material Finish Options",
+    "options": [
+      {
+        "label": "Smooth"
+      },
+      {
+        "label": "Studded"
+      },
+      {
+        "label": "Textured"
+      }
+    ],
+    "signature": "{\"type\":\"textOptions\",\"options\":[{\"label\":\"Smooth\",\"tone\":null},{\"label\":\"Studded\",\"tone\":null},{\"label\":\"Textured\",\"tone\":null}]}"
   },
   {
     "id": "fs:colorOptions:af651c95089e",
@@ -4219,5 +4254,341 @@
       }
     ],
     "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Powder-coated or timber\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:5908d3ff8c77",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Glazed recycled glass mosaic tiles"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Glazed recycled glass mosaic tiles\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:6abfb4eff666",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Handmade glazed clay tiles"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Handmade glazed clay tiles\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:18e5d57c1f14",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Engineered quartz slab"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Engineered quartz slab\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:900071d61e87",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Mineral-filled acrylic solid surface"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Mineral-filled acrylic solid surface\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:1ed15a585d4b",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Bio-based linoleum-faced board"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Bio-based linoleum-faced board\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:6ad7b2bbf957",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "FSC MDF with low-VOC finish"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"FSC MDF with low-VOC finish\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:a6243d7493c2",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Natural cork wallcovering roll"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Natural cork wallcovering roll\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:d2f9ea1a148b",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Natural linen textile wallcovering"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Natural linen textile wallcovering\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:e52bca7df462",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Recycled PET felt panels"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Recycled PET felt panels\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:06f371a4731d",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Mineral-bound wood wool panel"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Mineral-bound wood wool panel\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:d5e3a75e25ce",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Natural timber veneer on certified core"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Natural timber veneer on certified core\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:cba55b5423ba",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Lime-enhanced low-cement microtopping"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Lime-enhanced low-cement microtopping\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:d6cbe5d31b78",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Post-consumer recycled polymer moulding"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Post-consumer recycled polymer moulding\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:cf1b8986ee01",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Autoclaved aerated concrete blocks"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Autoclaved aerated concrete blocks\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:c585fa5b8aa7",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Alkali-activated low-clinker concrete"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Alkali-activated low-clinker concrete\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:2994df87cafd",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Compressed straw fibre insulation panel"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Compressed straw fibre insulation panel\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:75bd10573378",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Textured anti-slip porcelain tile"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Textured anti-slip porcelain tile\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:58208c0d2c5a",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Glazed ceramic wall tile"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Glazed ceramic wall tile\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:3808fe303c4f",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Toughened recycled-content glass panel"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Toughened recycled-content glass panel\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:7327f2174b62",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Ultra-compact sintered stone slab"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Ultra-compact sintered stone slab\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:623b5a9baa13",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Brushed stainless steel counter"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Brushed stainless steel counter\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:84dc3034e97e",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Resin-bound recycled paper composite"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Resin-bound recycled paper composite\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:8f971fae3341",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "FSC plywood carcass with low-VOC fronts"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"FSC plywood carcass with low-VOC fronts\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:bcc4d7fe9b15",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Moisture-resistant board with sealed edges"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Moisture-resistant board with sealed edges\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:77fff6ae0d29",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Vitreous china sanitaryware"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Vitreous china sanitaryware\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:90f68fc65d94",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Brushed stainless taps and accessories"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Brushed stainless taps and accessories\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:0a4b2b638c20",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Water-efficient shower set"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Water-efficient shower set\",\"tone\":null}]}"
+  },
+  {
+    "id": "fs:single:75b7b04bbca6",
+    "pk": "finish_set",
+    "type": "single",
+    "name": "Single Finish",
+    "options": [
+      {
+        "label": "Toughened low-iron glass screen"
+      }
+    ],
+    "signature": "{\"type\":\"single\",\"options\":[{\"label\":\"Toughened low-iron glass screen\",\"tone\":null}]}"
   }
 ]

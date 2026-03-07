@@ -11,6 +11,47 @@ interface ConceptProps {
   onNavigate: (page: string) => void;
 }
 
+const sustainabilityHighlights = [
+  {
+    title: 'Real material data',
+    copy: 'Specifications, finishes, and environmental context sit alongside the visual palette from the start.',
+  },
+  {
+    title: 'Concept-stage decisions',
+    copy: 'See carbon and circularity trade-offs while ideas are still flexible, not after key choices are locked.',
+  },
+  {
+    title: 'One continuous workflow',
+    copy: 'The same palette drives presentation visuals, applied renders, and downstream material handoff.',
+  },
+];
+
+const featureCards = [
+  {
+    title: 'Curate',
+    copy: 'Build a material palette with drag-and-drop selection, custom colours, real product data, and concise specification details.',
+  },
+  {
+    title: 'Sustainability',
+    copy: 'See environmental insight on every material in one click, with early guidance on carbon hotspots and better alternatives.',
+  },
+  {
+    title: 'Render',
+    copy: 'Generate photorealistic palette compositions that show texture, tone, and adjacency clearly for reviews and client presentations.',
+  },
+  {
+    title: 'Apply',
+    copy: 'Upload a sketch, elevation, or reference image and see your selected materials applied with context, light, and scale.',
+  },
+];
+
+const outcomes = [
+  'Present material choices to clients with real specifications, not just images.',
+  'Show sustainability data at concept stage before design decisions are locked.',
+  'Generate convincing visuals without a 3D visualiser or render artist.',
+  'Test material palettes on your actual designs before committing.',
+];
+
 const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
   const carouselImages = [carouselA, carouselB, carouselC, carouselD];
   const [activeIndex, setActiveIndex] = useState(0);
@@ -30,11 +71,10 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
         <div className="relative max-w-screen-2xl mx-auto px-6 pt-12 pb-20 md:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6">
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95]">
-              Material and moodboard workspace for architects and designers.
+              Material palette workspace for architects and designers.
             </h1>
             <p className="font-sans text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed">
-              From material intent to convincing visuals in minutes. Curate a material palette, get instant sustainability insight, and generate photorealistic
-              moodboard renders. Upload a reference image to see your palette applied then use simple prompts for deeper rendering. For a limited time sign-up and use for FREE!
+              Curate a material palette with real specifications and sustainability data. Generate photorealistic renders of your materials applied to buildings, free during launch.
             </p>
             <div className="flex flex-wrap gap-4">
               <button
@@ -42,7 +82,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
                 className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
-                <span className="font-mono text-xs uppercase tracking-widest">Start Curating and Creating Now</span>
+                <span className="font-mono text-xs uppercase tracking-widest">Start Free</span>
               </button>
             </div>
           </div>
@@ -50,36 +90,53 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-xl">
               <img
                 src={heroMoodboard}
-                alt="Moodboard hero preview"
+                alt="Material palette render preview"
                 className="w-full h-[420px] md:h-[520px] lg:h-[560px] object-cover"
               />
             </div>
           </div>
         </div>
-        <div className="relative max-w-screen-2xl mx-auto px-6 pb-12">
-          <div className="max-w-3xl">
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Why it matters</p>
-            <p className="mt-3 font-sans text-gray-800 text-lg leading-relaxed">
-              Moodboard Lab helps you move fast: curate materials, understand sustainability, generate visuals, and keep your palette consistent from early ideas to detailed rendering.
+      </header>
+
+      {/* Sustainability */}
+      <section className="border-b border-lime-200 bg-[linear-gradient(135deg,#f7f7ee_0%,#edf6dd_52%,#f5f2e9_100%)] py-16">
+        <div className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="lg:col-span-5 space-y-4">
+            <p className="font-mono text-xs uppercase tracking-[0.22em] text-lime-900/70">Embedded from concept stage</p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95] text-slate-900">
+              Sustainability starts with the first material.
+            </h2>
+          </div>
+          <div className="lg:col-span-7 space-y-6">
+            <p className="font-sans text-lg md:text-xl text-slate-800 max-w-4xl leading-relaxed">
+              Your material palette is a specification, not a collage. Environmental data is embedded in every material choice at concept stage, so carbon, circularity, and practical trade-offs show up before a separate Stage 4 review.
             </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {sustainabilityHighlights.map((item) => (
+                <div key={item.title} className="border border-lime-900/10 bg-white/80 backdrop-blur p-5 space-y-3 shadow-sm">
+                  <p className="font-display text-lg uppercase tracking-wide text-slate-900">{item.title}</p>
+                  <p className="font-sans text-sm leading-relaxed text-slate-700">{item.copy}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* Workflow Strip */}
       <WorkflowStrip />
 
-      {/* Recent Moodboards */}
+      {/* Recent Renders */}
       <section className="bg-white py-12 border-b border-gray-100">
         <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent Boards</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent renders</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
               <p className="font-sans text-gray-700 leading-relaxed">
-                A selection of moodboards created in Moodboard Lab. Each one shows how the palette system brings together balanced tones and clear material choices through speedy AI renders.
+                Recent palette renders created in Moodboard Lab. Each one shows how real material choices can become fast, presentation-ready visuals.
               </p>
             </div>
             <div className="lg:col-span-2">
@@ -90,7 +147,7 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
                 >
                   {carouselImages.map((src, idx) => (
                     <div key={src} className="w-full shrink-0">
-                      <img src={src} alt={`Moodboard ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={src} alt={`Palette render ${idx + 1}`} className="w-full h-full object-cover" />
                     </div>
                   ))}
                 </div>
@@ -112,21 +169,6 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* Value Proposition */}
-      <section className="bg-white py-12 border-b border-gray-100">
-        <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">What you can do</p>
-          </div>
-          <p className="font-sans text-lg text-gray-700 max-w-4xl leading-relaxed">
-            Drag ready-made materials or add your own colours, get one-click sustainability advice, produce a concise
-            material spec, generate a photorealistic moodboard render, upload an image to see your palette applied, and
-            hand the selections into the Material Lab for deeper work—all in one place.
-          </p>
-        </div>
-      </section>
-
       {/* Features */}
       <section className="bg-white py-16 border-b border-gray-100">
         <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
@@ -135,61 +177,25 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
             <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Features</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Curate</h3>
-              <p className="font-sans text-gray-700">
-                Build your palette by dragging materials or adding custom colours; choose steel tones when you select a steel frame.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Sustainability</h3>
-              <p className="font-sans text-gray-700">
-                One-click AI advice highlights carbon hotspots, circularity potential, and simple improvements.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Specification</h3>
-              <p className="font-sans text-gray-700">
-                Get a concise, project-ready material specification alongside your board.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Render</h3>
-              <p className="font-sans text-gray-700">
-                Generate a photorealistic moodboard render that reflects your chosen tones and textures.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Apply to images</h3>
-              <p className="font-sans text-gray-700">
-                Upload a sketch, elevation, or precedent and see your palette applied in a separate render.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <h3 className="font-display text-2xl uppercase font-semibold">Hand-off</h3>
-              <p className="font-sans text-gray-700">
-                Send your selections into the Material Lab for detailed rendering and refinement.
-              </p>
-            </div>
+            {featureCards.map((feature) => (
+              <div key={feature.title} className="space-y-3 border border-gray-200 bg-gray-50 p-6">
+                <h3 className="font-display text-2xl uppercase font-semibold">{feature.title}</h3>
+                <p className="font-sans text-gray-700 leading-relaxed">{feature.copy}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Use Cases */}
+      {/* Outcomes */}
       <section className="bg-gray-50 py-16 border-b border-gray-200">
         <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Use cases</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Outcomes</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              'Quickly explore design options and material strategies.',
-              'Understand sustainability implications early in the process.',
-              'Produce convincing visuals without specialist software.',
-              'Apply palettes to concept sketches or reference images.',
-              'Carry materials forward into later design stages.'
-            ].map((item, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {outcomes.map((item, idx) => (
               <div key={idx} className="border border-gray-200 bg-white p-4">
                 <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
                   {String(idx + 1).padStart(2, '0')}
@@ -203,19 +209,16 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
 
       {/* Final CTA */}
       <section className="bg-black text-white py-16">
-        <div className="max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <div className="font-mono text-xs uppercase tracking-widest text-gray-400">Build your first material palette in minutes.</div>
-            <h3 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight mt-2">
-              Open Moodboard Lab and build your palette now.
-            </h3>
-          </div>
+        <div className="max-w-screen-xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <h3 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight text-center md:text-left">
+            Build your first material palette.
+          </h3>
           <button
-            onClick={() => onNavigate('moodboard')}
+            onClick={() => onNavigate('materials')}
             className="bg-white text-black px-6 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors"
           >
             <ArrowRight className="w-4 h-4" />
-            <span className="font-mono text-xs uppercase tracking-widest">Open Moodboard Lab</span>
+            <span className="font-mono text-xs uppercase tracking-widest">Start Free</span>
           </button>
         </div>
       </section>

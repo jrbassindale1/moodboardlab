@@ -98,6 +98,27 @@
     "isPrimary": true
   },
   {
+    "id": "mf:rubber-floor:finish:smooth",
+    "pk": "rubber-floor",
+    "materialId": "rubber-floor",
+    "finishId": "finish:smooth",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:rubber-floor:finish:studded",
+    "pk": "rubber-floor",
+    "materialId": "rubber-floor",
+    "finishId": "finish:studded",
+    "isPrimary": false
+  },
+  {
+    "id": "mf:rubber-floor:finish:textured",
+    "pk": "rubber-floor",
+    "materialId": "rubber-floor",
+    "finishId": "finish:textured",
+    "isPrimary": false
+  },
+  {
     "id": "mf:timber-flooring:finish:engineered-timber-boards",
     "pk": "timber-flooring",
     "materialId": "timber-flooring",
@@ -1544,6 +1565,202 @@
     "pk": "modular-shelving",
     "materialId": "modular-shelving",
     "finishId": "finish:powder-coated-or-timber",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-glass-mosaic:finish:glazed-recycled-glass-mosaic-tiles",
+    "pk": "recycled-glass-mosaic",
+    "materialId": "recycled-glass-mosaic",
+    "finishId": "finish:glazed-recycled-glass-mosaic-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:zellige-tiles:finish:handmade-glazed-clay-tiles",
+    "pk": "zellige-tiles",
+    "materialId": "zellige-tiles",
+    "finishId": "finish:handmade-glazed-clay-tiles",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:quartz-composite-worktop:finish:engineered-quartz-slab",
+    "pk": "quartz-composite-worktop",
+    "materialId": "quartz-composite-worktop",
+    "finishId": "finish:engineered-quartz-slab",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:solid-surface-worktop:finish:mineral-filled-acrylic-solid-surface",
+    "pk": "solid-surface-worktop",
+    "materialId": "solid-surface-worktop",
+    "finishId": "finish:mineral-filled-acrylic-solid-surface",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:linoleum-faced-joinery:finish:bio-based-linoleum-faced-board",
+    "pk": "linoleum-faced-joinery",
+    "materialId": "linoleum-faced-joinery",
+    "finishId": "finish:bio-based-linoleum-faced-board",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:fsc-mdf-joinery:finish:fsc-mdf-with-low-voc-finish",
+    "pk": "fsc-mdf-joinery",
+    "materialId": "fsc-mdf-joinery",
+    "finishId": "finish:fsc-mdf-with-low-voc-finish",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:cork-wallcovering:finish:natural-cork-wallcovering-roll",
+    "pk": "cork-wallcovering",
+    "materialId": "cork-wallcovering",
+    "finishId": "finish:natural-cork-wallcovering-roll",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:linen-wallcovering:finish:natural-linen-textile-wallcovering",
+    "pk": "linen-wallcovering",
+    "materialId": "linen-wallcovering",
+    "finishId": "finish:natural-linen-textile-wallcovering",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:pet-felt-acoustic-panels:finish:recycled-pet-felt-panels",
+    "pk": "pet-felt-acoustic-panels",
+    "materialId": "pet-felt-acoustic-panels",
+    "finishId": "finish:recycled-pet-felt-panels",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:wood-wool-acoustic-panels:finish:mineral-bound-wood-wool-panel",
+    "pk": "wood-wool-acoustic-panels",
+    "materialId": "wood-wool-acoustic-panels",
+    "finishId": "finish:mineral-bound-wood-wool-panel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:veneer-wall-panels:finish:natural-timber-veneer-on-certified-core",
+    "pk": "veneer-wall-panels",
+    "materialId": "veneer-wall-panels",
+    "finishId": "finish:natural-timber-veneer-on-certified-core",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:bio-based-microcement:finish:lime-enhanced-low-cement-microtopping",
+    "pk": "bio-based-microcement",
+    "materialId": "bio-based-microcement",
+    "finishId": "finish:lime-enhanced-low-cement-microtopping",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-plastic-furniture:finish:post-consumer-recycled-polymer-moulding",
+    "pk": "recycled-plastic-furniture",
+    "materialId": "recycled-plastic-furniture",
+    "finishId": "finish:post-consumer-recycled-polymer-moulding",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:aac-blockwork:finish:autoclaved-aerated-concrete-blocks",
+    "pk": "aac-blockwork",
+    "materialId": "aac-blockwork",
+    "finishId": "finish:autoclaved-aerated-concrete-blocks",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:geopolymer-concrete:finish:alkali-activated-low-clinker-concrete",
+    "pk": "geopolymer-concrete",
+    "materialId": "geopolymer-concrete",
+    "finishId": "finish:alkali-activated-low-clinker-concrete",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:straw-insulation-panels:finish:compressed-straw-fibre-insulation-panel",
+    "pk": "straw-insulation-panels",
+    "materialId": "straw-insulation-panels",
+    "finishId": "finish:compressed-straw-fibre-insulation-panel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:porcelain-wetroom-tiles:finish:textured-anti-slip-porcelain-tile",
+    "pk": "porcelain-wetroom-tiles",
+    "materialId": "porcelain-wetroom-tiles",
+    "finishId": "finish:textured-anti-slip-porcelain-tile",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:ceramic-subway-tiles:finish:glazed-ceramic-wall-tile",
+    "pk": "ceramic-subway-tiles",
+    "materialId": "ceramic-subway-tiles",
+    "finishId": "finish:glazed-ceramic-wall-tile",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-glass-splashback:finish:toughened-recycled-content-glass-panel",
+    "pk": "recycled-glass-splashback",
+    "materialId": "recycled-glass-splashback",
+    "finishId": "finish:toughened-recycled-content-glass-panel",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:sintered-stone-worktop:finish:ultra-compact-sintered-stone-slab",
+    "pk": "sintered-stone-worktop",
+    "materialId": "sintered-stone-worktop",
+    "finishId": "finish:ultra-compact-sintered-stone-slab",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:stainless-steel-worktop:finish:brushed-stainless-steel-counter",
+    "pk": "stainless-steel-worktop",
+    "materialId": "stainless-steel-worktop",
+    "finishId": "finish:brushed-stainless-steel-counter",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:recycled-paper-composite-worktop:finish:resin-bound-recycled-paper-composite",
+    "pk": "recycled-paper-composite-worktop",
+    "materialId": "recycled-paper-composite-worktop",
+    "finishId": "finish:resin-bound-recycled-paper-composite",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:fsc-kitchen-cabinetry:finish:fsc-plywood-carcass-with-low-voc-fronts",
+    "pk": "fsc-kitchen-cabinetry",
+    "materialId": "fsc-kitchen-cabinetry",
+    "finishId": "finish:fsc-plywood-carcass-with-low-voc-fronts",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:water-resistant-bathroom-joinery:finish:moisture-resistant-board-with-sealed-edges",
+    "pk": "water-resistant-bathroom-joinery",
+    "materialId": "water-resistant-bathroom-joinery",
+    "finishId": "finish:moisture-resistant-board-with-sealed-edges",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:sanitary-ceramic-ware:finish:vitreous-china-sanitaryware",
+    "pk": "sanitary-ceramic-ware",
+    "materialId": "sanitary-ceramic-ware",
+    "finishId": "finish:vitreous-china-sanitaryware",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:brushed-stainless-fixtures:finish:brushed-stainless-taps-and-accessories",
+    "pk": "brushed-stainless-fixtures",
+    "materialId": "brushed-stainless-fixtures",
+    "finishId": "finish:brushed-stainless-taps-and-accessories",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:low-flow-shower-system:finish:water-efficient-shower-set",
+    "pk": "low-flow-shower-system",
+    "materialId": "low-flow-shower-system",
+    "finishId": "finish:water-efficient-shower-set",
+    "isPrimary": true
+  },
+  {
+    "id": "mf:frameless-shower-screen:finish:toughened-low-iron-glass-screen",
+    "pk": "frameless-shower-screen",
+    "materialId": "frameless-shower-screen",
+    "finishId": "finish:toughened-low-iron-glass-screen",
     "isPrimary": true
   }
 ]

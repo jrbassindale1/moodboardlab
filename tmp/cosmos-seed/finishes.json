@@ -98,6 +98,27 @@
     "type": "finish"
   },
   {
+    "id": "finish:smooth",
+    "pk": "finish",
+    "label": "Smooth",
+    "normalizedLabel": "smooth",
+    "type": "finish"
+  },
+  {
+    "id": "finish:studded",
+    "pk": "finish",
+    "label": "Studded",
+    "normalizedLabel": "studded",
+    "type": "finish"
+  },
+  {
+    "id": "finish:textured",
+    "pk": "finish",
+    "label": "Textured",
+    "normalizedLabel": "textured",
+    "type": "finish"
+  },
+  {
     "id": "finish:engineered-timber-boards",
     "pk": "finish",
     "label": "Engineered timber boards",
@@ -1439,6 +1460,202 @@
     "pk": "finish",
     "label": "Powder-coated or timber",
     "normalizedLabel": "powder-coated-or-timber",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glazed-recycled-glass-mosaic-tiles",
+    "pk": "finish",
+    "label": "Glazed recycled glass mosaic tiles",
+    "normalizedLabel": "glazed-recycled-glass-mosaic-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:handmade-glazed-clay-tiles",
+    "pk": "finish",
+    "label": "Handmade glazed clay tiles",
+    "normalizedLabel": "handmade-glazed-clay-tiles",
+    "type": "finish"
+  },
+  {
+    "id": "finish:engineered-quartz-slab",
+    "pk": "finish",
+    "label": "Engineered quartz slab",
+    "normalizedLabel": "engineered-quartz-slab",
+    "type": "finish"
+  },
+  {
+    "id": "finish:mineral-filled-acrylic-solid-surface",
+    "pk": "finish",
+    "label": "Mineral-filled acrylic solid surface",
+    "normalizedLabel": "mineral-filled-acrylic-solid-surface",
+    "type": "finish"
+  },
+  {
+    "id": "finish:bio-based-linoleum-faced-board",
+    "pk": "finish",
+    "label": "Bio-based linoleum-faced board",
+    "normalizedLabel": "bio-based-linoleum-faced-board",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fsc-mdf-with-low-voc-finish",
+    "pk": "finish",
+    "label": "FSC MDF with low-VOC finish",
+    "normalizedLabel": "fsc-mdf-with-low-voc-finish",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-cork-wallcovering-roll",
+    "pk": "finish",
+    "label": "Natural cork wallcovering roll",
+    "normalizedLabel": "natural-cork-wallcovering-roll",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-linen-textile-wallcovering",
+    "pk": "finish",
+    "label": "Natural linen textile wallcovering",
+    "normalizedLabel": "natural-linen-textile-wallcovering",
+    "type": "finish"
+  },
+  {
+    "id": "finish:recycled-pet-felt-panels",
+    "pk": "finish",
+    "label": "Recycled PET felt panels",
+    "normalizedLabel": "recycled-pet-felt-panels",
+    "type": "finish"
+  },
+  {
+    "id": "finish:mineral-bound-wood-wool-panel",
+    "pk": "finish",
+    "label": "Mineral-bound wood wool panel",
+    "normalizedLabel": "mineral-bound-wood-wool-panel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:natural-timber-veneer-on-certified-core",
+    "pk": "finish",
+    "label": "Natural timber veneer on certified core",
+    "normalizedLabel": "natural-timber-veneer-on-certified-core",
+    "type": "finish"
+  },
+  {
+    "id": "finish:lime-enhanced-low-cement-microtopping",
+    "pk": "finish",
+    "label": "Lime-enhanced low-cement microtopping",
+    "normalizedLabel": "lime-enhanced-low-cement-microtopping",
+    "type": "finish"
+  },
+  {
+    "id": "finish:post-consumer-recycled-polymer-moulding",
+    "pk": "finish",
+    "label": "Post-consumer recycled polymer moulding",
+    "normalizedLabel": "post-consumer-recycled-polymer-moulding",
+    "type": "finish"
+  },
+  {
+    "id": "finish:autoclaved-aerated-concrete-blocks",
+    "pk": "finish",
+    "label": "Autoclaved aerated concrete blocks",
+    "normalizedLabel": "autoclaved-aerated-concrete-blocks",
+    "type": "finish"
+  },
+  {
+    "id": "finish:alkali-activated-low-clinker-concrete",
+    "pk": "finish",
+    "label": "Alkali-activated low-clinker concrete",
+    "normalizedLabel": "alkali-activated-low-clinker-concrete",
+    "type": "finish"
+  },
+  {
+    "id": "finish:compressed-straw-fibre-insulation-panel",
+    "pk": "finish",
+    "label": "Compressed straw fibre insulation panel",
+    "normalizedLabel": "compressed-straw-fibre-insulation-panel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:textured-anti-slip-porcelain-tile",
+    "pk": "finish",
+    "label": "Textured anti-slip porcelain tile",
+    "normalizedLabel": "textured-anti-slip-porcelain-tile",
+    "type": "finish"
+  },
+  {
+    "id": "finish:glazed-ceramic-wall-tile",
+    "pk": "finish",
+    "label": "Glazed ceramic wall tile",
+    "normalizedLabel": "glazed-ceramic-wall-tile",
+    "type": "finish"
+  },
+  {
+    "id": "finish:toughened-recycled-content-glass-panel",
+    "pk": "finish",
+    "label": "Toughened recycled-content glass panel",
+    "normalizedLabel": "toughened-recycled-content-glass-panel",
+    "type": "finish"
+  },
+  {
+    "id": "finish:ultra-compact-sintered-stone-slab",
+    "pk": "finish",
+    "label": "Ultra-compact sintered stone slab",
+    "normalizedLabel": "ultra-compact-sintered-stone-slab",
+    "type": "finish"
+  },
+  {
+    "id": "finish:brushed-stainless-steel-counter",
+    "pk": "finish",
+    "label": "Brushed stainless steel counter",
+    "normalizedLabel": "brushed-stainless-steel-counter",
+    "type": "finish"
+  },
+  {
+    "id": "finish:resin-bound-recycled-paper-composite",
+    "pk": "finish",
+    "label": "Resin-bound recycled paper composite",
+    "normalizedLabel": "resin-bound-recycled-paper-composite",
+    "type": "finish"
+  },
+  {
+    "id": "finish:fsc-plywood-carcass-with-low-voc-fronts",
+    "pk": "finish",
+    "label": "FSC plywood carcass with low-VOC fronts",
+    "normalizedLabel": "fsc-plywood-carcass-with-low-voc-fronts",
+    "type": "finish"
+  },
+  {
+    "id": "finish:moisture-resistant-board-with-sealed-edges",
+    "pk": "finish",
+    "label": "Moisture-resistant board with sealed edges",
+    "normalizedLabel": "moisture-resistant-board-with-sealed-edges",
+    "type": "finish"
+  },
+  {
+    "id": "finish:vitreous-china-sanitaryware",
+    "pk": "finish",
+    "label": "Vitreous china sanitaryware",
+    "normalizedLabel": "vitreous-china-sanitaryware",
+    "type": "finish"
+  },
+  {
+    "id": "finish:brushed-stainless-taps-and-accessories",
+    "pk": "finish",
+    "label": "Brushed stainless taps and accessories",
+    "normalizedLabel": "brushed-stainless-taps-and-accessories",
+    "type": "finish"
+  },
+  {
+    "id": "finish:water-efficient-shower-set",
+    "pk": "finish",
+    "label": "Water-efficient shower set",
+    "normalizedLabel": "water-efficient-shower-set",
+    "type": "finish"
+  },
+  {
+    "id": "finish:toughened-low-iron-glass-screen",
+    "pk": "finish",
+    "label": "Toughened low-iron glass screen",
+    "normalizedLabel": "toughened-low-iron-glass-screen",
     "type": "finish"
   }
 ]

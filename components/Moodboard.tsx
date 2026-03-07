@@ -228,7 +228,8 @@ const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
     a.colorLabel === b.colorLabel &&
     a.colorVariantId === b.colorVariantId &&
     a.customImage === b.customImage &&
-    a.excludeFromMoodboardRender === b.excludeFromMoodboardRender);
+    a.excludeFromMoodboardRender === b.excludeFromMoodboardRender &&
+    a.note === b.note);
 
 const areBoardsEquivalent = (a: MaterialOption[], b: MaterialOption[]) =>
   a.length === b.length && a.every((item, index) => areBoardItemsEquivalent(item, b[index]));
@@ -479,6 +480,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setBoard((prev) =>
       prev.map((item, idx) =>
         idx === idxToToggle ? { ...item, excludeFromMoodboardRender: value } : item
+      )
+    );
+  };
+
+  const handleNoteChange = (idxToUpdate: number, note: string) => {
+    setBoard((prev) =>
+      prev.map((item, idx) =>
+        idx === idxToUpdate ? { ...item, note } : item
       )
     );
   };
@@ -1886,6 +1895,7 @@ ${JSON.stringify(proseContext)}`;
               onNavigate={onNavigate}
               onRemove={handleRemove}
               onToggleExclude={handleToggleExclude}
+              onNoteChange={handleNoteChange}
             />
 
             {board.length > 0 && (

@@ -49,15 +49,15 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Curate your palette</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Easily pick your proposed building materials from an extensive list.
+              Select real materials with specifications, RAL colours, and sustainability data. Or add custom colours and let the system match them to products.
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={materialKey}
-                alt="Material selection palette showing various architectural materials"
+                alt="Material palette builder showing real architectural material options"
                 className="w-full h-auto"
               />
             </div>
@@ -67,15 +67,15 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">02</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate your moodboard</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              A beautiful moodboard image, featuring all your materials, is created in an instant 
+              Your material palette rendered as a photorealistic composition. Every material specified, not just visualised.
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md">
               <img
                 src={moodboardSheet}
-                alt="Flat-lay moodboard arrangement of selected materials"
+                alt="Photorealistic composition of a selected material palette"
                 className="w-full h-auto"
               />
             </div>
@@ -85,10 +85,10 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to your design</h3>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Use a wireframe or a sketch to see your materials applied to your project.
+              Upload a sketch, elevation, or reference image. See your materials applied to a building with context, light, and scale.
             </p>
             <div
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md h-64 cursor-ew-resize select-none"
@@ -125,10 +125,10 @@ const WorkflowStrip: React.FC = () => {
                 </div>
               </div>
               <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
-                Before
+                Base image
               </div>
               <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
-                After
+                Applied render
               </div>
             </div>
           </div>
@@ -140,15 +140,15 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4 flex flex-col">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">01</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Choose materials</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Curate your palette</h3>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
-              Easily pick your proposed building materials from an extensive list.
+            <p className="text-sm text-gray-600 leading-relaxed max-w-sm">
+              Select real materials with specifications, RAL colours, and sustainability data. Or add custom colours and let the system match them to products.
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
               <img
                 src={materialKey}
-                alt="Material selection palette showing various architectural materials"
+                alt="Material palette builder showing real architectural material options"
                 className="w-auto h-auto max-h-[300px] max-w-full"
               />
             </div>
@@ -158,15 +158,15 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4 flex flex-col">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">02</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate moodboard</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Generate your moodboard</h3>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
-              A beautiful moodboard image, featuring all your materials, is created in an instant 
+            <p className="text-sm text-gray-600 leading-relaxed max-w-sm">
+              Your material palette rendered as a photorealistic composition. Every material specified, not just visualised.
             </p>
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 flex items-start">
               <img
                 src={moodboardSheet}
-                alt="Flat-lay moodboard arrangement of selected materials"
+                alt="Photorealistic composition of a selected material palette"
                 className="w-auto h-auto max-h-[300px] max-w-full"
               />
             </div>
@@ -176,10 +176,10 @@ const WorkflowStrip: React.FC = () => {
           <div className="space-y-4 flex flex-col">
             <div className="flex items-center gap-3">
               <span className="font-mono text-xs text-gray-400">03</span>
-              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to design</h3>
+              <h3 className="font-display text-lg uppercase font-semibold tracking-wide">Apply to your design</h3>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
-              Use a wireframe or a sketch to see your materials applied to your project.
+            <p className="text-sm text-gray-600 leading-relaxed max-w-sm">
+              Upload a sketch, elevation, or reference image. See your materials applied to a building with context, light, and scale.
             </p>
             <div
               className="relative overflow-hidden border border-gray-200 bg-white shadow-md flex-1 cursor-ew-resize select-none"
@@ -216,10 +216,10 @@ const WorkflowStrip: React.FC = () => {
                 </div>
               </div>
               <div className="absolute top-2 left-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
-                Before
+                Base image
               </div>
               <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 text-[10px] font-mono uppercase tracking-wider pointer-events-none">
-                After
+                Applied render
               </div>
             </div>
           </div>

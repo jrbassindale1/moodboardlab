@@ -21,7 +21,10 @@
       "id": "timber-structural",
       "pattern": "timber|wood|oak|ash|pine|birch",
       "patternFlags": "i",
-      "categories": ["structure", "exposed-structure"],
+      "categories": [
+        "structure",
+        "exposed-structure"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -66,7 +69,9 @@
       "id": "sheep-wool-insulation",
       "pattern": "sheep.?wool|lambswool|natural.?wool",
       "patternFlags": "i",
-      "categories": ["insulation"],
+      "categories": [
+        "insulation"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -81,7 +86,9 @@
       "id": "wood-fibre-insulation",
       "pattern": "wood.?fibre|woodfibre|cellulose.?insulation",
       "patternFlags": "i",
-      "categories": ["insulation"],
+      "categories": [
+        "insulation"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -103,7 +110,10 @@
         "partialReplacementFactor": 0.6,
         "carbonPayback": {
           "years": 2,
-          "rangeYears": [1.5, 4],
+          "rangeYears": [
+            1.5,
+            4
+          ],
           "category": "operational_offset",
           "assumption": "UK context, grid-dependent"
         },
@@ -114,7 +124,10 @@
       "id": "green-roof",
       "pattern": "green.?roof|sedum|living.?roof",
       "patternFlags": "i",
-      "categories": ["roof", "landscape"],
+      "categories": [
+        "roof",
+        "landscape"
+      ],
       "duration": {
         "serviceLife": 40,
         "replacementCycle": 40,
@@ -149,7 +162,10 @@
       "id": "carpet",
       "pattern": "carpet|rug",
       "patternFlags": "i",
-      "categories": ["floor", "finish"],
+      "categories": [
+        "floor",
+        "finish"
+      ],
       "duration": {
         "serviceLife": 10,
         "replacementCycle": 7,
@@ -160,7 +176,9 @@
       "id": "linoleum",
       "pattern": "linoleum",
       "patternFlags": "i",
-      "categories": ["floor"],
+      "categories": [
+        "floor"
+      ],
       "duration": {
         "serviceLife": 30,
         "replacementCycle": 25,
@@ -171,7 +189,9 @@
       "id": "vinyl-lvt",
       "pattern": "vinyl|lvt",
       "patternFlags": "i",
-      "categories": ["floor"],
+      "categories": [
+        "floor"
+      ],
       "duration": {
         "serviceLife": 15,
         "replacementCycle": 12,
@@ -182,7 +202,9 @@
       "id": "aluminium-window",
       "pattern": "aluminium.*window|aluminum.*window",
       "patternFlags": "i",
-      "categories": ["window"],
+      "categories": [
+        "window"
+      ],
       "duration": {
         "serviceLife": 40,
         "replacementCycle": 30,
@@ -195,7 +217,10 @@
       "id": "steel-structure",
       "pattern": "steel",
       "patternFlags": "i",
-      "categories": ["structure", "exposed-structure"],
+      "categories": [
+        "structure",
+        "exposed-structure"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -206,7 +231,10 @@
       "id": "concrete",
       "pattern": "concrete|cement",
       "patternFlags": "i",
-      "categories": ["structure", "exposed-structure"],
+      "categories": [
+        "structure",
+        "exposed-structure"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -217,7 +245,11 @@
       "id": "brick",
       "pattern": "brick|masonry",
       "patternFlags": "i",
-      "categories": ["structure", "external", "wall-internal"],
+      "categories": [
+        "structure",
+        "external",
+        "wall-internal"
+      ],
       "duration": {
         "serviceLife": 100,
         "replacementCycle": 100,
@@ -238,7 +270,11 @@
       "id": "porcelain-ceramic",
       "pattern": "porcelain|ceramic|tile",
       "patternFlags": "i",
-      "categories": ["floor", "wall-internal", "tile"],
+      "categories": [
+        "floor",
+        "wall-internal",
+        "tile"
+      ],
       "duration": {
         "serviceLife": 40,
         "replacementCycle": 35,
@@ -259,7 +295,9 @@
       "id": "paint-wall",
       "pattern": "paint|emulsion",
       "patternFlags": "i",
-      "categories": ["paint-wall"],
+      "categories": [
+        "paint-wall"
+      ],
       "duration": {
         "serviceLife": 10,
         "replacementCycle": 7,
@@ -270,7 +308,9 @@
       "id": "paint-ceiling",
       "pattern": "paint|emulsion",
       "patternFlags": "i",
-      "categories": ["paint-ceiling"],
+      "categories": [
+        "paint-ceiling"
+      ],
       "duration": {
         "serviceLife": 12,
         "replacementCycle": 10,
@@ -291,7 +331,9 @@
       "id": "mineral-wool",
       "pattern": "mineral.?wool|rockwool|glass.?wool",
       "patternFlags": "i",
-      "categories": ["insulation"],
+      "categories": [
+        "insulation"
+      ],
       "duration": {
         "serviceLife": 60,
         "replacementCycle": 60,
@@ -302,7 +344,9 @@
       "id": "pir-pur-insulation",
       "pattern": "pir|pur|polyurethane|polyisocyanurate",
       "patternFlags": "i",
-      "categories": ["insulation"],
+      "categories": [
+        "insulation"
+      ],
       "duration": {
         "serviceLife": 50,
         "replacementCycle": 50,
@@ -313,13 +357,18 @@
       "id": "soft-landscape",
       "pattern": "plant|meadow|grass|turf|hedge|shrub|tree",
       "patternFlags": "i",
-      "categories": ["landscape"],
+      "categories": [
+        "landscape"
+      ],
       "duration": {
         "serviceLife": 30,
         "replacementCycle": 10,
         "carbonPayback": {
           "years": 15,
-          "rangeYears": [10, 40],
+          "rangeYears": [
+            10,
+            40
+          ],
           "category": "ecosystem_sequestration",
           "assumption": "Order-of-magnitude placeholder; sequestration depends on species, age profile, maintenance, survival and site conditions"
         },
@@ -330,7 +379,10 @@
       "id": "gravel-aggregate",
       "pattern": "gravel|aggregate|pebble",
       "patternFlags": "i",
-      "categories": ["landscape", "external-ground"],
+      "categories": [
+        "landscape",
+        "external-ground"
+      ],
       "duration": {
         "serviceLife": 50,
         "replacementCycle": 30,
@@ -341,11 +393,116 @@
       "id": "paving",
       "pattern": "paving|paver|flag|sett",
       "patternFlags": "i",
-      "categories": ["landscape", "external-ground"],
+      "categories": [
+        "landscape",
+        "external-ground"
+      ],
       "duration": {
         "serviceLife": 40,
         "replacementCycle": 40,
         "notes": "Dry-laid can be lifted and reused"
+      }
+    },
+    {
+      "id": "interior-joinery-fixture",
+      "pattern": "joinery|worktop|countertop|cabinet|shelving|furniture",
+      "patternFlags": "i",
+      "categories": [
+        "joinery",
+        "fixture",
+        "furniture"
+      ],
+      "duration": {
+        "serviceLife": 25,
+        "replacementCycle": 20,
+        "replacementScope": "partial",
+        "partialReplacementFactor": 0.7,
+        "notes": "Primary carcass can outlast fronts and hardware when designed for refurbishment."
+      }
+    },
+    {
+      "id": "interior-wallcovering",
+      "pattern": "wallcovering|wallpaper|linen|cork",
+      "patternFlags": "i",
+      "categories": [
+        "wallpaper"
+      ],
+      "duration": {
+        "serviceLife": 15,
+        "replacementCycle": 12,
+        "notes": "Dependent on cleaning regime, UV exposure, and impact risk in circulation zones."
+      }
+    },
+    {
+      "id": "interior-acoustic-panels",
+      "pattern": "acoustic|felt|wood.?wool|baffle",
+      "patternFlags": "i",
+      "categories": [
+        "acoustic-panel",
+        "ceiling"
+      ],
+      "duration": {
+        "serviceLife": 25,
+        "replacementCycle": 20,
+        "notes": "Modular systems often allow selective replacement of damaged units."
+      }
+    },
+    {
+      "id": "microcement-finishes",
+      "pattern": "microcement|micro.?topping",
+      "patternFlags": "i",
+      "categories": [
+        "microcement"
+      ],
+      "duration": {
+        "serviceLife": 20,
+        "replacementCycle": 15,
+        "notes": "Recoating or local repair can extend life without full finish replacement."
+      }
+    },
+    {
+      "id": "kitchen-bathroom-worktops",
+      "pattern": "worktop|counter|splashback",
+      "patternFlags": "i",
+      "categories": [
+        "joinery",
+        "wall-internal",
+        "tile"
+      ],
+      "duration": {
+        "serviceLife": 25,
+        "replacementCycle": 20,
+        "replacementScope": "partial",
+        "partialReplacementFactor": 0.7,
+        "notes": "High-use kitchen and bathroom surfaces often support partial replacement with modular detailing."
+      }
+    },
+    {
+      "id": "bathroom-fixtures-and-sanitaryware",
+      "pattern": "sanitary|basin|toilet|wc|shower|tap|mixer|fixture",
+      "patternFlags": "i",
+      "categories": [
+        "fixture"
+      ],
+      "duration": {
+        "serviceLife": 20,
+        "replacementCycle": 15,
+        "replacementScope": "partial",
+        "partialReplacementFactor": 0.6,
+        "notes": "Cores often outlast cartridges, seals, and controls if maintainable parts are available."
+      }
+    },
+    {
+      "id": "bathroom-joinery-moisture",
+      "pattern": "bathroom.?joinery|vanity|cabinetry",
+      "patternFlags": "i",
+      "categories": [
+        "joinery"
+      ],
+      "duration": {
+        "serviceLife": 20,
+        "replacementCycle": 15,
+        "notes": "Humidity exposure can shorten life unless moisture detailing and ventilation are well controlled."
       }
     }
   ],

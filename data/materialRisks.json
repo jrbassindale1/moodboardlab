@@ -3,84 +3,484 @@
   "_comment": "Material-specific risks and mitigations for specification",
   "risks": {
     "cross-laminated-timber": [
-      { "risk": "Moisture ingress during construction", "mitigation": "Ensure weather protection and proper sealing" },
-      { "risk": "Fire performance concerns", "mitigation": "Specify char rate calculations and intumescent coatings" }
+      {
+        "risk": "Moisture ingress during construction",
+        "mitigation": "Ensure weather protection and proper sealing"
+      },
+      {
+        "risk": "Fire performance concerns",
+        "mitigation": "Specify char rate calculations and intumescent coatings"
+      }
     ],
     "glulam-beam": [
-      { "risk": "Moisture damage if exposed", "mitigation": "Apply protective finish and ensure ventilation" },
-      { "risk": "Connection detail complexity", "mitigation": "Coordinate early with structural engineer" }
+      {
+        "risk": "Moisture damage if exposed",
+        "mitigation": "Apply protective finish and ensure ventilation"
+      },
+      {
+        "risk": "Connection detail complexity",
+        "mitigation": "Coordinate early with structural engineer"
+      }
     ],
     "steel-frame": [
-      { "risk": "Corrosion in humid environments", "mitigation": "Specify galvanizing or protective coatings" },
-      { "risk": "Thermal bridging at connections", "mitigation": "Include thermal breaks in details" }
+      {
+        "risk": "Corrosion in humid environments",
+        "mitigation": "Specify galvanizing or protective coatings"
+      },
+      {
+        "risk": "Thermal bridging at connections",
+        "mitigation": "Include thermal breaks in details"
+      }
     ],
     "concrete-insitu": [
-      { "risk": "Quality control on site", "mitigation": "Specify test cubes and inspection regime" },
-      { "risk": "Long curing time affecting programme", "mitigation": "Consider accelerators or off-site options" }
+      {
+        "risk": "Quality control on site",
+        "mitigation": "Specify test cubes and inspection regime"
+      },
+      {
+        "risk": "Long curing time affecting programme",
+        "mitigation": "Consider accelerators or off-site options"
+      }
     ],
     "precast-concrete": [
-      { "risk": "Joint waterproofing failures", "mitigation": "Specify robust sealant and drainage details" },
-      { "risk": "Tolerance and fit issues", "mitigation": "Coordinate surveys and mock-ups early" }
+      {
+        "risk": "Joint waterproofing failures",
+        "mitigation": "Specify robust sealant and drainage details"
+      },
+      {
+        "risk": "Tolerance and fit issues",
+        "mitigation": "Coordinate surveys and mock-ups early"
+      }
     ],
     "brick-masonry": [
-      { "risk": "Efflorescence staining", "mitigation": "Specify low-salt bricks and proper DPC" },
-      { "risk": "Mortar colour mismatch", "mitigation": "Request sample panels before main works" }
+      {
+        "risk": "Efflorescence staining",
+        "mitigation": "Specify low-salt bricks and proper DPC"
+      },
+      {
+        "risk": "Mortar colour mismatch",
+        "mitigation": "Request sample panels before main works"
+      }
     ],
     "aluminium-cladding": [
-      { "risk": "Galvanic corrosion with dissimilar metals", "mitigation": "Isolate with neoprene gaskets" },
-      { "risk": "Thermal movement causing buckling", "mitigation": "Design expansion joints into system" }
+      {
+        "risk": "Galvanic corrosion with dissimilar metals",
+        "mitigation": "Isolate with neoprene gaskets"
+      },
+      {
+        "risk": "Thermal movement causing buckling",
+        "mitigation": "Design expansion joints into system"
+      }
     ],
     "zinc-cladding": [
-      { "risk": "Patina variation across panels", "mitigation": "Specify pre-weathered finish if consistency needed" },
-      { "risk": "Run-off staining adjacent materials", "mitigation": "Detail drip edges and sacrificial surfaces" }
+      {
+        "risk": "Patina variation across panels",
+        "mitigation": "Specify pre-weathered finish if consistency needed"
+      },
+      {
+        "risk": "Run-off staining adjacent materials",
+        "mitigation": "Detail drip edges and sacrificial surfaces"
+      }
     ],
     "timber-cladding": [
-      { "risk": "Uneven weathering and greying", "mitigation": "Accept natural variation or specify protective oils" },
-      { "risk": "Movement and checking", "mitigation": "Select stable species and allow for movement" }
+      {
+        "risk": "Uneven weathering and greying",
+        "mitigation": "Accept natural variation or specify protective oils"
+      },
+      {
+        "risk": "Movement and checking",
+        "mitigation": "Select stable species and allow for movement"
+      }
     ],
     "curtain-wall": [
-      { "risk": "Air and water infiltration", "mitigation": "Specify CWCT testing and site hose testing" },
-      { "risk": "Thermal bridging at transoms", "mitigation": "Require thermal break details in specs" }
+      {
+        "risk": "Air and water infiltration",
+        "mitigation": "Specify CWCT testing and site hose testing"
+      },
+      {
+        "risk": "Thermal bridging at transoms",
+        "mitigation": "Require thermal break details in specs"
+      }
     ],
     "triple-glazing": [
-      { "risk": "Weight requires stronger frames", "mitigation": "Coordinate frame sizing with glass supplier" },
-      { "risk": "Seal failure causing misting", "mitigation": "Specify minimum 10-year IGU warranty" }
+      {
+        "risk": "Weight requires stronger frames",
+        "mitigation": "Coordinate frame sizing with glass supplier"
+      },
+      {
+        "risk": "Seal failure causing misting",
+        "mitigation": "Specify minimum 10-year IGU warranty"
+      }
     ],
     "green-roof": [
-      { "risk": "Waterproofing failure under substrate", "mitigation": "Specify root barrier and flood testing" },
-      { "risk": "Plant establishment failure", "mitigation": "Include irrigation and maintenance period" }
+      {
+        "risk": "Waterproofing failure under substrate",
+        "mitigation": "Specify root barrier and flood testing"
+      },
+      {
+        "risk": "Plant establishment failure",
+        "mitigation": "Include irrigation and maintenance period"
+      }
     ],
     "mineral-wool-insulation": [
-      { "risk": "Moisture absorption reducing performance", "mitigation": "Ensure cavity ventilation and vapour control" },
-      { "risk": "Slumping in cavity over time", "mitigation": "Specify semi-rigid batts with friction fit" }
+      {
+        "risk": "Moisture absorption reducing performance",
+        "mitigation": "Ensure cavity ventilation and vapour control"
+      },
+      {
+        "risk": "Slumping in cavity over time",
+        "mitigation": "Specify semi-rigid batts with friction fit"
+      }
     ],
     "pir-insulation": [
-      { "risk": "Thermal drift reducing R-value", "mitigation": "Specify aged thermal values in calculations" },
-      { "risk": "Fire performance in some applications", "mitigation": "Check fire rating for specific use" }
+      {
+        "risk": "Thermal drift reducing R-value",
+        "mitigation": "Specify aged thermal values in calculations"
+      },
+      {
+        "risk": "Fire performance in some applications",
+        "mitigation": "Check fire rating for specific use"
+      }
     ],
     "vinyl-flooring": [
-      { "risk": "Subfloor moisture causing failure", "mitigation": "Test subfloor RH before installation" },
-      { "risk": "Plasticizer migration over time", "mitigation": "Specify phthalate-free options" }
+      {
+        "risk": "Subfloor moisture causing failure",
+        "mitigation": "Test subfloor RH before installation"
+      },
+      {
+        "risk": "Plasticizer migration over time",
+        "mitigation": "Specify phthalate-free options"
+      }
     ],
     "terrazzo": [
-      { "risk": "Cracking if substrate moves", "mitigation": "Include movement joints at 3m centres" },
-      { "risk": "Staining from spills", "mitigation": "Apply penetrating sealer and maintain" }
+      {
+        "risk": "Cracking if substrate moves",
+        "mitigation": "Include movement joints at 3m centres"
+      },
+      {
+        "risk": "Staining from spills",
+        "mitigation": "Apply penetrating sealer and maintain"
+      }
     ],
     "natural-stone": [
-      { "risk": "Variation between batches", "mitigation": "Request samples from production batch" },
-      { "risk": "Staining and etching", "mitigation": "Specify appropriate sealer for stone type" }
+      {
+        "risk": "Variation between batches",
+        "mitigation": "Request samples from production batch"
+      },
+      {
+        "risk": "Staining and etching",
+        "mitigation": "Specify appropriate sealer for stone type"
+      }
     ],
     "plasterboard": [
-      { "risk": "Moisture damage in humid areas", "mitigation": "Specify moisture-resistant board (green)" },
-      { "risk": "Impact damage in high-traffic zones", "mitigation": "Consider impact-resistant options" }
+      {
+        "risk": "Moisture damage in humid areas",
+        "mitigation": "Specify moisture-resistant board (green)"
+      },
+      {
+        "risk": "Impact damage in high-traffic zones",
+        "mitigation": "Consider impact-resistant options"
+      }
     ],
     "acoustic-ceiling": [
-      { "risk": "Sagging from humidity", "mitigation": "Specify humidity-resistant core for wet areas" },
-      { "risk": "Poor acoustic performance if gaps", "mitigation": "Ensure tight joints and edge details" }
+      {
+        "risk": "Sagging from humidity",
+        "mitigation": "Specify humidity-resistant core for wet areas"
+      },
+      {
+        "risk": "Poor acoustic performance if gaps",
+        "mitigation": "Ensure tight joints and edge details"
+      }
     ],
     "paint-interior": [
-      { "risk": "Poor adhesion to substrate", "mitigation": "Specify appropriate primer system" },
-      { "risk": "VOC emissions affecting IAQ", "mitigation": "Specify low-VOC or zero-VOC products" }
+      {
+        "risk": "Poor adhesion to substrate",
+        "mitigation": "Specify appropriate primer system"
+      },
+      {
+        "risk": "VOC emissions affecting IAQ",
+        "mitigation": "Specify low-VOC or zero-VOC products"
+      }
+    ],
+    "recycled-glass-mosaic": [
+      {
+        "risk": "Cracking from substrate movement",
+        "mitigation": "Use movement joints and flexible adhesive systems in wet areas."
+      },
+      {
+        "risk": "Staining in porous grout joints",
+        "mitigation": "Specify epoxy or sealed grout and a cleaning plan suited to occupancy."
+      }
+    ],
+    "zellige-tiles": [
+      {
+        "risk": "Tone variation across batches",
+        "mitigation": "Approve blended mock-ups and order full quantity from one production batch."
+      },
+      {
+        "risk": "Irregular tile geometry affecting alignment",
+        "mitigation": "Use experienced installers and wider joints with agreed setting-out rules."
+      }
+    ],
+    "quartz-composite-worktop": [
+      {
+        "risk": "Silica exposure during fabrication",
+        "mitigation": "Require factory wet-cutting and certified dust control procedures."
+      },
+      {
+        "risk": "Thermal shock near heat sources",
+        "mitigation": "Detail heat breaks and require trivets/thermal protection in user guidance."
+      }
+    ],
+    "solid-surface-worktop": [
+      {
+        "risk": "Visible seam movement on long runs",
+        "mitigation": "Coordinate expansion allowances and manufacturer-approved jointing methods."
+      },
+      {
+        "risk": "Surface scratching in high-use zones",
+        "mitigation": "Specify maintenance protocol with periodic resurfacing rather than replacement."
+      }
+    ],
+    "linoleum-faced-joinery": [
+      {
+        "risk": "Edge chipping at exposed corners",
+        "mitigation": "Use solid edge trims and radius details in high-traffic zones."
+      },
+      {
+        "risk": "Adhesive failure in humid conditions",
+        "mitigation": "Specify moisture-rated substrate and adhesive systems for each room type."
+      }
+    ],
+    "fsc-mdf-joinery": [
+      {
+        "risk": "Moisture swelling at cut edges",
+        "mitigation": "Seal all exposed edges and use moisture-resistant grade where required."
+      },
+      {
+        "risk": "Premature coating wear",
+        "mitigation": "Specify commercial-grade coatings and include maintenance/recoat cycles in FM plan."
+      }
+    ],
+    "cork-wallcovering": [
+      {
+        "risk": "Local denting in impact zones",
+        "mitigation": "Use dado or guard details where trolleys and furniture contact walls."
+      },
+      {
+        "risk": "Adhesive staining telegraphing through finish",
+        "mitigation": "Mock up adhesive system and use manufacturer-approved spread rates."
+      }
+    ],
+    "linen-wallcovering": [
+      {
+        "risk": "UV fade near strong daylight",
+        "mitigation": "Specify lightfastness grade and include shading strategy in facade design."
+      },
+      {
+        "risk": "Seam opening at substrate movement joints",
+        "mitigation": "Coordinate substrate prep and place seams away from stress points."
+      }
+    ],
+    "pet-felt-acoustic-panels": [
+      {
+        "risk": "Panel sagging from weak fixings",
+        "mitigation": "Use tested proprietary fixing rails and verify substrate pull-out capacity."
+      },
+      {
+        "risk": "Colour mismatch between production lots",
+        "mitigation": "Procure one lot and include approved control samples in QA process."
+      }
+    ],
+    "wood-wool-acoustic-panels": [
+      {
+        "risk": "Chipping at exposed panel edges",
+        "mitigation": "Specify edge trims or recessed shadow-gap details where impact risk is high."
+      },
+      {
+        "risk": "Acoustic underperformance from poor cavity setup",
+        "mitigation": "Coordinate backing void depth and insulation exactly to tested build-up."
+      }
+    ],
+    "veneer-wall-panels": [
+      {
+        "risk": "Veneer tone mismatch between sheets",
+        "mitigation": "Book-match or sequence-match veneer packs and approve full-size samples."
+      },
+      {
+        "risk": "Panel movement from humidity swings",
+        "mitigation": "Use balanced constructions and controlled indoor humidity at handover."
+      }
+    ],
+    "bio-based-microcement": [
+      {
+        "risk": "Hairline cracking over moving substrates",
+        "mitigation": "Use mesh-reinforced base coats and verify substrate movement tolerance."
+      },
+      {
+        "risk": "Uneven sheen from inconsistent sealing",
+        "mitigation": "Apply manufacturer system coats to tested coverage rates with sample sign-off."
+      }
+    ],
+    "recycled-plastic-furniture": [
+      {
+        "risk": "Surface creep or deformation near heat",
+        "mitigation": "Select commercial-grade polymer blends and avoid direct heat source placement."
+      },
+      {
+        "risk": "Difficult repair if proprietary parts fail",
+        "mitigation": "Specify replaceable components with documented spare-part availability."
+      }
+    ],
+    "aac-blockwork": [
+      {
+        "risk": "Cracking from differential movement",
+        "mitigation": "Coordinate movement joints and compatible thin-joint mortar strategy."
+      },
+      {
+        "risk": "Moisture ingress reducing thermal performance",
+        "mitigation": "Detail weatherproof external layers and protect blocks during construction."
+      }
+    ],
+    "geopolymer-concrete": [
+      {
+        "risk": "Variable site familiarity with binder chemistry",
+        "mitigation": "Prequalify contractor experience and run trial mixes before production pours."
+      },
+      {
+        "risk": "Early-age performance uncertainty in cold weather",
+        "mitigation": "Confirm curing regime and temperature controls in method statements."
+      }
+    ],
+    "straw-insulation-panels": [
+      {
+        "risk": "Moisture accumulation in poorly detailed envelopes",
+        "mitigation": "Use vapour-open build-up design with robust airtightness and rain control layers."
+      },
+      {
+        "risk": "Site damage during wet construction periods",
+        "mitigation": "Protect panels with dry storage, phased installation, and immediate weatherproofing."
+      }
+    ],
+    "porcelain-wetroom-tiles": [
+      {
+        "risk": "Slip risk if wrong texture selected",
+        "mitigation": "Specify tested wet slip resistance and verify with project mock-up."
+      },
+      {
+        "risk": "Grout staining in high-use wet areas",
+        "mitigation": "Use suitable grout system and maintenance protocol aligned to occupancy."
+      }
+    ],
+    "ceramic-subway-tiles": [
+      {
+        "risk": "Uneven set-out around outlets and corners",
+        "mitigation": "Approve full tile-setting drawing and sample panel before installation."
+      },
+      {
+        "risk": "Premature grout cracking",
+        "mitigation": "Detail movement joints and use compatible flexible grout where needed."
+      }
+    ],
+    "recycled-glass-splashback": [
+      {
+        "risk": "Thermal stress behind cooktops",
+        "mitigation": "Verify heat rating and maintain required clearances to heat sources."
+      },
+      {
+        "risk": "Paint delamination from poor edge sealing",
+        "mitigation": "Use manufacturer-approved edge protection and installation detailing."
+      }
+    ],
+    "sintered-stone-worktop": [
+      {
+        "risk": "Chips at cut-outs and exposed edges",
+        "mitigation": "Specify reinforced cut-out corners and edge profiles suited to use intensity."
+      },
+      {
+        "risk": "Breakage from transport/handling",
+        "mitigation": "Use certified handlers and lifting frames from fabrication to installation."
+      }
+    ],
+    "stainless-steel-worktop": [
+      {
+        "risk": "Visible scratching and denting in service",
+        "mitigation": "Specify gauge/thickness and brushing direction for anticipated usage."
+      },
+      {
+        "risk": "Tea staining in aggressive environments",
+        "mitigation": "Select appropriate stainless grade and cleaning protocol."
+      }
+    ],
+    "recycled-paper-composite-worktop": [
+      {
+        "risk": "Moisture ingress at penetrations",
+        "mitigation": "Seal all cut edges and penetrations per manufacturer wet-area details."
+      },
+      {
+        "risk": "Heat damage near appliances",
+        "mitigation": "Provide heat protection strategy and user guidance for hot cookware."
+      }
+    ],
+    "fsc-kitchen-cabinetry": [
+      {
+        "risk": "Hardware fatigue in high-use doors",
+        "mitigation": "Specify commercial-grade hinges/runners with accessible replacement."
+      },
+      {
+        "risk": "Localized water damage near sinks",
+        "mitigation": "Use moisture-resistant carcass zones and leak-detection details."
+      }
+    ],
+    "water-resistant-bathroom-joinery": [
+      {
+        "risk": "Edge swelling from persistent condensation",
+        "mitigation": "Improve ventilation strategy and specify sealed edge detailing."
+      },
+      {
+        "risk": "Corrosion of internal hardware",
+        "mitigation": "Use corrosion-resistant fixings and soft-close systems rated for wet rooms."
+      }
+    ],
+    "sanitary-ceramic-ware": [
+      {
+        "risk": "Fixture cracking from impact or over-tightened fixings",
+        "mitigation": "Use manufacturer torque guidance and protective handling methods."
+      },
+      {
+        "risk": "High water use from poor specification",
+        "mitigation": "Select low-flush and certified efficient fixtures during design stage."
+      }
+    ],
+    "brushed-stainless-fixtures": [
+      {
+        "risk": "Mineral scaling in hard-water locations",
+        "mitigation": "Specify removable aerators and planned descaling maintenance."
+      },
+      {
+        "risk": "Premature cartridge failure",
+        "mitigation": "Use replaceable high-durability cartridges and provide spare-part schedule."
+      }
+    ],
+    "low-flow-shower-system": [
+      {
+        "risk": "User dissatisfaction from low pressure feel",
+        "mitigation": "Specify pressure-compensated heads and test under expected network pressure."
+      },
+      {
+        "risk": "Performance drop from limescale build-up",
+        "mitigation": "Use anti-limescale nozzles and scheduled maintenance in FM plan."
+      }
+    ],
+    "frameless-shower-screen": [
+      {
+        "risk": "Glass breakage risk from impact or poor fixing",
+        "mitigation": "Specify compliant safety glass thickness and validated fixing details."
+      },
+      {
+        "risk": "Water leakage at floor/wall junctions",
+        "mitigation": "Coordinate threshold and channel detailing with waterproofing strategy."
+      }
     ]
   }
 }

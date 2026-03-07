@@ -3280,5 +3280,725 @@ export const MATERIAL_PALETTE: MaterialOption[] = [
     materialForm: ['panel', 'bar'],
     materialFunction: ['structural', 'decorative'],
     manufacturingProcess: ['metal-working', 'cutting']
+  },
+  {
+    id: 'recycled-glass-mosaic',
+    name: 'Recycled Glass Mosaic',
+    tone: '#6ea6b8',
+    finish: 'Glazed recycled glass mosaic tiles',
+    description:
+      'Small-format mosaic tiles made with high recycled glass content, ideal for splashbacks, wet areas, and feature walls.',
+    keywords: ['tile', 'mosaic', 'recycled glass', 'interior'],
+    category: 'tile',
+    treePaths: ['Interiors>Walls', 'Interiors>Floors'],
+    carbonIntensity: 'medium',
+    materialType: 'glass',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['casting', 'cutting'],
+    finishFamily: 'tile-glazed',
+    strategicValue:
+      'Recycled glass mosaic can reduce virgin raw material demand while delivering durable, low-maintenance interior finishes in wet zones.',
+    mitigationTip:
+      'Prioritise products with verified post-consumer glass content and specify cementitious low-VOC adhesives to reduce lifecycle emissions.',
+    actionDocumentation:
+      'Provide EPD and third-party declaration of recycled glass content (% post-consumer and pre-consumer).',
+    actionVerification:
+      'Verify slip resistance class, water absorption, and lead-free glaze compliance for interior hygiene areas.',
+    actionCircularity:
+      'Use modular sheet formats and detail for selective replacement to avoid full-surface strip-out at maintenance cycles.'
+  },
+  {
+    id: 'zellige-tiles',
+    name: 'Zellige Clay Tiles',
+    tone: '#d3c2a7',
+    finish: 'Handmade glazed clay tiles',
+    description:
+      'Handcrafted zellige tiles with tonal variation and reflective glaze, suited to boutique hospitality, bathrooms, and statement joinery fronts.',
+    keywords: ['tile', 'zellige', 'clay', 'handmade'],
+    category: 'tile',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'medium',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['kiln-firing', 'cutting'],
+    finishFamily: 'tile-glazed',
+    strategicValue:
+      'Long service life and repairable tiled assemblies can offset fired-manufacturing impacts where high quality detailing avoids premature replacement.',
+    mitigationTip:
+      'Source from producers with renewable kiln energy and optimise module sizes to reduce offcut waste and import distances.',
+    actionDocumentation:
+      'Provide kiln energy source declaration, EPD where available, and origin/provenance documentation.',
+    actionVerification:
+      'Verify frost/water absorption classification and confirm low-VOC grout/adhesive specification.',
+    actionCircularity:
+      'Specify lime-compatible bedding in low-moisture zones where feasible to improve tile recovery during future refurbishments.'
+  },
+  {
+    id: 'quartz-composite-worktop',
+    name: 'Quartz Composite Worktop',
+    tone: '#c9c4bb',
+    finish: 'Engineered quartz slab',
+    description:
+      'Engineered quartz worktops with high abrasion resistance and low porosity for kitchens, washrooms, and high-use hospitality counters.',
+    keywords: ['joinery', 'worktop', 'quartz', 'composite'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings', 'Interiors>Walls'],
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'pressing', 'cutting'],
+    finishFamily: 'stone-polished',
+    mitigationTip:
+      'Use high-recycled-content quartz agglomerate and minimise slab thickness to reduce embodied carbon while maintaining durability requirements.',
+    actionDocumentation:
+      'Provide EPD with declared resin content and recycled aggregate percentage for selected slab range.',
+    actionVerification:
+      'Verify silica-safe fabrication controls and low-VOC sealants/adhesives for indoor use.',
+    actionCircularity:
+      'Detail worktops with mechanical fixing zones and removable splashbacks so slabs can be recovered during fit-out change.'
+  },
+  {
+    id: 'solid-surface-worktop',
+    name: 'Solid Surface Worktop',
+    tone: '#e3ddd2',
+    finish: 'Mineral-filled acrylic solid surface',
+    description:
+      'Seamless thermoformable worktop material for healthcare, workplace kitchens, and washroom counters requiring hygienic detailing.',
+    keywords: ['joinery', 'worktop', 'solid surface', 'counter'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'composite',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'moulding', 'cutting'],
+    finishFamily: 'custom',
+    mitigationTip:
+      'Specify recycled-content grades and standardise radii/modules to reduce fabrication waste and extend worktop service life.',
+    actionDocumentation:
+      'Provide EPD and manufacturer declaration for recycled content, binder chemistry, and take-back options.',
+    actionVerification:
+      'Verify low-emission adhesive/weld system and maintenance protocol that enables resurfacing rather than replacement.',
+    actionCircularity:
+      'Use demountable carcass interfaces so tops can be refinished and reused when layouts change.'
+  },
+  {
+    id: 'linoleum-faced-joinery',
+    name: 'Linoleum-Faced Joinery',
+    tone: '#879487',
+    finish: 'Bio-based linoleum-faced board',
+    description:
+      'Cabinetry fronts and feature joinery faced in natural linoleum, offering a matte tactile finish with durable anti-fingerprint performance.',
+    keywords: ['joinery', 'linoleum', 'bio-based', 'cabinetry'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings', 'Interiors>Walls'],
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['lamination', 'cutting'],
+    finishFamily: 'laminate',
+    strategicValue:
+      'Natural linoleum facings reduce petrochemical finish demand and provide long-life, repairable surfaces for high-contact interior joinery.',
+    actionDocumentation:
+      'Provide FSC/PEFC chain-of-custody for substrate and declaration of bio-based content in linoleum facing.',
+    actionVerification:
+      'Verify formaldehyde class for core board (E1 or better) and low-VOC adhesive specification.',
+    actionCircularity:
+      'Specify screw-fixed carcasses and replaceable fronts so components can be refurbished instead of full joinery replacement.'
+  },
+  {
+    id: 'fsc-mdf-joinery',
+    name: 'FSC MDF Joinery',
+    tone: '#bfa68d',
+    finish: 'FSC MDF with low-VOC finish',
+    description:
+      'Machined MDF joinery for cabinetry and wall lining systems, suitable for painted or veneered interiors with precise detailing.',
+    keywords: ['joinery', 'mdf', 'fsc', 'cabinetry'],
+    category: 'joinery',
+    treePaths: ['Interiors>Walls', 'Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['pressing', 'machining', 'coating'],
+    finishFamily: 'custom',
+    strategicValue:
+      'Efficient use of timber fibres can support material yield and dimensional stability in interior fit-out when responsibly sourced.',
+    mitigationTip:
+      'Prioritise no-added-formaldehyde or ultra-low-emission MDF and durable finishes to lengthen replacement cycles.',
+    actionDocumentation:
+      'Provide FSC/PEFC chain-of-custody and product emissions certification for MDF core and applied finishes.',
+    actionVerification:
+      'Verify formaldehyde class (E1 or better), coating VOC limits, and moisture-grade suitability for intended rooms.',
+    actionCircularity:
+      'Detail boards in modular dimensions with mechanical fixing where possible for easier reuse in future adaptations.'
+  },
+  {
+    id: 'cork-wallcovering',
+    name: 'Cork Wallcovering',
+    tone: '#b59268',
+    finish: 'Natural cork wallcovering roll',
+    description:
+      'Warm textured cork wallcovering for hospitality and residential interiors, supporting acoustic softening and biophilic character.',
+    keywords: ['wallpaper', 'cork', 'biophilic', 'interior walls'],
+    category: 'wallpaper',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['roll'],
+    materialFunction: ['decorative', 'acoustic'],
+    manufacturingProcess: ['heat-pressing', 'cutting'],
+    finishFamily: 'fabric-natural',
+    strategicValue:
+      'Cork is harvested without felling trees and provides a renewable, carbon-storing interior finish with good acoustic comfort.',
+    actionDocumentation:
+      'Provide chain-of-custody and product declaration confirming cork origin, binder type, and biogenic content.',
+    actionVerification:
+      'Verify low-VOC adhesive and fire classification for project-specific escape routes and occupancy type.',
+    actionCircularity:
+      'Use paste systems that allow strip-and-replace by panel zone to reduce waste during phased interior refresh.'
+  },
+  {
+    id: 'linen-wallcovering',
+    name: 'Linen Wallcovering',
+    tone: '#cfc4b3',
+    finish: 'Natural linen textile wallcovering',
+    description:
+      'Woven linen wallcovering that adds depth and softness to workplace and hospitality interiors with a natural tactile finish.',
+    keywords: ['wallpaper', 'linen', 'natural fibre', 'textile'],
+    category: 'wallpaper',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['roll'],
+    materialFunction: ['decorative'],
+    manufacturingProcess: ['weaving', 'coating'],
+    finishFamily: 'fabric-natural',
+    strategicValue:
+      'Natural-fibre wallcoverings can lower petrochemical content in fit-outs and contribute to healthier low-emission interior palettes.',
+    actionDocumentation:
+      'Provide fibre origin documentation and VOC test data for backing, coatings, and adhesives.',
+    actionVerification:
+      'Verify abrasion/lightfastness ratings and confirm suitability for high-touch circulation zones.',
+    actionCircularity:
+      'Specify modular drop repeats and repairable seam strategies to replace damaged strips without full wall renewal.'
+  },
+  {
+    id: 'pet-felt-acoustic-panels',
+    name: 'PET Felt Acoustic Panels',
+    tone: '#7f858b',
+    finish: 'Recycled PET felt panels',
+    description:
+      'Acoustic wall and ceiling panels formed from recycled PET felt, used for reverberation control in offices, schools, and social spaces.',
+    keywords: ['acoustic', 'pet felt', 'recycled', 'sound absorption'],
+    category: 'acoustic-panel',
+    treePaths: ['Interiors>Walls', 'Interiors>Ceilings'],
+    carbonIntensity: 'medium',
+    materialType: 'textile',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['heat-pressing', 'cutting'],
+    finishFamily: 'fabric-synthetic',
+    strategicValue:
+      'High recycled-content PET systems can deliver strong acoustic performance while diverting plastic waste from landfill streams.',
+    mitigationTip:
+      'Prioritise panels with verified post-consumer PET content and demountable mounting systems to improve circular reuse.',
+    actionDocumentation:
+      'Provide recycled content declaration, EPD where available, and third-party acoustic test data (NRC/alpha-w).',
+    actionVerification:
+      'Verify low-emission certification and fire rating performance for ceiling and escape-route applications.',
+    actionCircularity:
+      'Use clip-on fixings and standard modules so panels can be relocated and reused in future layout changes.'
+  },
+  {
+    id: 'wood-wool-acoustic-panels',
+    name: 'Wood Wool Acoustic Panels',
+    tone: '#c2b59f',
+    finish: 'Mineral-bound wood wool panel',
+    description:
+      'Wood wool acoustic boards with mineral binder for robust wall or ceiling absorption in civic, education, and retrofit projects.',
+    keywords: ['acoustic', 'wood wool', 'panel', 'ceiling'],
+    category: 'acoustic-panel',
+    treePaths: ['Interiors>Walls', 'Interiors>Ceilings'],
+    carbonIntensity: 'low',
+    materialType: 'natural-fibre',
+    materialForm: ['panel'],
+    materialFunction: ['acoustic', 'surface'],
+    manufacturingProcess: ['mixing', 'pressing', 'cutting'],
+    finishFamily: 'self-finished',
+    strategicValue:
+      'Wood wool systems combine bio-based fibre with durable mineral binders to provide long-life acoustic control with lower embodied impact than many synthetic alternatives.',
+    actionDocumentation:
+      'Provide chain-of-custody for timber fibres, EPD, and certified acoustic/fire performance data.',
+    actionVerification:
+      'Verify binder composition and confirm low-emission paints/coatings where colour finishing is specified.',
+    actionCircularity:
+      'Specify mechanical fixing and standard panel grids for partial replacement and reuse during refurbishments.'
+  },
+  {
+    id: 'veneer-wall-panels',
+    name: 'Timber Veneer Wall Panels',
+    tone: '#b9956f',
+    finish: 'Natural timber veneer on certified core',
+    description:
+      'Architectural veneer wall panels delivering warm grain and premium detailing for reception, hospitality, and residential interiors.',
+    keywords: ['timber panel', 'veneer', 'wall lining', 'interior'],
+    category: 'timber-panel',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['lamination', 'cutting', 'coating'],
+    finishFamily: 'veneer',
+    strategicValue:
+      'Veneer systems use hardwood efficiently and can retain the biogenic carbon benefits of timber while achieving high-end interior aesthetics.',
+    actionDocumentation:
+      'Provide FSC/PEFC chain-of-custody for veneer and substrate plus emissions certification for adhesives/finishes.',
+    actionVerification:
+      'Verify fire classification, formaldehyde class, and moisture movement detailing at panel joints.',
+    actionCircularity:
+      'Specify cassette or secret-fix systems that allow panel-by-panel removal for access, repair, and reinstallation.'
+  },
+  {
+    id: 'bio-based-microcement',
+    name: 'Bio-Based Microcement',
+    tone: '#c8c1b5',
+    finish: 'Lime-enhanced low-cement microtopping',
+    description:
+      'Thin build-up continuous finish using reduced-cement or lime-enhanced binders for walls and low-traffic interior floors.',
+    keywords: ['microcement', 'lime', 'low cement', 'seamless'],
+    category: 'microcement',
+    treePaths: ['Interiors>Walls', 'Interiors>Floors'],
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['liquid'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['mixing', 'coating'],
+    finishFamily: 'concrete-polished',
+    strategicValue:
+      'Lower-cement microtoppings can reduce embodied carbon versus conventional screed-plus-finish build-ups while preserving seamless interior aesthetics.',
+    actionDocumentation:
+      'Provide EPD or manufacturer carbon declaration comparing binder content against standard microcement systems.',
+    actionVerification:
+      'Verify low-VOC sealer/coating and crack-bridging substrate preparation for long-term durability.',
+    actionCircularity:
+      'Design for local repair and recoating rather than full substrate removal at refurbishment cycles.'
+  },
+  {
+    id: 'recycled-plastic-furniture',
+    name: 'Recycled Plastic Furniture',
+    tone: '#7b8791',
+    finish: 'Post-consumer recycled polymer moulding',
+    description:
+      'Loose furniture manufactured from recycled polymers for cafés, breakout spaces, and flexible learning or workplace environments.',
+    keywords: ['furniture', 'recycled plastic', 'loose fit-out', 'interior'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'medium',
+    materialType: 'polymer',
+    materialForm: ['panel'],
+    materialFunction: ['decorative', 'surface'],
+    manufacturingProcess: ['moulding', 'cutting'],
+    finishFamily: 'custom',
+    strategicValue:
+      'Recycled polymer furniture can displace virgin plastics in fit-outs and perform well in high-use environments with low maintenance.',
+    mitigationTip:
+      'Specify monomaterial components and manufacturer take-back schemes to avoid downcycling or landfill at end of use.',
+    actionDocumentation:
+      'Provide verified recycled polymer content by weight and declaration of additive chemistry (flame retardants/plasticisers).',
+    actionVerification:
+      'Verify durability ratings for commercial use and low-emission certification for occupied interiors.',
+    actionCircularity:
+      'Prioritise products with replaceable components and supplier take-back/refurbishment services.'
+  },
+  {
+    id: 'aac-blockwork',
+    name: 'AAC Blockwork',
+    tone: '#d7d4cc',
+    finish: 'Autoclaved aerated concrete blocks',
+    description:
+      'Lightweight autoclaved aerated concrete blockwork for low-rise structure and infill where thermal performance and speed of installation are priorities.',
+    keywords: ['structure', 'aac', 'blockwork', 'lightweight masonry'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure'],
+    carbonIntensity: 'medium',
+    materialType: 'mineral',
+    materialForm: ['block'],
+    materialFunction: ['structural', 'insulation'],
+    manufacturingProcess: ['mixing', 'moulding', 'cutting'],
+    finishFamily: 'self-finished',
+    strategicValue:
+      'AAC can reduce structural dead load and improve thermal performance, lowering associated structural and operational demands in suitable typologies.',
+    mitigationTip:
+      'Specify products with transparent EPDs and optimise wall build-ups to avoid over-specification and unnecessary material volume.',
+    actionDocumentation:
+      'Provide EPD with declared A1-A3 impacts and manufacturer data for recycled inputs/energy mix.',
+    actionVerification:
+      'Verify compressive strength class, moisture detailing, and compatibility with selected render or rainscreen systems.',
+    actionCircularity:
+      'Use lime-based mortars where feasible and detail clear material separation layers to improve demolition-phase recovery.'
+  },
+  {
+    id: 'geopolymer-concrete',
+    name: 'Geopolymer Concrete',
+    tone: '#a9a9a4',
+    finish: 'Alkali-activated low-clinker concrete',
+    description:
+      'Concrete mix using alkali-activated binders and industrial by-products to reduce clinker demand for structural and precast applications.',
+    keywords: ['structure', 'geopolymer', 'low carbon concrete', 'alkali activated'],
+    category: 'structure',
+    treePaths: ['Structure>Primary Structure', 'Structure>Floors and Roofs'],
+    carbonIntensity: 'low',
+    materialType: 'concrete',
+    materialForm: ['block', 'panel'],
+    materialFunction: ['structural'],
+    manufacturingProcess: ['mixing', 'casting'],
+    finishFamily: 'concrete-exposed',
+    strategicValue:
+      'Geopolymer systems can materially cut embodied carbon versus ordinary Portland cement mixes while maintaining structural capability for many applications.',
+    actionDocumentation:
+      'Provide verified EPD and binder chemistry declaration including clinker replacement percentage and curing regime.',
+    actionVerification:
+      'Verify long-term durability evidence (chloride, carbonation, freeze-thaw) and contractor familiarity with placement controls.',
+    actionCircularity:
+      'Specify reusable formwork and crush-reuse strategy so future demolition arisings can return as secondary aggregate.'
+  },
+  {
+    id: 'straw-insulation-panels',
+    name: 'Straw Insulation Panels',
+    tone: '#cdb88a',
+    finish: 'Compressed straw fibre insulation panel',
+    description:
+      'Bio-based insulation boards from agricultural straw for walls and roofs, supporting moisture-buffering and low-embodied-carbon envelope design.',
+    keywords: ['insulation', 'straw', 'bio-based', 'envelope'],
+    category: 'insulation',
+    treePaths: ['Envelope>Insulation'],
+    carbonIntensity: 'low',
+    materialType: 'bio-based',
+    materialForm: ['panel', 'board'],
+    materialFunction: ['insulation'],
+    manufacturingProcess: ['pressing', 'cutting'],
+    finishFamily: 'self-finished',
+    strategicValue:
+      'Straw insulation uses rapidly renewable agricultural by-product feedstock and can deliver strong carbon-storage benefits in breathable envelope systems.',
+    actionDocumentation:
+      'Provide product declaration covering bio-based content, binder additives, and EPD or equivalent carbon assessment.',
+    actionVerification:
+      'Verify moisture, fire, and settlement performance with tested wall/roof build-ups and airtightness strategy.',
+    actionCircularity:
+      'Specify dry, demountable build-ups so panels can be removed intact and reused or composted where permitted.'
+  },
+  {
+    id: 'porcelain-wetroom-tiles',
+    name: 'Porcelain Wetroom Tiles',
+    tone: '#d8d6cf',
+    finish: 'Textured anti-slip porcelain tile',
+    description:
+      'Dense porcelain tiles for bathroom and kitchen wet zones, combining low water absorption with robust slip resistance and easy cleaning.',
+    keywords: ['bathroom', 'kitchen', 'porcelain', 'wetroom', 'tile'],
+    category: 'tile',
+    treePaths: ['Interiors>Floors', 'Interiors>Walls'],
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['kiln-firing', 'cutting'],
+    finishFamily: 'tile-glazed',
+    mitigationTip:
+      'Specify regional production, optimised tile module sizes, and low-waste setting-out to reduce fired-manufacturing and transport impacts.',
+    actionDocumentation:
+      'Provide EPD and declaration of kiln energy source for selected porcelain ranges.',
+    actionVerification:
+      'Verify slip resistance class (R/pendulum), water absorption, and stain resistance for intended wet-area use.',
+    actionCircularity:
+      'Detail movement joints and modular layouts so damaged tiles can be selectively replaced rather than full-room renewal.'
+  },
+  {
+    id: 'ceramic-subway-tiles',
+    name: 'Ceramic Subway Tiles',
+    tone: '#f1efe8',
+    finish: 'Glazed ceramic wall tile',
+    description:
+      'Classic glazed ceramic tiles for kitchen splashbacks and bathroom walls, offering durable low-maintenance hygiene surfaces.',
+    keywords: ['bathroom', 'kitchen', 'ceramic', 'subway tile', 'splashback'],
+    category: 'tile',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'medium',
+    materialType: 'ceramic',
+    materialForm: ['tile'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['kiln-firing', 'cutting'],
+    finishFamily: 'tile-glazed',
+    strategicValue:
+      'Long service life and easy cleaning make ceramic wall tiles a durable hygiene finish with low in-use maintenance demand.',
+    mitigationTip:
+      'Use local manufacturers with renewable kiln energy and modular sizes that minimise cut waste at edges and fittings.',
+    actionDocumentation:
+      'Provide product declaration or EPD including declared manufacturing energy source and lifecycle boundary.',
+    actionVerification:
+      'Verify glaze durability class, chemical resistance, and compatibility of grout system with cleaning regime.',
+    actionCircularity:
+      'Use repairable grout and planned spare stock to enable piecemeal replacement during maintenance cycles.'
+  },
+  {
+    id: 'recycled-glass-splashback',
+    name: 'Recycled Glass Splashback',
+    tone: '#9dc0cb',
+    finish: 'Toughened recycled-content glass panel',
+    description:
+      'Back-painted or clear toughened glass splashback panels for kitchens and vanity zones with high hygiene and reflectivity.',
+    keywords: ['kitchen', 'bathroom', 'splashback', 'recycled glass', 'hygiene'],
+    category: 'wall-internal',
+    treePaths: ['Interiors>Walls'],
+    carbonIntensity: 'medium',
+    materialType: 'glass',
+    materialForm: ['panel', 'sheet'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['casting', 'cutting'],
+    finishFamily: 'glass-clear',
+    strategicValue:
+      'Glass splashbacks are long-life, non-porous, and easy to maintain, supporting hygienic interiors with minimal ongoing treatment.',
+    mitigationTip:
+      'Specify high recycled cullet content and optimise panel dimensions to reduce offcuts and replacement risk.',
+    actionDocumentation:
+      'Provide EPD and declaration of recycled glass content with evidence of tempering process compliance.',
+    actionVerification:
+      'Verify heat/shock resistance behind hobs and low-VOC backing paints or sealants.',
+    actionCircularity:
+      'Detail mechanically removable edge trims to allow panel replacement without extensive substrate demolition.'
+  },
+  {
+    id: 'sintered-stone-worktop',
+    name: 'Sintered Stone Worktop',
+    tone: '#c9c7c1',
+    finish: 'Ultra-compact sintered stone slab',
+    description:
+      'Ultra-compact mineral worktop surface for kitchens and bathrooms with high heat resistance, low porosity, and scratch durability.',
+    keywords: ['kitchen', 'bathroom', 'worktop', 'sintered stone', 'counter'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'stone',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['heat-pressing', 'cutting'],
+    finishFamily: 'stone-honed',
+    mitigationTip:
+      'Specify thinner slabs and optimised nesting to reduce high-temperature manufacturing intensity and fabrication waste.',
+    actionDocumentation:
+      'Provide EPD and supplier data on slab thickness options and embodied carbon per square metre.',
+    actionVerification:
+      'Verify edge detailing, cut-out reinforcement, and thermal shock suitability for cooker and sink conditions.',
+    actionCircularity:
+      'Use demountable support details and separable sealants so tops can be recovered during fit-out changes.'
+  },
+  {
+    id: 'stainless-steel-worktop',
+    name: 'Stainless Steel Worktop',
+    tone: '#b5b8bb',
+    finish: 'Brushed stainless steel counter',
+    description:
+      'Commercial-grade stainless steel worksurfaces for kitchens and utility spaces requiring high hygiene and chemical resistance.',
+    keywords: ['kitchen', 'worktop', 'stainless steel', 'hygiene', 'counter'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['metal-working', 'cutting'],
+    finishFamily: 'metal-brushed',
+    mitigationTip:
+      'Prioritise high-recycled-content stainless grades and long-life detailing that avoids frequent replacement in high-use spaces.',
+    actionDocumentation:
+      'Provide EPD and mill certificate showing recycled content and alloy grade for selected sheet.',
+    actionVerification:
+      'Verify corrosion grade (e.g., 304/316) against cleaning chemicals and moisture exposure profile.',
+    actionCircularity:
+      'Specify mechanically fixed countertop assemblies for salvage and metal recycling at end-of-life.'
+  },
+  {
+    id: 'recycled-paper-composite-worktop',
+    name: 'Recycled Paper Composite Worktop',
+    tone: '#6a6158',
+    finish: 'Resin-bound recycled paper composite',
+    description:
+      'Dense paper-composite surfaces for vanity tops and dry-use kitchen zones, delivering matte warmth with high recycled fibre content.',
+    keywords: ['kitchen', 'bathroom', 'worktop', 'recycled paper', 'composite'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['sheet', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['lamination', 'pressing', 'cutting'],
+    finishFamily: 'laminate',
+    strategicValue:
+      'High recycled-fibre content can lower virgin material demand while delivering durable interior work surfaces.',
+    mitigationTip:
+      'Specify FSC-certified feedstock and low-emission resin systems with proven moisture and heat suitability for intended use.',
+    actionDocumentation:
+      'Provide declaration of recycled paper content, binder chemistry, and EPD or equivalent carbon data.',
+    actionVerification:
+      'Verify water resistance class, heat tolerance, and low-VOC installation adhesive compatibility.',
+    actionCircularity:
+      'Use modular counter sections and reversible fixing strategies to enable local replacement rather than full counter renewal.'
+  },
+  {
+    id: 'fsc-kitchen-cabinetry',
+    name: 'FSC Kitchen Cabinetry',
+    tone: '#c4ab8c',
+    finish: 'FSC plywood carcass with low-VOC fronts',
+    description:
+      'Durable modular kitchen cabinetry using certified timber products with replaceable fronts and hardware for long service life.',
+    keywords: ['kitchen', 'cabinetry', 'fsc', 'joinery', 'modular'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings', 'Interiors>Walls'],
+    carbonIntensity: 'low',
+    materialType: 'timber',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['cutting', 'machining', 'lamination'],
+    finishFamily: 'veneer',
+    strategicValue:
+      'Certified timber cabinetry stores carbon and supports long-life kitchen fit-outs when components are repairable and upgradable.',
+    actionDocumentation:
+      'Provide FSC/PEFC chain-of-custody for carcass and fronts plus emissions certificates for boards and coatings.',
+    actionVerification:
+      'Verify moisture-resistant board grades around sinks/appliances and low-VOC finish system performance.',
+    actionCircularity:
+      'Specify replaceable door fronts, hinges, and plinths to extend service life without full carcass replacement.'
+  },
+  {
+    id: 'water-resistant-bathroom-joinery',
+    name: 'Water-Resistant Bathroom Joinery',
+    tone: '#bdb3a5',
+    finish: 'Moisture-resistant board with sealed edges',
+    description:
+      'Vanity and storage joinery designed for humid bathroom environments with sealed edge protection and service access.',
+    keywords: ['bathroom', 'joinery', 'vanity', 'moisture resistant', 'storage'],
+    category: 'joinery',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['board', 'panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['pressing', 'cutting', 'coating'],
+    finishFamily: 'laminate',
+    strategicValue:
+      'Moisture-resilient joinery can significantly reduce replacement frequency in wet rooms, improving whole-life sustainability.',
+    mitigationTip:
+      'Prefer certified low-emission boards and durable edge-seal systems that avoid delamination in high-humidity cycles.',
+    actionDocumentation:
+      'Provide board emissions certification, moisture-resistance test data, and source documentation for substrate and finish.',
+    actionVerification:
+      'Verify edge sealing specification, hardware corrosion resistance, and access detailing around plumbing penetrations.',
+    actionCircularity:
+      'Detail plinths and service voids for non-destructive access so units can be repaired and retained during MEP interventions.'
+  },
+  {
+    id: 'sanitary-ceramic-ware',
+    name: 'Sanitary Ceramic Ware',
+    tone: '#f3f2ee',
+    finish: 'Vitreous china sanitaryware',
+    description:
+      'Toilets and basins in vitreous ceramic with durable glazed surfaces for hygiene-critical bathroom and hospitality settings.',
+    keywords: ['bathroom', 'sanitaryware', 'ceramic', 'toilet', 'basin'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'ceramic',
+    materialForm: ['block'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['moulding', 'kiln-firing'],
+    finishFamily: 'tile-glazed',
+    mitigationTip:
+      'Specify high-efficiency flush fixtures with long-life components and producers using lower-carbon kiln energy sources.',
+    actionDocumentation:
+      'Provide EPD and water-use certification evidence for selected WC and basin products.',
+    actionVerification:
+      'Verify flush volume, hygiene glazing durability, and spare-part availability for valves/seals.',
+    actionCircularity:
+      'Select systems with replaceable cistern internals and standard fixings to extend fixture life before full replacement.'
+  },
+  {
+    id: 'brushed-stainless-fixtures',
+    name: 'Brushed Stainless Fixtures',
+    tone: '#9ea3a7',
+    finish: 'Brushed stainless taps and accessories',
+    description:
+      'Tapware, shower controls, and bathroom accessories in brushed stainless steel for high durability and corrosion resistance.',
+    keywords: ['bathroom', 'kitchen', 'tapware', 'stainless steel', 'fixtures'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'metal',
+    materialForm: ['bar', 'tube'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['metal-working', 'machining'],
+    finishFamily: 'metal-brushed',
+    mitigationTip:
+      'Specify high-recycled-content stainless products and flow-regulated fittings to offset embodied impact with operational savings.',
+    actionDocumentation:
+      'Provide recycled content declaration and water-efficiency certification for taps and mixers.',
+    actionVerification:
+      'Verify corrosion grade, cartridge durability, and flow-rate compliance with project water targets.',
+    actionCircularity:
+      'Specify replaceable cartridges and aerators so fittings can be repaired instead of replaced.'
+  },
+  {
+    id: 'low-flow-shower-system',
+    name: 'Low-Flow Shower System',
+    tone: '#b0b6bb',
+    finish: 'Water-efficient shower set',
+    description:
+      'Low-flow shower heads and mixers designed to reduce potable water and hot-water energy demand in bathrooms and hotels.',
+    keywords: ['bathroom', 'shower', 'low-flow', 'water efficiency', 'fixture'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'medium',
+    materialType: 'composite',
+    materialForm: ['tube', 'bar'],
+    materialFunction: ['surface'],
+    manufacturingProcess: ['metal-working', 'moulding'],
+    finishFamily: 'custom',
+    strategicValue:
+      'Efficient shower systems can deliver substantial operational carbon and water savings over their life, often outweighing moderate embodied impacts.',
+    actionDocumentation:
+      'Provide flow-rate certification and lifecycle durability data for cartridges, hoses, and spray components.',
+    actionVerification:
+      'Verify pressure-compensated performance and user comfort at specified reduced flow rates.',
+    actionCircularity:
+      'Specify modular shower kits with replaceable heads/cartridges and standard connections for straightforward maintenance.'
+  },
+  {
+    id: 'frameless-shower-screen',
+    name: 'Frameless Shower Screen',
+    tone: '#d5e0e5',
+    finish: 'Toughened low-iron glass screen',
+    description:
+      'Minimal-framed or frameless glazed shower enclosures that maximise light transfer and visual openness in bathroom design.',
+    keywords: ['bathroom', 'shower screen', 'glass', 'frameless', 'wetroom'],
+    category: 'fixture',
+    treePaths: ['Interiors>Fixtures & Fittings'],
+    carbonIntensity: 'high',
+    materialType: 'glass',
+    materialForm: ['panel'],
+    materialFunction: ['surface', 'decorative'],
+    manufacturingProcess: ['casting', 'cutting'],
+    finishFamily: 'glass-clear',
+    mitigationTip:
+      'Optimise panel sizing and hardware standardisation to reduce replacement frequency and simplify end-of-life glass recovery.',
+    actionDocumentation:
+      'Provide EPD and glass safety certification plus declaration of recycled cullet where available.',
+    actionVerification:
+      'Verify toughened/laminated safety requirements, anti-limescale coating durability, and fixing load calculations.',
+    actionCircularity:
+      'Use mechanically fixed channels and replaceable gaskets to support non-destructive glass panel replacement.'
   }
 ];

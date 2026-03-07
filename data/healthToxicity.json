@@ -1268,6 +1268,188 @@
       "riskLevel": "low",
       "concerns": [],
       "note": "Natural planting improves air quality. No health concerns."
+    },
+    "recycled-glass-mosaic": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert finish once installed. Verify grout and adhesive as low-VOC for enclosed wet areas."
+    },
+    "zellige-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert ceramic surface with no off-gassing. Confirm sealers and adhesives meet low-emission indoor standards."
+    },
+    "quartz-composite-worktop": {
+      "riskLevel": "medium",
+      "concerns": [
+        "dust",
+        "binders"
+      ],
+      "note": "Fabrication can generate respirable silica dust; use controlled off-site cutting and verify binder emissions."
+    },
+    "solid-surface-worktop": {
+      "riskLevel": "medium",
+      "concerns": [
+        "vocs",
+        "binders"
+      ],
+      "note": "Adhesives and thermoforming processes can emit VOCs during installation; specify low-emission systems and ventilate during fit-out."
+    },
+    "linoleum-faced-joinery": {
+      "riskLevel": "low",
+      "concerns": [
+        "formaldehyde"
+      ],
+      "note": "Facing is typically low-emission; check substrate board formaldehyde class and adhesive VOC performance."
+    },
+    "fsc-mdf-joinery": {
+      "riskLevel": "medium",
+      "concerns": [
+        "formaldehyde",
+        "vocs"
+      ],
+      "note": "Specify no-added-formaldehyde or E1/E0 boards and low-VOC coatings to protect indoor air quality."
+    },
+    "cork-wallcovering": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Natural material with generally low emissions; verify binder and adhesive chemistry for sensitive occupancies."
+    },
+    "linen-wallcovering": {
+      "riskLevel": "low",
+      "concerns": [
+        "biocides"
+      ],
+      "note": "Natural fibre is typically low-emission; request disclosure of anti-mould or stain treatments and select low-toxicity options."
+    },
+    "pet-felt-acoustic-panels": {
+      "riskLevel": "medium",
+      "concerns": [
+        "vocs",
+        "flame-retardants"
+      ],
+      "note": "Check fire-treatment chemistry and product emissions testing. Prefer certified low-emission recycled PET systems."
+    },
+    "wood-wool-acoustic-panels": {
+      "riskLevel": "low",
+      "concerns": [
+        "dust"
+      ],
+      "note": "In-use emissions are low; control cutting dust during installation and use low-VOC coatings where painted."
+    },
+    "veneer-wall-panels": {
+      "riskLevel": "low",
+      "concerns": [
+        "formaldehyde"
+      ],
+      "note": "Natural veneer is low-emission, but adhesives and substrate boards should meet low formaldehyde classes."
+    },
+    "bio-based-microcement": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert once cured. Confirm low-VOC sealers and safe handling of fine powders during mixing/application."
+    },
+    "recycled-plastic-furniture": {
+      "riskLevel": "medium",
+      "concerns": [
+        "flame-retardants",
+        "vocs"
+      ],
+      "note": "Request additive disclosure and low-emission testing; avoid unnecessary flame-retardant chemistries in low-risk occupancies."
+    },
+    "aac-blockwork": {
+      "riskLevel": "low",
+      "concerns": [
+        "dust"
+      ],
+      "note": "Inert after installation. Manage silica/mineral dust during cutting and drilling with suitable controls."
+    },
+    "geopolymer-concrete": {
+      "riskLevel": "low",
+      "concerns": [
+        "dust"
+      ],
+      "note": "Inert once cured. Alkali activators require strict handling controls during batching and placement."
+    },
+    "straw-insulation-panels": {
+      "riskLevel": "low",
+      "concerns": [
+        "dust",
+        "fire-retardants"
+      ],
+      "note": "Natural fibre product with generally low in-use emissions; verify fire treatment chemistry and control dust during installation."
+    },
+    "porcelain-wetroom-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert finish with no off-gassing once installed. Verify grout and sealant as low-VOC for enclosed bathrooms."
+    },
+    "ceramic-subway-tiles": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert glazed ceramic with excellent indoor air quality profile. Confirm low-emission adhesives and grouts."
+    },
+    "recycled-glass-splashback": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert glass surface after installation. Check back-paint and sealants for VOC emissions."
+    },
+    "sintered-stone-worktop": {
+      "riskLevel": "medium",
+      "concerns": [
+        "dust"
+      ],
+      "note": "Fabrication can produce respirable silica dust; require off-site controlled cutting and dust suppression."
+    },
+    "stainless-steel-worktop": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert and hygienic in use. Verify cleaning chemicals are compatible to avoid corrosion products."
+    },
+    "recycled-paper-composite-worktop": {
+      "riskLevel": "medium",
+      "concerns": [
+        "vocs",
+        "binders"
+      ],
+      "note": "Resin binders may emit VOCs during installation; specify low-emission adhesives and sealers."
+    },
+    "fsc-kitchen-cabinetry": {
+      "riskLevel": "low",
+      "concerns": [
+        "formaldehyde"
+      ],
+      "note": "Natural timber-based system; verify board emissions class (E1 or better) and low-VOC finishes."
+    },
+    "water-resistant-bathroom-joinery": {
+      "riskLevel": "medium",
+      "concerns": [
+        "formaldehyde",
+        "vocs"
+      ],
+      "note": "Moisture-resistant boards and coatings can increase emissions risk; specify low-emission certified products."
+    },
+    "sanitary-ceramic-ware": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert glazed ceramic with no off-gassing. Ensure adjacent sealants are low-VOC and mould-resistant."
+    },
+    "brushed-stainless-fixtures": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert in use with minimal emissions risk. Confirm lead-free internal waterways and certified potable-water compliance."
+    },
+    "low-flow-shower-system": {
+      "riskLevel": "low",
+      "concerns": [
+        "chromium"
+      ],
+      "note": "Low emissions in use; verify wetted components and coatings are compliant for potable water and corrosion resistance."
+    },
+    "frameless-shower-screen": {
+      "riskLevel": "low",
+      "concerns": [],
+      "note": "Inert glazing system; ensure compatible low-VOC sealants and gaskets in enclosed wet rooms."
     }
   }
 }

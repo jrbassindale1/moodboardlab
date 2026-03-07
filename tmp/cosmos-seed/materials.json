@@ -912,12 +912,7 @@
         "mitigation": "Include thermal breaks in details"
       }
     ],
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 60
   },
   {
     "id": "glulam-structure",
@@ -2030,12 +2025,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 60
   },
   {
     "id": "clt-structure",
@@ -2255,17 +2245,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with excellent indoor air quality. Stabilisers (cement/lime) are inert once cured.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Standard",
-      "Premium",
-      "Recycled Content"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "polished-concrete",
@@ -2314,13 +2294,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Sealers and densifiers should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "lino-floor",
@@ -2369,13 +2343,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material (linseed oil, cork, wood flour) with low emissions. May have temporary odour during installation.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "recycled-terrazzo",
@@ -2424,13 +2392,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Resin-bound versions may have higher emissions than cement-bound—verify with EPD.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "rubber-floor",
@@ -2494,13 +2456,17 @@
     "docType": "material",
     "sortOrder": 13,
     "finishIds": [
-      "finish:recycled-rubber-sheet"
+      "finish:recycled-rubber-sheet",
+      "finish:smooth",
+      "finish:studded",
+      "finish:textured"
     ],
     "primaryFinishId": "finish:recycled-rubber-sheet",
     "finishSetIds": [
-      "fs:single:3eda78072e72"
+      "fs:colorOptions:1b9c52c2bdff",
+      "fs:textOptions:3570e449a8a6"
     ],
-    "primaryFinishSetId": "fs:single:3eda78072e72",
+    "primaryFinishSetId": "fs:colorOptions:1b9c52c2bdff",
     "lifecycleProfileId": "lp:rubber-floor",
     "insight": "Manufacturing is typically the main hotspot (polymer processing and additives), and end-of-life routes vary by product. Reduce impact by prioritising recycled-content rubber and take-back schemes where available, and use modular formats to allow partial replacement. Request EPD data to validate assumptions.",
     "actions": [
@@ -2581,17 +2547,7 @@
     ],
     "healthNote": "Natural material. Check finish and adhesive for VOC emissions—specify E1 or better for engineered products.",
     "risks": null,
-    "serviceLife": 20,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ]
+    "serviceLife": 20
   },
   {
     "id": "grey-carpet",
@@ -2644,13 +2600,7 @@
     ],
     "healthNote": "Can emit VOCs from fibres, backing, and adhesives. Specify CRI Green Label Plus or equivalent. Consider wool alternatives.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "bamboo-parquet",
@@ -2716,17 +2666,7 @@
     ],
     "healthNote": "Natural material. Verify adhesive emissions class (E1 or better). Low-VOC finish essential for good indoor air quality.",
     "risks": null,
-    "serviceLife": 20,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ]
+    "serviceLife": 20
   },
   {
     "id": "cork-plank-floor",
@@ -2776,32 +2716,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with excellent indoor air quality. Verify binder and finish are low-VOC.",
     "risks": null,
-    "serviceLife": 30,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "reclaimed-timber-floor",
@@ -2853,32 +2768,7 @@
     ],
     "healthNote": "Test for lead paint or historic treatments on reclaimed material. Once verified clean, excellent indoor air quality.",
     "risks": null,
-    "serviceLife": 20,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 20
   },
   {
     "id": "stone-paver",
@@ -2955,17 +2845,7 @@
     ],
     "healthNote": "Inert material. Some granites may emit low levels of radon—verify with supplier if used in enclosed spaces.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "vinyl-planks",
@@ -3018,13 +2898,7 @@
     ],
     "healthNote": "PVC flooring can contain phthalates and emit VOCs. Specify phthalate-free products meeting FloorScore or equivalent.",
     "risks": null,
-    "serviceLife": 15,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 15
   },
   {
     "id": "resin-flooring",
@@ -3075,13 +2949,7 @@
     ],
     "healthNote": "High VOC emissions during application—requires ventilation. Once cured, emissions reduce significantly. Specify low-VOC systems.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "microcement-floor",
@@ -3129,13 +2997,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Sealers should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "ceramic-tiles",
@@ -3184,13 +3046,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Excellent for indoor air quality. Grout should be low-VOC.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "epoxy-flooring",
@@ -3241,13 +3097,7 @@
     ],
     "healthNote": "High VOC emissions during application. Once fully cured (7+ days), emissions reduce. Specify water-based or low-VOC epoxies where possible.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "travertine-tiles",
@@ -3295,32 +3145,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "marble-floor",
@@ -3369,32 +3194,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "engineered-oak-floor",
@@ -3445,18 +3245,7 @@
     ],
     "healthNote": "Natural surface with plywood core. Verify formaldehyde emissions class (E1 or better). Low-VOC finish essential.",
     "risks": null,
-    "serviceLife": 20,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "linoleum-tiles",
@@ -3505,13 +3294,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with low emissions. May have temporary linseed oil odour during installation.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "aluminum-frame",
@@ -3562,13 +3345,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable to solvent-based finishes.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "timber-frame",
@@ -3621,13 +3398,7 @@
     ],
     "healthNote": "Natural material. Verify preservative treatments are non-toxic (avoid CCA). Untreated timber has excellent indoor air quality.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "recycled-aluminum-frame",
@@ -3678,13 +3449,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Recycling process does not affect health properties.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "steel-window-frame",
@@ -3734,13 +3499,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Galvanising and powder coating are preferable to solvent-based paints.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "composite-window-frame",
@@ -3791,13 +3550,7 @@
     ],
     "healthNote": "Check composite material composition. Some may contain formaldehyde-based resins. Verify emissions data.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "upvc-window-frame",
@@ -3850,13 +3603,7 @@
     ],
     "healthNote": "Historic uPVC contained lead stabilisers—verify lead-free formulation. Modern uPVC has low emissions once installed.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "curtain-wall-system",
@@ -3907,12 +3654,7 @@
     "healthConcerns": [],
     "healthNote": "Aluminium and glass are inert. Sealants and gaskets should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "frameless-glazing",
@@ -3962,12 +3704,7 @@
     "healthConcerns": [],
     "healthNote": "Glass is inert. Structural silicone should be low-VOC and verified for indoor air quality.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "clay-plaster",
@@ -4019,27 +3756,7 @@
     "healthConcerns": [],
     "healthNote": "Excellent for indoor air quality. Natural humidity buffering. No synthetic additives or emissions.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "gypsum-wall",
@@ -4199,27 +3916,7 @@
     ],
     "healthNote": "Verify formaldehyde emissions class (E1 or better). Low-VOC finish essential for good indoor air quality.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "acoustic-panels-wall",
@@ -4275,13 +3972,7 @@
     ],
     "healthNote": "Check core material and fabric for emissions. Specify products meeting indoor air quality standards.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "glass-partitions",
@@ -4334,12 +4025,7 @@
     "healthConcerns": [],
     "healthNote": "Glass is inert with no off-gassing. Frame sealants should be low-VOC.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "brick-internal",
@@ -4390,32 +4076,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "concrete-block-wall",
@@ -4518,13 +4179,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Sealers should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "standard-wall-paint",
@@ -4595,7 +4250,7 @@
     "name": "Paint – Custom Colour (Walls)",
     "tone": "#e8e8e8",
     "finish": "Custom emulsion colour",
-    "description": "Pick any HEX/RGB colour for walls and choose matte, satin, or gloss finish.",
+    "description": "Pick any wall colour and choose matte, satin, or gloss finish.",
     "keywords": [
       "paint",
       "walls",
@@ -4724,7 +4379,7 @@
     "name": "Paint – Custom Colour (Ceilings)",
     "tone": "#eeeeee",
     "finish": "Custom ceiling paint colour",
-    "description": "Define a custom HEX/RGB colour for ceilings with matte, satin, or gloss finish.",
+    "description": "Define a custom ceiling colour with matte, satin, or gloss finish.",
     "keywords": [
       "paint",
       "ceiling",
@@ -4878,17 +4533,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "acoustic-ceiling-baffles",
@@ -4940,13 +4585,7 @@
     ],
     "healthNote": "Check core material composition. Mineral fibre can release particles during installation—ensure proper sealing.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "perforated-metal-ceiling",
@@ -4997,13 +4636,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. Acoustic backing should be verified for fibre release and emissions.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "timber-slat-ceiling",
@@ -5057,32 +4690,7 @@
     ],
     "healthNote": "Natural material. Verify fire treatment is non-toxic and finish is low-VOC.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "gypsum-ceiling",
@@ -5131,13 +4739,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "open-grid-ceiling",
@@ -5186,13 +4788,7 @@
     "healthConcerns": [],
     "healthNote": "Inert metal material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "stretch-fabric-ceiling",
@@ -5244,13 +4840,7 @@
     ],
     "healthNote": "PVC-based systems may contain phthalates and emit VOCs. Specify phthalate-free products or polyester alternatives.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "coffered-ceiling",
@@ -5301,32 +4891,7 @@
     ],
     "healthNote": "Depends on material—timber/MDF may emit formaldehyde. GRG is inert. Verify emissions class.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "plasterboard-ceiling",
@@ -5375,13 +4940,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "exposed-clt-ceiling",
@@ -5433,32 +4992,7 @@
     ],
     "healthNote": "Natural material with good indoor air quality. Verify adhesive emissions class (E1 or better).",
     "risks": null,
-    "serviceLife": 60,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 60
   },
   {
     "id": "metal-mesh-ceiling",
@@ -5508,13 +5042,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable to solvent-based finishes.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "acoustic-tiles-ceiling",
@@ -5566,13 +5094,7 @@
     ],
     "healthNote": "Mineral fibre tiles may release particles. Specify products meeting indoor air quality standards. Sealed surfaces reduce fibre release.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "exposed-concrete-soffit",
@@ -5621,13 +5143,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Excellent for indoor air quality. Sealers should be low-VOC.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "timber-slat-soffit",
@@ -5679,32 +5195,7 @@
     ],
     "healthNote": "Verify preservative treatment for external soffits is non-toxic. Internal soffits should have low-VOC finish.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "perforated-metal-soffit",
@@ -5755,13 +5246,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 25,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "timber-linings",
@@ -5815,32 +5300,7 @@
     ],
     "healthNote": "Natural material. Verify fire treatment is non-toxic and any board substrate meets E1 emissions class.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 10
   },
   {
     "id": "terracotta-panels",
@@ -5942,17 +5402,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "bio-fibre-panels",
@@ -6003,18 +5453,7 @@
     ],
     "healthNote": "Natural fibres are healthy. Verify binder is non-toxic and formaldehyde-free.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Standard",
-      "Premium",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "timber-wall-panels",
@@ -6029,8 +5468,7 @@
     ],
     "category": "timber-panel",
     "treePaths": [
-      "Internal>Timber Panels",
-      "Internal>Joinery & Furniture"
+      "Internal>Timber Panels"
     ],
     "carbonIntensity": "low",
     "materialType": "timber",
@@ -6070,32 +5508,7 @@
     ],
     "healthNote": "Natural material. Verify adhesive and substrate emissions class (E1 or better). Low-VOC finish essential.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "porcelain-tiles",
@@ -6146,13 +5559,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "textured-wallpaper",
@@ -6207,13 +5614,7 @@
     ],
     "healthNote": "Paper-based wallpapers are generally low-emission. Vinyl wallpapers may emit VOCs. Specify low-VOC paste.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 15
   },
   {
     "id": "fabric-acoustic-panels",
@@ -6268,13 +5669,7 @@
     ],
     "healthNote": "Check fabric and core for flame retardant treatments and emissions. Specify products meeting indoor air quality standards.",
     "risks": null,
-    "serviceLife": 20,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 25
   },
   {
     "id": "oak-timber-slats",
@@ -6331,32 +5726,7 @@
     ],
     "healthNote": "Natural material with excellent indoor air quality. Verify fire treatment is non-toxic if applied.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "cork-panels",
@@ -6407,32 +5777,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with excellent indoor air quality. Verify any finish is low-VOC.",
     "risks": null,
-    "serviceLife": 30,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "reclaimed-boarding",
@@ -6484,32 +5829,7 @@
     ],
     "healthNote": "Test for lead paint or historic treatments. Once verified clean, excellent indoor air quality.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 10
   },
   {
     "id": "mycelium-tiles",
@@ -6558,18 +5878,7 @@
     "healthConcerns": [],
     "healthNote": "Natural bio-based material with no synthetic additives. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Standard Profile",
-      "Heavy Duty",
-      "Low-Carbon Variant"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "wool-felt-panels",
@@ -6634,17 +5943,7 @@
     ],
     "healthNote": "Natural material. Verify moth treatment is non-toxic (avoid permethrin). Excellent acoustic and air quality properties.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Standard",
-      "Premium",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 10
   },
   {
     "id": "bamboo-slat-wall",
@@ -6709,17 +6008,7 @@
     ],
     "healthNote": "Natural material. Verify adhesive emissions class (E1 or better). Low-VOC finish essential.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ]
+    "serviceLife": 10
   },
   {
     "id": "plywood-panels-finish",
@@ -6771,32 +6060,7 @@
     ],
     "healthNote": "Verify formaldehyde emissions class (E1 or better). Low-VOC lacquer or oil finish essential.",
     "risks": null,
-    "serviceLife": 10,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 10
   },
   {
     "id": "marble-panels",
@@ -6846,32 +6110,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "leather-panels",
@@ -6924,13 +6163,7 @@
     ],
     "healthNote": "Chrome-tanned leather may contain chromium VI. Specify vegetable-tanned or chrome-free alternatives. Check fire retardant treatments.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "metal-mesh-panels",
@@ -6980,13 +6213,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "glass-panels-finish",
@@ -7036,27 +6263,7 @@
     "healthConcerns": [],
     "healthNote": "Glass is inert. Back-painting should use low-VOC paints.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Clear",
-        "tone": "#dfe8ef"
-      },
-      {
-        "label": "Soft Grey Tint",
-        "tone": "#b6c0c8"
-      },
-      {
-        "label": "Smoke Tint",
-        "tone": "#7d858c"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "acoustic-plaster",
@@ -7105,13 +6312,7 @@
     "healthConcerns": [],
     "healthNote": "Mineral-based with low emissions once cured. Verify composition with manufacturer.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "lime-plaster",
@@ -7159,13 +6360,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with excellent indoor air quality. Humidity buffering and naturally antifungal.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "tadelakt-plaster",
@@ -7214,13 +6409,7 @@
     "healthConcerns": [],
     "healthNote": "Natural lime-based material with excellent indoor air quality. Soap treatment is non-toxic.",
     "risks": null,
-    "serviceLife": 10,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 10
   },
   {
     "id": "secondary-steelwork",
@@ -7273,13 +6462,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "composite-metal-deck-slabs",
@@ -7332,13 +6515,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Dust during cutting requires PPE.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "precast-concrete-floor-planks",
@@ -7553,13 +6730,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "raised-access-floor-systems",
@@ -7724,13 +6895,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "glulam-roof-beams",
@@ -7837,13 +7002,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "clt-roof-panels",
@@ -7950,13 +7109,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "edge-beams",
@@ -8160,13 +7313,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "masonry-shelf-angles",
@@ -8269,13 +7416,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "timber-wind-bracing",
@@ -8543,13 +7684,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "timber-stair-carriages",
@@ -8657,13 +7792,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "cantilevered-stair-treads",
@@ -8719,13 +7848,7 @@
     ],
     "healthNote": "Natural material. Engineered products may use adhesives—verify low emissions and low-VOC finishes.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "facade-support-rails",
@@ -8778,13 +7901,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "rainscreen-carrier-systems",
@@ -8890,27 +8007,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Clear",
-        "tone": "#dfe8ef"
-      },
-      {
-        "label": "Soft Grey Tint",
-        "tone": "#b6c0c8"
-      },
-      {
-        "label": "Smoke Tint",
-        "tone": "#7d858c"
-      }
-    ]
+    "serviceLife": 60
   },
   {
     "id": "secondary-facade-brackets",
@@ -9014,13 +8111,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "steel-canopy-frames",
@@ -9073,13 +8164,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "timber-pergola-structures",
@@ -9186,13 +8271,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings and fire protection may contain VOCs—specify low-emission products.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "secondary-cantilever-arms",
@@ -9324,17 +8403,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "concrete-block-loadbearing",
@@ -10335,12 +9404,7 @@
     "healthConcerns": [],
     "healthNote": "Both materials are inert once cured. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 60
   },
   {
     "id": "precast-concrete",
@@ -11302,12 +10366,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Coatings should be verified for low VOC content.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 60
   },
   {
     "id": "prestressed-concrete",
@@ -11411,7 +10470,7 @@
   },
   {
     "id": "joinery-built-in",
-    "name": "Built-in Joinery",
+    "name": "Built-in Joinery (Birch Plywood)",
     "tone": "#cfa87b",
     "finish": "Birch plywood joinery",
     "description": "Birch plywood joinery elements with clear matte lacquer; integrated shelving and benches.",
@@ -11420,9 +10479,9 @@
       "furniture",
       "birch"
     ],
-    "category": "joinery",
+    "category": "wall-internal",
     "treePaths": [
-      "Internal>Joinery & Furniture"
+      "Internal>Walls"
     ],
     "carbonIntensity": "low",
     "materialType": "timber",
@@ -11439,7 +10498,7 @@
       "machining",
       "lamination"
     ],
-    "pk": "joinery",
+    "pk": "wall-internal",
     "docType": "material",
     "sortOrder": 130,
     "finishIds": [
@@ -11464,32 +10523,7 @@
     ],
     "healthNote": "Board materials may emit formaldehyde. Verify E1 class or better. Specify low-VOC finishes and adhesives.",
     "risks": null,
-    "serviceLife": 25,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "brass-fixtures",
@@ -11542,13 +10576,7 @@
     ],
     "healthNote": "Some brass alloys contain lead. Specify lead-free brass for any water contact applications.",
     "risks": null,
-    "serviceLife": 15,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 20
   },
   {
     "id": "standing-seam-roof",
@@ -11646,12 +10674,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "aluminium-standing-seam-roof",
@@ -11703,12 +10726,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "copper-standing-seam-roof",
@@ -11776,12 +10794,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "stainless-standing-seam-roof",
@@ -11845,12 +10858,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "lead-standing-seam-roof",
@@ -11915,12 +10923,7 @@
     ],
     "healthNote": "Lead is toxic during fabrication. Use safe handling and keep surfaces sealed.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "green-roof",
@@ -11977,17 +10980,7 @@
         "mitigation": "Include irrigation and maintenance period"
       }
     ],
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Standard Profile",
-      "Heavy Duty",
-      "Low-Carbon Variant"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "cool-roof",
@@ -12035,13 +11028,7 @@
     "healthConcerns": [],
     "healthNote": "External membrane with minimal indoor air quality impact. Verify any coatings are low-VOC.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "pv-roof",
@@ -12090,17 +11077,7 @@
     "healthConcerns": [],
     "healthNote": "External installation with no indoor air quality impact. Panels are sealed units.",
     "risks": null,
-    "serviceLife": 30,
-    "varietyOptions": [
-      "Standard Profile",
-      "Heavy Duty",
-      "Low-Carbon Variant"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "blue-roof",
@@ -12148,17 +11125,7 @@
     "healthConcerns": [],
     "healthNote": "External system with no indoor air quality impact. Liner materials should be food-safe if connected to harvesting.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Standard Profile",
-      "Heavy Duty",
-      "Low-Carbon Variant"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "clay-tiles-roof",
@@ -12207,32 +11174,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "slate-tiles-roof",
@@ -12280,32 +11222,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "metal-tiles-roof",
@@ -12355,13 +11272,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "epdm-membrane",
@@ -12409,13 +11320,7 @@
     "healthConcerns": [],
     "healthNote": "Synthetic rubber with low emissions once installed. External use minimises any impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "tpo-membrane",
@@ -12464,13 +11369,7 @@
     "healthConcerns": [],
     "healthNote": "Thermoplastic with low emissions. External use minimises any indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "built-up-roofing",
@@ -12522,13 +11421,7 @@
     ],
     "healthNote": "Bitumen can emit VOCs and PAHs during application. External use minimises occupant exposure. Avoid hot-applied systems where possible.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "polycarbonate-roof",
@@ -12578,13 +11471,7 @@
     "healthConcerns": [],
     "healthNote": "Low emissions once installed. UV stabilisers are encapsulated within material.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Embossed"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "wood-fiber-insulation",
@@ -13042,13 +11929,7 @@
     ],
     "healthNote": "Natural material. Verify core construction meets E1 emissions class. Low-VOC finish essential.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "steel-door",
@@ -13097,13 +11978,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Verify any foam core insulation emissions.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "aluminum-door",
@@ -13152,13 +12027,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "glass-door",
@@ -13206,12 +12075,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Sealants and gaskets should be low-VOC.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "composite-door",
@@ -13263,27 +12127,7 @@
     ],
     "healthNote": "Check composite material composition. Foam cores and resins may emit. Verify emissions data.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Clear",
-        "tone": "#dfe8ef"
-      },
-      {
-        "label": "Soft Grey Tint",
-        "tone": "#b6c0c8"
-      },
-      {
-        "label": "Smoke Tint",
-        "tone": "#7d858c"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "fire-rated-door",
@@ -13334,13 +12178,7 @@
     ],
     "healthNote": "Fire-resistant cores may contain formaldehyde. Intumescent seals are inert until activated. Verify emissions data.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": true
+    "serviceLife": 30
   },
   {
     "id": "glass-balustrade",
@@ -13389,12 +12227,7 @@
     "healthConcerns": [],
     "healthNote": "Glass is inert with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ]
+    "serviceLife": 30
   },
   {
     "id": "steel-railing",
@@ -13444,13 +12277,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "timber-railing",
@@ -13502,32 +12329,7 @@
     ],
     "healthNote": "Natural material. Verify preservative treatment is non-toxic for internal use. Low-VOC finish essential.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "cable-railing",
@@ -13575,13 +12377,7 @@
     "healthConcerns": [],
     "healthNote": "Stainless steel is inert with no off-gassing. Excellent for indoor air quality.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "mesh-railing",
@@ -13631,13 +12427,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Powder coating is preferable.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "gravel-paving",
@@ -13684,27 +12474,7 @@
     "healthConcerns": [],
     "healthNote": "Natural inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 50,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 50
   },
   {
     "id": "resin-bound-gravel",
@@ -13753,27 +12523,7 @@
     ],
     "healthNote": "Resin may emit VOCs during application. Once cured, low emissions. External use minimises impact.",
     "risks": null,
-    "serviceLife": 50,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 50
   },
   {
     "id": "concrete-paving",
@@ -13821,27 +12571,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "block-paving",
@@ -13889,32 +12619,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "grass-reinforcement",
@@ -13961,27 +12666,7 @@
     "healthConcerns": [],
     "healthNote": "Plastic grid with natural grass. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "decking-external",
@@ -14032,32 +12717,7 @@
     ],
     "healthNote": "Verify preservative treatment is non-toxic (avoid CCA). External use minimises exposure.",
     "risks": null,
-    "serviceLife": 30,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light Aggregate",
-        "tone": "#c9c1b4"
-      },
-      {
-        "label": "Warm Earth",
-        "tone": "#9f7c5d"
-      },
-      {
-        "label": "Dark Aggregate",
-        "tone": "#5f5750"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "brick-slip-rainscreen",
@@ -14112,32 +12772,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Standard",
-      "Facing Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "stone-facade",
@@ -14218,17 +12853,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "stone-rainscreen",
@@ -14309,17 +12934,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ]
+    "serviceLife": 100
   },
   {
     "id": "precast-concrete-panels",
@@ -14372,13 +12987,7 @@
     "healthConcerns": [],
     "healthNote": "Inert once cured. Dust during cutting requires PPE.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Honed",
-      "Polished",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "gfrc-grc-panels",
@@ -14436,27 +13045,7 @@
     ],
     "healthNote": "Inert once installed. Dust and fibres during cutting require PPE.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Clear",
-        "tone": "#dfe8ef"
-      },
-      {
-        "label": "Soft Grey Tint",
-        "tone": "#b6c0c8"
-      },
-      {
-        "label": "Smoke Tint",
-        "tone": "#7d858c"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "slate-cladding",
@@ -14510,32 +13099,7 @@
     "healthConcerns": [],
     "healthNote": "Inert natural material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 100,
-    "varietyOptions": [
-      "Select Grade",
-      "Commercial Grade",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 100
   },
   {
     "id": "hemp-lime-wall",
@@ -14590,13 +13154,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with excellent indoor air quality. Verify any binder or treatment is non-toxic.",
     "risks": null,
-    "serviceLife": 60,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 60
   },
   {
     "id": "timber-rainscreen",
@@ -14654,32 +13212,7 @@
     ],
     "healthNote": "Verify preservative treatment is non-toxic. External use minimises exposure.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "charred-timber-cladding",
@@ -14737,32 +13270,7 @@
     ],
     "healthNote": "Verify preservative treatment is non-toxic. External use minimises exposure.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "cork-rainscreen",
@@ -14819,32 +13327,7 @@
     ],
     "healthNote": "Verify preservative treatment is non-toxic. External use minimises exposure.",
     "risks": null,
-    "serviceLife": 30,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "wood-fibre-lime-render",
@@ -14900,32 +13383,7 @@
     "healthConcerns": [],
     "healthNote": "Natural lime-based render with low emissions once cured.",
     "risks": null,
-    "serviceLife": 40,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 40
   },
   {
     "id": "insulated-render-system",
@@ -14984,12 +13442,7 @@
     ],
     "healthNote": "Render may contain biocides. EPS/PIR boards have low emissions once installed. External use minimises impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "living-green-wall",
@@ -15043,13 +13496,7 @@
     "healthConcerns": [],
     "healthNote": "Plants improve air quality. Verify irrigation system and growing medium are contaminant-free.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "zinc-cladding",
@@ -15161,12 +13608,7 @@
         "mitigation": "Detail drip edges and sacrificial surfaces"
       }
     ],
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "aluminium-cladding",
@@ -15231,12 +13673,7 @@
         "mitigation": "Design expansion joints into system"
       }
     ],
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "copper-cladding",
@@ -15309,12 +13746,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "stainless-cladding",
@@ -15383,12 +13815,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "lead-cladding",
@@ -15457,12 +13884,7 @@
     ],
     "healthNote": "Lead is toxic during fabrication. Use safe handling and keep surfaces sealed.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ]
+    "serviceLife": 40
   },
   {
     "id": "weathering-steel-cladding",
@@ -15517,13 +13939,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "insulated-metal-panels",
@@ -15581,13 +13997,7 @@
     ],
     "healthNote": "Foam cores can include isocyanates. Low emissions once installed. Ensure fire protection.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "fibre-cement-panels",
@@ -15645,13 +14055,7 @@
     ],
     "healthNote": "Inert once installed. Dust and fibres during cutting require PPE.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "metal-composite-panels",
@@ -15709,13 +14113,7 @@
     ],
     "healthNote": "Composite panels can include polymer cores and fire treatments. Specify low-emission products.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "glass-facade",
@@ -15769,27 +14167,7 @@
     "healthConcerns": [],
     "healthNote": "Glass is inert. Sealants should be low-VOC.",
     "risks": null,
-    "serviceLife": 30,
-    "finishOptions": [
-      "Clear",
-      "Frosted",
-      "Tinted"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Clear",
-        "tone": "#dfe8ef"
-      },
-      {
-        "label": "Soft Grey Tint",
-        "tone": "#b6c0c8"
-      },
-      {
-        "label": "Smoke Tint",
-        "tone": "#7d858c"
-      }
-    ]
+    "serviceLife": 30
   },
   {
     "id": "etfe-tensile-facade",
@@ -15843,13 +14221,7 @@
     "healthConcerns": [],
     "healthNote": "ETFE is inert once installed. External use means no indoor air quality impact.",
     "risks": null,
-    "serviceLife": 40,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 40
   },
   {
     "id": "native-planting",
@@ -16210,18 +14582,7 @@
     "healthConcerns": [],
     "healthNote": "Natural material with low emissions. Verify finishes are low-VOC.",
     "risks": null,
-    "serviceLife": 15,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 15
   },
   {
     "id": "upholstered-seating",
@@ -16277,13 +14638,7 @@
     ],
     "healthNote": "Foam and fabrics can emit VOCs or have flame retardant treatments. Specify low-emission products.",
     "risks": null,
-    "serviceLife": 15,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Textured"
-    ],
-    "supportsColor": true
+    "serviceLife": 15
   },
   {
     "id": "metal-chair",
@@ -16337,13 +14692,7 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Verify coatings are low-VOC.",
     "risks": null,
-    "serviceLife": 15,
-    "finishOptions": [
-      "Matte",
-      "Satin",
-      "Gloss"
-    ],
-    "supportsColor": true
+    "serviceLife": 15
   },
   {
     "id": "plywood-furniture",
@@ -16399,32 +14748,7 @@
     ],
     "healthNote": "Natural material. Engineered products may use adhesives—verify low emissions and low-VOC finishes.",
     "risks": null,
-    "serviceLife": 15,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "reclaimed-timber-furniture",
@@ -16480,32 +14804,7 @@
     ],
     "healthNote": "Reclaimed timber is low-emission. Verify any treatments are non-toxic.",
     "risks": null,
-    "serviceLife": 15,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
-    ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
-    ],
-    "supportsColor": false,
-    "colorOptions": [
-      {
-        "label": "Light",
-        "tone": "#d7c7b3"
-      },
-      {
-        "label": "Mid Tone",
-        "tone": "#a38666"
-      },
-      {
-        "label": "Dark",
-        "tone": "#64503f"
-      }
-    ]
+    "serviceLife": 25
   },
   {
     "id": "modular-shelving",
@@ -16559,17 +14858,1860 @@
     "healthConcerns": [],
     "healthNote": "Inert material with no off-gassing. Verify coatings are low-VOC.",
     "risks": null,
-    "serviceLife": 15,
-    "varietyOptions": [
-      "Select Grade",
-      "Engineered",
-      "Reclaimed"
+    "serviceLife": 25
+  },
+  {
+    "id": "recycled-glass-mosaic",
+    "name": "Recycled Glass Mosaic",
+    "tone": "#6ea6b8",
+    "finish": "Glazed recycled glass mosaic tiles",
+    "description": "Small-format mosaic tiles made with high recycled glass content, ideal for splashbacks, wet areas, and feature walls.",
+    "keywords": [
+      "tile",
+      "mosaic",
+      "recycled glass",
+      "interior"
     ],
-    "finishOptions": [
-      "Natural",
-      "Oiled",
-      "Lacquered"
+    "category": "tile",
+    "treePaths": [
+      "Interiors>Walls",
+      "Interiors>Floors"
     ],
-    "supportsColor": true
+    "carbonIntensity": "medium",
+    "materialType": "glass",
+    "materialForm": [
+      "tile"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "casting",
+      "cutting"
+    ],
+    "finishFamily": "tile-glazed",
+    "strategicValue": "Recycled glass mosaic can reduce virgin raw material demand while delivering durable, low-maintenance interior finishes in wet zones.",
+    "mitigationTip": "Prioritise products with verified post-consumer glass content and specify cementitious low-VOC adhesives to reduce lifecycle emissions.",
+    "actionDocumentation": "Provide EPD and third-party declaration of recycled glass content (% post-consumer and pre-consumer).",
+    "actionVerification": "Verify slip resistance class, water absorption, and lead-free glaze compliance for interior hygiene areas.",
+    "actionCircularity": "Use modular sheet formats and detail for selective replacement to avoid full-surface strip-out at maintenance cycles.",
+    "pk": "tile",
+    "docType": "material",
+    "sortOrder": 209,
+    "finishIds": [
+      "finish:glazed-recycled-glass-mosaic-tiles"
+    ],
+    "primaryFinishId": "finish:glazed-recycled-glass-mosaic-tiles",
+    "finishSetIds": [
+      "fs:single:5908d3ff8c77"
+    ],
+    "primaryFinishSetId": "fs:single:5908d3ff8c77",
+    "lifecycleProfileId": "lp:recycled-glass-mosaic",
+    "insight": "Manufacturing energy for remelting and finishing is typically the main hotspot. Reduce impact by selecting high post-consumer cullet content and local fabrication where possible. In-use performance is strong due to durability and low maintenance in wet areas.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert finish once installed. Verify grout and adhesive as low-VOC for enclosed wet areas.",
+    "risks": [
+      {
+        "risk": "Cracking from substrate movement",
+        "mitigation": "Use movement joints and flexible adhesive systems in wet areas."
+      },
+      {
+        "risk": "Staining in porous grout joints",
+        "mitigation": "Specify epoxy or sealed grout and a cleaning plan suited to occupancy."
+      }
+    ],
+    "serviceLife": 30
+  },
+  {
+    "id": "zellige-tiles",
+    "name": "Zellige Clay Tiles",
+    "tone": "#d3c2a7",
+    "finish": "Handmade glazed clay tiles",
+    "description": "Handcrafted zellige tiles with tonal variation and reflective glaze, suited to boutique hospitality, bathrooms, and statement joinery fronts.",
+    "keywords": [
+      "tile",
+      "zellige",
+      "clay",
+      "handmade"
+    ],
+    "category": "tile",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "ceramic",
+    "materialForm": [
+      "tile"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "kiln-firing",
+      "cutting"
+    ],
+    "finishFamily": "tile-glazed",
+    "strategicValue": "Long service life and repairable tiled assemblies can offset fired-manufacturing impacts where high quality detailing avoids premature replacement.",
+    "mitigationTip": "Source from producers with renewable kiln energy and optimise module sizes to reduce offcut waste and import distances.",
+    "actionDocumentation": "Provide kiln energy source declaration, EPD where available, and origin/provenance documentation.",
+    "actionVerification": "Verify frost/water absorption classification and confirm low-VOC grout/adhesive specification.",
+    "actionCircularity": "Specify lime-compatible bedding in low-moisture zones where feasible to improve tile recovery during future refurbishments.",
+    "pk": "tile",
+    "docType": "material",
+    "sortOrder": 210,
+    "finishIds": [
+      "finish:handmade-glazed-clay-tiles"
+    ],
+    "primaryFinishId": "finish:handmade-glazed-clay-tiles",
+    "finishSetIds": [
+      "fs:single:6abfb4eff666"
+    ],
+    "primaryFinishSetId": "fs:single:6abfb4eff666",
+    "lifecycleProfileId": "lp:zellige-tiles",
+    "insight": "Kiln firing and transport are usually the dominant impacts. Reduce impact by prioritising efficient kiln production, right-sizing modules to cut waste, and using durable detailing for long service life. In-use impacts remain low when replacement is infrequent.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert ceramic surface with no off-gassing. Confirm sealers and adhesives meet low-emission indoor standards.",
+    "risks": [
+      {
+        "risk": "Tone variation across batches",
+        "mitigation": "Approve blended mock-ups and order full quantity from one production batch."
+      },
+      {
+        "risk": "Irregular tile geometry affecting alignment",
+        "mitigation": "Use experienced installers and wider joints with agreed setting-out rules."
+      }
+    ],
+    "serviceLife": 40
+  },
+  {
+    "id": "quartz-composite-worktop",
+    "name": "Quartz Composite Worktop",
+    "tone": "#c9c4bb",
+    "finish": "Engineered quartz slab",
+    "description": "Engineered quartz worktops with high abrasion resistance and low porosity for kitchens, washrooms, and high-use hospitality counters.",
+    "keywords": [
+      "joinery",
+      "worktop",
+      "quartz",
+      "composite"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings",
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "composite",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "pressing",
+      "cutting"
+    ],
+    "finishFamily": "stone-polished",
+    "mitigationTip": "Use high-recycled-content quartz agglomerate and minimise slab thickness to reduce embodied carbon while maintaining durability requirements.",
+    "actionDocumentation": "Provide EPD with declared resin content and recycled aggregate percentage for selected slab range.",
+    "actionVerification": "Verify silica-safe fabrication controls and low-VOC sealants/adhesives for indoor use.",
+    "actionCircularity": "Detail worktops with mechanical fixing zones and removable splashbacks so slabs can be recovered during fit-out change.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 211,
+    "finishIds": [
+      "finish:engineered-quartz-slab"
+    ],
+    "primaryFinishId": "finish:engineered-quartz-slab",
+    "finishSetIds": [
+      "fs:single:18e5d57c1f14"
+    ],
+    "primaryFinishSetId": "fs:single:18e5d57c1f14",
+    "lifecycleProfileId": "lp:quartz-composite-worktop",
+    "insight": "Raw material processing and resin-intensive manufacturing are key impact drivers. Reduce impact through thinner slabs, recycled content specification, and fabrication optimisation to minimise offcuts. Service life can be excellent when repair and reseal strategies are planned.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "dust",
+      "binders"
+    ],
+    "healthNote": "Fabrication can generate respirable silica dust; use controlled off-site cutting and verify binder emissions.",
+    "risks": [
+      {
+        "risk": "Silica exposure during fabrication",
+        "mitigation": "Require factory wet-cutting and certified dust control procedures."
+      },
+      {
+        "risk": "Thermal shock near heat sources",
+        "mitigation": "Detail heat breaks and require trivets/thermal protection in user guidance."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "solid-surface-worktop",
+    "name": "Solid Surface Worktop",
+    "tone": "#e3ddd2",
+    "finish": "Mineral-filled acrylic solid surface",
+    "description": "Seamless thermoformable worktop material for healthcare, workplace kitchens, and washroom counters requiring hygienic detailing.",
+    "keywords": [
+      "joinery",
+      "worktop",
+      "solid surface",
+      "counter"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "composite",
+    "materialForm": [
+      "sheet",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "moulding",
+      "cutting"
+    ],
+    "finishFamily": "custom",
+    "mitigationTip": "Specify recycled-content grades and standardise radii/modules to reduce fabrication waste and extend worktop service life.",
+    "actionDocumentation": "Provide EPD and manufacturer declaration for recycled content, binder chemistry, and take-back options.",
+    "actionVerification": "Verify low-emission adhesive/weld system and maintenance protocol that enables resurfacing rather than replacement.",
+    "actionCircularity": "Use demountable carcass interfaces so tops can be refinished and reused when layouts change.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 212,
+    "finishIds": [
+      "finish:mineral-filled-acrylic-solid-surface"
+    ],
+    "primaryFinishId": "finish:mineral-filled-acrylic-solid-surface",
+    "finishSetIds": [
+      "fs:single:900071d61e87"
+    ],
+    "primaryFinishSetId": "fs:single:900071d61e87",
+    "lifecycleProfileId": "lp:solid-surface-worktop",
+    "insight": "Manufacturing and polymer binder content generally dominate lifecycle impacts. Reduce impact by choosing recycled-content grades and designing for resurfacing rather than replacement. End-of-life performance improves when assemblies are demountable and separable.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "vocs",
+      "binders"
+    ],
+    "healthNote": "Adhesives and thermoforming processes can emit VOCs during installation; specify low-emission systems and ventilate during fit-out.",
+    "risks": [
+      {
+        "risk": "Visible seam movement on long runs",
+        "mitigation": "Coordinate expansion allowances and manufacturer-approved jointing methods."
+      },
+      {
+        "risk": "Surface scratching in high-use zones",
+        "mitigation": "Specify maintenance protocol with periodic resurfacing rather than replacement."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "linoleum-faced-joinery",
+    "name": "Linoleum-Faced Joinery",
+    "tone": "#879487",
+    "finish": "Bio-based linoleum-faced board",
+    "description": "Cabinetry fronts and feature joinery faced in natural linoleum, offering a matte tactile finish with durable anti-fingerprint performance.",
+    "keywords": [
+      "joinery",
+      "linoleum",
+      "bio-based",
+      "cabinetry"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings",
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "bio-based",
+    "materialForm": [
+      "board",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "lamination",
+      "cutting"
+    ],
+    "finishFamily": "laminate",
+    "strategicValue": "Natural linoleum facings reduce petrochemical finish demand and provide long-life, repairable surfaces for high-contact interior joinery.",
+    "actionDocumentation": "Provide FSC/PEFC chain-of-custody for substrate and declaration of bio-based content in linoleum facing.",
+    "actionVerification": "Verify formaldehyde class for core board (E1 or better) and low-VOC adhesive specification.",
+    "actionCircularity": "Specify screw-fixed carcasses and replaceable fronts so components can be refurbished instead of full joinery replacement.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 213,
+    "finishIds": [
+      "finish:bio-based-linoleum-faced-board"
+    ],
+    "primaryFinishId": "finish:bio-based-linoleum-faced-board",
+    "finishSetIds": [
+      "fs:single:1ed15a585d4b"
+    ],
+    "primaryFinishSetId": "fs:single:1ed15a585d4b",
+    "lifecycleProfileId": "lp:linoleum-faced-joinery",
+    "insight": "Bio-based facing materials can lower embodied impacts versus petrochemical laminates, but outcomes depend on substrate and adhesives. Reduce impact with low-emission core boards and modular joinery dimensions that limit waste. Long in-use life is a major strength when fronts are replaceable.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "formaldehyde"
+    ],
+    "healthNote": "Facing is typically low-emission; check substrate board formaldehyde class and adhesive VOC performance.",
+    "risks": [
+      {
+        "risk": "Edge chipping at exposed corners",
+        "mitigation": "Use solid edge trims and radius details in high-traffic zones."
+      },
+      {
+        "risk": "Adhesive failure in humid conditions",
+        "mitigation": "Specify moisture-rated substrate and adhesive systems for each room type."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "fsc-mdf-joinery",
+    "name": "FSC MDF Joinery",
+    "tone": "#bfa68d",
+    "finish": "FSC MDF with low-VOC finish",
+    "description": "Machined MDF joinery for cabinetry and wall lining systems, suitable for painted or veneered interiors with precise detailing.",
+    "keywords": [
+      "joinery",
+      "mdf",
+      "fsc",
+      "cabinetry"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Walls",
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "composite",
+    "materialForm": [
+      "board",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "pressing",
+      "machining",
+      "coating"
+    ],
+    "finishFamily": "custom",
+    "strategicValue": "Efficient use of timber fibres can support material yield and dimensional stability in interior fit-out when responsibly sourced.",
+    "mitigationTip": "Prioritise no-added-formaldehyde or ultra-low-emission MDF and durable finishes to lengthen replacement cycles.",
+    "actionDocumentation": "Provide FSC/PEFC chain-of-custody and product emissions certification for MDF core and applied finishes.",
+    "actionVerification": "Verify formaldehyde class (E1 or better), coating VOC limits, and moisture-grade suitability for intended rooms.",
+    "actionCircularity": "Detail boards in modular dimensions with mechanical fixing where possible for easier reuse in future adaptations.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 214,
+    "finishIds": [
+      "finish:fsc-mdf-with-low-voc-finish"
+    ],
+    "primaryFinishId": "finish:fsc-mdf-with-low-voc-finish",
+    "finishSetIds": [
+      "fs:single:6ad7b2bbf957"
+    ],
+    "primaryFinishSetId": "fs:single:6ad7b2bbf957",
+    "lifecycleProfileId": "lp:fsc-mdf-joinery",
+    "insight": "Impacts are typically driven by board processing energy and binder chemistry. Reduce impact by selecting low-emission MDF with certified responsible fibre sourcing and durable finishes. Design for reconfiguration can extend service life and avoid premature strip-out.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "formaldehyde",
+      "vocs"
+    ],
+    "healthNote": "Specify no-added-formaldehyde or E1/E0 boards and low-VOC coatings to protect indoor air quality.",
+    "risks": [
+      {
+        "risk": "Moisture swelling at cut edges",
+        "mitigation": "Seal all exposed edges and use moisture-resistant grade where required."
+      },
+      {
+        "risk": "Premature coating wear",
+        "mitigation": "Specify commercial-grade coatings and include maintenance/recoat cycles in FM plan."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "cork-wallcovering",
+    "name": "Cork Wallcovering",
+    "tone": "#b59268",
+    "finish": "Natural cork wallcovering roll",
+    "description": "Warm textured cork wallcovering for hospitality and residential interiors, supporting acoustic softening and biophilic character.",
+    "keywords": [
+      "wallpaper",
+      "cork",
+      "biophilic",
+      "interior walls"
+    ],
+    "category": "wallpaper",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "bio-based",
+    "materialForm": [
+      "roll"
+    ],
+    "materialFunction": [
+      "decorative",
+      "acoustic"
+    ],
+    "manufacturingProcess": [
+      "heat-pressing",
+      "cutting"
+    ],
+    "finishFamily": "fabric-natural",
+    "strategicValue": "Cork is harvested without felling trees and provides a renewable, carbon-storing interior finish with good acoustic comfort.",
+    "actionDocumentation": "Provide chain-of-custody and product declaration confirming cork origin, binder type, and biogenic content.",
+    "actionVerification": "Verify low-VOC adhesive and fire classification for project-specific escape routes and occupancy type.",
+    "actionCircularity": "Use paste systems that allow strip-and-replace by panel zone to reduce waste during phased interior refresh.",
+    "pk": "wallpaper",
+    "docType": "material",
+    "sortOrder": 215,
+    "finishIds": [
+      "finish:natural-cork-wallcovering-roll"
+    ],
+    "primaryFinishId": "finish:natural-cork-wallcovering-roll",
+    "finishSetIds": [
+      "fs:single:a6243d7493c2"
+    ],
+    "primaryFinishSetId": "fs:single:a6243d7493c2",
+    "lifecycleProfileId": "lp:cork-wallcovering",
+    "insight": "Cork feedstock can deliver low raw-material impact due to regenerative harvesting. Reduce impact by verifying binder chemistry and using low-VOC adhesive systems. In-use benefits include thermal and acoustic comfort with modest maintenance needs.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Natural material with generally low emissions; verify binder and adhesive chemistry for sensitive occupancies.",
+    "risks": [
+      {
+        "risk": "Local denting in impact zones",
+        "mitigation": "Use dado or guard details where trolleys and furniture contact walls."
+      },
+      {
+        "risk": "Adhesive staining telegraphing through finish",
+        "mitigation": "Mock up adhesive system and use manufacturer-approved spread rates."
+      }
+    ],
+    "serviceLife": 30
+  },
+  {
+    "id": "linen-wallcovering",
+    "name": "Linen Wallcovering",
+    "tone": "#cfc4b3",
+    "finish": "Natural linen textile wallcovering",
+    "description": "Woven linen wallcovering that adds depth and softness to workplace and hospitality interiors with a natural tactile finish.",
+    "keywords": [
+      "wallpaper",
+      "linen",
+      "natural fibre",
+      "textile"
+    ],
+    "category": "wallpaper",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "natural-fibre",
+    "materialForm": [
+      "roll"
+    ],
+    "materialFunction": [
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "weaving",
+      "coating"
+    ],
+    "finishFamily": "fabric-natural",
+    "strategicValue": "Natural-fibre wallcoverings can lower petrochemical content in fit-outs and contribute to healthier low-emission interior palettes.",
+    "actionDocumentation": "Provide fibre origin documentation and VOC test data for backing, coatings, and adhesives.",
+    "actionVerification": "Verify abrasion/lightfastness ratings and confirm suitability for high-touch circulation zones.",
+    "actionCircularity": "Specify modular drop repeats and repairable seam strategies to replace damaged strips without full wall renewal.",
+    "pk": "wallpaper",
+    "docType": "material",
+    "sortOrder": 216,
+    "finishIds": [
+      "finish:natural-linen-textile-wallcovering"
+    ],
+    "primaryFinishId": "finish:natural-linen-textile-wallcovering",
+    "finishSetIds": [
+      "fs:single:d2f9ea1a148b"
+    ],
+    "primaryFinishSetId": "fs:single:d2f9ea1a148b",
+    "lifecycleProfileId": "lp:linen-wallcovering",
+    "insight": "Raw fibre cultivation and finishing treatments drive most impacts. Reduce impact by selecting traceable natural-fibre products with low-toxicity coatings and adhesives. Durability and repairable strip replacement improve lifecycle outcomes.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "biocides"
+    ],
+    "healthNote": "Natural fibre is typically low-emission; request disclosure of anti-mould or stain treatments and select low-toxicity options.",
+    "risks": [
+      {
+        "risk": "UV fade near strong daylight",
+        "mitigation": "Specify lightfastness grade and include shading strategy in facade design."
+      },
+      {
+        "risk": "Seam opening at substrate movement joints",
+        "mitigation": "Coordinate substrate prep and place seams away from stress points."
+      }
+    ],
+    "serviceLife": 15
+  },
+  {
+    "id": "pet-felt-acoustic-panels",
+    "name": "PET Felt Acoustic Panels",
+    "tone": "#7f858b",
+    "finish": "Recycled PET felt panels",
+    "description": "Acoustic wall and ceiling panels formed from recycled PET felt, used for reverberation control in offices, schools, and social spaces.",
+    "keywords": [
+      "acoustic",
+      "pet felt",
+      "recycled",
+      "sound absorption"
+    ],
+    "category": "acoustic-panel",
+    "treePaths": [
+      "Interiors>Walls",
+      "Interiors>Ceilings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "textile",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "acoustic",
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "heat-pressing",
+      "cutting"
+    ],
+    "finishFamily": "fabric-synthetic",
+    "strategicValue": "High recycled-content PET systems can deliver strong acoustic performance while diverting plastic waste from landfill streams.",
+    "mitigationTip": "Prioritise panels with verified post-consumer PET content and demountable mounting systems to improve circular reuse.",
+    "actionDocumentation": "Provide recycled content declaration, EPD where available, and third-party acoustic test data (NRC/alpha-w).",
+    "actionVerification": "Verify low-emission certification and fire rating performance for ceiling and escape-route applications.",
+    "actionCircularity": "Use clip-on fixings and standard modules so panels can be relocated and reused in future layout changes.",
+    "pk": "acoustic-panel",
+    "docType": "material",
+    "sortOrder": 217,
+    "finishIds": [
+      "finish:recycled-pet-felt-panels"
+    ],
+    "primaryFinishId": "finish:recycled-pet-felt-panels",
+    "finishSetIds": [
+      "fs:single:e52bca7df462"
+    ],
+    "primaryFinishSetId": "fs:single:e52bca7df462",
+    "lifecycleProfileId": "lp:pet-felt-acoustic-panels",
+    "insight": "Material impacts are sensitive to recycled PET content and fire-treatment chemistry. Reduce impact by selecting high post-consumer content with verified low-emission certification and demountable fixing systems. In-use impacts are low when panels are reusable across fit-out cycles.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "vocs",
+      "flame-retardants"
+    ],
+    "healthNote": "Check fire-treatment chemistry and product emissions testing. Prefer certified low-emission recycled PET systems.",
+    "risks": [
+      {
+        "risk": "Panel sagging from weak fixings",
+        "mitigation": "Use tested proprietary fixing rails and verify substrate pull-out capacity."
+      },
+      {
+        "risk": "Colour mismatch between production lots",
+        "mitigation": "Procure one lot and include approved control samples in QA process."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "wood-wool-acoustic-panels",
+    "name": "Wood Wool Acoustic Panels",
+    "tone": "#c2b59f",
+    "finish": "Mineral-bound wood wool panel",
+    "description": "Wood wool acoustic boards with mineral binder for robust wall or ceiling absorption in civic, education, and retrofit projects.",
+    "keywords": [
+      "acoustic",
+      "wood wool",
+      "panel",
+      "ceiling"
+    ],
+    "category": "acoustic-panel",
+    "treePaths": [
+      "Interiors>Walls",
+      "Interiors>Ceilings"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "natural-fibre",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "acoustic",
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "pressing",
+      "cutting"
+    ],
+    "finishFamily": "self-finished",
+    "strategicValue": "Wood wool systems combine bio-based fibre with durable mineral binders to provide long-life acoustic control with lower embodied impact than many synthetic alternatives.",
+    "actionDocumentation": "Provide chain-of-custody for timber fibres, EPD, and certified acoustic/fire performance data.",
+    "actionVerification": "Verify binder composition and confirm low-emission paints/coatings where colour finishing is specified.",
+    "actionCircularity": "Specify mechanical fixing and standard panel grids for partial replacement and reuse during refurbishments.",
+    "pk": "acoustic-panel",
+    "docType": "material",
+    "sortOrder": 218,
+    "finishIds": [
+      "finish:mineral-bound-wood-wool-panel"
+    ],
+    "primaryFinishId": "finish:mineral-bound-wood-wool-panel",
+    "finishSetIds": [
+      "fs:single:06f371a4731d"
+    ],
+    "primaryFinishSetId": "fs:single:06f371a4731d",
+    "lifecycleProfileId": "lp:wood-wool-acoustic-panels",
+    "insight": "Embodied impacts are generally moderate and can be lowered through responsible fibre sourcing and efficient binder mixes. Prioritise products with EPD-backed acoustic and fire performance. Long service life and easy maintenance are key strengths in public interiors.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "dust"
+    ],
+    "healthNote": "In-use emissions are low; control cutting dust during installation and use low-VOC coatings where painted.",
+    "risks": [
+      {
+        "risk": "Chipping at exposed panel edges",
+        "mitigation": "Specify edge trims or recessed shadow-gap details where impact risk is high."
+      },
+      {
+        "risk": "Acoustic underperformance from poor cavity setup",
+        "mitigation": "Coordinate backing void depth and insulation exactly to tested build-up."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "veneer-wall-panels",
+    "name": "Timber Veneer Wall Panels",
+    "tone": "#b9956f",
+    "finish": "Natural timber veneer on certified core",
+    "description": "Architectural veneer wall panels delivering warm grain and premium detailing for reception, hospitality, and residential interiors.",
+    "keywords": [
+      "timber panel",
+      "veneer",
+      "wall lining",
+      "interior"
+    ],
+    "category": "timber-panel",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "timber",
+    "materialForm": [
+      "panel",
+      "board"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "lamination",
+      "cutting",
+      "coating"
+    ],
+    "finishFamily": "veneer",
+    "strategicValue": "Veneer systems use hardwood efficiently and can retain the biogenic carbon benefits of timber while achieving high-end interior aesthetics.",
+    "actionDocumentation": "Provide FSC/PEFC chain-of-custody for veneer and substrate plus emissions certification for adhesives/finishes.",
+    "actionVerification": "Verify fire classification, formaldehyde class, and moisture movement detailing at panel joints.",
+    "actionCircularity": "Specify cassette or secret-fix systems that allow panel-by-panel removal for access, repair, and reinstallation.",
+    "pk": "timber-panel",
+    "docType": "material",
+    "sortOrder": 219,
+    "finishIds": [
+      "finish:natural-timber-veneer-on-certified-core"
+    ],
+    "primaryFinishId": "finish:natural-timber-veneer-on-certified-core",
+    "finishSetIds": [
+      "fs:single:d5e3a75e25ce"
+    ],
+    "primaryFinishSetId": "fs:single:d5e3a75e25ce",
+    "lifecycleProfileId": "lp:veneer-wall-panels",
+    "insight": "Impacts are often low-to-moderate and depend on substrate, adhesive system, and transport distance. Reduce impact by selecting certified timber sources and low-emission binders. Design for panel removal supports future reuse and access maintenance.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "formaldehyde"
+    ],
+    "healthNote": "Natural veneer is low-emission, but adhesives and substrate boards should meet low formaldehyde classes.",
+    "risks": [
+      {
+        "risk": "Veneer tone mismatch between sheets",
+        "mitigation": "Book-match or sequence-match veneer packs and approve full-size samples."
+      },
+      {
+        "risk": "Panel movement from humidity swings",
+        "mitigation": "Use balanced constructions and controlled indoor humidity at handover."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "bio-based-microcement",
+    "name": "Bio-Based Microcement",
+    "tone": "#c8c1b5",
+    "finish": "Lime-enhanced low-cement microtopping",
+    "description": "Thin build-up continuous finish using reduced-cement or lime-enhanced binders for walls and low-traffic interior floors.",
+    "keywords": [
+      "microcement",
+      "lime",
+      "low cement",
+      "seamless"
+    ],
+    "category": "microcement",
+    "treePaths": [
+      "Interiors>Walls",
+      "Interiors>Floors"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "bio-based",
+    "materialForm": [
+      "liquid"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "coating"
+    ],
+    "finishFamily": "concrete-polished",
+    "strategicValue": "Lower-cement microtoppings can reduce embodied carbon versus conventional screed-plus-finish build-ups while preserving seamless interior aesthetics.",
+    "actionDocumentation": "Provide EPD or manufacturer carbon declaration comparing binder content against standard microcement systems.",
+    "actionVerification": "Verify low-VOC sealer/coating and crack-bridging substrate preparation for long-term durability.",
+    "actionCircularity": "Design for local repair and recoating rather than full substrate removal at refurbishment cycles.",
+    "pk": "microcement",
+    "docType": "material",
+    "sortOrder": 220,
+    "finishIds": [
+      "finish:lime-enhanced-low-cement-microtopping"
+    ],
+    "primaryFinishId": "finish:lime-enhanced-low-cement-microtopping",
+    "finishSetIds": [
+      "fs:single:cba55b5423ba"
+    ],
+    "primaryFinishSetId": "fs:single:cba55b5423ba",
+    "lifecycleProfileId": "lp:bio-based-microcement",
+    "insight": "Lower-clinker formulations can reduce manufacturing impacts compared with conventional cement-rich toppings. Performance depends on substrate prep and sealer choice, so low-VOC systems are important. In-use durability and localised repairability are major lifecycle advantages.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert once cured. Confirm low-VOC sealers and safe handling of fine powders during mixing/application.",
+    "risks": [
+      {
+        "risk": "Hairline cracking over moving substrates",
+        "mitigation": "Use mesh-reinforced base coats and verify substrate movement tolerance."
+      },
+      {
+        "risk": "Uneven sheen from inconsistent sealing",
+        "mitigation": "Apply manufacturer system coats to tested coverage rates with sample sign-off."
+      }
+    ],
+    "serviceLife": 20
+  },
+  {
+    "id": "recycled-plastic-furniture",
+    "name": "Recycled Plastic Furniture",
+    "tone": "#7b8791",
+    "finish": "Post-consumer recycled polymer moulding",
+    "description": "Loose furniture manufactured from recycled polymers for cafés, breakout spaces, and flexible learning or workplace environments.",
+    "keywords": [
+      "furniture",
+      "recycled plastic",
+      "loose fit-out",
+      "interior"
+    ],
+    "category": "fixture",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "polymer",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "decorative",
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "moulding",
+      "cutting"
+    ],
+    "finishFamily": "custom",
+    "strategicValue": "Recycled polymer furniture can displace virgin plastics in fit-outs and perform well in high-use environments with low maintenance.",
+    "mitigationTip": "Specify monomaterial components and manufacturer take-back schemes to avoid downcycling or landfill at end of use.",
+    "actionDocumentation": "Provide verified recycled polymer content by weight and declaration of additive chemistry (flame retardants/plasticisers).",
+    "actionVerification": "Verify durability ratings for commercial use and low-emission certification for occupied interiors.",
+    "actionCircularity": "Prioritise products with replaceable components and supplier take-back/refurbishment services.",
+    "pk": "fixture",
+    "docType": "material",
+    "sortOrder": 221,
+    "finishIds": [
+      "finish:post-consumer-recycled-polymer-moulding"
+    ],
+    "primaryFinishId": "finish:post-consumer-recycled-polymer-moulding",
+    "finishSetIds": [
+      "fs:single:d6cbe5d31b78"
+    ],
+    "primaryFinishSetId": "fs:single:d6cbe5d31b78",
+    "lifecycleProfileId": "lp:recycled-plastic-furniture",
+    "insight": "Recycled polymer feedstock can lower raw material demand, but performance depends on additive chemistry and product lifespan. Specify durable commercial-grade products with take-back pathways and replaceable components. End-of-life outcomes improve with monomaterial design.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "flame-retardants",
+      "vocs"
+    ],
+    "healthNote": "Request additive disclosure and low-emission testing; avoid unnecessary flame-retardant chemistries in low-risk occupancies.",
+    "risks": [
+      {
+        "risk": "Surface creep or deformation near heat",
+        "mitigation": "Select commercial-grade polymer blends and avoid direct heat source placement."
+      },
+      {
+        "risk": "Difficult repair if proprietary parts fail",
+        "mitigation": "Specify replaceable components with documented spare-part availability."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "aac-blockwork",
+    "name": "AAC Blockwork",
+    "tone": "#d7d4cc",
+    "finish": "Autoclaved aerated concrete blocks",
+    "description": "Lightweight autoclaved aerated concrete blockwork for low-rise structure and infill where thermal performance and speed of installation are priorities.",
+    "keywords": [
+      "structure",
+      "aac",
+      "blockwork",
+      "lightweight masonry"
+    ],
+    "category": "structure",
+    "treePaths": [
+      "Structure>Primary Structure"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "mineral",
+    "materialForm": [
+      "block"
+    ],
+    "materialFunction": [
+      "structural",
+      "insulation"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "moulding",
+      "cutting"
+    ],
+    "finishFamily": "self-finished",
+    "strategicValue": "AAC can reduce structural dead load and improve thermal performance, lowering associated structural and operational demands in suitable typologies.",
+    "mitigationTip": "Specify products with transparent EPDs and optimise wall build-ups to avoid over-specification and unnecessary material volume.",
+    "actionDocumentation": "Provide EPD with declared A1-A3 impacts and manufacturer data for recycled inputs/energy mix.",
+    "actionVerification": "Verify compressive strength class, moisture detailing, and compatibility with selected render or rainscreen systems.",
+    "actionCircularity": "Use lime-based mortars where feasible and detail clear material separation layers to improve demolition-phase recovery.",
+    "pk": "structure",
+    "docType": "material",
+    "sortOrder": 222,
+    "finishIds": [
+      "finish:autoclaved-aerated-concrete-blocks"
+    ],
+    "primaryFinishId": "finish:autoclaved-aerated-concrete-blocks",
+    "finishSetIds": [
+      "fs:single:cf1b8986ee01"
+    ],
+    "primaryFinishSetId": "fs:single:cf1b8986ee01",
+    "lifecycleProfileId": "lp:aac-blockwork",
+    "insight": "AAC typically has lower structural dead load and can reduce associated building system impacts, though autoclaving remains a manufacturing hotspot. Optimise wall thickness and avoid over-specification to control embodied carbon. In-use performance benefits from thermal efficiency when detailing is robust.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "dust"
+    ],
+    "healthNote": "Inert after installation. Manage silica/mineral dust during cutting and drilling with suitable controls.",
+    "risks": [
+      {
+        "risk": "Cracking from differential movement",
+        "mitigation": "Coordinate movement joints and compatible thin-joint mortar strategy."
+      },
+      {
+        "risk": "Moisture ingress reducing thermal performance",
+        "mitigation": "Detail weatherproof external layers and protect blocks during construction."
+      }
+    ],
+    "serviceLife": 60
+  },
+  {
+    "id": "geopolymer-concrete",
+    "name": "Geopolymer Concrete",
+    "tone": "#a9a9a4",
+    "finish": "Alkali-activated low-clinker concrete",
+    "description": "Concrete mix using alkali-activated binders and industrial by-products to reduce clinker demand for structural and precast applications.",
+    "keywords": [
+      "structure",
+      "geopolymer",
+      "low carbon concrete",
+      "alkali activated"
+    ],
+    "category": "structure",
+    "treePaths": [
+      "Structure>Primary Structure",
+      "Structure>Floors and Roofs"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "concrete",
+    "materialForm": [
+      "block",
+      "panel"
+    ],
+    "materialFunction": [
+      "structural"
+    ],
+    "manufacturingProcess": [
+      "mixing",
+      "casting"
+    ],
+    "finishFamily": "concrete-exposed",
+    "strategicValue": "Geopolymer systems can materially cut embodied carbon versus ordinary Portland cement mixes while maintaining structural capability for many applications.",
+    "actionDocumentation": "Provide verified EPD and binder chemistry declaration including clinker replacement percentage and curing regime.",
+    "actionVerification": "Verify long-term durability evidence (chloride, carbonation, freeze-thaw) and contractor familiarity with placement controls.",
+    "actionCircularity": "Specify reusable formwork and crush-reuse strategy so future demolition arisings can return as secondary aggregate.",
+    "pk": "structure",
+    "docType": "material",
+    "sortOrder": 223,
+    "finishIds": [
+      "finish:alkali-activated-low-clinker-concrete"
+    ],
+    "primaryFinishId": "finish:alkali-activated-low-clinker-concrete",
+    "finishSetIds": [
+      "fs:single:c585fa5b8aa7"
+    ],
+    "primaryFinishSetId": "fs:single:c585fa5b8aa7",
+    "lifecycleProfileId": "lp:geopolymer-concrete",
+    "insight": "Reduced-clinker binder systems can significantly cut manufacturing emissions compared with conventional concrete. Verify durability and performance with project-specific evidence and EPD data. Long structural service life supports low in-use impact when correctly specified.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "dust"
+    ],
+    "healthNote": "Inert once cured. Alkali activators require strict handling controls during batching and placement.",
+    "risks": [
+      {
+        "risk": "Variable site familiarity with binder chemistry",
+        "mitigation": "Prequalify contractor experience and run trial mixes before production pours."
+      },
+      {
+        "risk": "Early-age performance uncertainty in cold weather",
+        "mitigation": "Confirm curing regime and temperature controls in method statements."
+      }
+    ],
+    "serviceLife": 60
+  },
+  {
+    "id": "straw-insulation-panels",
+    "name": "Straw Insulation Panels",
+    "tone": "#cdb88a",
+    "finish": "Compressed straw fibre insulation panel",
+    "description": "Bio-based insulation boards from agricultural straw for walls and roofs, supporting moisture-buffering and low-embodied-carbon envelope design.",
+    "keywords": [
+      "insulation",
+      "straw",
+      "bio-based",
+      "envelope"
+    ],
+    "category": "insulation",
+    "treePaths": [
+      "Envelope>Insulation"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "bio-based",
+    "materialForm": [
+      "panel",
+      "board"
+    ],
+    "materialFunction": [
+      "insulation"
+    ],
+    "manufacturingProcess": [
+      "pressing",
+      "cutting"
+    ],
+    "finishFamily": "self-finished",
+    "strategicValue": "Straw insulation uses rapidly renewable agricultural by-product feedstock and can deliver strong carbon-storage benefits in breathable envelope systems.",
+    "actionDocumentation": "Provide product declaration covering bio-based content, binder additives, and EPD or equivalent carbon assessment.",
+    "actionVerification": "Verify moisture, fire, and settlement performance with tested wall/roof build-ups and airtightness strategy.",
+    "actionCircularity": "Specify dry, demountable build-ups so panels can be removed intact and reused or composted where permitted.",
+    "pk": "insulation",
+    "docType": "material",
+    "sortOrder": 224,
+    "finishIds": [
+      "finish:compressed-straw-fibre-insulation-panel"
+    ],
+    "primaryFinishId": "finish:compressed-straw-fibre-insulation-panel",
+    "finishSetIds": [
+      "fs:single:2994df87cafd"
+    ],
+    "primaryFinishSetId": "fs:single:2994df87cafd",
+    "lifecycleProfileId": "lp:straw-insulation-panels",
+    "insight": "Bio-based feedstock can provide low embodied impact with potential biogenic carbon storage. Outcomes depend on moisture/fire detailing and binder composition, so robust tested build-ups are essential. In-use impacts are low when protected from moisture and maintained in dry assemblies.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "dust",
+      "fire-retardants"
+    ],
+    "healthNote": "Natural fibre product with generally low in-use emissions; verify fire treatment chemistry and control dust during installation.",
+    "risks": [
+      {
+        "risk": "Moisture accumulation in poorly detailed envelopes",
+        "mitigation": "Use vapour-open build-up design with robust airtightness and rain control layers."
+      },
+      {
+        "risk": "Site damage during wet construction periods",
+        "mitigation": "Protect panels with dry storage, phased installation, and immediate weatherproofing."
+      }
+    ],
+    "serviceLife": 60
+  },
+  {
+    "id": "porcelain-wetroom-tiles",
+    "name": "Porcelain Wetroom Tiles",
+    "tone": "#d8d6cf",
+    "finish": "Textured anti-slip porcelain tile",
+    "description": "Dense porcelain tiles for bathroom and kitchen wet zones, combining low water absorption with robust slip resistance and easy cleaning.",
+    "keywords": [
+      "bathroom",
+      "kitchen",
+      "porcelain",
+      "wetroom",
+      "tile"
+    ],
+    "category": "tile",
+    "treePaths": [
+      "Interiors>Floors",
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "ceramic",
+    "materialForm": [
+      "tile"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "kiln-firing",
+      "cutting"
+    ],
+    "finishFamily": "tile-glazed",
+    "mitigationTip": "Specify regional production, optimised tile module sizes, and low-waste setting-out to reduce fired-manufacturing and transport impacts.",
+    "actionDocumentation": "Provide EPD and declaration of kiln energy source for selected porcelain ranges.",
+    "actionVerification": "Verify slip resistance class (R/pendulum), water absorption, and stain resistance for intended wet-area use.",
+    "actionCircularity": "Detail movement joints and modular layouts so damaged tiles can be selectively replaced rather than full-room renewal.",
+    "pk": "tile",
+    "docType": "material",
+    "sortOrder": 225,
+    "finishIds": [
+      "finish:textured-anti-slip-porcelain-tile"
+    ],
+    "primaryFinishId": "finish:textured-anti-slip-porcelain-tile",
+    "finishSetIds": [
+      "fs:single:75bd10573378"
+    ],
+    "primaryFinishSetId": "fs:single:75bd10573378",
+    "lifecycleProfileId": "lp:porcelain-wetroom-tiles",
+    "insight": "Kiln firing typically dominates embodied impact, while in-use performance is excellent due to durability and low maintenance. Reduce lifecycle impact by using right-sized modules, minimising cuts, and selecting lower-carbon regional production where possible. In wet areas, long replacement cycles are a major sustainability advantage.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert finish with no off-gassing once installed. Verify grout and sealant as low-VOC for enclosed bathrooms.",
+    "risks": [
+      {
+        "risk": "Slip risk if wrong texture selected",
+        "mitigation": "Specify tested wet slip resistance and verify with project mock-up."
+      },
+      {
+        "risk": "Grout staining in high-use wet areas",
+        "mitigation": "Use suitable grout system and maintenance protocol aligned to occupancy."
+      }
+    ],
+    "serviceLife": 40
+  },
+  {
+    "id": "ceramic-subway-tiles",
+    "name": "Ceramic Subway Tiles",
+    "tone": "#f1efe8",
+    "finish": "Glazed ceramic wall tile",
+    "description": "Classic glazed ceramic tiles for kitchen splashbacks and bathroom walls, offering durable low-maintenance hygiene surfaces.",
+    "keywords": [
+      "bathroom",
+      "kitchen",
+      "ceramic",
+      "subway tile",
+      "splashback"
+    ],
+    "category": "tile",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "ceramic",
+    "materialForm": [
+      "tile"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "kiln-firing",
+      "cutting"
+    ],
+    "finishFamily": "tile-glazed",
+    "strategicValue": "Long service life and easy cleaning make ceramic wall tiles a durable hygiene finish with low in-use maintenance demand.",
+    "mitigationTip": "Use local manufacturers with renewable kiln energy and modular sizes that minimise cut waste at edges and fittings.",
+    "actionDocumentation": "Provide product declaration or EPD including declared manufacturing energy source and lifecycle boundary.",
+    "actionVerification": "Verify glaze durability class, chemical resistance, and compatibility of grout system with cleaning regime.",
+    "actionCircularity": "Use repairable grout and planned spare stock to enable piecemeal replacement during maintenance cycles.",
+    "pk": "tile",
+    "docType": "material",
+    "sortOrder": 226,
+    "finishIds": [
+      "finish:glazed-ceramic-wall-tile"
+    ],
+    "primaryFinishId": "finish:glazed-ceramic-wall-tile",
+    "finishSetIds": [
+      "fs:single:58208c0d2c5a"
+    ],
+    "primaryFinishSetId": "fs:single:58208c0d2c5a",
+    "lifecycleProfileId": "lp:ceramic-subway-tiles",
+    "insight": "Manufacturing energy and transport are the main hotspots for small-format ceramic tiles. Reduce impact by selecting efficient local production and durable grout systems that avoid frequent replacement. In-use impacts are low when cleaning and maintenance are well managed.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert glazed ceramic with excellent indoor air quality profile. Confirm low-emission adhesives and grouts.",
+    "risks": [
+      {
+        "risk": "Uneven set-out around outlets and corners",
+        "mitigation": "Approve full tile-setting drawing and sample panel before installation."
+      },
+      {
+        "risk": "Premature grout cracking",
+        "mitigation": "Detail movement joints and use compatible flexible grout where needed."
+      }
+    ],
+    "serviceLife": 40
+  },
+  {
+    "id": "recycled-glass-splashback",
+    "name": "Recycled Glass Splashback",
+    "tone": "#9dc0cb",
+    "finish": "Toughened recycled-content glass panel",
+    "description": "Back-painted or clear toughened glass splashback panels for kitchens and vanity zones with high hygiene and reflectivity.",
+    "keywords": [
+      "kitchen",
+      "bathroom",
+      "splashback",
+      "recycled glass",
+      "hygiene"
+    ],
+    "category": "wall-internal",
+    "treePaths": [
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "glass",
+    "materialForm": [
+      "panel",
+      "sheet"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "casting",
+      "cutting"
+    ],
+    "finishFamily": "glass-clear",
+    "strategicValue": "Glass splashbacks are long-life, non-porous, and easy to maintain, supporting hygienic interiors with minimal ongoing treatment.",
+    "mitigationTip": "Specify high recycled cullet content and optimise panel dimensions to reduce offcuts and replacement risk.",
+    "actionDocumentation": "Provide EPD and declaration of recycled glass content with evidence of tempering process compliance.",
+    "actionVerification": "Verify heat/shock resistance behind hobs and low-VOC backing paints or sealants.",
+    "actionCircularity": "Detail mechanically removable edge trims to allow panel replacement without extensive substrate demolition.",
+    "pk": "wall-internal",
+    "docType": "material",
+    "sortOrder": 227,
+    "finishIds": [
+      "finish:toughened-recycled-content-glass-panel"
+    ],
+    "primaryFinishId": "finish:toughened-recycled-content-glass-panel",
+    "finishSetIds": [
+      "fs:single:3808fe303c4f"
+    ],
+    "primaryFinishSetId": "fs:single:3808fe303c4f",
+    "lifecycleProfileId": "lp:recycled-glass-splashback",
+    "insight": "Remelting and tempering processes drive most impacts, but recycled cullet content can reduce raw material intensity. Reduce impact through panel optimisation, standardised dimensions, and low-emission sealants. Long service life and easy hygiene maintenance provide strong in-use performance.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert glass surface after installation. Check back-paint and sealants for VOC emissions.",
+    "risks": [
+      {
+        "risk": "Thermal stress behind cooktops",
+        "mitigation": "Verify heat rating and maintain required clearances to heat sources."
+      },
+      {
+        "risk": "Paint delamination from poor edge sealing",
+        "mitigation": "Use manufacturer-approved edge protection and installation detailing."
+      }
+    ],
+    "serviceLife": 30
+  },
+  {
+    "id": "sintered-stone-worktop",
+    "name": "Sintered Stone Worktop",
+    "tone": "#c9c7c1",
+    "finish": "Ultra-compact sintered stone slab",
+    "description": "Ultra-compact mineral worktop surface for kitchens and bathrooms with high heat resistance, low porosity, and scratch durability.",
+    "keywords": [
+      "kitchen",
+      "bathroom",
+      "worktop",
+      "sintered stone",
+      "counter"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "stone",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "heat-pressing",
+      "cutting"
+    ],
+    "finishFamily": "stone-honed",
+    "mitigationTip": "Specify thinner slabs and optimised nesting to reduce high-temperature manufacturing intensity and fabrication waste.",
+    "actionDocumentation": "Provide EPD and supplier data on slab thickness options and embodied carbon per square metre.",
+    "actionVerification": "Verify edge detailing, cut-out reinforcement, and thermal shock suitability for cooker and sink conditions.",
+    "actionCircularity": "Use demountable support details and separable sealants so tops can be recovered during fit-out changes.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 228,
+    "finishIds": [
+      "finish:ultra-compact-sintered-stone-slab"
+    ],
+    "primaryFinishId": "finish:ultra-compact-sintered-stone-slab",
+    "finishSetIds": [
+      "fs:single:7327f2174b62"
+    ],
+    "primaryFinishSetId": "fs:single:7327f2174b62",
+    "lifecycleProfileId": "lp:sintered-stone-worktop",
+    "insight": "High-temperature processing is typically the dominant carbon hotspot. Reduce impact by optimising slab thickness, cut plans, and reusing offcuts for upstands or vanity details. Long service life and resistance to staining/heat can offset upfront impacts over time.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "dust"
+    ],
+    "healthNote": "Fabrication can produce respirable silica dust; require off-site controlled cutting and dust suppression.",
+    "risks": [
+      {
+        "risk": "Chips at cut-outs and exposed edges",
+        "mitigation": "Specify reinforced cut-out corners and edge profiles suited to use intensity."
+      },
+      {
+        "risk": "Breakage from transport/handling",
+        "mitigation": "Use certified handlers and lifting frames from fabrication to installation."
+      }
+    ],
+    "serviceLife": 100
+  },
+  {
+    "id": "stainless-steel-worktop",
+    "name": "Stainless Steel Worktop",
+    "tone": "#b5b8bb",
+    "finish": "Brushed stainless steel counter",
+    "description": "Commercial-grade stainless steel worksurfaces for kitchens and utility spaces requiring high hygiene and chemical resistance.",
+    "keywords": [
+      "kitchen",
+      "worktop",
+      "stainless steel",
+      "hygiene",
+      "counter"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "metal",
+    "materialForm": [
+      "sheet",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "metal-working",
+      "cutting"
+    ],
+    "finishFamily": "metal-brushed",
+    "mitigationTip": "Prioritise high-recycled-content stainless grades and long-life detailing that avoids frequent replacement in high-use spaces.",
+    "actionDocumentation": "Provide EPD and mill certificate showing recycled content and alloy grade for selected sheet.",
+    "actionVerification": "Verify corrosion grade (e.g., 304/316) against cleaning chemicals and moisture exposure profile.",
+    "actionCircularity": "Specify mechanically fixed countertop assemblies for salvage and metal recycling at end-of-life.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 229,
+    "finishIds": [
+      "finish:brushed-stainless-steel-counter"
+    ],
+    "primaryFinishId": "finish:brushed-stainless-steel-counter",
+    "finishSetIds": [
+      "fs:single:623b5a9baa13"
+    ],
+    "primaryFinishSetId": "fs:single:623b5a9baa13",
+    "lifecycleProfileId": "lp:stainless-steel-worktop",
+    "insight": "Primary steel production and alloying are major impact drivers, but high recycled content can materially reduce this footprint. Prioritise recycled-content stainless with verified EPDs and durable detailing to maximise lifespan. End-of-life recovery is strong where assemblies are separable.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert and hygienic in use. Verify cleaning chemicals are compatible to avoid corrosion products.",
+    "risks": [
+      {
+        "risk": "Visible scratching and denting in service",
+        "mitigation": "Specify gauge/thickness and brushing direction for anticipated usage."
+      },
+      {
+        "risk": "Tea staining in aggressive environments",
+        "mitigation": "Select appropriate stainless grade and cleaning protocol."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "recycled-paper-composite-worktop",
+    "name": "Recycled Paper Composite Worktop",
+    "tone": "#6a6158",
+    "finish": "Resin-bound recycled paper composite",
+    "description": "Dense paper-composite surfaces for vanity tops and dry-use kitchen zones, delivering matte warmth with high recycled fibre content.",
+    "keywords": [
+      "kitchen",
+      "bathroom",
+      "worktop",
+      "recycled paper",
+      "composite"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "composite",
+    "materialForm": [
+      "sheet",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "lamination",
+      "pressing",
+      "cutting"
+    ],
+    "finishFamily": "laminate",
+    "strategicValue": "High recycled-fibre content can lower virgin material demand while delivering durable interior work surfaces.",
+    "mitigationTip": "Specify FSC-certified feedstock and low-emission resin systems with proven moisture and heat suitability for intended use.",
+    "actionDocumentation": "Provide declaration of recycled paper content, binder chemistry, and EPD or equivalent carbon data.",
+    "actionVerification": "Verify water resistance class, heat tolerance, and low-VOC installation adhesive compatibility.",
+    "actionCircularity": "Use modular counter sections and reversible fixing strategies to enable local replacement rather than full counter renewal.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 230,
+    "finishIds": [
+      "finish:resin-bound-recycled-paper-composite"
+    ],
+    "primaryFinishId": "finish:resin-bound-recycled-paper-composite",
+    "finishSetIds": [
+      "fs:single:84dc3034e97e"
+    ],
+    "primaryFinishSetId": "fs:single:84dc3034e97e",
+    "lifecycleProfileId": "lp:recycled-paper-composite-worktop",
+    "insight": "Impacts depend on resin chemistry, pressing energy, and moisture durability requirements. Reduce impact by selecting high recycled-fibre products with low-emission binders and appropriate specification by zone. Lifecycle performance improves when counters are designed for repair rather than full replacement.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "vocs",
+      "binders"
+    ],
+    "healthNote": "Resin binders may emit VOCs during installation; specify low-emission adhesives and sealers.",
+    "risks": [
+      {
+        "risk": "Moisture ingress at penetrations",
+        "mitigation": "Seal all cut edges and penetrations per manufacturer wet-area details."
+      },
+      {
+        "risk": "Heat damage near appliances",
+        "mitigation": "Provide heat protection strategy and user guidance for hot cookware."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "fsc-kitchen-cabinetry",
+    "name": "FSC Kitchen Cabinetry",
+    "tone": "#c4ab8c",
+    "finish": "FSC plywood carcass with low-VOC fronts",
+    "description": "Durable modular kitchen cabinetry using certified timber products with replaceable fronts and hardware for long service life.",
+    "keywords": [
+      "kitchen",
+      "cabinetry",
+      "fsc",
+      "joinery",
+      "modular"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings",
+      "Interiors>Walls"
+    ],
+    "carbonIntensity": "low",
+    "materialType": "timber",
+    "materialForm": [
+      "board",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "cutting",
+      "machining",
+      "lamination"
+    ],
+    "finishFamily": "veneer",
+    "strategicValue": "Certified timber cabinetry stores carbon and supports long-life kitchen fit-outs when components are repairable and upgradable.",
+    "actionDocumentation": "Provide FSC/PEFC chain-of-custody for carcass and fronts plus emissions certificates for boards and coatings.",
+    "actionVerification": "Verify moisture-resistant board grades around sinks/appliances and low-VOC finish system performance.",
+    "actionCircularity": "Specify replaceable door fronts, hinges, and plinths to extend service life without full carcass replacement.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 231,
+    "finishIds": [
+      "finish:fsc-plywood-carcass-with-low-voc-fronts"
+    ],
+    "primaryFinishId": "finish:fsc-plywood-carcass-with-low-voc-fronts",
+    "finishSetIds": [
+      "fs:single:8f971fae3341"
+    ],
+    "primaryFinishSetId": "fs:single:8f971fae3341",
+    "lifecycleProfileId": "lp:fsc-kitchen-cabinetry",
+    "insight": "Bio-based timber systems can offer low embodied impact and biogenic carbon storage when responsibly sourced. Keep impacts low by specifying low-emission boards, durable hardware, and replaceable fronts. Long-life modular carcasses are a key circularity opportunity in kitchen refurbishments.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "formaldehyde"
+    ],
+    "healthNote": "Natural timber-based system; verify board emissions class (E1 or better) and low-VOC finishes.",
+    "risks": [
+      {
+        "risk": "Hardware fatigue in high-use doors",
+        "mitigation": "Specify commercial-grade hinges/runners with accessible replacement."
+      },
+      {
+        "risk": "Localized water damage near sinks",
+        "mitigation": "Use moisture-resistant carcass zones and leak-detection details."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "water-resistant-bathroom-joinery",
+    "name": "Water-Resistant Bathroom Joinery",
+    "tone": "#bdb3a5",
+    "finish": "Moisture-resistant board with sealed edges",
+    "description": "Vanity and storage joinery designed for humid bathroom environments with sealed edge protection and service access.",
+    "keywords": [
+      "bathroom",
+      "joinery",
+      "vanity",
+      "moisture resistant",
+      "storage"
+    ],
+    "category": "joinery",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "composite",
+    "materialForm": [
+      "board",
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "pressing",
+      "cutting",
+      "coating"
+    ],
+    "finishFamily": "laminate",
+    "strategicValue": "Moisture-resilient joinery can significantly reduce replacement frequency in wet rooms, improving whole-life sustainability.",
+    "mitigationTip": "Prefer certified low-emission boards and durable edge-seal systems that avoid delamination in high-humidity cycles.",
+    "actionDocumentation": "Provide board emissions certification, moisture-resistance test data, and source documentation for substrate and finish.",
+    "actionVerification": "Verify edge sealing specification, hardware corrosion resistance, and access detailing around plumbing penetrations.",
+    "actionCircularity": "Detail plinths and service voids for non-destructive access so units can be repaired and retained during MEP interventions.",
+    "pk": "joinery",
+    "docType": "material",
+    "sortOrder": 232,
+    "finishIds": [
+      "finish:moisture-resistant-board-with-sealed-edges"
+    ],
+    "primaryFinishId": "finish:moisture-resistant-board-with-sealed-edges",
+    "finishSetIds": [
+      "fs:single:bcc4d7fe9b15"
+    ],
+    "primaryFinishSetId": "fs:single:bcc4d7fe9b15",
+    "lifecycleProfileId": "lp:water-resistant-bathroom-joinery",
+    "insight": "Moisture-resistant board products often have moderate embodied impact due to additives and coatings. Reduce impact with robust detailing that prevents early failure and avoids repeated wet-area replacements. Lifecycle outcomes improve when components are repairable and service access is non-destructive.",
+    "actions": null,
+    "healthRiskLevel": "medium",
+    "healthConcerns": [
+      "formaldehyde",
+      "vocs"
+    ],
+    "healthNote": "Moisture-resistant boards and coatings can increase emissions risk; specify low-emission certified products.",
+    "risks": [
+      {
+        "risk": "Edge swelling from persistent condensation",
+        "mitigation": "Improve ventilation strategy and specify sealed edge detailing."
+      },
+      {
+        "risk": "Corrosion of internal hardware",
+        "mitigation": "Use corrosion-resistant fixings and soft-close systems rated for wet rooms."
+      }
+    ],
+    "serviceLife": 25
+  },
+  {
+    "id": "sanitary-ceramic-ware",
+    "name": "Sanitary Ceramic Ware",
+    "tone": "#f3f2ee",
+    "finish": "Vitreous china sanitaryware",
+    "description": "Toilets and basins in vitreous ceramic with durable glazed surfaces for hygiene-critical bathroom and hospitality settings.",
+    "keywords": [
+      "bathroom",
+      "sanitaryware",
+      "ceramic",
+      "toilet",
+      "basin"
+    ],
+    "category": "fixture",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "ceramic",
+    "materialForm": [
+      "block"
+    ],
+    "materialFunction": [
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "moulding",
+      "kiln-firing"
+    ],
+    "finishFamily": "tile-glazed",
+    "mitigationTip": "Specify high-efficiency flush fixtures with long-life components and producers using lower-carbon kiln energy sources.",
+    "actionDocumentation": "Provide EPD and water-use certification evidence for selected WC and basin products.",
+    "actionVerification": "Verify flush volume, hygiene glazing durability, and spare-part availability for valves/seals.",
+    "actionCircularity": "Select systems with replaceable cistern internals and standard fixings to extend fixture life before full replacement.",
+    "pk": "fixture",
+    "docType": "material",
+    "sortOrder": 233,
+    "finishIds": [
+      "finish:vitreous-china-sanitaryware"
+    ],
+    "primaryFinishId": "finish:vitreous-china-sanitaryware",
+    "finishSetIds": [
+      "fs:single:77fff6ae0d29"
+    ],
+    "primaryFinishSetId": "fs:single:77fff6ae0d29",
+    "lifecycleProfileId": "lp:sanitary-ceramic-ware",
+    "insight": "Firing processes are usually the dominant hotspot, but long product life can provide good whole-life performance. Prioritise efficient flush systems and spare-part availability to extend fixture lifespan. Water and hot-water savings can meaningfully reduce operational impacts.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert glazed ceramic with no off-gassing. Ensure adjacent sealants are low-VOC and mould-resistant.",
+    "risks": [
+      {
+        "risk": "Fixture cracking from impact or over-tightened fixings",
+        "mitigation": "Use manufacturer torque guidance and protective handling methods."
+      },
+      {
+        "risk": "High water use from poor specification",
+        "mitigation": "Select low-flush and certified efficient fixtures during design stage."
+      }
+    ],
+    "serviceLife": 20
+  },
+  {
+    "id": "brushed-stainless-fixtures",
+    "name": "Brushed Stainless Fixtures",
+    "tone": "#9ea3a7",
+    "finish": "Brushed stainless taps and accessories",
+    "description": "Tapware, shower controls, and bathroom accessories in brushed stainless steel for high durability and corrosion resistance.",
+    "keywords": [
+      "bathroom",
+      "kitchen",
+      "tapware",
+      "stainless steel",
+      "fixtures"
+    ],
+    "category": "fixture",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "metal",
+    "materialForm": [
+      "bar",
+      "tube"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "metal-working",
+      "machining"
+    ],
+    "finishFamily": "metal-brushed",
+    "mitigationTip": "Specify high-recycled-content stainless products and flow-regulated fittings to offset embodied impact with operational savings.",
+    "actionDocumentation": "Provide recycled content declaration and water-efficiency certification for taps and mixers.",
+    "actionVerification": "Verify corrosion grade, cartridge durability, and flow-rate compliance with project water targets.",
+    "actionCircularity": "Specify replaceable cartridges and aerators so fittings can be repaired instead of replaced.",
+    "pk": "fixture",
+    "docType": "material",
+    "sortOrder": 234,
+    "finishIds": [
+      "finish:brushed-stainless-taps-and-accessories"
+    ],
+    "primaryFinishId": "finish:brushed-stainless-taps-and-accessories",
+    "finishSetIds": [
+      "fs:single:90f68fc65d94"
+    ],
+    "primaryFinishSetId": "fs:single:90f68fc65d94",
+    "lifecycleProfileId": "lp:brushed-stainless-fixtures",
+    "insight": "Metal extraction and processing are key embodied hotspots for fittings. Reduce impact by selecting high recycled-content alloys and durable replaceable cartridges. Very long service life and straightforward metal recycling improve lifecycle outcomes.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert in use with minimal emissions risk. Confirm lead-free internal waterways and certified potable-water compliance.",
+    "risks": [
+      {
+        "risk": "Mineral scaling in hard-water locations",
+        "mitigation": "Specify removable aerators and planned descaling maintenance."
+      },
+      {
+        "risk": "Premature cartridge failure",
+        "mitigation": "Use replaceable high-durability cartridges and provide spare-part schedule."
+      }
+    ],
+    "serviceLife": 20
+  },
+  {
+    "id": "low-flow-shower-system",
+    "name": "Low-Flow Shower System",
+    "tone": "#b0b6bb",
+    "finish": "Water-efficient shower set",
+    "description": "Low-flow shower heads and mixers designed to reduce potable water and hot-water energy demand in bathrooms and hotels.",
+    "keywords": [
+      "bathroom",
+      "shower",
+      "low-flow",
+      "water efficiency",
+      "fixture"
+    ],
+    "category": "fixture",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "medium",
+    "materialType": "composite",
+    "materialForm": [
+      "tube",
+      "bar"
+    ],
+    "materialFunction": [
+      "surface"
+    ],
+    "manufacturingProcess": [
+      "metal-working",
+      "moulding"
+    ],
+    "finishFamily": "custom",
+    "strategicValue": "Efficient shower systems can deliver substantial operational carbon and water savings over their life, often outweighing moderate embodied impacts.",
+    "actionDocumentation": "Provide flow-rate certification and lifecycle durability data for cartridges, hoses, and spray components.",
+    "actionVerification": "Verify pressure-compensated performance and user comfort at specified reduced flow rates.",
+    "actionCircularity": "Specify modular shower kits with replaceable heads/cartridges and standard connections for straightforward maintenance.",
+    "pk": "fixture",
+    "docType": "material",
+    "sortOrder": 235,
+    "finishIds": [
+      "finish:water-efficient-shower-set"
+    ],
+    "primaryFinishId": "finish:water-efficient-shower-set",
+    "finishSetIds": [
+      "fs:single:0a4b2b638c20"
+    ],
+    "primaryFinishSetId": "fs:single:0a4b2b638c20",
+    "lifecycleProfileId": "lp:low-flow-shower-system",
+    "insight": "Embodied impacts are moderate relative to potential operational savings from reduced hot-water demand. Prioritise verified flow performance, durability, and maintainable components to lock in long-term benefits. Operational energy reduction is the principal sustainability lever for this system.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [
+      "chromium"
+    ],
+    "healthNote": "Low emissions in use; verify wetted components and coatings are compliant for potable water and corrosion resistance.",
+    "risks": [
+      {
+        "risk": "User dissatisfaction from low pressure feel",
+        "mitigation": "Specify pressure-compensated heads and test under expected network pressure."
+      },
+      {
+        "risk": "Performance drop from limescale build-up",
+        "mitigation": "Use anti-limescale nozzles and scheduled maintenance in FM plan."
+      }
+    ],
+    "serviceLife": 20
+  },
+  {
+    "id": "frameless-shower-screen",
+    "name": "Frameless Shower Screen",
+    "tone": "#d5e0e5",
+    "finish": "Toughened low-iron glass screen",
+    "description": "Minimal-framed or frameless glazed shower enclosures that maximise light transfer and visual openness in bathroom design.",
+    "keywords": [
+      "bathroom",
+      "shower screen",
+      "glass",
+      "frameless",
+      "wetroom"
+    ],
+    "category": "fixture",
+    "treePaths": [
+      "Interiors>Fixtures & Fittings"
+    ],
+    "carbonIntensity": "high",
+    "materialType": "glass",
+    "materialForm": [
+      "panel"
+    ],
+    "materialFunction": [
+      "surface",
+      "decorative"
+    ],
+    "manufacturingProcess": [
+      "casting",
+      "cutting"
+    ],
+    "finishFamily": "glass-clear",
+    "mitigationTip": "Optimise panel sizing and hardware standardisation to reduce replacement frequency and simplify end-of-life glass recovery.",
+    "actionDocumentation": "Provide EPD and glass safety certification plus declaration of recycled cullet where available.",
+    "actionVerification": "Verify toughened/laminated safety requirements, anti-limescale coating durability, and fixing load calculations.",
+    "actionCircularity": "Use mechanically fixed channels and replaceable gaskets to support non-destructive glass panel replacement.",
+    "pk": "fixture",
+    "docType": "material",
+    "sortOrder": 236,
+    "finishIds": [
+      "finish:toughened-low-iron-glass-screen"
+    ],
+    "primaryFinishId": "finish:toughened-low-iron-glass-screen",
+    "finishSetIds": [
+      "fs:single:75b7b04bbca6"
+    ],
+    "primaryFinishSetId": "fs:single:75b7b04bbca6",
+    "lifecycleProfileId": "lp:frameless-shower-screen",
+    "insight": "Glass processing drives most upfront impact, while in-use performance is largely maintenance-dependent. Reduce impact by standardising dimensions, specifying durable coatings, and avoiding premature replacement from hardware failure. End-of-life outcomes improve where glazing can be removed without breakage.",
+    "actions": null,
+    "healthRiskLevel": "low",
+    "healthConcerns": [],
+    "healthNote": "Inert glazing system; ensure compatible low-VOC sealants and gaskets in enclosed wet rooms.",
+    "risks": [
+      {
+        "risk": "Glass breakage risk from impact or poor fixing",
+        "mitigation": "Specify compliant safety glass thickness and validated fixing details."
+      },
+      {
+        "risk": "Water leakage at floor/wall junctions",
+        "mitigation": "Coordinate threshold and channel detailing with waterproofing strategy."
+      }
+    ],
+    "serviceLife": 20
   }
 ]

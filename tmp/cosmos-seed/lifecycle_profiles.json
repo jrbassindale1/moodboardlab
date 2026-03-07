@@ -7702,5 +7702,1013 @@
         "confidence": "low"
       }
     }
+  },
+  {
+    "id": "lp:recycled-glass-mosaic",
+    "pk": "recycled-glass-mosaic",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-glass-mosaic",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:zellige-tiles",
+    "pk": "zellige-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "zellige-tiles",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:quartz-composite-worktop",
+    "pk": "quartz-composite-worktop",
+    "docType": "lifecycleProfile",
+    "materialId": "quartz-composite-worktop",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:solid-surface-worktop",
+    "pk": "solid-surface-worktop",
+    "docType": "lifecycleProfile",
+    "materialId": "solid-surface-worktop",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 4,
+        "confidence": "low"
+      }
+    }
+  },
+  {
+    "id": "lp:linoleum-faced-joinery",
+    "pk": "linoleum-faced-joinery",
+    "docType": "lifecycleProfile",
+    "materialId": "linoleum-faced-joinery",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:fsc-mdf-joinery",
+    "pk": "fsc-mdf-joinery",
+    "docType": "lifecycleProfile",
+    "materialId": "fsc-mdf-joinery",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:cork-wallcovering",
+    "pk": "cork-wallcovering",
+    "docType": "lifecycleProfile",
+    "materialId": "cork-wallcovering",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:linen-wallcovering",
+    "pk": "linen-wallcovering",
+    "docType": "lifecycleProfile",
+    "materialId": "linen-wallcovering",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:pet-felt-acoustic-panels",
+    "pk": "pet-felt-acoustic-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "pet-felt-acoustic-panels",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:wood-wool-acoustic-panels",
+    "pk": "wood-wool-acoustic-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "wood-wool-acoustic-panels",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:veneer-wall-panels",
+    "pk": "veneer-wall-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "veneer-wall-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:bio-based-microcement",
+    "pk": "bio-based-microcement",
+    "docType": "lifecycleProfile",
+    "materialId": "bio-based-microcement",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:recycled-plastic-furniture",
+    "pk": "recycled-plastic-furniture",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-plastic-furniture",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:aac-blockwork",
+    "pk": "aac-blockwork",
+    "docType": "lifecycleProfile",
+    "materialId": "aac-blockwork",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:geopolymer-concrete",
+    "pk": "geopolymer-concrete",
+    "docType": "lifecycleProfile",
+    "materialId": "geopolymer-concrete",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:straw-insulation-panels",
+    "pk": "straw-insulation-panels",
+    "docType": "lifecycleProfile",
+    "materialId": "straw-insulation-panels",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 1,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:porcelain-wetroom-tiles",
+    "pk": "porcelain-wetroom-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "porcelain-wetroom-tiles",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:ceramic-subway-tiles",
+    "pk": "ceramic-subway-tiles",
+    "docType": "lifecycleProfile",
+    "materialId": "ceramic-subway-tiles",
+    "stages": {
+      "raw": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:recycled-glass-splashback",
+    "pk": "recycled-glass-splashback",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-glass-splashback",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:sintered-stone-worktop",
+    "pk": "sintered-stone-worktop",
+    "docType": "lifecycleProfile",
+    "materialId": "sintered-stone-worktop",
+    "stages": {
+      "raw": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:stainless-steel-worktop",
+    "pk": "stainless-steel-worktop",
+    "docType": "lifecycleProfile",
+    "materialId": "stainless-steel-worktop",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:recycled-paper-composite-worktop",
+    "pk": "recycled-paper-composite-worktop",
+    "docType": "lifecycleProfile",
+    "materialId": "recycled-paper-composite-worktop",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:fsc-kitchen-cabinetry",
+    "pk": "fsc-kitchen-cabinetry",
+    "docType": "lifecycleProfile",
+    "materialId": "fsc-kitchen-cabinetry",
+    "stages": {
+      "raw": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:water-resistant-bathroom-joinery",
+    "pk": "water-resistant-bathroom-joinery",
+    "docType": "lifecycleProfile",
+    "materialId": "water-resistant-bathroom-joinery",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:sanitary-ceramic-ware",
+    "pk": "sanitary-ceramic-ware",
+    "docType": "lifecycleProfile",
+    "materialId": "sanitary-ceramic-ware",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:brushed-stainless-fixtures",
+    "pk": "brushed-stainless-fixtures",
+    "docType": "lifecycleProfile",
+    "materialId": "brushed-stainless-fixtures",
+    "stages": {
+      "raw": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 5,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "high"
+      }
+    }
+  },
+  {
+    "id": "lp:low-flow-shower-system",
+    "pk": "low-flow-shower-system",
+    "docType": "lifecycleProfile",
+    "materialId": "low-flow-shower-system",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "manufacturing": {
+        "impact": 3,
+        "confidence": "medium"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 2,
+        "confidence": "medium"
+      }
+    }
+  },
+  {
+    "id": "lp:frameless-shower-screen",
+    "pk": "frameless-shower-screen",
+    "docType": "lifecycleProfile",
+    "materialId": "frameless-shower-screen",
+    "stages": {
+      "raw": {
+        "impact": 3,
+        "confidence": "high"
+      },
+      "manufacturing": {
+        "impact": 4,
+        "confidence": "high"
+      },
+      "transport": {
+        "impact": 2,
+        "confidence": "medium"
+      },
+      "installation": {
+        "impact": 2,
+        "confidence": "high"
+      },
+      "inUse": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "maintenance": {
+        "impact": 1,
+        "confidence": "high"
+      },
+      "endOfLife": {
+        "impact": 3,
+        "confidence": "medium"
+      }
+    }
   }
 ]

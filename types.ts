@@ -171,6 +171,7 @@ export interface MaterialOption {
   iconWebpUrl?: string; // Blob/SAS URL for default WebP icon
   iconPngUrl?: string; // Blob/SAS URL for default PNG icon fallback
   excludeFromMoodboardRender?: boolean; // Exclude from moodboard image render
+  note?: string; // User note for this material instance (saved with moodboard)
   // Material classification attributes
   materialType?: MaterialType; // Base material composition (e.g., metal, timber, composite)
   materialForm?: MaterialForm[]; // Physical forms available (e.g., sheet, board, tube)

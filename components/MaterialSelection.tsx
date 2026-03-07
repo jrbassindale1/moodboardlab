@@ -230,7 +230,16 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
         const dbMaterials = await getMaterials();
         if (!mounted) return;
         if (Array.isArray(dbMaterials) && dbMaterials.length > 0) {
-          setMaterialPalette(dbMaterials);
+          // Merge API materials with the local fallback palette so curated local additions
+          // (including sustainability fields) remain available even when the API list lags.
+          const fallbackById = new Map(MATERIAL_PALETTE.map((mat) => [mat.id, mat] as const));
+          const merged = dbMaterials.map((mat) => {
+            const fallback = fallbackById.get(mat.id);
+            fallbackById.delete(mat.id);
+            return fallback ? { ...fallback, ...mat } : mat;
+          });
+          merged.push(...fallbackById.values());
+          setMaterialPalette(merged);
           setIsUsingFallbackPalette(false);
           return;
         }
