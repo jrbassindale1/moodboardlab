@@ -4,7 +4,6 @@ import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
 import ApplyMaterials from './components/ApplyMaterials';
 import MaterialSelection from './components/MaterialSelection';
-import AdRail from './components/AdRail';
 import Product from './components/Product';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
@@ -261,8 +260,6 @@ const App: React.FC = () => {
     }
   };
 
-  const showAds = currentPage !== 'moodboard' && currentPage !== 'apply';
-  const adRailPadding = showAds ? 'xl:px-[210px] 2xl:px-[260px]' : '';
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -273,13 +270,7 @@ const App: React.FC = () => {
         moodboardReady={Boolean(moodboardRenderUrl)}
       />
 
-      <main className={`flex-grow relative ${adRailPadding}`}>
-        {showAds && (
-          <>
-            <AdRail side="left" />
-            <AdRail side="right" />
-          </>
-        )}
+      <main className="flex-grow relative">
         <div className="relative">
           {renderPage()}
         </div>
@@ -291,7 +282,7 @@ const App: React.FC = () => {
       />
 
       <footer className="bg-arch-black text-white py-12 border-t border-gray-800">
-        <div className={`max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-6 md:items-center ${adRailPadding}`}>
+        <div className="max-w-screen-2xl mx-auto px-6 flex flex-col md:flex-row justify-between gap-6 md:items-center">
           <div>
             <h4 className="font-display font-bold uppercase tracking-widest text-lg">Moodboard Lab</h4>
             <div className="mt-3 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-widest text-gray-400">

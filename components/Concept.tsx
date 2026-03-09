@@ -1,11 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Wand2 } from 'lucide-react';
 import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
-import carouselA from '../images/moodboard-4.webp';
-import carouselB from '../images/moodboard-5.webp';
-import carouselC from '../images/moodboard-6.webp';
-import carouselD from '../images/moodboard.webp';
+
+// Dynamically import all images from the recents folder for the carousel
+// Any image added to images/recents/ will automatically be included
+const recentImageModules = import.meta.glob<{ default: string }>(
+  '../images/recents/*.{webp,png,jpg,jpeg}',
+  { eager: true }
+);
+
+// Extract and sort images by filename
+const recentImages = Object.entries(recentImageModules)
+  .map(([path, module]) => ({
+    path,
+    url: module.default,
+    filename: path.split('/').pop() || ''
+  }))
+  .sort((a, b) => a.filename.localeCompare(b.filename));
 
 interface ConceptProps {
   onNavigate: (page: string) => void;
@@ -53,7 +65,8 @@ const outcomes = [
 ];
 
 const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
-  const carouselImages = [carouselA, carouselB, carouselC, carouselD];
+  // Use all images from the recents folder for the carousel
+  const carouselImages = useMemo(() => recentImages.map(img => img.url), []);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {

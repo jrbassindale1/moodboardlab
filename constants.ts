@@ -1,10 +1,27 @@
 import { MaterialOption, ProjectImage } from './types';
-import moodboardMain from './images/moodboard-2.webp';
-import moodboardAlt1 from './images/moodboard-4.webp';
-import moodboardAlt2 from './images/moodboard-5.webp';
-import moodboardAlt3 from './images/moodboard-6.webp';
-import moodboardAlt4 from './images/moodboard.webp';
 import { RAL_COLOR_OPTIONS as RAL_COLORS } from './data/ralColors';
+import moodboardMain from './images/moodboard-2.webp';
+
+// Dynamically import all images from the recents folder for the carousel
+// Any image added to images/recents/ will automatically be included
+const recentImageModules = import.meta.glob<{ default: string }>(
+  './images/recents/*.{webp,png,jpg,jpeg}',
+  { eager: true }
+);
+
+// Extract image URLs and sort by filename
+const recentImages = Object.entries(recentImageModules)
+  .map(([path, module]) => ({
+    path,
+    url: module.default,
+    filename: path.split('/').pop() || ''
+  }))
+  .sort((a, b) => a.filename.localeCompare(b.filename));
+
+// Use recents for alternates, fallback to main hero
+const moodboardAlt1 = recentImages[0]?.url || moodboardMain;
+const moodboardAlt2 = recentImages[1]?.url || moodboardMain;
+const moodboardAlt3 = recentImages[2]?.url || moodboardMain;
 
 export const MATERIAL_BASE_IMAGE = moodboardMain;
 export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
@@ -15,43 +32,15 @@ export const STRUCTURE_BASE_IMAGES: Record<string, string> = {
   'hybrid-structure': moodboardAlt3,
   'space-frame-structure': moodboardAlt3
 };
-export const PROJECT_IMAGES: ProjectImage[] = [
-  {
-    id: 'concept-board',
-    url: moodboardMain,
-    title: 'Concept Moodboard',
-    description: 'Primary board showing the baseline palette and lighting tone for the workspace.',
-    category: 'Render'
-  },
-  {
-    id: 'contrast-study',
-    url: moodboardAlt1,
-    title: 'Contrast & Materiality',
-    description: 'A study balancing warm timber textures with cooler metal accents.',
-    category: 'Render'
-  },
-  {
-    id: 'facade-tone',
-    url: moodboardAlt2,
-    title: 'Facade Tone',
-    description: 'Exterior-leaning palette exploring neutral renders and daylight behaviour.',
-    category: 'Render'
-  },
-  {
-    id: 'texture-stack',
-    url: moodboardAlt3,
-    title: 'Texture Stack',
-    description: 'Layered swatches focusing on grain, textile, and aggregate interplay.',
-    category: 'Render'
-  },
-  {
-    id: 'palette-overview',
-    url: moodboardAlt4,
-    title: 'Palette Overview',
-    description: 'Quick overview of the palette in a clean board layout for handoff.',
-    category: 'Render'
-  }
-];
+
+// Generate PROJECT_IMAGES dynamically from recents folder
+export const PROJECT_IMAGES: ProjectImage[] = recentImages.map((img, index) => ({
+  id: `recent-${index + 1}`,
+  url: img.url,
+  title: `Moodboard ${index + 1}`,
+  description: `Recent moodboard image ${index + 1}`,
+  category: 'Render' as const
+}));
 
 export const RAL_COLOR_OPTIONS = RAL_COLORS;
 
