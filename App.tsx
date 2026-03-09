@@ -183,16 +183,32 @@ const App: React.FC = () => {
     board,
     generationImageUrl,
     sourceType,
+    sustainabilityBriefing: restoredBriefing,
+    briefingPayload: restoredPayload,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
     generationImageUrl: string | null;
     sourceType: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+    sustainabilityBriefing?: SustainabilityBriefingResponse | null;
+    briefingPayload?: SustainabilityBriefingPayload | null;
   }) => {
     setSelectedMaterials(board);
 
     if (targetPage === 'moodboard') {
       setMoodboardRenderUrl(generationImageUrl);
+      // Restore sustainability briefing if available
+      if (restoredBriefing) {
+        setSustainabilityBriefing(restoredBriefing);
+      }
+      if (restoredPayload) {
+        setBriefingPayload(restoredPayload);
+      }
+      // Update the briefing materials key to match the restored board
+      if (restoredBriefing && restoredPayload) {
+        setBriefingMaterialsKey(getBriefingMaterialsKey(board));
+        setBriefingInvalidatedMessage(null);
+      }
       setCurrentPage('moodboard');
       return;
     }

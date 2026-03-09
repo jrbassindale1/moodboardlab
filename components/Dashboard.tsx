@@ -3,6 +3,7 @@ import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
 import { getGenerations } from '../api';
 import type { MaterialOption } from '../types';
+import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
@@ -22,6 +23,8 @@ interface DashboardProps {
     board: MaterialOption[];
     generationImageUrl: string | null;
     sourceType: Generation['type'];
+    sustainabilityBriefing?: SustainabilityBriefingResponse | null;
+    briefingPayload?: SustainabilityBriefingPayload | null;
   }) => void;
 }
 
@@ -38,10 +41,6 @@ const typeLabels: Record<string, string> = {
   materialIcon: 'Material Icon',
   sustainabilityBriefing: 'Sustainability',
 };
-const STAGING_INSIGHTS_EMAIL = 'jrbassindale@yahoo.co.uk';
-const LATEST_MOODBOARDS_LIMIT = 10;
-const LATEST_MOODBOARDS_PAGE_SIZE = 50;
-const LATEST_MOODBOARDS_MAX_PAGES = 5;
 const PREVIEW_SAMPLE_BOARD: MaterialOption[] = [
   {
     id: 'preview-concrete',
@@ -152,19 +151,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
-  const [latestMoodboards, setLatestMoodboards] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLatestMoodboardsLoading, setIsLatestMoodboardsLoading] = useState(false);
-  const [latestMoodboardsError, setLatestMoodboardsError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const hasFetchedRef = useRef(false);
-  const hasFetchedLatestMoodboardsRef = useRef(false);
   const limit_per_page = 12;
-  const normalizedUserEmail = (user?.email || '').toLowerCase();
   const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
   const canAccessDashboard = isAuthenticated || isPreviewMode;
-  const canViewStagingInsights = normalizedUserEmail === STAGING_INSIGHTS_EMAIL || isPreviewMode;
   const previewDisplayItems = useMemo(() => {
     if (!isPreviewMode) return [];
     const now = Date.now();
@@ -262,69 +255,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
     fetchGenerations();
   }, [isAuthenticated, getAccessToken]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !canViewStagingInsights) {
-      setLatestMoodboards([]);
-      setLatestMoodboardsError(null);
-      setIsLatestMoodboardsLoading(false);
-      hasFetchedLatestMoodboardsRef.current = false;
-      return;
-    }
-
-    if (hasFetchedLatestMoodboardsRef.current) return;
-    hasFetchedLatestMoodboardsRef.current = true;
-
-    const fetchLatestMoodboards = async () => {
-      setIsLatestMoodboardsLoading(true);
-      setLatestMoodboardsError(null);
-      try {
-        const token = await getAccessToken();
-        if (!token) {
-          setLatestMoodboards([]);
-          return;
-        }
-
-        const moodboards: Generation[] = [];
-        let page = 0;
-        let nextOffset = 0;
-        let hasNextPage = true;
-
-        while (
-          hasNextPage &&
-          moodboards.length < LATEST_MOODBOARDS_LIMIT &&
-          page < LATEST_MOODBOARDS_MAX_PAGES
-        ) {
-          const data = await getGenerations(token, {
-            limit: LATEST_MOODBOARDS_PAGE_SIZE,
-            offset: nextOffset,
-          });
-
-          for (const item of data.items || []) {
-            if (item.type !== 'moodboard') continue;
-            moodboards.push(item);
-            if (moodboards.length >= LATEST_MOODBOARDS_LIMIT) {
-              break;
-            }
-          }
-
-          hasNextPage = data.hasMore || false;
-          nextOffset += LATEST_MOODBOARDS_PAGE_SIZE;
-          page += 1;
-        }
-
-        setLatestMoodboards(moodboards);
-      } catch (error) {
-        console.error('Failed to fetch latest moodboards:', error);
-        setLatestMoodboards([]);
-        setLatestMoodboardsError('Could not load latest moodboards right now.');
-      } finally {
-        setIsLatestMoodboardsLoading(false);
-      }
-    };
-
-    fetchLatestMoodboards();
-  }, [isAuthenticated, canViewStagingInsights, getAccessToken]);
-
   const loadMore = async () => {
     if (!isAuthenticated || !hasMore) return;
 
@@ -350,11 +280,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
     if (!targetPage) return;
 
+    // Extract sustainability briefing data if available
+    const materials = gen.materials as Record<string, unknown> | undefined;
+    const sustainabilityBriefing = materials?.sustainabilityBriefing as SustainabilityBriefingResponse | undefined;
+    const briefingPayload = materials?.briefingPayload as SustainabilityBriefingPayload | undefined;
+
     onRestoreGeneration({
       targetPage,
       board,
       generationImageUrl: gen.blobUrl || null,
       sourceType: gen.type,
+      sustainabilityBriefing: sustainabilityBriefing || null,
+      briefingPayload: briefingPayload || null,
     });
   };
 
@@ -443,60 +380,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
         </div>
 
         {/* Generation History */}
-        {canViewStagingInsights && (
-          <div>
-            <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-4">
-              Latest 10 Moodboards ({STAGING_INSIGHTS_EMAIL})
-            </h2>
-
-            {isLatestMoodboardsLoading ? (
-              <div className="flex items-center justify-center py-8 border border-gray-200">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-              </div>
-            ) : isPreviewMode ? (
-              <div className="border border-dashed border-gray-300 p-6 text-sm text-gray-600">
-                Preview mode active. Sign in with {STAGING_INSIGHTS_EMAIL} to load real moodboards.
-              </div>
-            ) : latestMoodboardsError ? (
-              <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {latestMoodboardsError}
-              </div>
-            ) : latestMoodboards.length === 0 ? (
-              <div className="border border-dashed border-gray-300 p-6 text-sm text-gray-600">
-                No moodboards found for this account.
-              </div>
-            ) : (
-              <div className="border border-gray-200 divide-y divide-gray-100">
-                {latestMoodboards.map((moodboard, index) => (
-                  <div key={moodboard.id} className="flex items-center justify-between gap-4 p-4">
-                    <div className="min-w-0">
-                      <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                        Moodboard {index + 1}
-                      </p>
-                      <p className="text-sm text-gray-700 truncate">
-                        {new Date(moodboard.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                    {moodboard.blobUrl ? (
-                      <a
-                        href={moodboard.blobUrl}
-                        download
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors shrink-0"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Download
-                      </a>
-                    ) : (
-                      <span className="text-xs text-gray-400 shrink-0">No file</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Generation History */}
         <div>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-4">
             Recent Generations
@@ -531,6 +414,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                     gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
                   const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                   const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+
+                  // Check if this moodboard has sustainability briefing data
+                  const materials = gen.materials as Record<string, unknown> | undefined;
+                  const hasBriefingData = Boolean(materials?.sustainabilityBriefing);
+                  const showBriefingWarning = gen.type === 'moodboard' && canRestore && !hasBriefingData;
 
                   return (
                     <div
@@ -569,6 +457,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                             {new Date(gen.createdAt).toLocaleDateString()}
                           </span>
                         </div>
+                        {gen.blobUrl && (
+                          <div className="mb-2">
+                            <a
+                              href={gen.blobUrl}
+                              download
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              Download
+                            </a>
+                          </div>
+                        )}
                         {attachments.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {attachments.map((pdf) => {
@@ -621,6 +521,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                             >
                               {restoreLabel}
                             </button>
+                            {showBriefingWarning && (
+                              <p className="mt-2 text-[10px] text-amber-600">
+                                No sustainability briefing saved for older generations
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

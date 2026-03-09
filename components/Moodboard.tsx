@@ -569,6 +569,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       imageModelUsed: generationMeta?.imageModelUsed || undefined,
       imageFallbackUsed: generationMeta?.imageFallbackUsed,
       sustainabilityInsights: sustainabilityInsightsRef.current || undefined,
+      sustainabilityBriefing: sustainabilityBriefing || undefined,
+      briefingPayload: briefingPayload || undefined,
       board
     };
 
