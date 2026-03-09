@@ -596,33 +596,52 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
         <UsageDisplay variant="full" showSignUpPrompt={!isAuthBypassEnabled && isAnonymous} />
 
-        {!moodboardRenderUrl ? (
-          <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-3">
-            <p className="font-sans text-gray-700 text-sm">
-              Generate a moodboard first, then return here to apply the palette to your own image.
+        {board.length === 0 && !appliedRenderUrl && (
+          <div className="border border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
+            <p className="font-sans text-amber-800 text-sm">
+              Add materials to your palette before generating renders. You can upload a base image below, but rendering requires a material selection.
             </p>
             <button
-              onClick={() => onNavigate?.('moodboard')}
+              onClick={() => onNavigate?.('materials')}
               className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900"
             >
-              Go to Moodboard Lab
+              Select Materials
             </button>
           </div>
-        ) : (
-          <>
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)]">
-              <div className="border border-gray-200 bg-white p-4 space-y-3">
-                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                  Current Moodboard
-                </div>
-                <div className="border border-gray-200 bg-gray-50 flex items-center justify-center">
-                  <img
-                    src={moodboardRenderUrl}
-                    alt="Moodboard preview"
-                    className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
-                  />
-                </div>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)]">
+          {moodboardRenderUrl ? (
+            <div className="border border-gray-200 bg-white p-4 space-y-3">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                Current Moodboard
               </div>
+              <div className="border border-gray-200 bg-gray-50 flex items-center justify-center">
+                <img
+                  src={moodboardRenderUrl}
+                  alt="Moodboard preview"
+                  className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-300 bg-gray-50 p-4 space-y-3">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                Moodboard Preview
+              </div>
+              <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <p className="font-sans text-sm text-gray-600">
+                  No moodboard generated yet.
+                </p>
+                <button
+                  onClick={() => onNavigate?.('moodboard')}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
+                >
+                  Go to Moodboard Lab
+                </button>
+              </div>
+            </div>
+          )}
 
               <div className="border border-gray-200 bg-white p-4 space-y-3">
                 <div className="flex items-center justify-between gap-2">
@@ -829,8 +848,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                 </div>
               </div>
             )}
-          </>
-        )}
       </div>
     </div>
   );
