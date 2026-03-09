@@ -7,14 +7,12 @@ interface NavbarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   boardCount?: number;
-  moodboardReady?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   currentPage,
   onNavigate,
-  boardCount = 0,
-  moodboardReady = false
+  boardCount = 0
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
@@ -37,13 +35,9 @@ const Navbar: React.FC<NavbarProps> = ({
   ];
 
   const handleNavigate = (page: string) => {
-    if (page === 'apply' && !moodboardReady) return;
     onNavigate(page);
     setIsMobileMenuOpen(false);
   };
-
-  const isApplyDisabled = !moodboardReady;
-  const applyDisabledCopy = 'Create a moodboard first to unlock Apply.';
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
@@ -66,14 +60,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                disabled={item.id === 'apply' && isApplyDisabled}
-                title={item.id === 'apply' && isApplyDisabled ? applyDisabledCopy : undefined}
-                aria-disabled={item.id === 'apply' && isApplyDisabled}
-                className={`relative py-1 transition-colors ${
-                  item.id === 'apply' && isApplyDisabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'hover:text-black'
-                } ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`relative py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
                 {item.label}
                 {currentPage === item.id && (
@@ -117,14 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={item.id}
                 onClick={() => handleNavigate(item.id)}
-                disabled={item.id === 'apply' && isApplyDisabled}
-                title={item.id === 'apply' && isApplyDisabled ? applyDisabledCopy : undefined}
-                aria-disabled={item.id === 'apply' && isApplyDisabled}
-                className={`text-left transition-colors ${
-                  item.id === 'apply' && isApplyDisabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'hover:text-black'
-                } ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`text-left transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
                 {item.label}
               </button>

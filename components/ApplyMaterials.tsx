@@ -210,6 +210,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       userNote: trimmedNote || undefined,
       generatedPrompt: prompt,
       board,
+      moodboardRenderUrl: moodboardRenderUrl || undefined,
       uploads: uploadedImages.map((img) => ({
         id: img.id,
         name: img.name,

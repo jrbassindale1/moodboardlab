@@ -185,6 +185,7 @@ const App: React.FC = () => {
     sourceType,
     sustainabilityBriefing: restoredBriefing,
     briefingPayload: restoredPayload,
+    moodboardRenderUrl: restoredMoodboardUrl,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
@@ -192,6 +193,7 @@ const App: React.FC = () => {
     sourceType: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
     sustainabilityBriefing?: SustainabilityBriefingResponse | null;
     briefingPayload?: SustainabilityBriefingPayload | null;
+    moodboardRenderUrl?: string | null;
   }) => {
     setSelectedMaterials(board);
 
@@ -215,6 +217,10 @@ const App: React.FC = () => {
 
     if (generationImageUrl && (sourceType === 'applyMaterials' || sourceType === 'upscale')) {
       setAppliedRenderUrl(generationImageUrl);
+    }
+    // Restore the accompanying moodboard URL if available
+    if (restoredMoodboardUrl) {
+      setMoodboardRenderUrl(restoredMoodboardUrl);
     }
     setCurrentPage('apply');
   };
@@ -283,7 +289,6 @@ const App: React.FC = () => {
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         boardCount={selectedMaterials.length}
-        moodboardReady={Boolean(moodboardRenderUrl)}
       />
 
       <main className="flex-grow relative">

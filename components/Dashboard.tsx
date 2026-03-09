@@ -25,6 +25,7 @@ interface DashboardProps {
     sourceType: Generation['type'];
     sustainabilityBriefing?: SustainabilityBriefingResponse | null;
     briefingPayload?: SustainabilityBriefingPayload | null;
+    moodboardRenderUrl?: string | null;
   }) => void;
 }
 
@@ -280,10 +281,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
     if (!targetPage) return;
 
-    // Extract sustainability briefing data if available
+    // Extract sustainability briefing data and moodboard URL if available
     const materials = gen.materials as Record<string, unknown> | undefined;
     const sustainabilityBriefing = materials?.sustainabilityBriefing as SustainabilityBriefingResponse | undefined;
     const briefingPayload = materials?.briefingPayload as SustainabilityBriefingPayload | undefined;
+    const moodboardRenderUrl = materials?.moodboardRenderUrl as string | undefined;
 
     onRestoreGeneration({
       targetPage,
@@ -292,6 +294,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       sourceType: gen.type,
       sustainabilityBriefing: sustainabilityBriefing || null,
       briefingPayload: briefingPayload || null,
+      moodboardRenderUrl: moodboardRenderUrl || null,
     });
   };
 
