@@ -129,6 +129,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+
+  const handleClearAllMaterials = () => {
+    onBoardChange([]);
+    setShowClearConfirmation(false);
+  };
+
   const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf|polyester)/i;
   const NATURAL_METAL_FINISH_RE = /(galvan|exposed|stainless|anodis|mill|natural metal|weathering|corten)/i;
   const getColorSelectionMode = (
@@ -976,6 +983,36 @@ IMPORTANT:
                     </div>
                     ));
                   })()}
+
+                  {/* Clear all materials button */}
+                  <div className="pt-3 border-t border-gray-100">
+                    {showClearConfirmation ? (
+                      <div className="p-3 border border-amber-200 bg-amber-50 rounded space-y-2">
+                        <p className="text-sm text-amber-800">Clear all {board.length} materials?</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleClearAllMaterials}
+                            className="px-3 py-1.5 bg-red-600 text-white font-mono text-[10px] uppercase tracking-widest hover:bg-red-700 rounded"
+                          >
+                            Yes, Clear All
+                          </button>
+                          <button
+                            onClick={() => setShowClearConfirmation(false)}
+                            className="px-3 py-1.5 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50 rounded"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowClearConfirmation(true)}
+                        className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                      >
+                        Clear all materials
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

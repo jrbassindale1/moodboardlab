@@ -431,19 +431,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
-  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
-
-  const handleClearAllMaterials = () => {
-    setBoard([]);
-    onBoardChange?.([]);
-    setShowClearConfirmation(false);
-    // Reset related state
-    setSustainabilityInsights(null);
-    setSustainabilityBriefingState(null);
-    setBriefingPayloadState(null);
-    onSustainabilityBriefingChange?.(null);
-    onBriefingPayloadChange?.(null);
-  };
 
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
@@ -1913,36 +1900,6 @@ ${JSON.stringify(proseContext)}`;
               onToggleExclude={handleToggleExclude}
               onNoteChange={handleNoteChange}
             />
-
-            {board.length > 0 && (
-              <div className="pt-2 border-t border-gray-100">
-                {showClearConfirmation ? (
-                  <div className="flex items-center gap-3 p-3 border border-amber-200 bg-amber-50 rounded">
-                    <span className="text-sm text-amber-800">Clear all {board.length} materials?</span>
-                    <button
-                      onClick={handleClearAllMaterials}
-                      className="px-3 py-1.5 bg-red-600 text-white font-mono text-[10px] uppercase tracking-widest hover:bg-red-700 rounded"
-                    >
-                      Yes, Clear All
-                    </button>
-                    <button
-                      onClick={() => setShowClearConfirmation(false)}
-                      className="px-3 py-1.5 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowClearConfirmation(true)}
-                    disabled={isCreatingMoodboard || status !== 'idle'}
-                    className="text-xs text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Clear all materials
-                  </button>
-                )}
-              </div>
-            )}
 
             {board.length > 0 && (
               <div className="space-y-3">
