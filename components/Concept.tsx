@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ArrowRight, Wand2 } from 'lucide-react';
 import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
+import { getPathForPage } from '../utils/siteSeo';
 
 // Dynamically import all images from the recents folder for the carousel
 // Any image added to images/recents/ will automatically be included
@@ -76,6 +77,25 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
     return () => clearInterval(timer);
   }, [carouselImages.length]);
 
+  const handleNavigateClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    page: string
+  ) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    onNavigate(page);
+  };
+
   return (
     <div className="w-full pt-20 animate-in fade-in duration-700 bg-white">
       {/* Hero */}
@@ -90,13 +110,14 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
               Curate a material palette with real specifications and sustainability data. Generate photorealistic renders of your materials applied to buildings, free during launch.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => onNavigate('materials')}
+              <a
+                href={getPathForPage('materials')}
+                onClick={(event) => handleNavigateClick(event, 'materials')}
                 className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
               >
                 <Wand2 className="w-4 h-4" />
                 <span className="font-mono text-xs uppercase tracking-widest">Start Free</span>
-              </button>
+              </a>
             </div>
           </div>
           <div className="lg:col-span-6">

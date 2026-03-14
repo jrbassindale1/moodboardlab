@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moodboard-lab.com/sitemap.xml

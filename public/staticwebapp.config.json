@@ -10,7 +10,9 @@
       "/favicon.png",
       "/apple-touch-icon.png",
       "/manifest.webmanifest",
-      "/ads.txt"
+      "/ads.txt",
+      "/robots.txt",
+      "/sitemap.xml"
     ]
   }
 }

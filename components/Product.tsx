@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers, ShieldCheck, Sparkles, Wand2, Palette, Images } from 'lucide-react';
+import { getPathForPage } from '../utils/siteSeo';
 
 interface ProductProps {
   onNavigate: (page: string) => void;
@@ -39,6 +40,25 @@ const features = [
 ];
 
 const Product: React.FC<ProductProps> = ({ onNavigate }) => {
+  const handleNavigateClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    page: string
+  ) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    onNavigate(page);
+  };
+
   return (
     <div className="w-full pt-24 pb-16 bg-white animate-in fade-in duration-700">
       <section className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -54,20 +74,22 @@ const Product: React.FC<ProductProps> = ({ onNavigate }) => {
             workspace. Move from palette ideas to convincing visuals without context switching.
           </p>
           <div className="flex flex-wrap gap-4">
-            <button
-              onClick={() => onNavigate('moodboard')}
+            <a
+              href={getPathForPage('moodboard')}
+              onClick={(event) => handleNavigateClick(event, 'moodboard')}
               className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
             >
               <Wand2 className="w-4 h-4" />
               <span className="font-mono text-xs uppercase tracking-widest">Open Moodboard Lab</span>
-            </button>
-            <button
-              onClick={() => onNavigate('concept')}
+            </a>
+            <a
+              href={getPathForPage('concept')}
+              onClick={(event) => handleNavigateClick(event, 'concept')}
               className="border border-black px-6 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
             >
               <Layers className="w-4 h-4" />
               <span className="font-mono text-xs uppercase tracking-widest">Back to homepage</span>
-            </button>
+            </a>
           </div>
         </div>
         <div className="lg:col-span-5 border border-gray-200 bg-gray-50 p-6 space-y-4">

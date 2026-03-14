@@ -18,6 +18,7 @@ import type {
 } from './utils/sustainabilityBriefing';
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 import { trackPageView } from './utils/analytics';
+import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 
 const BRIEFING_CACHE_KEY = 'moodboard_sustainability_briefing_v1';
 const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
@@ -62,8 +63,13 @@ const readBoardCache = (): BoardCache | null => {
   }
 };
 
+const getInitialPage = (): string => {
+  if (typeof window === 'undefined') return 'concept';
+  return getPageFromPath(window.location.pathname);
+};
+
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState('concept');
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
@@ -76,6 +82,7 @@ const App: React.FC = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
+  const hasSyncedLocationRef = useRef(false);
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
 
@@ -85,11 +92,36 @@ const App: React.FC = () => {
 
   // Track page views in Google Analytics
   useEffect(() => {
+    const pagePath = getPathForPage(currentPage);
     trackPageView(
-      `/${currentPage}`,
+      pagePath,
       currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
     );
   }, [currentPage]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const path = getPathForPage(currentPage);
+    const currentPath = window.location.pathname;
+    if (currentPath !== path) {
+      const historyMethod = hasSyncedLocationRef.current ? 'pushState' : 'replaceState';
+      window.history[historyMethod](null, '', path);
+    }
+    hasSyncedLocationRef.current = true;
+    applyPageSeo(currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = () => {
+      setCurrentPage(getPageFromPath(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     if (boardCacheRestoredRef.current) return;
@@ -282,6 +314,25 @@ const App: React.FC = () => {
     }
   };
 
+  const handlePageLinkClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    page: string
+  ) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    setCurrentPage(page);
+  };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -307,11 +358,35 @@ const App: React.FC = () => {
           <div>
             <h4 className="font-display font-bold uppercase tracking-widest text-lg">Moodboard Lab</h4>
             <div className="mt-3 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-widest text-gray-400">
-              <button onClick={() => setCurrentPage('product')} className="hover:text-white transition-colors">Product</button>
+              <a
+                href={getPathForPage('product')}
+                onClick={(event) => handlePageLinkClick(event, 'product')}
+                className="hover:text-white transition-colors"
+              >
+                Product
+              </a>
               <button onClick={() => setIsHelpOpen(true)} className="hover:text-white transition-colors">Help</button>
-              <button onClick={() => setCurrentPage('privacy')} className="hover:text-white transition-colors">Privacy</button>
-              <button onClick={() => setCurrentPage('terms')} className="hover:text-white transition-colors">Terms</button>
-              <button onClick={() => setCurrentPage('contact')} className="hover:text-white transition-colors">Contact</button>
+              <a
+                href={getPathForPage('privacy')}
+                onClick={(event) => handlePageLinkClick(event, 'privacy')}
+                className="hover:text-white transition-colors"
+              >
+                Privacy
+              </a>
+              <a
+                href={getPathForPage('terms')}
+                onClick={(event) => handlePageLinkClick(event, 'terms')}
+                className="hover:text-white transition-colors"
+              >
+                Terms
+              </a>
+              <a
+                href={getPathForPage('contact')}
+                onClick={(event) => handlePageLinkClick(event, 'contact')}
+                className="hover:text-white transition-colors"
+              >
+                Contact
+              </a>
               <button onClick={() => setOpenConsentPreferences(true)} className="hover:text-white transition-colors">Privacy & Cookies</button>
             </div>
           </div>
