@@ -31,7 +31,8 @@
       "Bash(/opt/homebrew/bin/node:*)",
       "Bash(export PATH=\"/usr/local/bin:$PATH\")",
       "Bash(bash:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")"
     ]
   }
 }
