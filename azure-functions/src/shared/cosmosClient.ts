@@ -81,6 +81,7 @@ export interface UsageDocument {
     upscale: number;
     materialIcon: number;
     sustainabilityBriefing: number;
+    precedentSearch: number;
   };
   totalGenerations: number;
   lastUpdatedAt: string;
@@ -89,7 +90,7 @@ export interface UsageDocument {
 export interface GenerationDocument {
   id: string;
   userId: string; // Partition key
-  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing' | 'precedentSearch';
   prompt: string;
   blobUrl?: string;
   materials?: unknown;

@@ -12,6 +12,7 @@ import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
 import { MaterialOption } from './types';
+import type { PrecedentResult } from './api';
 import type {
   SustainabilityBriefingPayload,
   SustainabilityBriefingResponse,
@@ -78,6 +79,7 @@ const App: React.FC = () => {
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
   const [briefingMaterialsKey, setBriefingMaterialsKey] = useState<string | null>(null);
   const [briefingInvalidatedMessage, setBriefingInvalidatedMessage] = useState<string | null>(null);
+  const [savedPrecedents, setSavedPrecedents] = useState<PrecedentResult[] | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const briefingCacheRef = useRef<BriefingCache | null>(null);
@@ -218,14 +220,16 @@ const App: React.FC = () => {
     sustainabilityBriefing: restoredBriefing,
     briefingPayload: restoredPayload,
     moodboardRenderUrl: restoredMoodboardUrl,
+    savedPrecedents: restoredPrecedents,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
     generationImageUrl: string | null;
-    sourceType: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+    sourceType: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing' | 'precedentSearch';
     sustainabilityBriefing?: SustainabilityBriefingResponse | null;
     briefingPayload?: SustainabilityBriefingPayload | null;
     moodboardRenderUrl?: string | null;
+    savedPrecedents?: PrecedentResult[] | null;
   }) => {
     setSelectedMaterials(board);
 
@@ -242,6 +246,10 @@ const App: React.FC = () => {
       if (restoredBriefing && restoredPayload) {
         setBriefingMaterialsKey(getBriefingMaterialsKey(board));
         setBriefingInvalidatedMessage(null);
+      }
+      // Restore precedents if available
+      if (restoredPrecedents) {
+        setSavedPrecedents(restoredPrecedents);
       }
       setCurrentPage('moodboard');
       return;
@@ -284,6 +292,8 @@ const App: React.FC = () => {
             onBriefingMaterialsKeyChange={setBriefingMaterialsKey}
             briefingInvalidatedMessage={briefingInvalidatedMessage}
             onBriefingInvalidatedMessageChange={setBriefingInvalidatedMessage}
+            initialPrecedents={savedPrecedents}
+            onPrecedentsChange={setSavedPrecedents}
           />
         );
       case 'apply':

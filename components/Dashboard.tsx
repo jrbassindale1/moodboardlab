@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
-import { getGenerations } from '../api';
+import { getGenerations, PrecedentResult } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
 import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
@@ -9,7 +9,7 @@ import { trackEvent } from '../utils/analytics';
 
 interface Generation {
   id: string;
-  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing' | 'precedentSearch';
   blobUrl?: string;
   createdAt: string;
   prompt: string;
@@ -26,6 +26,7 @@ interface DashboardProps {
     sustainabilityBriefing?: SustainabilityBriefingResponse | null;
     briefingPayload?: SustainabilityBriefingPayload | null;
     moodboardRenderUrl?: string | null;
+    savedPrecedents?: PrecedentResult[] | null;
   }) => void;
 }
 
@@ -281,11 +282,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
     if (!targetPage) return;
 
-    // Extract sustainability briefing data and moodboard URL if available
+    // Extract sustainability briefing data, moodboard URL, and precedents if available
     const materials = gen.materials as Record<string, unknown> | undefined;
     const sustainabilityBriefing = materials?.sustainabilityBriefing as SustainabilityBriefingResponse | undefined;
     const briefingPayload = materials?.briefingPayload as SustainabilityBriefingPayload | undefined;
     const moodboardRenderUrl = materials?.moodboardRenderUrl as string | undefined;
+    const savedPrecedents = materials?.savedPrecedents as PrecedentResult[] | undefined;
 
     onRestoreGeneration({
       targetPage,
@@ -295,6 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       sustainabilityBriefing: sustainabilityBriefing || null,
       briefingPayload: briefingPayload || null,
       moodboardRenderUrl: moodboardRenderUrl || null,
+      savedPrecedents: savedPrecedents || null,
     });
   };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, AlertTriangle, Loader2, Wand2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Wand2, Search, ChevronDown, ChevronUp, ExternalLink, Trash2 } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
+import FindPrecedentsModal from './moodboard/FindPrecedentsModal';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
 import {
@@ -18,7 +19,8 @@ import {
   checkQuota,
   saveGenerationAuth,
   savePdfAuth,
-  generateSustainabilityBriefing
+  generateSustainabilityBriefing,
+  PrecedentResult
 } from '../api';
 import { MaterialOption } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
@@ -65,6 +67,8 @@ interface MoodboardProps {
   onBriefingMaterialsKeyChange?: (value: string | null) => void;
   briefingInvalidatedMessage?: string | null;
   onBriefingInvalidatedMessageChange?: (value: string | null) => void;
+  initialPrecedents?: PrecedentResult[] | null;
+  onPrecedentsChange?: (precedents: PrecedentResult[] | null) => void;
 }
 
 type MoodboardFlowProgress = {
@@ -397,7 +401,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   onBriefingPayloadChange,
   onBriefingMaterialsKeyChange,
   briefingInvalidatedMessage,
-  onBriefingInvalidatedMessageChange
+  onBriefingInvalidatedMessageChange,
+  initialPrecedents,
+  onPrecedentsChange
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -431,6 +437,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
   const [exportingBriefingPdf, setExportingBriefingPdf] = useState(false);
   const [exportingMaterialsSheetPdf, setExportingMaterialsSheetPdf] = useState(false);
+  const [isPrecedentsModalOpen, setIsPrecedentsModalOpen] = useState(false);
+  const [precedentsAccordionOpen, setPrecedentsAccordionOpen] = useState(true);
+  const [savedPrecedents, setSavedPrecedents] = useState<PrecedentResult[] | null>(
+    initialPrecedents ?? null
+  );
 
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
@@ -470,8 +481,22 @@ const Moodboard: React.FC<MoodboardProps> = ({
   }, [initialBoard]);
 
   useEffect(() => {
+    if (initialPrecedents) {
+      setSavedPrecedents(initialPrecedents);
+    }
+  }, [initialPrecedents]);
+
+  useEffect(() => {
     onBoardChange?.(board);
   }, [board, onBoardChange]);
+
+  useEffect(() => {
+    onPrecedentsChange?.(savedPrecedents);
+  }, [savedPrecedents, onPrecedentsChange]);
+
+  const handlePrecedentsSaved = (precedents: PrecedentResult[]) => {
+    setSavedPrecedents(precedents);
+  };
 
   const handleRemove = (idxToRemove: number) => {
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
@@ -572,7 +597,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       sustainabilityInsights: sustainabilityInsightsRef.current || undefined,
       sustainabilityBriefing: sustainabilityBriefing || undefined,
       briefingPayload: briefingPayload || undefined,
-      board
+      board,
+      savedPrecedents: savedPrecedents || undefined
     };
 
     if (!isAuthenticated) {
@@ -1921,6 +1947,14 @@ ${JSON.stringify(proseContext)}`;
                       </>
                     )}
                   </button>
+                  <button
+                    onClick={() => setIsPrecedentsModalOpen(true)}
+                    disabled={!board.length}
+                    className="inline-flex items-center gap-2 px-4 py-3 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:border-black hover:text-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Search className="w-4 h-4" />
+                    Find Precedents
+                  </button>
                 </div>
                 {flowProgress && (
                   <div
@@ -1974,6 +2008,80 @@ ${JSON.stringify(proseContext)}`;
               onDownloadMaterialsSheetPdf={handleDownloadMaterialsSheetPdf}
             />
 
+            {/* Saved Precedents Section */}
+            {savedPrecedents && savedPrecedents.length > 0 && (
+              <section className="border border-gray-200 bg-white">
+                <button
+                  onClick={() => setPrecedentsAccordionOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4" />
+                    <span className="font-mono text-[11px] uppercase tracking-widest">
+                      Saved Precedents ({savedPrecedents.length})
+                    </span>
+                  </div>
+                  {precedentsAccordionOpen ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+
+                {precedentsAccordionOpen && (
+                  <div className="border-t border-gray-200 p-4">
+                    <div className="flex justify-end mb-4">
+                      <button
+                        onClick={() => setSavedPrecedents(null)}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors font-mono uppercase tracking-wider"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        Clear All
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {savedPrecedents.map((precedent) => (
+                        <div
+                          key={precedent.id}
+                          className="border border-gray-200 bg-white hover:border-gray-400 transition-colors"
+                        >
+                          {precedent.imageUrl && (
+                            <div className="aspect-[16/10] bg-gray-100 overflow-hidden">
+                              <img
+                                src={precedent.imageUrl}
+                                alt={precedent.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div className="p-3">
+                            <h4 className="font-sans text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                              {precedent.title}
+                            </h4>
+                            <p className="font-sans text-xs text-gray-500 line-clamp-2 mb-2">
+                              {precedent.description}
+                            </p>
+                            <a
+                              href={precedent.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-black font-mono uppercase tracking-wider"
+                            >
+                              {precedent.sourceName}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
             {moodboardRenderUrl && (
               <MoodboardRenderSection
                 moodboardRenderUrl={moodboardRenderUrl}
@@ -1991,6 +2099,13 @@ ${JSON.stringify(proseContext)}`;
         </div>
       </div>
 
+      {/* Find Precedents Modal */}
+      <FindPrecedentsModal
+        isOpen={isPrecedentsModalOpen}
+        onClose={() => setIsPrecedentsModalOpen(false)}
+        materials={board}
+        onSave={handlePrecedentsSaved}
+      />
     </div>
   );
 };

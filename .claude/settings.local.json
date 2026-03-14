@@ -25,7 +25,13 @@
       "Bash(git push:*)",
       "Bash(git add -A)",
       "Bash(npm run typecheck:functions:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(bash scripts/verify-functions.sh:*)",
+      "Bash(/usr/local/bin/node:*)",
+      "Bash(/opt/homebrew/bin/node:*)",
+      "Bash(export PATH=\"/usr/local/bin:$PATH\")",
+      "Bash(bash:*)",
+      "Bash(git add:*)"
     ]
   }
 }

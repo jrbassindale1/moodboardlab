@@ -22,7 +22,8 @@ export type GenerationType =
   | 'applyMaterials'
   | 'upscale'
   | 'materialIcon'
-  | 'sustainabilityBriefing';
+  | 'sustainabilityBriefing'
+  | 'precedentSearch';
 
 // Generation types that don't count towards the user's monthly free limit
 export const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
@@ -138,6 +139,7 @@ export async function incrementUsage(
       upscale: generationType === 'upscale' ? incrementBy : 0,
       materialIcon: generationType === 'materialIcon' ? incrementBy : 0,
       sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? incrementBy : 0,
+      precedentSearch: generationType === 'precedentSearch' ? incrementBy : 0,
     },
     // Only count towards limit for non-free generation types
     totalGenerations: countsTowardsLimit ? incrementBy : 0,

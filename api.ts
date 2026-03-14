@@ -1,5 +1,25 @@
 import type { MaterialOption } from './types';
 
+// ============================================
+// Precedent Search Types
+// ============================================
+
+export interface PrecedentResult {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  imageUrl: string | null;
+  source: 'archdaily' | 'dezeen' | 'architizer' | 'designboom' | 'other';
+  sourceName: string;
+}
+
+export interface SearchPrecedentsResponse {
+  results: PrecedentResult[];
+  query: string;
+  totalFound: number;
+}
+
 // Prod host is the deployed Function App; adjust if you rename the app.
 // Support both Vite (import.meta.env) and Node.js (process.env) environments
 type RequestOptions = {
@@ -11,7 +31,8 @@ export type GenerationType =
   | 'applyMaterials'
   | 'upscale'
   | 'materialIcon'
-  | 'sustainabilityBriefing';
+  | 'sustainabilityBriefing'
+  | 'precedentSearch';
 
 export interface UsageData {
   moodboard: number;
@@ -530,5 +551,56 @@ export async function savePdfAuth(
   );
 
   if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ============================================
+// Precedent Search
+// ============================================
+
+/**
+ * Search for architectural precedents based on selected materials
+ */
+export async function searchPrecedents(
+  materials: MaterialOption[],
+  options?: { maxResults?: number; timeoutMs?: number }
+): Promise<SearchPrecedentsResponse> {
+  const API_BASE = getApiBase();
+  const timeoutMs = options?.timeoutMs ?? 30000;
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/search-precedents`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        materials: materials.map((m) => ({
+          id: m.id,
+          name: m.name,
+          category: m.category,
+          keywords: m.keywords,
+          finish: m.finish,
+          materialType: m.materialType,
+        })),
+        maxResults: options?.maxResults ?? 12,
+      }),
+    },
+    timeoutMs
+  );
+
+  if (!res.ok) {
+    let errorData: { error?: string; message?: string } = {};
+    try {
+      errorData = await res.json();
+    } catch {
+      // ignore parse errors
+    }
+
+    if (res.status === 429) {
+      throw new Error('rate_limit');
+    }
+    throw new Error(errorData.message || `Search failed (status ${res.status})`);
+  }
+
   return res.json();
 }

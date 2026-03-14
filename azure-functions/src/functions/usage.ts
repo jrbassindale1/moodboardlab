@@ -46,6 +46,7 @@ export async function usage(
       upscale: 0,
       materialIcon: 0,
       sustainabilityBriefing: 0,
+      precedentSearch: 0,
     };
     let total = 0;
 
