@@ -19,13 +19,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Architecture-focused sites for precedent searches
-const ARCHITECTURE_SITES = [
-  'archdaily.com',
-  'dezeen.com',
-  'architizer.com',
-  'designboom.com',
-];
 
 interface MaterialInput {
   id: string;
@@ -146,6 +139,7 @@ function getSourceFromUrl(url: string): { source: PrecedentResult['source']; sou
 
 /**
  * Build an optimized search query to find buildings using specific materials
+ * Note: Serper API has limitations on query complexity - avoid OR operators and parentheses
  */
 function buildSearchQuery(materials: MaterialInput[]): string {
   // Extract unique material types (e.g., timber, steel, concrete, glass)
@@ -189,28 +183,29 @@ function buildSearchQuery(materials: MaterialInput[]): string {
     }
   });
 
-  // Build the query to find BUILDINGS that feature these materials
+  // Build a simple query - Serper doesn't handle complex OR/parentheses well
   const queryParts: string[] = [];
 
-  // Primary material types (most important for the search)
-  const typeList = Array.from(materialTypes).slice(0, 3);
+  // Primary material types (limit to top 2 to keep query simple)
+  const typeList = Array.from(materialTypes).slice(0, 2);
   if (typeList.length > 0) {
     queryParts.push(typeList.join(' '));
   }
 
-  // Add any special descriptors
-  const uniqueDescriptors = [...new Set(materialDescriptors)].slice(0, 2);
+  // Add one special descriptor if present
+  const uniqueDescriptors = [...new Set(materialDescriptors)].slice(0, 1);
   if (uniqueDescriptors.length > 0) {
-    queryParts.push(uniqueDescriptors.join(' '));
+    queryParts.push(uniqueDescriptors[0]);
   }
 
-  // Key phrase to find actual buildings/houses/projects
-  queryParts.push('house OR residence OR building OR pavilion');
+  // Simple architecture keyword
+  queryParts.push('architecture building');
 
-  // Build site filter
-  const siteFilter = ARCHITECTURE_SITES.map((site) => `site:${site}`).join(' OR ');
+  // Use just one primary site filter to keep query simple
+  // The image search will still return results from other sites
+  queryParts.push('site:archdaily.com');
 
-  return `${queryParts.join(' ')} (${siteFilter})`;
+  return queryParts.join(' ');
 }
 
 /**
