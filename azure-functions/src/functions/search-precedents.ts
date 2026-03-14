@@ -10,7 +10,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
-const SERPER_API_URL = 'https://google.serper.dev/search';
+const SERPER_IMAGES_URL = 'https://google.serper.dev/images';
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -41,20 +41,71 @@ interface SearchPrecedentsRequest {
   maxResults?: number;
 }
 
-interface SerperOrganicResult {
+interface SerperImageResult {
   title: string;
+  imageUrl: string;
   link: string;
-  snippet: string;
-  imageUrl?: string;
+  position?: number;
 }
 
-interface SerperResponse {
-  organic?: SerperOrganicResult[];
-  images?: Array<{
-    title: string;
-    imageUrl: string;
-    link: string;
-  }>;
+interface SerperImagesResponse {
+  images?: SerperImageResult[];
+}
+
+// URL patterns to filter out (category pages, tag pages, pagination, news indexes)
+const EXCLUDED_URL_PATTERNS = [
+  /\/tag\//i,
+  /\/tags\//i,
+  /\/page\/\d+/i,
+  /\/page-\d+/i,
+  /\/category\//i,
+  /\/categories\//i,
+  /\/search\?/i,
+  /\/news$/i,
+  /\/news\/$/i,
+  /\/architecture$/i,
+  /\/projects$/i,
+  /\?page=/i,
+  /\?p=/i,
+];
+
+/**
+ * Check if URL is a specific project page (not a category or list page)
+ */
+function isProjectUrl(url: string): boolean {
+  // Reject URLs matching excluded patterns
+  for (const pattern of EXCLUDED_URL_PATTERNS) {
+    if (pattern.test(url)) {
+      return false;
+    }
+  }
+
+  // Check for ArchDaily project URLs (they have numeric IDs in path)
+  if (url.includes('archdaily.com')) {
+    // Valid: /123456/project-name or /us/123456/project-name
+    return /archdaily\.com\/(?:[a-z]{2}\/)?(\d{4,})\//i.test(url);
+  }
+
+  // Check for Dezeen project URLs (year/month/day pattern for articles)
+  if (url.includes('dezeen.com')) {
+    // Valid: /2024/01/15/project-name
+    return /dezeen\.com\/\d{4}\/\d{2}\/\d{2}\//i.test(url);
+  }
+
+  // Check for Architizer project URLs
+  if (url.includes('architizer.com')) {
+    // Valid: /projects/project-name
+    return /architizer\.com\/projects\//i.test(url);
+  }
+
+  // Check for Designboom project URLs
+  if (url.includes('designboom.com')) {
+    // Valid: /architecture/firm-name/project-name-date
+    return /designboom\.com\/architecture\/[^/]+\/[^/]+-\d{2}-\d{2}-\d{4}/i.test(url);
+  }
+
+  // For other sources, be more permissive but still filter common patterns
+  return true;
 }
 
 interface PrecedentResult {
@@ -94,10 +145,10 @@ function getSourceFromUrl(url: string): { source: PrecedentResult['source']; sou
 }
 
 /**
- * Build an optimized search query from materials
+ * Build an optimized search query to find buildings using specific materials
  */
 function buildSearchQuery(materials: MaterialInput[]): string {
-  // Extract unique material types
+  // Extract unique material types (e.g., timber, steel, concrete, glass)
   const materialTypes = new Set<string>();
   materials.forEach((m) => {
     if (m.materialType) {
@@ -105,52 +156,56 @@ function buildSearchQuery(materials: MaterialInput[]): string {
     }
   });
 
-  // Get first word of material names (often the most relevant)
-  const materialTerms: string[] = [];
-  materials.slice(0, 3).forEach((m) => {
-    const firstWord = m.name.split(' ')[0]?.toLowerCase();
-    if (firstWord && firstWord.length > 2) {
-      materialTerms.push(firstWord);
-    }
-  });
-
-  // Extract unique keywords (limit to most common)
-  const keywordCounts = new Map<string, number>();
+  // Extract key material descriptors
+  // e.g., "CLT" from "CLT Panel", "exposed concrete" from material name
+  const materialDescriptors: string[] = [];
   materials.forEach((m) => {
-    m.keywords?.forEach((kw) => {
-      const kwLower = kw.toLowerCase();
-      keywordCounts.set(kwLower, (keywordCounts.get(kwLower) || 0) + 1);
-    });
-  });
+    const name = m.name.toLowerCase();
 
-  // Get top 2 keywords that appear in multiple materials
-  const topKeywords = Array.from(keywordCounts.entries())
-    .filter(([, count]) => count > 1)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([kw]) => kw);
-
-  // Build the query
-  const queryParts = ['architecture project'];
-
-  // Add material types (e.g., timber, steel, concrete)
-  Array.from(materialTypes).slice(0, 2).forEach((type) => {
-    queryParts.push(type);
-  });
-
-  // Add material terms
-  materialTerms.forEach((term) => {
-    if (!queryParts.includes(term)) {
-      queryParts.push(term);
+    // Extract meaningful terms
+    if (name.includes('clt') || name.includes('cross-laminated')) {
+      materialDescriptors.push('CLT');
+    }
+    if (name.includes('exposed')) {
+      materialDescriptors.push('exposed');
+    }
+    if (name.includes('polished')) {
+      materialDescriptors.push('polished');
+    }
+    if (name.includes('brick')) {
+      materialDescriptors.push('brick');
+    }
+    if (name.includes('glazing') || name.includes('glazed')) {
+      materialDescriptors.push('glazing');
+    }
+    if (name.includes('curtain wall')) {
+      materialDescriptors.push('curtain wall');
+    }
+    if (name.includes('corten') || name.includes('weathering')) {
+      materialDescriptors.push('corten steel');
+    }
+    if (name.includes('terrazzo')) {
+      materialDescriptors.push('terrazzo');
     }
   });
 
-  // Add top keywords
-  topKeywords.forEach((kw) => {
-    if (!queryParts.includes(kw)) {
-      queryParts.push(kw);
-    }
-  });
+  // Build the query to find BUILDINGS that feature these materials
+  const queryParts: string[] = [];
+
+  // Primary material types (most important for the search)
+  const typeList = Array.from(materialTypes).slice(0, 3);
+  if (typeList.length > 0) {
+    queryParts.push(typeList.join(' '));
+  }
+
+  // Add any special descriptors
+  const uniqueDescriptors = [...new Set(materialDescriptors)].slice(0, 2);
+  if (uniqueDescriptors.length > 0) {
+    queryParts.push(uniqueDescriptors.join(' '));
+  }
+
+  // Key phrase to find actual buildings/houses/projects
+  queryParts.push('house OR residence OR building OR pavilion');
 
   // Build site filter
   const siteFilter = ARCHITECTURE_SITES.map((site) => `site:${site}`).join(' OR ');
@@ -159,14 +214,17 @@ function buildSearchQuery(materials: MaterialInput[]): string {
 }
 
 /**
- * Call Serper API to search for precedents
+ * Call Serper Images API to search for precedent images
  */
-async function searchSerper(
+async function searchSerperImages(
   query: string,
   maxResults: number,
   context: InvocationContext
-): Promise<SerperResponse> {
-  const response = await fetch(SERPER_API_URL, {
+): Promise<SerperImagesResponse> {
+  // Request more results than needed since we'll filter some out
+  const numToRequest = Math.min(maxResults * 3, 50);
+
+  const response = await fetch(SERPER_IMAGES_URL, {
     method: 'POST',
     headers: {
       'X-API-KEY': SERPER_API_KEY,
@@ -174,7 +232,7 @@ async function searchSerper(
     },
     body: JSON.stringify({
       q: query,
-      num: maxResults,
+      num: numToRequest,
       gl: 'gb',
       hl: 'en',
     }),
@@ -189,29 +247,52 @@ async function searchSerper(
 }
 
 /**
- * Process Serper results into normalized precedent results
+ * Process Serper image results into normalized precedent results
  */
-function processResults(serperResponse: SerperResponse): PrecedentResult[] {
+function processResults(
+  serperResponse: SerperImagesResponse,
+  maxResults: number,
+  context: InvocationContext
+): PrecedentResult[] {
   const results: PrecedentResult[] = [];
   const seenUrls = new Set<string>();
 
-  // Process organic results
-  serperResponse.organic?.forEach((item, index) => {
-    if (seenUrls.has(item.link)) return;
-    seenUrls.add(item.link);
+  // Process image results
+  for (const item of serperResponse.images || []) {
+    // Stop if we have enough results
+    if (results.length >= maxResults) break;
 
+    // Skip duplicate URLs
+    if (seenUrls.has(item.link)) continue;
+
+    // Filter out non-project URLs
+    if (!isProjectUrl(item.link)) {
+      context.log(`Filtered out non-project URL: ${item.link}`);
+      continue;
+    }
+
+    seenUrls.add(item.link);
     const { source, sourceName } = getSourceFromUrl(item.link);
 
+    // Clean up title (remove site name suffix if present)
+    let cleanTitle = item.title;
+    const siteSuffixes = ['| ArchDaily', '- Dezeen', '| Architizer', '- designboom'];
+    for (const suffix of siteSuffixes) {
+      if (cleanTitle.includes(suffix)) {
+        cleanTitle = cleanTitle.replace(suffix, '').trim();
+      }
+    }
+
     results.push({
-      id: `precedent-${index}`,
-      title: item.title,
-      description: item.snippet || '',
+      id: `precedent-${results.length}`,
+      title: cleanTitle,
+      description: '', // Image search doesn't return descriptions
       url: item.link,
-      imageUrl: item.imageUrl || null,
+      imageUrl: item.imageUrl,
       source,
       sourceName,
     });
-  });
+  }
 
   return results;
 }
@@ -271,10 +352,10 @@ export async function searchPrecedents(
     const query = buildSearchQuery(body.materials);
     context.log(`Search query: ${query}`);
 
-    // Call Serper API
-    let serperResponse: SerperResponse;
+    // Call Serper Images API
+    let serperResponse: SerperImagesResponse;
     try {
-      serperResponse = await searchSerper(query, maxResults, context);
+      serperResponse = await searchSerperImages(query, maxResults, context);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -301,7 +382,7 @@ export async function searchPrecedents(
     }
 
     // Process and return results
-    const results = processResults(serperResponse);
+    const results = processResults(serperResponse, maxResults, context);
 
     return {
       status: 200,
