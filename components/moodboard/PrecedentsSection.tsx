@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Search,
   ChevronUp,
@@ -44,7 +44,8 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
 }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Auto-expand if we have saved precedents
+  const [isExpanded, setIsExpanded] = useState(Boolean(savedPrecedents?.length));
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [results, setResults] = useState<PrecedentResult[]>([]);
   const [error, setError] = useState<SearchError | null>(null);
@@ -137,6 +138,13 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   const handleClearSaved = () => {
     onPrecedentsChange(null);
   };
+
+  // Auto-expand when precedents are loaded
+  useEffect(() => {
+    if (savedPrecedents && savedPrecedents.length > 0 && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [savedPrecedents, isExpanded]);
 
   const hasMaterials = materials.length > 0;
   const hasSearchResults = status === 'success' && results.length > 0;

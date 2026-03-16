@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, AlertTriangle, Loader2, Wand2 } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import PrecedentsSection from './moodboard/PrecedentsSection';
@@ -409,6 +409,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
 
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+  // Abort controllers for canceling in-flight requests
+  const moodboardAbortControllerRef = useRef<AbortController | null>(null);
+  const briefingAbortControllerRef = useRef<AbortController | null>(null);
+  // Track the materials key used for the last briefing (for cache invalidation)
+  const lastBriefingMaterialsKeyRef = useRef<string | null>(null);
+
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
   const sustainabilityInsightsRef = useRef<SustainabilityInsight[] | null>(null);
@@ -440,6 +448,19 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [savedPrecedents, setSavedPrecedents] = useState<PrecedentResult[] | null>(
     initialPrecedents ?? null
   );
+  const [backgroundNotification, setBackgroundNotification] = useState<{
+    type: 'info' | 'warning' | 'error';
+    message: string;
+  } | null>(null);
+
+  // Helper to reset all loading states consistently
+  const resetLoadingStates = useCallback(() => {
+    if (!isMountedRef.current) return;
+    setIsCreatingMoodboard(false);
+    setIsBriefingLoading(false);
+    setStatus('idle');
+    setFlowProgress(null);
+  }, []);
 
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
@@ -450,22 +471,42 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const ensureQuotaForMoodboard = async () => {
     // If auth bypass is enabled, skip quota check
-    if (isAuthBypassEnabled) return true;
-    if (!isAuthenticated) return false;
+    if (isAuthBypassEnabled) {
+      console.log('[Quota Check] Bypassed (auth bypass enabled)');
+      return true;
+    }
+    if (!isAuthenticated) {
+      console.warn('[Quota Check] Failed: user not authenticated');
+      return false;
+    }
     try {
+      console.log('[Quota Check] Starting quota verification...');
       const token = await getAccessToken();
       if (!token) {
+        console.warn('[Quota Check] Failed: no access token available');
         setError('Please sign in to continue.');
         return false;
       }
       const quota = await checkQuota(token);
+      console.log('[Quota Check] Result:', {
+        canGenerate: quota.canGenerate,
+        remaining: quota.remaining,
+        limit: quota.limit,
+        used: quota.used
+      });
       if (!quota.canGenerate) {
+        console.warn('[Quota Check] Failed: quota exceeded', quota);
         setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
         return false;
       }
       return true;
     } catch (err) {
-      console.error('Quota check failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[Quota Check] Error:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
       setError('Could not verify your remaining credits. Please try again.');
       return false;
     }
@@ -491,6 +532,19 @@ const Moodboard: React.FC<MoodboardProps> = ({
   useEffect(() => {
     onPrecedentsChange?.(savedPrecedents);
   }, [savedPrecedents, onPrecedentsChange]);
+
+  // Cleanup: mark as unmounted and abort any in-flight requests
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (moodboardAbortControllerRef.current) {
+        moodboardAbortControllerRef.current.abort();
+      }
+      if (briefingAbortControllerRef.current) {
+        briefingAbortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleRemove = (idxToRemove: number) => {
     setBoard((prev) => prev.filter((_, idx) => idx !== idxToRemove));
@@ -535,6 +589,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const sustainabilityBriefing = sustainabilityBriefingProp ?? sustainabilityBriefingState;
   const briefingPayload = briefingPayloadProp ?? briefingPayloadState;
 
+  // Calculate current materials key for cache validation
+  const currentMaterialsKey = useMemo(() => getBriefingMaterialsKey(board), [board]);
+
   const setMoodboardRenderUrl = (url: string | null) => {
     setMoodboardRenderUrlState(url);
     onMoodboardRenderUrlChange?.(url);
@@ -568,6 +625,54 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   }, [briefingPayloadProp]);
 
+  // Smart cache invalidation: detect when materials change after briefing was generated
+  useEffect(() => {
+    // Skip if no briefing exists yet
+    if (!sustainabilityBriefing || !briefingPayload) {
+      return;
+    }
+
+    // Check if current materials differ from when briefing was generated
+    const briefingMaterialsKey = getBriefingMaterialsKey(briefingPayload.materials.map((m: any) => {
+      // Reconstruct MaterialOption from briefing payload material
+      const boardMaterial = board.find((b: MaterialOption) => b.id === m.id);
+      return boardMaterial || {
+        id: m.id,
+        name: m.name,
+        category: m.category,
+        finish: m.finish,
+        description: m.description,
+        tone: m.tone || '#cccccc',
+        keywords: []
+      } as MaterialOption;
+    }));
+
+    if (currentMaterialsKey !== briefingMaterialsKey) {
+      // Materials have changed - show invalidation warning
+      const addedCount = board.filter(
+        (item: MaterialOption) => !briefingPayload.materials.some((m: any) => m.id === item.id)
+      ).length;
+      const removedCount = briefingPayload.materials.filter(
+        (m: any) => !board.some((item: MaterialOption) => item.id === m.id)
+      ).length;
+
+      let message = 'Materials have changed since briefing was generated.';
+      if (addedCount > 0 && removedCount > 0) {
+        message += ` ${addedCount} added, ${removedCount} removed.`;
+      } else if (addedCount > 0) {
+        message += ` ${addedCount} material(s) added.`;
+      } else if (removedCount > 0) {
+        message += ` ${removedCount} material(s) removed.`;
+      }
+      message += ' Create a new moodboard to update the briefing.';
+
+      onBriefingInvalidatedMessageChange?.(message);
+    } else {
+      // Materials match - clear any invalidation message
+      onBriefingInvalidatedMessageChange?.(null);
+    }
+  }, [board, currentMaterialsKey, sustainabilityBriefing, briefingPayload, onBriefingInvalidatedMessageChange]);
+
   const buildMaterialKey = () => {
     if (!renderMaterials.length) return 'No materials selected yet.';
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
@@ -596,25 +701,68 @@ const Moodboard: React.FC<MoodboardProps> = ({
     };
 
     if (!isAuthenticated) {
-      console.warn('Skipping save-generation: user not authenticated.');
+      console.warn('[Persist Generation] Skipping save: user not authenticated.');
       return;
     }
 
     try {
       const token = await getAccessToken();
       if (!token) {
-        console.warn('Skipping save-generation: missing access token.');
+        console.warn('[Persist Generation] Skipping save: missing access token.');
+        setBackgroundNotification({
+          type: 'warning',
+          message: 'Could not save generation to your account. Please sign in again.'
+        });
         return;
       }
+
+      console.log('[Persist Generation] Saving moodboard generation...');
       await saveGenerationAuth({
         prompt,
         imageDataUri,
         materials: metadata,
         generationType: 'moodboard'
       }, token);
+
       await refreshUsage();
+      console.log('[Persist Generation] Successfully saved moodboard generation');
+
+      // Show success notification briefly
+      setBackgroundNotification({
+        type: 'info',
+        message: 'Moodboard saved to your account'
+      });
+      setTimeout(() => setBackgroundNotification(null), 3000);
     } catch (err) {
-      console.error('Authenticated save failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[Persist Generation] Save failed:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString(),
+        authenticated: isAuthenticated,
+        boardItemCount: board.length
+      });
+
+      // Show user-friendly error notification
+      if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        setBackgroundNotification({
+          type: 'error',
+          message: 'Could not save to your account (network error). Generation is still available locally.'
+        });
+      } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        setBackgroundNotification({
+          type: 'error',
+          message: 'Storage limit reached. Generation is available locally but not saved to account.'
+        });
+      } else {
+        setBackgroundNotification({
+          type: 'warning',
+          message: 'Could not save to your account. Generation is still available locally.'
+        });
+      }
+
+      // Auto-dismiss error notifications after 5 seconds
+      setTimeout(() => setBackgroundNotification(null), 5000);
     }
   };
 
@@ -675,12 +823,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const handleDownloadBriefingPdf = async () => {
     if (!sustainabilityBriefing || !briefingPayload) return;
+    console.log('[PDF Export] Starting briefing PDF generation...');
     setExportingBriefingPdf(true);
     try {
       const doc = generateBriefingPdf();
       if (doc) {
         // Save locally
         doc.save('sustainability-briefing.pdf');
+        console.log('[PDF Export] Briefing PDF downloaded locally');
         trackEvent('download_pdf', {
           pdf_type: 'sustainability_briefing',
           source: 'moodboard',
@@ -688,19 +838,41 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
         // Save to backend for authenticated users
         if (isAuthenticated) {
-          const token = await getAccessToken();
-          if (token) {
-            const pdfDataUri = doc.output('datauristring');
-            await savePdfAuth({
-              pdfDataUri,
-              pdfType: 'sustainabilityBriefing',
-              materials: { board, briefingPayload }
-            }, token);
+          try {
+            const token = await getAccessToken();
+            if (token) {
+              console.log('[PDF Export] Saving briefing PDF to backend...');
+              const pdfDataUri = doc.output('datauristring');
+              await savePdfAuth({
+                pdfDataUri,
+                pdfType: 'sustainabilityBriefing',
+                materials: { board, briefingPayload }
+              }, token);
+              console.log('[PDF Export] Briefing PDF saved to backend successfully');
+              setBackgroundNotification({
+                type: 'info',
+                message: 'PDF saved to your account'
+              });
+              setTimeout(() => setBackgroundNotification(null), 3000);
+            }
+          } catch (saveErr) {
+            console.error('[PDF Export] Failed to save briefing PDF to backend:', saveErr);
+            // Don't show error - local download succeeded
+            setBackgroundNotification({
+              type: 'warning',
+              message: 'PDF downloaded but could not save to account'
+            });
+            setTimeout(() => setBackgroundNotification(null), 4000);
           }
         }
       }
     } catch (err) {
-      console.error('Could not create briefing PDF', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[PDF Export] Failed to create briefing PDF:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
       setError('Could not create the briefing PDF download.');
     } finally {
       setExportingBriefingPdf(false);
@@ -709,12 +881,14 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const handleDownloadMaterialsSheetPdf = async () => {
     if (!board.length) return;
+    console.log('[PDF Export] Starting materials sheet PDF generation...');
     setExportingMaterialsSheetPdf(true);
     try {
       const doc = await generateMaterialsSheetPdf();
       if (doc) {
         // Save locally
         doc.save('materials-sheet.pdf');
+        console.log('[PDF Export] Materials sheet PDF downloaded locally');
         trackEvent('download_pdf', {
           pdf_type: 'materials_sheet',
           source: 'moodboard',
@@ -722,19 +896,41 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
         // Save to backend for authenticated users
         if (isAuthenticated) {
-          const token = await getAccessToken();
-          if (token) {
-            const pdfDataUri = doc.output('datauristring');
-            await savePdfAuth({
-              pdfDataUri,
-              pdfType: 'materialsSheet',
-              materials: { board }
-            }, token);
+          try {
+            const token = await getAccessToken();
+            if (token) {
+              console.log('[PDF Export] Saving materials sheet PDF to backend...');
+              const pdfDataUri = doc.output('datauristring');
+              await savePdfAuth({
+                pdfDataUri,
+                pdfType: 'materialsSheet',
+                materials: { board }
+              }, token);
+              console.log('[PDF Export] Materials sheet PDF saved to backend successfully');
+              setBackgroundNotification({
+                type: 'info',
+                message: 'PDF saved to your account'
+              });
+              setTimeout(() => setBackgroundNotification(null), 3000);
+            }
+          } catch (saveErr) {
+            console.error('[PDF Export] Failed to save materials sheet PDF to backend:', saveErr);
+            // Don't show error - local download succeeded
+            setBackgroundNotification({
+              type: 'warning',
+              message: 'PDF downloaded but could not save to account'
+            });
+            setTimeout(() => setBackgroundNotification(null), 4000);
           }
         }
       }
     } catch (err) {
-      console.error('Could not create materials sheet PDF', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[PDF Export] Failed to create materials sheet PDF:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
       setError('Could not create the materials sheet PDF download.');
     } finally {
       setExportingMaterialsSheetPdf(false);
@@ -743,6 +939,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const handleDownloadBoard = async (url: string, renderId?: string) => {
     if (!url) return;
+    console.log('[Moodboard Download] Starting download preparation...', { renderId });
     setDownloadingId(renderId || null);
     try {
       const image = await loadImage(url);
@@ -868,19 +1065,66 @@ const Moodboard: React.FC<MoodboardProps> = ({
       link.href = canvas.toDataURL('image/png');
       link.download = 'moodboard-sheet.png';
       link.click();
+      console.log('[Moodboard Download] Download initiated successfully');
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[Moodboard Download] Failed to create download:', {
+        error: err,
+        message: errorMessage,
+        timestamp: new Date().toISOString(),
+        renderId
+      });
       setError(err instanceof Error ? err.message : 'Could not create download.');
     } finally {
       setDownloadingId(null);
     }
   };
 
+  // Check if briefing needs regeneration based on material changes
+  const needsBriefingRegeneration = useCallback((): boolean => {
+    if (!sustainabilityBriefing || !briefingPayload) {
+      return true; // No briefing exists, needs generation
+    }
+    // Compare current materials with briefing materials
+    const currentKey = getBriefingMaterialsKey(board);
+    const briefingKey = getBriefingMaterialsKey(briefingPayload.materials.map((m: any) => {
+      const boardMaterial = board.find((b: MaterialOption) => b.id === m.id);
+      return boardMaterial || {
+        id: m.id,
+        name: m.name,
+        category: m.category,
+        finish: m.finish,
+        description: m.description,
+        tone: m.tone || '#cccccc',
+        keywords: []
+      } as MaterialOption;
+    }));
+    return currentKey !== briefingKey;
+  }, [board, sustainabilityBriefing, briefingPayload]);
+
   // Helper to generate sustainability briefing
-  const generateBriefing = async (): Promise<boolean> => {
+  const generateBriefing = async (forceRegenerate = false): Promise<boolean> => {
+    // Skip if materials haven't changed and we're not forcing regeneration
+    if (!forceRegenerate && !needsBriefingRegeneration()) {
+      console.log('[Sustainability Briefing] Using cached briefing (materials unchanged)');
+      return true;
+    }
+    // Cancel any existing briefing generation
+    if (briefingAbortControllerRef.current) {
+      briefingAbortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    briefingAbortControllerRef.current = abortController;
+
     try {
       console.log('[Sustainability Briefing] Starting generation...');
+      if (!isMountedRef.current) return false;
       setIsBriefingLoading(true);
+
       const payload = prepareBriefingPayload(board, 'Material Palette');
+      if (!isMountedRef.current) return false;
       setBriefingPayload(payload);
       console.log('[Sustainability Briefing] Payload prepared:', payload);
 
@@ -890,6 +1134,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
         averageScores: payload.averageScores,
         projectName: 'Material Palette',
       });
+
+      // Check if request was aborted or component unmounted
+      if (abortController.signal.aborted || !isMountedRef.current) {
+        console.log('[Sustainability Briefing] Request aborted or component unmounted');
+        return false;
+      }
 
       console.log('[Sustainability Briefing] Raw response:', response);
 
@@ -935,9 +1185,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
       const parsed: SustainabilityBriefingResponse = JSON.parse(jsonText);
       console.log('[Sustainability Briefing] Parsed response:', parsed);
 
+      // Final check before setting state
+      if (!isMountedRef.current || abortController.signal.aborted) {
+        return false;
+      }
+
       setSustainabilityBriefing(parsed);
-      onBriefingMaterialsKeyChange?.(getBriefingMaterialsKey(board));
+      const materialsKey = getBriefingMaterialsKey(board);
+      onBriefingMaterialsKeyChange?.(materialsKey);
       onBriefingInvalidatedMessageChange?.(null);
+      // Store the materials key for cache tracking
+      lastBriefingMaterialsKeyRef.current = materialsKey;
       setMaterialsAccordionOpen(false);
       // Track sustainability briefing generation in Google Analytics
       trackEvent('generate_briefing', {
@@ -947,9 +1205,29 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return true;
     } catch (err) {
       console.error('[Sustainability Briefing] Generation failed:', err);
+
+      // Only show error if not aborted and component is still mounted
+      if (!abortController.signal.aborted && isMountedRef.current) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (errorMessage.includes('aborted') || errorMessage.includes('cancel')) {
+          console.log('[Sustainability Briefing] Request was cancelled');
+        } else if (errorMessage.includes('JSON')) {
+          setError('Could not parse sustainability briefing response. Please try again.');
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          setError('Network error while generating sustainability briefing. Please check your connection and try again.');
+        } else {
+          setError(`Failed to generate sustainability briefing: ${errorMessage}`);
+        }
+      }
       return false;
     } finally {
-      setIsBriefingLoading(false);
+      if (isMountedRef.current && !abortController.signal.aborted) {
+        setIsBriefingLoading(false);
+      }
+      // Clear the abort controller ref if this is still the current one
+      if (briefingAbortControllerRef.current === abortController) {
+        briefingAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -961,10 +1239,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Add materials to the moodboard first.');
       return;
     }
+    if (!isMountedRef.current) return;
+
     setError(null);
     setImageModelFallbackWarning(null);
     const canGenerate = await ensureQuotaForMoodboard();
-    if (!canGenerate) return;
+    if (!canGenerate || !isMountedRef.current) return;
+
     setIsCreatingMoodboard(true);
     setSustainabilityInsights(null);
     setPaletteSummary(null);
@@ -978,54 +1259,64 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setStatus('all');
     setError(null);
     try {
-      // Step 1: Generate moodboard image
+      // Run both operations in parallel for faster generation (briefing doesn't depend on image)
+      if (!isMountedRef.current) return;
       setFlowProgress({
         step: 1,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Generating moodboard image',
+        label: 'Generating moodboard and briefing',
         state: 'running'
       });
 
-      const renderOk = await runGemini('render', { onRender: setMoodboardRenderUrl });
+      const [renderResult, briefingResult] = await Promise.allSettled([
+        runGemini('render', { onRender: setMoodboardRenderUrl }),
+        generateBriefing(true) // Force regenerate when creating new moodboard
+      ]);
 
-      if (!renderOk) {
-        setFlowProgress({
-          step: 1,
-          total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Image generation failed',
-          state: 'error'
-        });
-        return;
-      }
+      if (!isMountedRef.current) return;
 
-      // Step 2: Generate sustainability briefing
-      setFlowProgress({
-        step: 2,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Generating sustainability briefing',
-        state: 'running'
-      });
-      const briefingOk = await generateBriefing();
-      if (!briefingOk) {
+      // Check results
+      const renderOk = renderResult.status === 'fulfilled' && renderResult.value === true;
+      const briefingOk = briefingResult.status === 'fulfilled' && briefingResult.value === true;
+
+      // Handle failures
+      if (!renderOk && !briefingOk) {
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Briefing generation failed',
+          label: 'Both operations failed',
           state: 'error'
         });
         return;
+      } else if (!renderOk) {
+        setFlowProgress({
+          step: 2,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Image generation failed (briefing succeeded)',
+          state: 'error'
+        });
+        // Keep the briefing even if image failed
+      } else if (!briefingOk) {
+        setFlowProgress({
+          step: 2,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Briefing generation failed (image succeeded)',
+          state: 'error'
+        });
+        // Keep the image even if briefing failed
+      } else {
+        // Both succeeded
+        setFlowProgress({
+          step: 2,
+          total: MOODBOARD_FLOW_TOTAL_STEPS,
+          label: 'Complete',
+          state: 'complete'
+        });
       }
 
-      setFlowProgress({
-        step: 2,
-        total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Complete',
-        state: 'complete'
-      });
       setMaterialsAccordionOpen(false);
     } finally {
-      setIsCreatingMoodboard(false);
-      setStatus('idle');
+      resetLoadingStates();
     }
   };
 
@@ -1033,6 +1324,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
     if (!requireAuthForMoodboard()) {
       return;
     }
+    if (!isMountedRef.current) return;
+
     const trimmed = moodboardEditPrompt.trim();
     if (!moodboardRenderUrl) {
       setError('Generate a moodboard render first.');
@@ -1043,7 +1336,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return;
     }
     const canGenerate = await ensureQuotaForMoodboard();
-    if (!canGenerate) return;
+    if (!canGenerate || !isMountedRef.current) return;
+
     setIsCreatingMoodboard(true);
     try {
       await runGemini('render', {
@@ -1052,7 +1346,23 @@ const Moodboard: React.FC<MoodboardProps> = ({
         editPrompt: trimmed
       });
     } finally {
-      setIsCreatingMoodboard(false);
+      if (isMountedRef.current) {
+        setIsCreatingMoodboard(false);
+      }
+    }
+  };
+
+  // Retry helper for failed briefing generation
+  const handleRetryBriefing = async () => {
+    if (!board.length) {
+      setError('Add materials to the moodboard first.');
+      return;
+    }
+    setError(null);
+    setIsBriefingLoading(true);
+    const success = await generateBriefing(true);
+    if (!success) {
+      console.log('[Retry Briefing] Retry failed');
     }
   };
 
@@ -1456,6 +1766,15 @@ ${JSON.stringify(proseContext)}`;
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
     if (mode === 'render') {
+      // Cancel any existing moodboard render
+      if (moodboardAbortControllerRef.current) {
+        moodboardAbortControllerRef.current.abort();
+      }
+
+      // Create new abort controller for this render
+      const abortController = new AbortController();
+      moodboardAbortControllerRef.current = abortController;
+
       // Image render call
       try {
         // Determine aspect ratio based on context
@@ -1482,7 +1801,14 @@ ${JSON.stringify(proseContext)}`;
             imageSize: '1K'
           }
         };
+
         const data = await callGeminiImage(payload);
+
+        // Check if request was aborted or component unmounted
+        if (abortController.signal.aborted || !isMountedRef.current) {
+          console.log('[Moodboard Render] Request aborted or component unmounted');
+          return false;
+        }
         const fallbackUsed = isImageModelFallbackUsed(data);
         const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
         setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
@@ -1503,6 +1829,13 @@ ${JSON.stringify(proseContext)}`;
         }
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
+
+        // Final check before setting state
+        if (abortController.signal.aborted || !isMountedRef.current) {
+          console.log('[Moodboard Render] Request aborted before setting result');
+          return false;
+        }
+
         options?.onRender?.(newUrl);
         void persistGeneration(newUrl, prompt, {
           imageModelUsed: modelUsed,
@@ -1519,10 +1852,26 @@ ${JSON.stringify(proseContext)}`;
         });
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+        // Only show error if not aborted and component is still mounted
+        if (!abortController.signal.aborted && isMountedRef.current) {
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          if (errorMessage.includes('aborted') || errorMessage.includes('cancel')) {
+            console.log('[Moodboard Render] Request was cancelled');
+          } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+            setError('Network error while generating moodboard image. Please check your connection and try again.');
+          } else {
+            setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+          }
+        }
         return false;
       } finally {
-        setStatus('idle');
+        if (isMountedRef.current && !abortController.signal.aborted) {
+          setStatus('idle');
+        }
+        // Clear the abort controller ref if this is still the current one
+        if (moodboardAbortControllerRef.current === abortController) {
+          moodboardAbortControllerRef.current = null;
+        }
       }
     }
 
@@ -1943,19 +2292,30 @@ ${JSON.stringify(proseContext)}`;
                   </button>
                 </div>
                 {flowProgress && (
-                  <div
-                    className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${
-                      flowProgress.state === 'error'
-                        ? 'border-red-200 bg-red-50 text-red-700'
-                        : flowProgress.state === 'complete'
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        : 'border-amber-200 bg-amber-50 text-amber-700'
-                    }`}
-                  >
-                    {flowProgress.state === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
-                    <span>
-                      {flowProgress.step}/{flowProgress.total} {flowProgress.label}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${
+                        flowProgress.state === 'error'
+                          ? 'border-red-200 bg-red-50 text-red-700'
+                          : flowProgress.state === 'complete'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border-amber-200 bg-amber-50 text-amber-700'
+                      }`}
+                    >
+                      {flowProgress.state === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                      <span>
+                        {flowProgress.step}/{flowProgress.total} {flowProgress.label}
+                      </span>
+                    </div>
+                    {flowProgress.state === 'error' && !isCreatingMoodboard && (
+                      <button
+                        onClick={runMoodboardFlow}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
+                      >
+                        <Loader2 className="w-3 h-3" />
+                        Retry
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1980,6 +2340,51 @@ ${JSON.stringify(proseContext)}`;
               <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                 <AlertTriangle className="w-4 h-4 mt-[2px]" />
                 <span>{briefingInvalidatedMessage}</span>
+              </div>
+            )}
+
+            {backgroundNotification && (
+              <div
+                className={`flex items-start gap-2 border p-4 text-sm animate-fadeIn ${
+                  backgroundNotification.type === 'error'
+                    ? 'border-red-200 bg-red-50 text-red-700'
+                    : backgroundNotification.type === 'warning'
+                    ? 'border-amber-200 bg-amber-50 text-amber-700'
+                    : 'border-blue-200 bg-blue-50 text-blue-700'
+                }`}
+              >
+                {backgroundNotification.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 mt-[2px]" />
+                ) : backgroundNotification.type === 'warning' ? (
+                  <AlertTriangle className="w-4 h-4 mt-[2px]" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 mt-[2px]" />
+                )}
+                <span>{backgroundNotification.message}</span>
+              </div>
+            )}
+
+            {/* Retry button for failed briefing generation */}
+            {!sustainabilityBriefing && !isBriefingLoading && board.length > 0 && error && (
+              <div className="border border-gray-200 bg-white p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-2">
+                      Sustainability Briefing Failed
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      The briefing could not be generated. You can retry or create the moodboard image only.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleRetryBriefing}
+                    disabled={isBriefingLoading}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    <Loader2 className={`w-4 h-4 ${isBriefingLoading ? 'animate-spin' : ''}`} />
+                    Retry Briefing
+                  </button>
+                </div>
               </div>
             )}
 

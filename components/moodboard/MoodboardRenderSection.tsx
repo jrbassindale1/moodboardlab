@@ -27,7 +27,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   onMoodboardEdit,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fadeIn">
       <div className="border border-gray-200 p-4 bg-white space-y-3">
         <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
           Moodboard Render
