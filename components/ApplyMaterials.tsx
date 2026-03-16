@@ -18,6 +18,33 @@ interface ApplyMaterialsProps {
   onAppliedRenderUrlChange: (url: string | null) => void;
 }
 
+type SceneControl = {
+  enabled: boolean;
+  value: number;
+};
+
+type SceneControls = {
+  weather: SceneControl;
+  activity: SceneControl;
+  timeOfDay: SceneControl;
+  season: SceneControl;
+  viewCharacter: SceneControl;
+};
+
+const WEATHER_OPTIONS = ['clear / sunny', 'soft overcast', 'heavy overcast', 'misty / moody', 'wet after rain'];
+const ACTIVITY_OPTIONS = ['empty', 'sparse', 'moderate', 'busy'];
+const TIME_OPTIONS = ['morning', 'midday', 'afternoon / evening', 'dusk', 'night'];
+const SEASON_OPTIONS = ['spring', 'summer', 'autumn', 'winter'];
+const VIEW_OPTIONS = ['clean architectural', 'lightly lived-in', 'lived-in scene', 'editorial photo', 'candid street view'];
+
+const DEFAULT_SCENE_CONTROLS: SceneControls = {
+  weather: { enabled: false, value: 0 },
+  activity: { enabled: false, value: 0 },
+  timeOfDay: { enabled: false, value: 0 },
+  season: { enabled: false, value: 0 },
+  viewCharacter: { enabled: false, value: 0 }
+};
+
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
@@ -149,6 +176,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const [editTurnCount, setEditTurnCount] = useState(0);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
+  const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
 
   // Reset edit counter only when a NEW moodboard is generated
   useEffect(() => {
@@ -189,6 +217,30 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const buildMaterialKey = () => {
     if (!renderMaterials.length) return 'No materials selected yet.';
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
+  };
+
+  const buildSceneControlsText = (controls: SceneControls): string => {
+    const parts: string[] = [];
+
+    if (controls.weather.enabled) {
+      parts.push(`weather = ${WEATHER_OPTIONS[controls.weather.value]}`);
+    }
+    if (controls.activity.enabled) {
+      parts.push(`activity level = ${ACTIVITY_OPTIONS[controls.activity.value]}`);
+    }
+    if (controls.timeOfDay.enabled) {
+      parts.push(`time of day = ${TIME_OPTIONS[controls.timeOfDay.value]}`);
+    }
+    if (controls.season.enabled) {
+      parts.push(`season = ${SEASON_OPTIONS[controls.season.value]}`);
+    }
+    if (controls.viewCharacter.enabled) {
+      parts.push(`view character = ${VIEW_OPTIONS[controls.viewCharacter.value]}`);
+    }
+
+    if (parts.length === 0) return '';
+
+    return `Scene settings: ${parts.join(', ')}.`;
   };
 
   const persistGeneration = async (
@@ -417,6 +469,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       .join('\n');
 
     const trimmedNote = renderNote.trim();
+    const sceneControlsText = buildSceneControlsText(sceneControls);
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
     const viewGuidanceInput = `${options?.editPrompt || ''}\n${trimmedNote}`.trim();
@@ -426,8 +479,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       : '- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading.';
 
     const prompt = isEditingRender
-      ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options?.editPrompt || ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
-      : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
+      ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
+      : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n- Preserve the original composition, camera angle, proportions, and spatial relationships from the input\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
     try {
       let baseImageDataUrl: string | null = options?.baseImageDataUrl ?? null;
@@ -721,6 +774,203 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
                   />
                 </div>
+
+                {/* Scene Controls Panel */}
+                <div className="space-y-3 border border-gray-200 bg-white p-3">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                    Scene Controls (Optional)
+                  </div>
+
+                  {/* Weather / Atmosphere */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="weather-enable"
+                        checked={sceneControls.weather.enabled}
+                        onChange={(e) => setSceneControls(prev => ({
+                          ...prev,
+                          weather: { ...prev.weather, enabled: e.target.checked }
+                        }))}
+                        className="h-3 w-3 border-gray-300 text-gray-900"
+                      />
+                      <label htmlFor="weather-enable" className="font-sans text-xs text-gray-700">
+                        Weather / Atmosphere
+                      </label>
+                    </div>
+                    {sceneControls.weather.enabled && (
+                      <div className="ml-5 space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          {WEATHER_OPTIONS[sceneControls.weather.value]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={WEATHER_OPTIONS.length - 1}
+                          step="1"
+                          value={sceneControls.weather.value}
+                          onChange={(e) => setSceneControls(prev => ({
+                            ...prev,
+                            weather: { ...prev.weather, value: parseInt(e.target.value) }
+                          }))}
+                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Activity Level */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="activity-enable"
+                        checked={sceneControls.activity.enabled}
+                        onChange={(e) => setSceneControls(prev => ({
+                          ...prev,
+                          activity: { ...prev.activity, enabled: e.target.checked }
+                        }))}
+                        className="h-3 w-3 border-gray-300 text-gray-900"
+                      />
+                      <label htmlFor="activity-enable" className="font-sans text-xs text-gray-700">
+                        Activity Level
+                      </label>
+                    </div>
+                    {sceneControls.activity.enabled && (
+                      <div className="ml-5 space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          {ACTIVITY_OPTIONS[sceneControls.activity.value]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={ACTIVITY_OPTIONS.length - 1}
+                          step="1"
+                          value={sceneControls.activity.value}
+                          onChange={(e) => setSceneControls(prev => ({
+                            ...prev,
+                            activity: { ...prev.activity, value: parseInt(e.target.value) }
+                          }))}
+                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Time of Day */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="time-enable"
+                        checked={sceneControls.timeOfDay.enabled}
+                        onChange={(e) => setSceneControls(prev => ({
+                          ...prev,
+                          timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
+                        }))}
+                        className="h-3 w-3 border-gray-300 text-gray-900"
+                      />
+                      <label htmlFor="time-enable" className="font-sans text-xs text-gray-700">
+                        Time of Day
+                      </label>
+                    </div>
+                    {sceneControls.timeOfDay.enabled && (
+                      <div className="ml-5 space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          {TIME_OPTIONS[sceneControls.timeOfDay.value]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={TIME_OPTIONS.length - 1}
+                          step="1"
+                          value={sceneControls.timeOfDay.value}
+                          onChange={(e) => setSceneControls(prev => ({
+                            ...prev,
+                            timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
+                          }))}
+                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Season */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="season-enable"
+                        checked={sceneControls.season.enabled}
+                        onChange={(e) => setSceneControls(prev => ({
+                          ...prev,
+                          season: { ...prev.season, enabled: e.target.checked }
+                        }))}
+                        className="h-3 w-3 border-gray-300 text-gray-900"
+                      />
+                      <label htmlFor="season-enable" className="font-sans text-xs text-gray-700">
+                        Season
+                      </label>
+                    </div>
+                    {sceneControls.season.enabled && (
+                      <div className="ml-5 space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          {SEASON_OPTIONS[sceneControls.season.value]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={SEASON_OPTIONS.length - 1}
+                          step="1"
+                          value={sceneControls.season.value}
+                          onChange={(e) => setSceneControls(prev => ({
+                            ...prev,
+                            season: { ...prev.season, value: parseInt(e.target.value) }
+                          }))}
+                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* View Character */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="view-enable"
+                        checked={sceneControls.viewCharacter.enabled}
+                        onChange={(e) => setSceneControls(prev => ({
+                          ...prev,
+                          viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
+                        }))}
+                        className="h-3 w-3 border-gray-300 text-gray-900"
+                      />
+                      <label htmlFor="view-enable" className="font-sans text-xs text-gray-700">
+                        View Character
+                      </label>
+                    </div>
+                    {sceneControls.viewCharacter.enabled && (
+                      <div className="ml-5 space-y-1">
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                          {VIEW_OPTIONS[sceneControls.viewCharacter.value]}
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max={VIEW_OPTIONS.length - 1}
+                          step="1"
+                          value={sceneControls.viewCharacter.value}
+                          onChange={(e) => setSceneControls(prev => ({
+                            ...prev,
+                            viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
+                          }))}
+                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {uploadedImages.length > 0 && (
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -796,6 +1046,214 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
                       className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
                     />
+
+                    {/* Scene Controls Panel for Edits */}
+                    <div className="space-y-3 border border-gray-200 bg-white p-3">
+                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
+                        Scene Controls (Optional)
+                      </div>
+
+                      {/* Weather / Atmosphere */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="weather-enable-edit"
+                            checked={sceneControls.weather.enabled}
+                            onChange={(e) => setSceneControls(prev => ({
+                              ...prev,
+                              weather: { ...prev.weather, enabled: e.target.checked }
+                            }))}
+                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
+                          />
+                          <label htmlFor="weather-enable-edit" className="font-sans text-xs text-gray-700">
+                            Weather / Atmosphere
+                          </label>
+                        </div>
+                        {sceneControls.weather.enabled && (
+                          <div className="ml-5 space-y-1">
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {WEATHER_OPTIONS[sceneControls.weather.value]}
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={WEATHER_OPTIONS.length - 1}
+                              step="1"
+                              value={sceneControls.weather.value}
+                              onChange={(e) => setSceneControls(prev => ({
+                                ...prev,
+                                weather: { ...prev.weather, value: parseInt(e.target.value) }
+                              }))}
+                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Activity Level */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="activity-enable-edit"
+                            checked={sceneControls.activity.enabled}
+                            onChange={(e) => setSceneControls(prev => ({
+                              ...prev,
+                              activity: { ...prev.activity, enabled: e.target.checked }
+                            }))}
+                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
+                          />
+                          <label htmlFor="activity-enable-edit" className="font-sans text-xs text-gray-700">
+                            Activity Level
+                          </label>
+                        </div>
+                        {sceneControls.activity.enabled && (
+                          <div className="ml-5 space-y-1">
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {ACTIVITY_OPTIONS[sceneControls.activity.value]}
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={ACTIVITY_OPTIONS.length - 1}
+                              step="1"
+                              value={sceneControls.activity.value}
+                              onChange={(e) => setSceneControls(prev => ({
+                                ...prev,
+                                activity: { ...prev.activity, value: parseInt(e.target.value) }
+                              }))}
+                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Time of Day */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="time-enable-edit"
+                            checked={sceneControls.timeOfDay.enabled}
+                            onChange={(e) => setSceneControls(prev => ({
+                              ...prev,
+                              timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
+                            }))}
+                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
+                          />
+                          <label htmlFor="time-enable-edit" className="font-sans text-xs text-gray-700">
+                            Time of Day
+                          </label>
+                        </div>
+                        {sceneControls.timeOfDay.enabled && (
+                          <div className="ml-5 space-y-1">
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {TIME_OPTIONS[sceneControls.timeOfDay.value]}
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={TIME_OPTIONS.length - 1}
+                              step="1"
+                              value={sceneControls.timeOfDay.value}
+                              onChange={(e) => setSceneControls(prev => ({
+                                ...prev,
+                                timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
+                              }))}
+                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Season */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="season-enable-edit"
+                            checked={sceneControls.season.enabled}
+                            onChange={(e) => setSceneControls(prev => ({
+                              ...prev,
+                              season: { ...prev.season, enabled: e.target.checked }
+                            }))}
+                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
+                          />
+                          <label htmlFor="season-enable-edit" className="font-sans text-xs text-gray-700">
+                            Season
+                          </label>
+                        </div>
+                        {sceneControls.season.enabled && (
+                          <div className="ml-5 space-y-1">
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {SEASON_OPTIONS[sceneControls.season.value]}
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={SEASON_OPTIONS.length - 1}
+                              step="1"
+                              value={sceneControls.season.value}
+                              onChange={(e) => setSceneControls(prev => ({
+                                ...prev,
+                                season: { ...prev.season, value: parseInt(e.target.value) }
+                              }))}
+                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* View Character */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="view-enable-edit"
+                            checked={sceneControls.viewCharacter.enabled}
+                            onChange={(e) => setSceneControls(prev => ({
+                              ...prev,
+                              viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
+                            }))}
+                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
+                          />
+                          <label htmlFor="view-enable-edit" className="font-sans text-xs text-gray-700">
+                            View Character
+                          </label>
+                        </div>
+                        {sceneControls.viewCharacter.enabled && (
+                          <div className="ml-5 space-y-1">
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {VIEW_OPTIONS[sceneControls.viewCharacter.value]}
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={VIEW_OPTIONS.length - 1}
+                              step="1"
+                              value={sceneControls.viewCharacter.value}
+                              onChange={(e) => setSceneControls(prev => ({
+                                ...prev,
+                                viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
+                              }))}
+                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <button
                       onClick={handleAppliedEdit}
                       disabled={status !== 'idle' || !appliedRenderUrl || editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
