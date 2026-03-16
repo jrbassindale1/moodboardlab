@@ -178,10 +178,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const prevMoodboardRef = useRef(moodboardRenderUrl);
   const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
 
-  // Reset edit counter only when a NEW moodboard is generated
+  // Reset edit counter and scene controls only when a NEW moodboard is generated
   useEffect(() => {
     if (moodboardRenderUrl && moodboardRenderUrl !== prevMoodboardRef.current) {
       setEditTurnCount(0);
+      setSceneControls(DEFAULT_SCENE_CONTROLS);
       prevMoodboardRef.current = moodboardRenderUrl;
     }
   }, [moodboardRenderUrl]);
@@ -552,6 +553,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       if (!img) throw new Error('Gemini did not return an image payload.');
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
       onAppliedRenderUrlChange(newUrl);
+
+      // Reset scene controls after successful render
+      setSceneControls(DEFAULT_SCENE_CONTROLS);
 
       // Track apply materials generation in Google Analytics
       const eventLabel = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
