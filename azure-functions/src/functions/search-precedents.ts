@@ -21,6 +21,7 @@ const GEMINI_TEXT_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 const RESULTS_PER_QUERY = 10;
+const MAX_QUERIES = 6;
 const MAX_CANDIDATES_FOR_LLM = 15;
 const FINAL_RESULTS_COUNT = 3;
 const METADATA_FETCH_TIMEOUT_MS = 8000;
@@ -277,46 +278,46 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
 
 function generateSearchQueries(brief: MaterialsBrief): string[] {
   const queries: string[] = [];
-  const sites =
+  const publicationSites =
     'site:archdaily.com OR site:dezeen.com OR site:architizer.com OR site:designboom.com OR site:divisare.com';
 
-  // Query 1: Primary material types + architecture
+  // Query 1: Primary material types + architecture (publication sites)
   if (brief.materialTypes.length > 0) {
     const types = brief.materialTypes.slice(0, 2).join(' ');
-    queries.push(`${types} architecture project ${sites}`);
+    queries.push(`${types} architecture project ${publicationSites}`);
   }
 
-  // Query 2: Special keywords (CLT, terrazzo, corten, etc.)
+  // Query 2: Special keywords (CLT, terrazzo, corten, etc.) (publication sites)
   if (brief.keywords.length > 0) {
     const keyword = brief.keywords[0];
-    queries.push(`${keyword} architecture house ${sites}`);
+    queries.push(`${keyword} architecture building ${publicationSites}`);
   }
 
-  // Query 3: Material + finish combination
+  // Query 3: Architect websites - materials + "architects" or "studio"
+  if (brief.materialTypes.length > 0) {
+    const types = brief.materialTypes.slice(0, 2).join(' ');
+    queries.push(`${types} architecture project architects studio`);
+  }
+
+  // Query 4: Material + finish combination (open search for architect sites)
   if (brief.materialTypes.length > 0 && brief.finishes.length > 0) {
     const type = brief.materialTypes[0];
     const finish = brief.finishes[0];
-    queries.push(`${finish} ${type} building ${sites}`);
+    queries.push(`${finish} ${type} building design architect`);
   }
 
-  // Query 4: Second keyword if available
-  if (brief.keywords.length > 1) {
-    const keyword = brief.keywords[1];
-    queries.push(`${keyword} building architecture ${sites}`);
-  }
-
-  // Query 5: Material combination
+  // Query 5: Material combination (publication sites)
   if (brief.materialTypes.length >= 2) {
     const combo = brief.materialTypes.slice(0, 2).join(' and ');
-    queries.push(`${combo} architecture ${sites}`);
+    queries.push(`${combo} architecture ${publicationSites}`);
   }
 
   // Ensure at least 3 queries
   if (queries.length < 3 && brief.materialTypes.length > 0) {
-    queries.push(`${brief.materialTypes[0]} facade design ${sites}`);
+    queries.push(`${brief.materialTypes[0]} facade design architecture`);
   }
 
-  return queries.slice(0, 5);
+  return queries.slice(0, MAX_QUERIES);
 }
 
 // =============================================================================
@@ -492,6 +493,23 @@ async function selectBestPrecedentsWithLLM(
 // Step 7: Fetch Page Metadata
 // =============================================================================
 
+// Known logo/generic images to filter out
+const LOGO_PATTERNS = [
+  /logo/i,
+  /dezeen-logo/i,
+  /dezeen-sq/i,
+  /archdaily-logo/i,
+  /designboom-logo/i,
+  /default-image/i,
+  /placeholder/i,
+  /avatar/i,
+  /icon/i,
+];
+
+function isLikelyLogo(imageUrl: string): boolean {
+  return LOGO_PATTERNS.some((pattern) => pattern.test(imageUrl));
+}
+
 async function fetchPageMetadata(url: string): Promise<PageMetadata> {
   try {
     const controller = new AbortController();
@@ -513,11 +531,47 @@ async function fetchPageMetadata(url: string): Promise<PageMetadata> {
 
     const html = await response.text();
 
-    // Extract og:image
+    // Try multiple image sources in priority order
+    const imageCandidates: (string | null)[] = [];
+
+    // 1. og:image
     const ogImageMatch =
       html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-    const ogImage = ogImageMatch?.[1] || null;
+    if (ogImageMatch?.[1]) imageCandidates.push(ogImageMatch[1]);
+
+    // 2. twitter:image
+    const twitterImageMatch =
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+    if (twitterImageMatch?.[1]) imageCandidates.push(twitterImageMatch[1]);
+
+    // 3. article:image
+    const articleImageMatch =
+      html.match(/<meta[^>]+property=["']article:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']article:image["']/i);
+    if (articleImageMatch?.[1]) imageCandidates.push(articleImageMatch[1]);
+
+    // 4. First large image in content (for sites like Dezeen)
+    // Look for <img> tags with width/height attributes > 400px or in article/main content
+    const contentImgMatch = html.match(
+      /<(?:article|main|div[^>]*class=["'][^"']*(?:content|article|post|entry)[^"']*["'])[^>]*>[\s\S]{0,3000}?<img[^>]+src=["']([^"']+)["']/i
+    );
+    if (contentImgMatch?.[1]) imageCandidates.push(contentImgMatch[1]);
+
+    // Select first non-logo image
+    let ogImage: string | null = null;
+    for (const candidate of imageCandidates) {
+      if (candidate && !isLikelyLogo(candidate)) {
+        ogImage = candidate;
+        break;
+      }
+    }
+
+    // If all images look like logos, use the first one anyway
+    if (!ogImage && imageCandidates.length > 0 && imageCandidates[0]) {
+      ogImage = imageCandidates[0];
+    }
 
     // Extract og:title
     const ogTitleMatch =
