@@ -407,7 +407,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('All materials are excluded from the render. Uncheck at least one material.');
       return false;
     }
-    const isEditingRender = Boolean(options?.editPrompt && options?.baseImageDataUrl);
+    const isEditingRender = Boolean(options?.baseImageDataUrl && options?.renderMode === 'edit');
     if (!isEditingRender && uploadedImages.length === 0) {
       setError('Upload at least one base image first.');
       return false;
