@@ -7,6 +7,7 @@ import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { formatFinishForDisplay } from '../utils/materialDisplay';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
+import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
 import UsageDisplay from './UsageDisplay';
 
 interface ApplyMaterialsProps {
@@ -67,43 +68,16 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-const loadImage = (src: string) =>
+const loadImage = (src: string, useCrossOrigin = true) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (useCrossOrigin) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => resolve(img);
     img.onerror = reject;
     img.src = src;
   });
-
-const resolveImageSourceToDataUrl = async (source: string): Promise<string> => {
-  if (!source) throw new Error('Missing base image source.');
-  if (isDataUri(source)) return source;
-
-  // Use canvas-based approach to handle CORS better
-  try {
-    const img = await loadImage(source);
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas not supported');
-    ctx.drawImage(img, 0, 0);
-    return canvas.toDataURL('image/png');
-  } catch (err) {
-    // Fallback to fetch approach
-    try {
-      const response = await fetch(source);
-      if (!response.ok) {
-        throw new Error(`Could not load base image (status ${response.status}).`);
-      }
-      const blob = await response.blob();
-      return blobToDataUrl(blob);
-    } catch (fetchErr) {
-      throw new Error('Could not load the base image. The image URL may have expired or CORS is blocking access.');
-    }
-  }
-};
 
 const downscaleImage = (
   dataUrl: string,

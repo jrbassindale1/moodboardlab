@@ -20,6 +20,7 @@ import type {
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 import { trackPageView } from './utils/analytics';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
+import { resolveImageSourceToDataUrl } from './utils/imageUtils';
 
 const BRIEFING_CACHE_KEY = 'moodboard_sustainability_briefing_v1';
 const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
@@ -212,7 +213,7 @@ const App: React.FC = () => {
     };
   }, [isHelpOpen]);
 
-  const handleRestoreGeneration = ({
+  const handleRestoreGeneration = async ({
     targetPage,
     board,
     generationImageUrl,
@@ -256,7 +257,16 @@ const App: React.FC = () => {
     }
 
     if (generationImageUrl && (sourceType === 'applyMaterials' || sourceType === 'upscale')) {
-      setAppliedRenderUrl(generationImageUrl);
+      // Convert to data URI eagerly to ensure the image is available for editing
+      // This prevents "Load failed" errors when the URL expires
+      try {
+        const dataUri = await resolveImageSourceToDataUrl(generationImageUrl);
+        setAppliedRenderUrl(dataUri);
+      } catch (err) {
+        console.warn('Failed to convert restored image to data URI:', err);
+        // Fallback to using the original URL
+        setAppliedRenderUrl(generationImageUrl);
+      }
     }
     // Restore the accompanying moodboard URL if available
     if (restoredMoodboardUrl) {
