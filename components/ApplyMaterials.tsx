@@ -50,8 +50,6 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
-const MAX_EDIT_TURNS = 6;
-
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -174,14 +172,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
-  const [editTurnCount, setEditTurnCount] = useState(0);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
   const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
 
-  // Reset edit counter and scene controls only when a NEW moodboard is generated
+  // Reset scene controls only when a NEW moodboard is generated
   useEffect(() => {
     if (moodboardRenderUrl && moodboardRenderUrl !== prevMoodboardRef.current) {
-      setEditTurnCount(0);
       setSceneControls(DEFAULT_SCENE_CONTROLS);
       prevMoodboardRef.current = moodboardRenderUrl;
     }
@@ -598,17 +594,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('Add text instructions or enable scene controls to update the applied render.');
       return;
     }
-    if (editTurnCount >= MAX_EDIT_TURNS) {
-      setError(`Edit limit reached (${MAX_EDIT_TURNS} edits). Generate a new moodboard to get more edits.`);
-      return;
-    }
     const wasUpdated = await runApplyRender({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
       renderMode: 'edit'
     });
     if (wasUpdated) {
-      setEditTurnCount((prev) => prev + 1);
       setAppliedEditPrompt('');
     }
   };
@@ -1024,27 +1015,17 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                        Edit applied render (multi-turn)
-                      </div>
-                      <div className={`font-mono text-[11px] uppercase tracking-widest ${editTurnCount >= MAX_EDIT_TURNS ? 'text-red-500' : 'text-gray-500'}`}>
-                        {MAX_EDIT_TURNS - editTurnCount} edit{MAX_EDIT_TURNS - editTurnCount !== 1 ? 's' : ''} remaining
-                      </div>
+                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
+                      Edit applied render (multi-turn)
                     </div>
                     <p className="font-sans text-sm text-gray-700">
                       Use text instructions or scene controls to refine this render without losing the palette application.
                     </p>
-                    {editTurnCount >= MAX_EDIT_TURNS && (
-                      <div className="bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-700">
-                        Edit limit reached. Generate a new moodboard to get more edits.
-                      </div>
-                    )}
                     <textarea
                       value={appliedEditPrompt}
                       onChange={(e) => setAppliedEditPrompt(e.target.value)}
                       placeholder="E.g., add people walking, change to evening atmosphere, include more vegetation and street furniture."
-                      disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                      disabled={!canGenerate}
                       className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
                     />
 
@@ -1065,7 +1046,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               weather: { ...prev.weather, enabled: e.target.checked }
                             }))}
-                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            disabled={!canGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="weather-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1087,7 +1068,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 weather: { ...prev.weather, value: parseInt(e.target.value) }
                               }))}
-                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              disabled={!canGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1105,7 +1086,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               activity: { ...prev.activity, enabled: e.target.checked }
                             }))}
-                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            disabled={!canGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="activity-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1127,7 +1108,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 activity: { ...prev.activity, value: parseInt(e.target.value) }
                               }))}
-                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              disabled={!canGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1145,7 +1126,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
                             }))}
-                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            disabled={!canGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="time-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1167,7 +1148,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
                               }))}
-                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              disabled={!canGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1185,7 +1166,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               season: { ...prev.season, enabled: e.target.checked }
                             }))}
-                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            disabled={!canGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="season-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1207,7 +1188,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 season: { ...prev.season, value: parseInt(e.target.value) }
                               }))}
-                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              disabled={!canGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1225,7 +1206,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
                             }))}
-                            disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                            disabled={!canGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="view-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1247,7 +1228,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
                               }))}
-                              disabled={editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                              disabled={!canGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1257,7 +1238,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
                     <button
                       onClick={handleAppliedEdit}
-                      disabled={status !== 'idle' || !appliedRenderUrl || editTurnCount >= MAX_EDIT_TURNS || !canGenerate}
+                      disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
                       className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                     >
                       {status === 'render' && renderingMode === 'edit' ? (
