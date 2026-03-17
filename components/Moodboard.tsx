@@ -1331,10 +1331,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Generate a moodboard render first.');
       return;
     }
-    if (!trimmed) {
-      setError('Add text instructions to update the moodboard render.');
-      return;
-    }
     const canGenerate = await ensureQuotaForMoodboard();
     if (!canGenerate || !isMountedRef.current) return;
 
@@ -1345,6 +1341,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
         baseImageDataUrl: moodboardRenderUrl,
         editPrompt: trimmed
       });
+      if (isMountedRef.current) {
+        setMoodboardEditPrompt('');
+      }
     } finally {
       if (isMountedRef.current) {
         setIsCreatingMoodboard(false);

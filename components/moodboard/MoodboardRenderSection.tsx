@@ -87,7 +87,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
         <textarea
           value={moodboardEditPrompt}
           onChange={(e) => setMoodboardEditPrompt(e.target.value)}
-          placeholder="E.g., keep this composition but make it a street-level exterior in overcast daylight."
+          placeholder="E.g., add people walking through the scene, change to dusk lighting with warm atmosphere, include plants and greenery."
           className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
         />
         <button
