@@ -67,16 +67,42 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+
 const resolveImageSourceToDataUrl = async (source: string): Promise<string> => {
   if (!source) throw new Error('Missing base image source.');
   if (isDataUri(source)) return source;
 
-  const response = await fetch(source);
-  if (!response.ok) {
-    throw new Error(`Could not load base image (status ${response.status}).`);
+  // Use canvas-based approach to handle CORS better
+  try {
+    const img = await loadImage(source);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not supported');
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL('image/png');
+  } catch (err) {
+    // Fallback to fetch approach
+    try {
+      const response = await fetch(source);
+      if (!response.ok) {
+        throw new Error(`Could not load base image (status ${response.status}).`);
+      }
+      const blob = await response.blob();
+      return blobToDataUrl(blob);
+    } catch (fetchErr) {
+      throw new Error('Could not load the base image. The image URL may have expired or CORS is blocking access.');
+    }
   }
-  const blob = await response.blob();
-  return blobToDataUrl(blob);
 };
 
 const downscaleImage = (
@@ -298,15 +324,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
-  const loadImage = (src: string) =>
-    new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
-    });
-
   const inferAspectRatioFromDataUrl = async (dataUrl: string): Promise<string | null> => {
     try {
       const image = await loadImage(dataUrl);
@@ -480,7 +497,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       : '- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading.';
 
     const prompt = isEditingRender
-      ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO EXISTING GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the previous render\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the previous render\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the previous render - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the previous render\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the previous render - only atmosphere, materials, lighting, entourage (people, vegetation, furniture) and surface finishes should change based on the new instruction\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
+      ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nGEOMETRY & ENVIRONMENT PRESERVATION - ABSOLUTELY CRITICAL:\n- STRICT ADHERENCE TO EXISTING GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the previous render\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the previous render\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the previous render - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the previous render\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- PRESERVE LANDSCAPE & ENVIRONMENT: The terrain, topography, water bodies (lakes, rivers, oceans), ground plane, site context, and natural features MUST remain EXACTLY as shown in the previous render - do NOT change from waterfront to hillside, do NOT add or remove water, do NOT alter the landscape type or terrain\n- PRESERVE HARDSCAPE & SITE ELEMENTS: Paths, decking, boardwalks, paving, retaining walls, and all site infrastructure must remain exactly as shown\n- NO ENVIRONMENT DRIFT: If the previous render shows water, KEEP the water. If it shows hills, KEEP the hills. If it shows flat terrain, KEEP flat terrain. The landscape type is FIXED and must not change\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the previous render - only atmosphere (sky, clouds, lighting conditions), materials, lighting quality, entourage (people, vegetation density/type within the existing landscape), and surface finishes should change based on the new instruction\n- WEATHER/ATMOSPHERE CHANGES ONLY: Scene control adjustments (weather, time of day, season) should ONLY affect atmospheric conditions (sky, clouds, light quality, shadows) and NOT change the fundamental landscape, terrain, or site context\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
       : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
     try {
