@@ -4,7 +4,7 @@ import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../a
 import { getGenerations, PrecedentResult } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
-import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 interface Generation {
@@ -313,6 +313,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
 
   // State for expanded projects
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+
+  // State for recent generations section (starts closed)
+  const [recentGenExpanded, setRecentGenExpanded] = useState(false);
+
+  // All generations sorted by date (newest first)
+  const allGenerationsSorted = useMemo(() => {
+    const items = isPreviewMode ? previewDisplayItems : displayItems;
+    return [...items].sort((a, b) => toTimestamp(b.gen.createdAt) - toTimestamp(a.gen.createdAt));
+  }, [isPreviewMode, previewDisplayItems, displayItems]);
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
@@ -669,6 +678,127 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {/* Recent Generations (collapsible, starts closed) */}
+              {allGenerationsSorted.length > 0 && (
+                <div className="border border-gray-200 overflow-hidden mb-8">
+                  <button
+                    onClick={() => setRecentGenExpanded(!recentGenExpanded)}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-display text-lg font-bold">
+                        Recent Generations
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {allGenerationsSorted.length} {allGenerationsSorted.length === 1 ? 'item' : 'items'} in chronological order
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {recentGenExpanded ? (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                  </button>
+
+                  {recentGenExpanded && (
+                    <div className="border-t border-gray-200 bg-gray-50 p-4">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {allGenerationsSorted.map(({ gen, attachments }) => {
+                          const targetPage =
+                            gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+                          const restoreLabel =
+                            gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                          const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
+                          const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+                          const project = extractProjectFromMaterials(gen.materials);
+
+                          return (
+                            <div
+                              key={gen.id}
+                              className="border border-gray-200 bg-white overflow-hidden group hover:border-black transition-colors"
+                            >
+                              {gen.blobUrl ? (
+                                <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                                  <img
+                                    src={gen.blobUrl}
+                                    alt={gen.type}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    loading="lazy"
+                                  />
+                                  <a
+                                    href={gen.blobUrl}
+                                    download
+                                    className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
+                                    aria-label="Download image"
+                                  >
+                                    <Download className="w-3.5 h-3.5" />
+                                  </a>
+                                </div>
+                              ) : (
+                                <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                                  <Image className="w-10 h-10 text-gray-300" />
+                                </div>
+                              )}
+                              <div className="p-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-mono text-[9px] uppercase tracking-widest text-gray-500 bg-gray-100 px-1.5 py-0.5">
+                                    {typeLabels[gen.type] || gen.type}
+                                  </span>
+                                  <span className="text-gray-400 text-[10px]">
+                                    {new Date(gen.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                {project && (
+                                  <p className="text-[10px] text-gray-500 truncate mb-2">
+                                    {project.name}
+                                  </p>
+                                )}
+                                {attachments.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mb-2">
+                                    {attachments.map((pdf) => {
+                                      const rawUrl = pdf.blobUrl || '';
+                                      const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
+                                      return rawUrl ? (
+                                        <a
+                                          key={pdf.id}
+                                          href={rawUrl}
+                                          download
+                                          className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
+                                            isMaterialsSheet
+                                              ? 'text-emerald-700 bg-emerald-100'
+                                              : 'text-green-700 bg-green-100'
+                                          }`}
+                                        >
+                                          <Download className="w-3 h-3" />
+                                          {isMaterialsSheet ? 'Sheet' : 'Briefing'}
+                                        </a>
+                                      ) : null;
+                                    })}
+                                  </div>
+                                )}
+                                {restoreLabel && canRestore && (
+                                  <button
+                                    onClick={() => handleRestoreGeneration(gen)}
+                                    className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                  >
+                                    {restoreLabel}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
