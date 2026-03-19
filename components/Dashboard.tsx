@@ -183,20 +183,41 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
   const previewDisplayItems = useMemo(() => {
     if (!isPreviewMode) return [];
     const now = Date.now();
+    const previewProjectId = 'preview-project-1';
+    const previewProjectName = 'Moodboard 19 Mar 2026';
     const previewGenerations: Generation[] = [
       {
         id: 'preview-moodboard-1',
         type: 'moodboard',
         createdAt: new Date(now - 5 * 60 * 1000).toISOString(),
         prompt: 'Preview moodboard generation',
-        materials: { board: PREVIEW_SAMPLE_BOARD },
+        materials: {
+          board: PREVIEW_SAMPLE_BOARD,
+          projectId: previewProjectId,
+          projectName: previewProjectName,
+        },
       },
       {
         id: 'preview-apply-1',
         type: 'applyMaterials',
         createdAt: new Date(now - 12 * 60 * 1000).toISOString(),
         prompt: 'Preview apply generation',
-        materials: { board: PREVIEW_SAMPLE_BOARD },
+        materials: {
+          board: PREVIEW_SAMPLE_BOARD,
+          projectId: previewProjectId,
+          projectName: previewProjectName,
+        },
+      },
+      {
+        id: 'preview-apply-2',
+        type: 'applyMaterials',
+        createdAt: new Date(now - 20 * 60 * 1000).toISOString(),
+        prompt: 'Another preview apply generation',
+        materials: {
+          board: PREVIEW_SAMPLE_BOARD,
+          projectId: previewProjectId,
+          projectName: previewProjectName,
+        },
       },
     ];
 
@@ -248,8 +269,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
   const projectGroups = useMemo(() => {
     const groups = new Map<string, ProjectGroup>();
     const ungrouped: Array<{ gen: Generation; attachments: Generation[] }> = [];
+    const itemsToGroup = isPreviewMode ? previewDisplayItems : displayItems;
 
-    for (const item of displayItems) {
+    for (const item of itemsToGroup) {
       const project = extractProjectFromMaterials(item.gen.materials);
 
       if (project) {
@@ -286,7 +308,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
     });
 
     return { projects: sortedGroups, ungrouped };
-  }, [displayItems]);
+  }, [displayItems, isPreviewMode, previewDisplayItems]);
 
   // State for expanded projects
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
