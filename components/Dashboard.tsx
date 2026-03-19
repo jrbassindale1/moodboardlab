@@ -701,10 +701,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="font-display text-lg font-bold">
-                        Recent Generations
+                        Other Generations
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'} from before projects
+                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'}
                       </p>
                     </div>
                     <div className="flex-shrink-0">
