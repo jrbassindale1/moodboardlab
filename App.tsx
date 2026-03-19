@@ -70,6 +70,52 @@ const formatProjectDate = (): string => {
   return `${day} ${month} ${year}`;
 };
 
+const PROJECT_COUNTER_KEY = 'moodboard_project_counter_v1';
+
+type ProjectCounter = {
+  date: string; // YYYY-MM-DD format
+  count: number;
+};
+
+const getTodayDateKey = (): string => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+const getNextProjectNumber = (): number => {
+  if (typeof window === 'undefined') return 1;
+
+  const todayKey = getTodayDateKey();
+
+  try {
+    const raw = window.localStorage.getItem(PROJECT_COUNTER_KEY);
+    if (raw) {
+      const counter = JSON.parse(raw) as ProjectCounter;
+      if (counter.date === todayKey) {
+        // Same day, increment counter
+        const newCount = counter.count + 1;
+        window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: newCount }));
+        return newCount;
+      }
+    }
+    // New day or no counter, start at 1
+    window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: 1 }));
+    return 1;
+  } catch {
+    return 1;
+  }
+};
+
+const formatProjectName = (): string => {
+  const dateStr = formatProjectDate();
+  const projectNumber = getNextProjectNumber();
+
+  if (projectNumber === 1) {
+    return `Moodboard ${dateStr}`;
+  }
+  return `Moodboard ${dateStr} (${projectNumber})`;
+};
+
 const readProjectCache = (): Project | null => {
   if (typeof window === 'undefined') return null;
   try {
@@ -234,7 +280,7 @@ const App: React.FC = () => {
   const createNewProject = (): Project => {
     const project: Project = {
       id: generateProjectId(),
-      name: `Moodboard ${formatProjectDate()}`,
+      name: formatProjectName(),
       createdAt: new Date().toISOString(),
     };
     setCurrentProject(project);
