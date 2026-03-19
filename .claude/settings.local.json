@@ -33,7 +33,12 @@
       "Bash(bash:*)",
       "Bash(git add:*)",
       "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")",
-      "Bash(npm run sync:functions:*)"
+      "Bash(npm run sync:functions:*)",
+      "Bash(/usr/local/bin/npm run build)",
+      "Bash(/opt/homebrew/bin/npm run build)",
+      "Bash(pnpm run build:*)",
+      "Bash(source ~/.zshrc)",
+      "Bash(source ~/.bashrc)"
     ]
   }
 }

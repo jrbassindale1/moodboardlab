@@ -269,8 +269,12 @@ const App: React.FC = () => {
       }
     }
     // Restore the accompanying moodboard URL if available
+    console.log('=== RESTORE FROM DASHBOARD ===');
+    console.log('restoredMoodboardUrl:', restoredMoodboardUrl ? `${restoredMoodboardUrl.substring(0, 100)}...` : 'null');
     if (restoredMoodboardUrl) {
       setMoodboardRenderUrl(restoredMoodboardUrl);
+    } else {
+      console.warn('No moodboardRenderUrl found in saved render metadata');
     }
     setCurrentPage('apply');
   };

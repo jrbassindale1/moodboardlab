@@ -289,6 +289,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
     const moodboardRenderUrl = materials?.moodboardRenderUrl as string | undefined;
     const savedPrecedents = materials?.savedPrecedents as PrecedentResult[] | undefined;
 
+    console.log('=== DASHBOARD RESTORE ===');
+    console.log('Generation type:', gen.type);
+    console.log('Materials keys:', materials ? Object.keys(materials) : 'no materials');
+    console.log('moodboardRenderUrl present:', !!moodboardRenderUrl);
+    console.log('moodboardRenderUrl preview:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
+
     onRestoreGeneration({
       targetPage,
       board,
