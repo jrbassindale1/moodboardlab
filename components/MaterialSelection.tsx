@@ -15,6 +15,7 @@ interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
   board: MaterialOption[];
   onBoardChange: (items: MaterialOption[]) => void;
+  onStartNewProject?: () => void;
 }
 
 type CustomMaterialMode = 'upload' | 'describe' | 'analyse' | null;
@@ -91,7 +92,7 @@ const downscaleImage = (
     img.src = dataUrl;
   });
 
-const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange }) => {
+const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange, onStartNewProject }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
   const boardRef = useRef<MaterialOption[]>(board);
@@ -134,6 +135,8 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const handleClearAllMaterials = () => {
     onBoardChange([]);
     setShowClearConfirmation(false);
+    // Reset project so next moodboard starts a new project
+    onStartNewProject?.();
   };
 
   const PAINTED_FINISH_RE = /(paint|powder|ral|pvdf|polyester)/i;

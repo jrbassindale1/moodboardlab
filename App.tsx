@@ -532,6 +532,7 @@ const App: React.FC = () => {
             onNavigate={setCurrentPage}
             board={selectedMaterials}
             onBoardChange={setSelectedMaterials}
+            onStartNewProject={startNewProject}
           />
         );
       case 'moodboard':
