@@ -189,6 +189,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       {
         id: 'preview-moodboard-1',
         type: 'moodboard',
+        blobUrl: 'https://placehold.co/400x400/e5e5e5/9ca3af?text=Moodboard',
         createdAt: new Date(now - 5 * 60 * 1000).toISOString(),
         prompt: 'Preview moodboard generation',
         materials: {
