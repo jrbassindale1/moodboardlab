@@ -39,7 +39,8 @@
       "Bash(pnpm run build:*)",
       "Bash(source ~/.zshrc)",
       "Bash(source ~/.bashrc)",
-      "Bash(./node_modules/.bin/tsc:*)"
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(/opt/homebrew/bin/npx tsc --noEmit)"
     ]
   }
 }

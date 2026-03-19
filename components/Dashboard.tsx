@@ -186,6 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
     const previewProjectId = 'preview-project-1';
     const previewProjectName = 'Moodboard 19 Mar 2026';
     const previewGenerations: Generation[] = [
+      // New project-based generations
       {
         id: 'preview-moodboard-1',
         type: 'moodboard',
@@ -201,6 +202,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       {
         id: 'preview-apply-1',
         type: 'applyMaterials',
+        blobUrl: 'https://placehold.co/400x400/d4d4d4/737373?text=Applied',
         createdAt: new Date(now - 12 * 60 * 1000).toISOString(),
         prompt: 'Preview apply generation',
         materials: {
@@ -209,15 +211,27 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
           projectName: previewProjectName,
         },
       },
+      // Legacy generations without projectId (will appear in Recent Generations)
       {
-        id: 'preview-apply-2',
-        type: 'applyMaterials',
-        createdAt: new Date(now - 20 * 60 * 1000).toISOString(),
-        prompt: 'Another preview apply generation',
+        id: 'preview-legacy-1',
+        type: 'moodboard',
+        blobUrl: 'https://placehold.co/400x400/fef3c7/d97706?text=Legacy+1',
+        createdAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        prompt: 'Legacy moodboard without project',
         materials: {
           board: PREVIEW_SAMPLE_BOARD,
-          projectId: previewProjectId,
-          projectName: previewProjectName,
+          // No projectId - this will be "ungrouped"
+        },
+      },
+      {
+        id: 'preview-legacy-2',
+        type: 'applyMaterials',
+        blobUrl: 'https://placehold.co/400x400/dbeafe/2563eb?text=Legacy+2',
+        createdAt: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        prompt: 'Legacy apply without project',
+        materials: {
+          board: PREVIEW_SAMPLE_BOARD,
+          // No projectId - this will be "ungrouped"
         },
       },
     ];
@@ -314,14 +328,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
   // State for expanded projects
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
-  // State for recent generations section (starts closed)
+  // State for recent generations section (legacy items without projectId, starts closed)
   const [recentGenExpanded, setRecentGenExpanded] = useState(false);
-
-  // All generations sorted by date (newest first)
-  const allGenerationsSorted = useMemo(() => {
-    const items = isPreviewMode ? previewDisplayItems : displayItems;
-    return [...items].sort((a, b) => toTimestamp(b.gen.createdAt) - toTimestamp(a.gen.createdAt));
-  }, [isPreviewMode, previewDisplayItems, displayItems]);
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
@@ -681,8 +689,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                 </div>
               )}
 
-              {/* Recent Generations (collapsible, starts closed) */}
-              {allGenerationsSorted.length > 0 && (
+              {/* Recent Generations - legacy items without projectId (collapsible, starts closed) */}
+              {projectGroups.ungrouped.length > 0 && (
                 <div className="border border-gray-200 overflow-hidden mb-8">
                   <button
                     onClick={() => setRecentGenExpanded(!recentGenExpanded)}
@@ -696,7 +704,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                         Recent Generations
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {allGenerationsSorted.length} {allGenerationsSorted.length === 1 ? 'item' : 'items'} in chronological order
+                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'} from before projects
                       </p>
                     </div>
                     <div className="flex-shrink-0">
@@ -711,14 +719,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                   {recentGenExpanded && (
                     <div className="border-t border-gray-200 bg-gray-50 p-4">
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {allGenerationsSorted.map(({ gen, attachments }) => {
+                        {projectGroups.ungrouped.map(({ gen, attachments }) => {
                           const targetPage =
                             gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
                           const restoreLabel =
                             gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
                           const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                           const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
-                          const project = extractProjectFromMaterials(gen.materials);
 
                           return (
                             <div
@@ -748,7 +755,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                 </div>
                               )}
                               <div className="p-3">
-                                <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center justify-between mb-2">
                                   <span className="font-mono text-[9px] uppercase tracking-widest text-gray-500 bg-gray-100 px-1.5 py-0.5">
                                     {typeLabels[gen.type] || gen.type}
                                   </span>
@@ -756,11 +763,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                     {new Date(gen.createdAt).toLocaleDateString()}
                                   </span>
                                 </div>
-                                {project && (
-                                  <p className="text-[10px] text-gray-500 truncate mb-2">
-                                    {project.name}
-                                  </p>
-                                )}
                                 {attachments.length > 0 && (
                                   <div className="flex flex-wrap gap-1 mb-2">
                                     {attachments.map((pdf) => {
@@ -799,116 +801,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Ungrouped Items (legacy generations without projectId) */}
-              {projectGroups.ungrouped.length > 0 && (
-                <div>
-                  {projectGroups.projects.length > 0 && (
-                    <h3 className="font-display text-lg font-bold uppercase tracking-tight mb-4 text-gray-500">
-                      Other Generations
-                    </h3>
-                  )}
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {projectGroups.ungrouped.map(({ gen, attachments }) => {
-                      const targetPage =
-                        gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
-                      const restoreLabel =
-                        gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
-                      const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
-                      const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
-
-                      const materials = gen.materials as Record<string, unknown> | undefined;
-                      const hasBriefingData = Boolean(materials?.sustainabilityBriefing);
-                      const showBriefingWarning = gen.type === 'moodboard' && canRestore && !hasBriefingData;
-
-                      return (
-                        <div
-                          key={gen.id}
-                          className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
-                        >
-                          {gen.blobUrl ? (
-                            <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                              <img
-                                src={gen.blobUrl}
-                                alt={gen.type}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                              />
-                              <a
-                                href={gen.blobUrl}
-                                download
-                                className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
-                                aria-label="Download image"
-                              >
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </div>
-                          ) : (
-                            <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                              <Image className="w-12 h-12 text-gray-300" />
-                            </div>
-                          )}
-                          <div className="p-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
-                                {typeLabels[gen.type] || gen.type}
-                              </span>
-                              <span className="flex items-center gap-1 text-gray-500 text-xs">
-                                <Calendar className="w-3 h-3" />
-                                {new Date(gen.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                            {attachments.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mb-2">
-                                {attachments.map((pdf) => {
-                                  const rawUrl = pdf.blobUrl || '';
-                                  const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
-                                  const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Briefing';
-                                  return rawUrl ? (
-                                    <a
-                                      key={pdf.id}
-                                      href={rawUrl}
-                                      download
-                                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded ${
-                                        isMaterialsSheet
-                                          ? 'text-emerald-700 bg-emerald-100 hover:bg-emerald-200'
-                                          : 'text-green-700 bg-green-100 hover:bg-green-200'
-                                      } transition-colors`}
-                                    >
-                                      <Download className="w-3.5 h-3.5" />
-                                      {pdfLabel}
-                                    </a>
-                                  ) : null;
-                                })}
-                              </div>
-                            )}
-                            {restoreLabel && (
-                              <div className="mt-3">
-                                <button
-                                  onClick={() => handleRestoreGeneration(gen)}
-                                  disabled={!canRestore}
-                                  className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
-                                    canRestore
-                                      ? 'border-gray-300 text-gray-700 hover:border-black hover:text-black'
-                                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                                  }`}
-                                >
-                                  {restoreLabel}
-                                </button>
-                                {showBriefingWarning && (
-                                  <p className="mt-2 text-[10px] text-amber-600">
-                                    No sustainability briefing saved
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
                 </div>
               )}
 
