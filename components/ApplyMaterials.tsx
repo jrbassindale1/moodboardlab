@@ -1063,10 +1063,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                   </div>
                   <div className="space-y-2">
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                      Edit applied render (multi-turn)
+                      Refine Your Render
                     </div>
                     <p className="font-sans text-sm text-gray-700">
-                      Use text instructions or scene controls to refine this render without losing the palette application.
+                      Describe changes you'd like to make, or use the scene controls below to adjust lighting, weather, and activity.
                     </p>
                     <textarea
                       value={appliedEditPrompt}
@@ -1283,56 +1283,56 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       </div>
                     </div>
 
-                    <button
-                      onClick={handleAppliedEdit}
-                      disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {status === 'render' && renderingMode === 'edit' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Updating render
-                        </>
-                      ) : (
-                        <>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        onClick={handleAppliedEdit}
+                        disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                      >
+                        {status === 'render' && renderingMode === 'edit' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Updating render
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4" />
+                            Apply changes
+                          </>
+                        )}
+                      </button>
+                      <div className="relative group">
+                        <button
+                          disabled
+                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-gray-100 text-gray-400 font-mono text-[11px] uppercase tracking-widest cursor-not-allowed"
+                        >
                           <Wand2 className="w-4 h-4" />
-                          Apply changes
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-gray-200">
-                  <div className="relative group">
-                    <button
-                      disabled
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-gray-100 text-gray-400 font-mono text-[11px] uppercase tracking-widest cursor-not-allowed"
-                    >
-                      <Wand2 className="w-4 h-4" />
-                      Render 4K
-                    </button>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      Feature coming soon
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                          Render 4K
+                        </button>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          Feature coming soon
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDownloadImage(appliedRenderUrl, 'applied')}
+                        disabled={downloadingId === 'applied' || status !== 'idle'}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400"
+                      >
+                        {downloadingId === 'applied' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Downloading...
+                          </>
+                        ) : (
+                          <>
+                            <ImageDown className="w-4 h-4" />
+                            Download Render
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDownloadImage(appliedRenderUrl, 'applied')}
-                    disabled={downloadingId === 'applied' || status !== 'idle'}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                  >
-                    {downloadingId === 'applied' ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        <ImageDown className="w-4 h-4" />
-                        Download Render
-                      </>
-                    )}
-                  </button>
                 </div>
               </div>
             )}

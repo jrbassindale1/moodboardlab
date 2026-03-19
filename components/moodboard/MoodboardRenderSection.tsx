@@ -52,11 +52,10 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
       </div>
       <div className="border border-gray-200 p-4 bg-white space-y-2">
         <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-          Edit moodboard render (multi-turn)
+          Refine Your Moodboard
         </div>
         <p className="font-sans text-sm text-gray-700">
-          Provide new text instructions to adjust the latest moodboard image while keeping
-          composition and materials consistent.
+          Describe changes you'd like to make to this moodboard. Your materials and composition will be preserved.
         </p>
         <textarea
           value={moodboardEditPrompt}
