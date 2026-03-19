@@ -50,32 +50,6 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
           )}
         </div>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => onDownloadBoard(moodboardRenderUrl, 'moodboard')}
-          disabled={downloadingId === 'moodboard'}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-        >
-          {downloadingId === 'moodboard' ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Preparing...
-            </>
-          ) : (
-            <>
-              <ImageDown className="w-4 h-4" />
-              Download
-            </>
-          )}
-        </button>
-        <button
-          onClick={() => onNavigate?.('apply')}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
-        >
-          <Wand2 className="w-4 h-4" />
-          Apply your materials
-        </button>
-      </div>
       <div className="border border-gray-200 p-4 bg-white space-y-2">
         <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
           Edit moodboard render (multi-turn)
@@ -90,23 +64,49 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
           placeholder="E.g., add people walking through the scene, change to dusk lighting with warm atmosphere, include plants and greenery."
           className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
         />
-        <button
-          onClick={onMoodboardEdit}
-          disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
-          className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-        >
-          {status === 'render' && isCreatingMoodboard ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Updating render
-            </>
-          ) : (
-            <>
-              <Wand2 className="w-4 h-4" />
-              Apply text edit
-            </>
-          )}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={onMoodboardEdit}
+            disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+          >
+            {status === 'render' && isCreatingMoodboard ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating render
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4" />
+                Apply text edit
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => onDownloadBoard(moodboardRenderUrl, 'moodboard')}
+            disabled={downloadingId === 'moodboard'}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            {downloadingId === 'moodboard' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <ImageDown className="w-4 h-4" />
+                Download
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => onNavigate?.('apply')}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+          >
+            <Wand2 className="w-4 h-4" />
+            Apply your materials
+          </button>
+        </div>
       </div>
     </div>
   );
