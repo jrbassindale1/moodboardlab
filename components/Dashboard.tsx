@@ -4,7 +4,7 @@ import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../a
 import { getGenerations, PrecedentResult } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
-import { Calendar, Image, Loader2, LogIn, Download } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 interface Generation {
@@ -27,6 +27,8 @@ interface DashboardProps {
     briefingPayload?: SustainabilityBriefingPayload | null;
     moodboardRenderUrl?: string | null;
     savedPrecedents?: PrecedentResult[] | null;
+    projectId?: string | null;
+    projectName?: string | null;
   }) => void;
 }
 
@@ -149,6 +151,24 @@ const extractBoardFromMaterials = (materials?: unknown): MaterialOption[] => {
     .filter((item): item is MaterialOption => Boolean(item));
 };
 
+const extractProjectFromMaterials = (materials?: unknown): { id: string; name: string } | null => {
+  if (!materials || typeof materials !== 'object') return null;
+  const mat = materials as { projectId?: string; projectName?: string };
+  if (!mat.projectId) return null;
+  return {
+    id: mat.projectId,
+    name: mat.projectName || 'Untitled Project'
+  };
+};
+
+type ProjectGroup = {
+  projectId: string;
+  projectName: string;
+  generations: Array<{ gen: Generation; attachments: Generation[] }>;
+  moodboardGen?: Generation; // The main moodboard for this project (used as cover)
+  createdAt: string; // Earliest generation timestamp
+};
+
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit } = useUsage();
@@ -224,6 +244,65 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       });
   }, [generations]);
 
+  // Group generations by project
+  const projectGroups = useMemo(() => {
+    const groups = new Map<string, ProjectGroup>();
+    const ungrouped: Array<{ gen: Generation; attachments: Generation[] }> = [];
+
+    for (const item of displayItems) {
+      const project = extractProjectFromMaterials(item.gen.materials);
+
+      if (project) {
+        if (!groups.has(project.id)) {
+          groups.set(project.id, {
+            projectId: project.id,
+            projectName: project.name,
+            generations: [],
+            createdAt: item.gen.createdAt
+          });
+        }
+        const group = groups.get(project.id)!;
+        group.generations.push(item);
+
+        // Track moodboard as cover image
+        if (item.gen.type === 'moodboard' && !group.moodboardGen) {
+          group.moodboardGen = item.gen;
+        }
+
+        // Update createdAt to earliest
+        if (toTimestamp(item.gen.createdAt) < toTimestamp(group.createdAt)) {
+          group.createdAt = item.gen.createdAt;
+        }
+      } else {
+        ungrouped.push(item);
+      }
+    }
+
+    // Sort projects by most recent activity (newest first)
+    const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+      const aLatest = Math.max(...a.generations.map(g => toTimestamp(g.gen.createdAt)));
+      const bLatest = Math.max(...b.generations.map(g => toTimestamp(g.gen.createdAt)));
+      return bLatest - aLatest;
+    });
+
+    return { projects: sortedGroups, ungrouped };
+  }, [displayItems]);
+
+  // State for expanded projects
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+
+  const toggleProject = (projectId: string) => {
+    setExpandedProjects(prev => {
+      const next = new Set(prev);
+      if (next.has(projectId)) {
+        next.delete(projectId);
+      } else {
+        next.add(projectId);
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       setIsLoading(false);
@@ -282,18 +361,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
     if (!targetPage) return;
 
-    // Extract sustainability briefing data, moodboard URL, and precedents if available
+    // Extract sustainability briefing data, moodboard URL, precedents, and project info
     const materials = gen.materials as Record<string, unknown> | undefined;
     const sustainabilityBriefing = materials?.sustainabilityBriefing as SustainabilityBriefingResponse | undefined;
     const briefingPayload = materials?.briefingPayload as SustainabilityBriefingPayload | undefined;
     const moodboardRenderUrl = materials?.moodboardRenderUrl as string | undefined;
     const savedPrecedents = materials?.savedPrecedents as PrecedentResult[] | undefined;
+    const projectId = materials?.projectId as string | undefined;
+    const projectName = materials?.projectName as string | undefined;
 
     console.log('=== DASHBOARD RESTORE ===');
     console.log('Generation type:', gen.type);
     console.log('Materials keys:', materials ? Object.keys(materials) : 'no materials');
     console.log('moodboardRenderUrl present:', !!moodboardRenderUrl);
-    console.log('moodboardRenderUrl preview:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
+    console.log('projectId:', projectId || 'none');
 
     onRestoreGeneration({
       targetPage,
@@ -304,6 +385,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       briefingPayload: briefingPayload || null,
       moodboardRenderUrl: moodboardRenderUrl || null,
       savedPrecedents: savedPrecedents || null,
+      projectId: projectId || null,
+      projectName: projectName || null,
     });
   };
 
@@ -391,10 +474,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
           </div>
         </div>
 
-        {/* Generation History */}
+        {/* Projects & Generation History */}
         <div>
           <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-4">
-            Recent Generations
+            Your Projects
           </h2>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -402,13 +485,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
             </div>
           ) : (isPreviewMode ? previewDisplayItems : displayItems).length === 0 ? (
             <div className="border border-dashed border-gray-300 p-8 text-center">
-              <Image className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 mb-4">{isPreviewMode ? 'No preview generations available.' : 'No generations yet.'}</p>
+              <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600 mb-4">{isPreviewMode ? 'No preview projects available.' : 'No projects yet.'}</p>
               <button
                 onClick={() => onNavigate?.('moodboard')}
                 className="px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest"
               >
-                Create Your First Moodboard
+                Create Your First Project
               </button>
             </div>
           ) : (
@@ -418,133 +501,263 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                   Preview sample data shown so you can test the restore buttons without live generation history.
                 </div>
               )}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {(isPreviewMode ? previewDisplayItems : displayItems).map(({ gen, attachments }) => {
-                  const targetPage =
-                    gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
-                  const restoreLabel =
-                    gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
-                  const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
-                  const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
 
-                  // Check if this moodboard has sustainability briefing data
-                  const materials = gen.materials as Record<string, unknown> | undefined;
-                  const hasBriefingData = Boolean(materials?.sustainabilityBriefing);
-                  const showBriefingWarning = gen.type === 'moodboard' && canRestore && !hasBriefingData;
+              {/* Project Cards */}
+              {projectGroups.projects.length > 0 && (
+                <div className="space-y-4 mb-8">
+                  {projectGroups.projects.map((project) => {
+                    const isExpanded = expandedProjects.has(project.projectId);
+                    const genCount = project.generations.length;
 
-                  return (
-                    <div
-                      key={gen.id}
-                      className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
-                    >
-                      {gen.blobUrl ? (
-                        <div className="relative aspect-square bg-gray-100 overflow-hidden">
-                          <img
-                            src={gen.blobUrl}
-                            alt={gen.type}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                          <a
-                            href={gen.blobUrl}
-                            download
-                            className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm transition-opacity"
-                            aria-label="Download image"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-                        </div>
-                      ) : (
-                        <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                          <Image className="w-12 h-12 text-gray-300" />
-                        </div>
-                      )}
-                      <div className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
-                            {typeLabels[gen.type] || gen.type}
-                          </span>
-                          <span className="flex items-center gap-1 text-gray-500 text-xs">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(gen.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        {gen.blobUrl && (
-                          <div className="mb-2">
-                            <a
-                              href={gen.blobUrl}
-                              download
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              Download
-                            </a>
-                          </div>
-                        )}
-                        {attachments.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {attachments.map((pdf) => {
-                              const rawUrl = pdf.blobUrl || '';
-                              const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
-                              const pdfLabel = isMaterialsSheet
-                                ? 'Materials Sheet'
-                                : 'Download Sustainability Briefing';
-                              const pdfButtonClass = isMaterialsSheet
-                                ? 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 rounded hover:bg-emerald-200 transition-colors'
-                                : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded hover:bg-green-200 transition-colors';
-
-                              return rawUrl ? (
-                                <a
-                                  key={pdf.id}
-                                  href={rawUrl}
-                                  download={isMaterialsSheet ? 'materials-sheet.pdf' : 'sustainability-briefing.pdf'}
-                                  className={pdfButtonClass}
-                                  onClick={() =>
-                                    trackEvent('download_pdf', {
-                                      pdf_type: isMaterialsSheet
-                                        ? 'materials_sheet'
-                                        : 'sustainability_briefing',
-                                      source: 'dashboard',
-                                    })
-                                  }
-                                >
-                                  <Download className="w-3.5 h-3.5" />
-                                  {pdfLabel}
-                                </a>
-                              ) : null;
-                            })}
-                          </div>
-                        )}
-                        {restoreLabel && (
-                          <div className="mt-3">
-                            <button
-                              onClick={() => handleRestoreGeneration(gen)}
-                              disabled={!canRestore}
-                              className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
-                                canRestore
-                                  ? 'border-gray-300 text-gray-700 hover:border-black hover:text-black'
-                                  : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                              }`}
-                              title={
-                                canRestore
-                                  ? undefined
-                                  : 'This generation does not include reusable material data.'
-                              }
-                            >
-                              {restoreLabel}
-                            </button>
-                            {showBriefingWarning && (
-                              <p className="mt-2 text-[10px] text-amber-600">
-                                No sustainability briefing saved for older generations
-                              </p>
+                    return (
+                      <div key={project.projectId} className="border border-gray-200 overflow-hidden">
+                        {/* Project Header */}
+                        <button
+                          onClick={() => toggleProject(project.projectId)}
+                          className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left"
+                        >
+                          {/* Cover Image */}
+                          <div className="w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
+                            {project.moodboardGen?.blobUrl ? (
+                              <img
+                                src={project.moodboardGen.blobUrl}
+                                alt={project.projectName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <FolderOpen className="w-8 h-8 text-gray-300" />
+                              </div>
                             )}
+                          </div>
+
+                          {/* Project Info */}
+                          <div className="flex-grow min-w-0">
+                            <h3 className="font-display text-lg font-bold truncate">
+                              {project.projectName}
+                            </h3>
+                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(project.createdAt).toLocaleDateString()}
+                              </span>
+                              <span className="font-mono text-[10px] uppercase tracking-widest bg-gray-100 px-2 py-0.5">
+                                {genCount} {genCount === 1 ? 'item' : 'items'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Expand/Collapse */}
+                          <div className="flex-shrink-0">
+                            {isExpanded ? (
+                              <ChevronDown className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="border-t border-gray-200 bg-gray-50 p-4">
+                            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {project.generations.map(({ gen, attachments }) => {
+                                const targetPage =
+                                  gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+                                const restoreLabel =
+                                  gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                                const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
+                                const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+
+                                return (
+                                  <div
+                                    key={gen.id}
+                                    className="border border-gray-200 bg-white overflow-hidden group hover:border-black transition-colors"
+                                  >
+                                    {gen.blobUrl ? (
+                                      <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                                        <img
+                                          src={gen.blobUrl}
+                                          alt={gen.type}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                          loading="lazy"
+                                        />
+                                        <a
+                                          href={gen.blobUrl}
+                                          download
+                                          className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
+                                          aria-label="Download image"
+                                        >
+                                          <Download className="w-3.5 h-3.5" />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                                        <Image className="w-10 h-10 text-gray-300" />
+                                      </div>
+                                    )}
+                                    <div className="p-3">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-mono text-[9px] uppercase tracking-widest text-gray-500 bg-gray-100 px-1.5 py-0.5">
+                                          {typeLabels[gen.type] || gen.type}
+                                        </span>
+                                        <span className="text-gray-400 text-[10px]">
+                                          {new Date(gen.createdAt).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                      {attachments.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mb-2">
+                                          {attachments.map((pdf) => {
+                                            const rawUrl = pdf.blobUrl || '';
+                                            const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
+                                            return rawUrl ? (
+                                              <a
+                                                key={pdf.id}
+                                                href={rawUrl}
+                                                download
+                                                className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
+                                                  isMaterialsSheet
+                                                    ? 'text-emerald-700 bg-emerald-100'
+                                                    : 'text-green-700 bg-green-100'
+                                                }`}
+                                              >
+                                                <Download className="w-3 h-3" />
+                                                {isMaterialsSheet ? 'Sheet' : 'Briefing'}
+                                              </a>
+                                            ) : null;
+                                          })}
+                                        </div>
+                                      )}
+                                      {restoreLabel && canRestore && (
+                                        <button
+                                          onClick={() => handleRestoreGeneration(gen)}
+                                          className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                        >
+                                          {restoreLabel}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Ungrouped Items (legacy generations without projectId) */}
+              {projectGroups.ungrouped.length > 0 && (
+                <div>
+                  {projectGroups.projects.length > 0 && (
+                    <h3 className="font-display text-lg font-bold uppercase tracking-tight mb-4 text-gray-500">
+                      Other Generations
+                    </h3>
+                  )}
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {projectGroups.ungrouped.map(({ gen, attachments }) => {
+                      const targetPage =
+                        gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+                      const restoreLabel =
+                        gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                      const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
+                      const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+
+                      const materials = gen.materials as Record<string, unknown> | undefined;
+                      const hasBriefingData = Boolean(materials?.sustainabilityBriefing);
+                      const showBriefingWarning = gen.type === 'moodboard' && canRestore && !hasBriefingData;
+
+                      return (
+                        <div
+                          key={gen.id}
+                          className="border border-gray-200 overflow-hidden group hover:border-black transition-colors"
+                        >
+                          {gen.blobUrl ? (
+                            <div className="relative aspect-square bg-gray-100 overflow-hidden">
+                              <img
+                                src={gen.blobUrl}
+                                alt={gen.type}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                              />
+                              <a
+                                href={gen.blobUrl}
+                                download
+                                className="absolute top-3 right-3 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
+                                aria-label="Download image"
+                              >
+                                <Download className="w-4 h-4" />
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="aspect-square bg-gray-100 flex items-center justify-center">
+                              <Image className="w-12 h-12 text-gray-300" />
+                            </div>
+                          )}
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500 bg-gray-100 px-2 py-1">
+                                {typeLabels[gen.type] || gen.type}
+                              </span>
+                              <span className="flex items-center gap-1 text-gray-500 text-xs">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(gen.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {attachments.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {attachments.map((pdf) => {
+                                  const rawUrl = pdf.blobUrl || '';
+                                  const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
+                                  const pdfLabel = isMaterialsSheet ? 'Materials Sheet' : 'Briefing';
+                                  return rawUrl ? (
+                                    <a
+                                      key={pdf.id}
+                                      href={rawUrl}
+                                      download
+                                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded ${
+                                        isMaterialsSheet
+                                          ? 'text-emerald-700 bg-emerald-100 hover:bg-emerald-200'
+                                          : 'text-green-700 bg-green-100 hover:bg-green-200'
+                                      } transition-colors`}
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      {pdfLabel}
+                                    </a>
+                                  ) : null;
+                                })}
+                              </div>
+                            )}
+                            {restoreLabel && (
+                              <div className="mt-3">
+                                <button
+                                  onClick={() => handleRestoreGeneration(gen)}
+                                  disabled={!canRestore}
+                                  className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
+                                    canRestore
+                                      ? 'border-gray-300 text-gray-700 hover:border-black hover:text-black'
+                                      : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                  }`}
+                                >
+                                  {restoreLabel}
+                                </button>
+                                {showBriefingWarning && (
+                                  <p className="mt-2 text-[10px] text-amber-600">
+                                    No sustainability briefing saved
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {hasMore && (
                 <div className="text-center mt-8">

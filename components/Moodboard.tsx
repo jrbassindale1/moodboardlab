@@ -54,6 +54,13 @@ type BoardItem = MaterialOption;
 // Use enhanced sustainability insight type from types/sustainability.ts
 type SustainabilityInsight = EnhancedSustainabilityInsight;
 
+// Project type for grouping generations
+type Project = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
 interface MoodboardProps {
   onNavigate?: (page: string) => void;
   initialBoard?: BoardItem[];
@@ -72,6 +79,9 @@ interface MoodboardProps {
   // Lifted state from App.tsx (persists across navigation)
   moodboardEditPrompt?: string;
   onMoodboardEditPromptChange?: (prompt: string) => void;
+  // Project state
+  currentProject?: Project | null;
+  onCreateProject?: () => Project;
 }
 
 type MoodboardFlowProgress = {
@@ -409,7 +419,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
   onPrecedentsChange,
   // Lifted state from App.tsx
   moodboardEditPrompt: moodboardEditPromptProp,
-  onMoodboardEditPromptChange
+  onMoodboardEditPromptChange,
+  // Project state
+  currentProject,
+  onCreateProject
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -698,6 +711,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
       imageFallbackUsed?: boolean;
     }
   ) => {
+    // Get or create project for this moodboard
+    const project = currentProject || onCreateProject?.();
+
     const metadata = {
       renderMode: 'moodboard',
       materialKey: buildMaterialKey(),
@@ -709,7 +725,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
       sustainabilityBriefing: sustainabilityBriefing || undefined,
       briefingPayload: briefingPayload || undefined,
       board,
-      savedPrecedents: savedPrecedents || undefined
+      savedPrecedents: savedPrecedents || undefined,
+      // Project identification
+      projectId: project?.id,
+      projectName: project?.name
     };
 
     if (!isAuthenticated) {

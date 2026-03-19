@@ -23,6 +23,13 @@ type SceneControls = {
   viewCharacter: SceneControl;
 };
 
+// Project type for grouping generations
+type Project = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
 interface ApplyMaterialsProps {
   onNavigate?: (page: string) => void;
   board: MaterialOption[];
@@ -41,6 +48,8 @@ interface ApplyMaterialsProps {
   onRenderNoteChange: (note: string) => void;
   appliedEditPrompt: string;
   onAppliedEditPromptChange: (prompt: string) => void;
+  // Project state
+  currentProject?: Project | null;
 }
 
 const WEATHER_OPTIONS = ['clear / sunny', 'soft overcast', 'heavy overcast', 'misty / moody', 'wet after rain'];
@@ -180,7 +189,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   renderNote,
   onRenderNoteChange,
   appliedEditPrompt,
-  onAppliedEditPromptChange
+  onAppliedEditPromptChange,
+  // Project state
+  currentProject
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -297,7 +308,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         width: img.width,
         height: img.height,
         dataUrl: img.dataUrl
-      }))
+      })),
+      // Project identification
+      projectId: currentProject?.id,
+      projectName: currentProject?.name
     };
 
     if (!isAuthenticated) {

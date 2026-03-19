@@ -95,7 +95,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const { isAuthenticated, getAccessToken } = useAuth();
   const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
   const boardRef = useRef<MaterialOption[]>(board);
-  const cartButtonRef = useRef<HTMLButtonElement | null>(null);
+  const cartButtonRef = useRef<HTMLDivElement | null>(null);
   const animationTimeoutRef = useRef<number | null>(null);
   const hasScrolledToTop = useRef(false);
   const [isSmallScreen] = useState(() => {
@@ -919,17 +919,40 @@ IMPORTANT:
 
             {/* Board summary */}
             <div className="border-t border-gray-200 pt-6 lg:sticky lg:top-24 lg:z-20 lg:bg-white">
-              <button
+              <div
                 ref={cartButtonRef}
-                onClick={() => onNavigate('moodboard')}
-                className={`w-full flex items-center justify-between p-3 border border-gray-200 hover:border-black transition-colors mb-4 ${isCartPulsing ? 'animate-cart-pulse' : ''}`}
+                className={`mb-4 border border-gray-200 bg-white p-4 transition-transform ${isCartPulsing ? 'animate-cart-pulse' : ''}`}
               >
-                <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="text-sm font-sans">My board</span>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2">
+                    <ShoppingCart className="mt-0.5 h-4 w-4" />
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">My board</p>
+                      <p className="text-sm font-sans text-gray-900">
+                        {board.length === 0
+                          ? 'Add materials to start your moodboard'
+                          : `${board.length} material${board.length === 1 ? '' : 's'} selected`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-sans text-gray-600">{board.length}</span>
                 </div>
-                <span className="text-xs font-sans text-gray-600">({board.length})</span>
-              </button>
+
+                <button
+                  onClick={() => onNavigate('moodboard')}
+                  disabled={!board.length}
+                  className="mt-4 inline-flex w-full items-center justify-between border border-black bg-black px-4 py-3 font-mono text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  <span>Create moodboard</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+
+                <p className="mt-2 text-xs font-sans text-gray-500">
+                  {board.length === 0
+                    ? 'Select at least one material to continue.'
+                    : 'Continue to the next page to review your board and generate the moodboard.'}
+                </p>
+              </div>
 
               {/* Materials basket grouped by category */}
               {board.length > 0 && (

@@ -49,6 +49,40 @@ const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
 const RENDER_URL_CACHE_KEY = 'moodboard_render_url_v1';
 const APPLIED_URL_CACHE_KEY = 'moodboard_applied_url_v1';
 const APPLY_STATE_CACHE_KEY = 'moodboard_apply_state_v1';
+const PROJECT_CACHE_KEY = 'moodboard_current_project_v1';
+
+// Project type for grouping generations
+type Project = {
+  id: string;
+  name: string;
+  createdAt: string;
+};
+
+const generateProjectId = (): string => {
+  return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+};
+
+const formatProjectDate = (): string => {
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.toLocaleString('en-GB', { month: 'short' });
+  const year = now.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+
+const readProjectCache = (): Project | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(PROJECT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<Project>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed.id || !parsed.name) return null;
+    return parsed as Project;
+  } catch {
+    return null;
+  }
+};
 
 type ApplyStateCache = {
   uploadedImages: UploadedImage[];
@@ -157,15 +191,72 @@ const App: React.FC = () => {
 
   // Lifted state from Moodboard (persists across navigation)
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
+
+  // Project state - groups all generations under a single project
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
   const hasSyncedLocationRef = useRef(false);
+  const projectCacheRestoredRef = useRef(false);
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
 
   useEffect(() => {
     briefingCacheRef.current = readBriefingCache();
   }, []);
+
+  // Restore project from localStorage on mount
+  useEffect(() => {
+    if (projectCacheRestoredRef.current) return;
+    projectCacheRestoredRef.current = true;
+    const cached = readProjectCache();
+    if (cached) {
+      setCurrentProject(cached);
+    }
+  }, []);
+
+  // Persist project to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (currentProject) {
+        window.localStorage.setItem(PROJECT_CACHE_KEY, JSON.stringify(currentProject));
+      } else {
+        window.localStorage.removeItem(PROJECT_CACHE_KEY);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [currentProject]);
+
+  // Create a new project (called when generating first moodboard)
+  const createNewProject = (): Project => {
+    const project: Project = {
+      id: generateProjectId(),
+      name: `Moodboard ${formatProjectDate()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setCurrentProject(project);
+    return project;
+  };
+
+  // Start a fresh project (clears current project and related state)
+  const startNewProject = () => {
+    setCurrentProject(null);
+    setMoodboardRenderUrl(null);
+    setAppliedRenderUrl(null);
+    setSustainabilityBriefing(null);
+    setBriefingPayload(null);
+    setBriefingMaterialsKey(null);
+    setSavedPrecedents(null);
+    setUploadedImages([]);
+    setSceneControls(DEFAULT_SCENE_CONTROLS);
+    setRenderNote('');
+    setAppliedEditPrompt('');
+    setMoodboardEditPrompt('');
+    // Keep materials - user might want to reuse them
+  };
 
   // Track page views in Google Analytics
   useEffect(() => {
@@ -363,6 +454,8 @@ const App: React.FC = () => {
     briefingPayload: restoredPayload,
     moodboardRenderUrl: restoredMoodboardUrl,
     savedPrecedents: restoredPrecedents,
+    projectId: restoredProjectId,
+    projectName: restoredProjectName,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
@@ -372,8 +465,19 @@ const App: React.FC = () => {
     briefingPayload?: SustainabilityBriefingPayload | null;
     moodboardRenderUrl?: string | null;
     savedPrecedents?: PrecedentResult[] | null;
+    projectId?: string | null;
+    projectName?: string | null;
   }) => {
     setSelectedMaterials(board);
+
+    // Restore project context if available
+    if (restoredProjectId && restoredProjectName) {
+      setCurrentProject({
+        id: restoredProjectId,
+        name: restoredProjectName,
+        createdAt: new Date().toISOString() // We don't have the original, use now
+      });
+    }
 
     if (targetPage === 'moodboard') {
       setMoodboardRenderUrl(generationImageUrl);
@@ -449,6 +553,8 @@ const App: React.FC = () => {
             onPrecedentsChange={setSavedPrecedents}
             moodboardEditPrompt={moodboardEditPrompt}
             onMoodboardEditPromptChange={setMoodboardEditPrompt}
+            currentProject={currentProject}
+            onCreateProject={createNewProject}
           />
         );
       case 'apply':
@@ -470,6 +576,7 @@ const App: React.FC = () => {
             onRenderNoteChange={setRenderNote}
             appliedEditPrompt={appliedEditPrompt}
             onAppliedEditPromptChange={setAppliedEditPrompt}
+            currentProject={currentProject}
           />
         );
       case 'product':
