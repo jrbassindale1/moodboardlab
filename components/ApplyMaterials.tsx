@@ -17,6 +17,8 @@ interface ApplyMaterialsProps {
   moodboardRenderUrl: string | null;
   appliedRenderUrl: string | null;
   onAppliedRenderUrlChange: (url: string | null) => void;
+  restoredWithoutMoodboard?: boolean;
+  onClearRestoredFlag?: () => void;
 }
 
 type SceneControl = {
@@ -158,7 +160,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onBoardChange,
   moodboardRenderUrl,
   appliedRenderUrl,
-  onAppliedRenderUrlChange
+  onAppliedRenderUrlChange,
+  restoredWithoutMoodboard,
+  onClearRestoredFlag
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -680,10 +684,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
               </div>
               <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
                 <p className="font-sans text-sm text-gray-600">
-                  No moodboard generated yet.
+                  {restoredWithoutMoodboard
+                    ? 'No moodboard is saved with this render.'
+                    : 'No moodboard generated yet.'}
                 </p>
                 <button
-                  onClick={() => onNavigate?.('moodboard')}
+                  onClick={() => {
+                    onClearRestoredFlag?.();
+                    onNavigate?.('moodboard');
+                  }}
                   className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
                 >
                   Go to Moodboard Lab

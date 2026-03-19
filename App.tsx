@@ -74,6 +74,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
+  const [restoredWithoutMoodboard, setRestoredWithoutMoodboard] = useState(false);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
   const [sustainabilityBriefing, setSustainabilityBriefing] =
     useState<SustainabilityBriefingResponse | null>(null);
@@ -268,14 +269,12 @@ const App: React.FC = () => {
         setAppliedRenderUrl(generationImageUrl);
       }
     }
-    // Restore the accompanying moodboard URL if available
+    // Always set moodboard URL when restoring (clears any existing if none saved)
     console.log('=== RESTORE FROM DASHBOARD ===');
     console.log('restoredMoodboardUrl:', restoredMoodboardUrl ? `${restoredMoodboardUrl.substring(0, 100)}...` : 'null');
-    if (restoredMoodboardUrl) {
-      setMoodboardRenderUrl(restoredMoodboardUrl);
-    } else {
-      console.warn('No moodboardRenderUrl found in saved render metadata');
-    }
+    setMoodboardRenderUrl(restoredMoodboardUrl || null);
+    // Track if we restored without a moodboard so we can show appropriate message
+    setRestoredWithoutMoodboard(!restoredMoodboardUrl);
     setCurrentPage('apply');
   };
 
@@ -319,6 +318,8 @@ const App: React.FC = () => {
             moodboardRenderUrl={moodboardRenderUrl}
             appliedRenderUrl={appliedRenderUrl}
             onAppliedRenderUrlChange={setAppliedRenderUrl}
+            restoredWithoutMoodboard={restoredWithoutMoodboard}
+            onClearRestoredFlag={() => setRestoredWithoutMoodboard(false)}
           />
         );
       case 'product':
