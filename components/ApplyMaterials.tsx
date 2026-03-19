@@ -249,6 +249,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   ) => {
     const trimmedNote = renderNote.trim();
+    console.log('=== SAVING RENDER ===');
+    console.log('moodboardRenderUrl prop:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
+
     const metadata = {
       renderMode: 'apply-to-upload',
       materialKey: buildMaterialKey(),
