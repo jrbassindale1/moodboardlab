@@ -11,7 +11,7 @@ import Contact from './components/Contact';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
-import { MaterialOption } from './types';
+import { MaterialOption, UploadedImage } from './types';
 import type { PrecedentResult } from './api';
 import type {
   SustainabilityBriefingPayload,
@@ -22,8 +22,72 @@ import { trackPageView } from './utils/analytics';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
 
+// Scene control types (shared with ApplyMaterials)
+type SceneControl = {
+  enabled: boolean;
+  value: number;
+};
+
+type SceneControls = {
+  weather: SceneControl;
+  activity: SceneControl;
+  timeOfDay: SceneControl;
+  season: SceneControl;
+  viewCharacter: SceneControl;
+};
+
+const DEFAULT_SCENE_CONTROLS: SceneControls = {
+  weather: { enabled: false, value: 0 },
+  activity: { enabled: false, value: 0 },
+  timeOfDay: { enabled: false, value: 0 },
+  season: { enabled: false, value: 0 },
+  viewCharacter: { enabled: false, value: 0 }
+};
+
 const BRIEFING_CACHE_KEY = 'moodboard_sustainability_briefing_v1';
 const BOARD_CACHE_KEY = 'moodboard_selected_materials_v1';
+const RENDER_URL_CACHE_KEY = 'moodboard_render_url_v1';
+const APPLIED_URL_CACHE_KEY = 'moodboard_applied_url_v1';
+const APPLY_STATE_CACHE_KEY = 'moodboard_apply_state_v1';
+
+type ApplyStateCache = {
+  uploadedImages: UploadedImage[];
+  sceneControls: SceneControls;
+  renderNote: string;
+  appliedEditPrompt: string;
+  savedAt: string;
+};
+
+const readApplyStateCache = (): ApplyStateCache | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(APPLY_STATE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<ApplyStateCache>;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed as ApplyStateCache;
+  } catch {
+    return null;
+  }
+};
+
+const readRenderUrlCache = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(RENDER_URL_CACHE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const readAppliedUrlCache = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(APPLIED_URL_CACHE_KEY);
+  } catch {
+    return null;
+  }
+};
 
 type BriefingCache = {
   materialsKey: string;
@@ -84,6 +148,15 @@ const App: React.FC = () => {
   const [savedPrecedents, setSavedPrecedents] = useState<PrecedentResult[] | null>(null);
   const [openConsentPreferences, setOpenConsentPreferences] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  // Lifted state from ApplyMaterials (persists across navigation)
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
+  const [renderNote, setRenderNote] = useState('');
+  const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
+
+  // Lifted state from Moodboard (persists across navigation)
+  const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
   const hasSyncedLocationRef = useRef(false);
@@ -179,6 +252,73 @@ const App: React.FC = () => {
       // Ignore storage errors (quota, private mode, etc.)
     }
   }, [selectedMaterials]);
+
+  // Restore render URLs from localStorage on mount
+  useEffect(() => {
+    const cachedRenderUrl = readRenderUrlCache();
+    if (cachedRenderUrl && !moodboardRenderUrl) {
+      setMoodboardRenderUrl(cachedRenderUrl);
+    }
+    const cachedAppliedUrl = readAppliedUrlCache();
+    if (cachedAppliedUrl && !appliedRenderUrl) {
+      setAppliedRenderUrl(cachedAppliedUrl);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist moodboardRenderUrl to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (moodboardRenderUrl) {
+        window.localStorage.setItem(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
+      } else {
+        window.localStorage.removeItem(RENDER_URL_CACHE_KEY);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [moodboardRenderUrl]);
+
+  // Persist appliedRenderUrl to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (appliedRenderUrl) {
+        window.localStorage.setItem(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
+      } else {
+        window.localStorage.removeItem(APPLIED_URL_CACHE_KEY);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, [appliedRenderUrl]);
+
+  // Restore Apply page state from localStorage on mount
+  useEffect(() => {
+    const cached = readApplyStateCache();
+    if (!cached) return;
+    if (cached.uploadedImages?.length) setUploadedImages(cached.uploadedImages);
+    if (cached.sceneControls) setSceneControls(cached.sceneControls);
+    if (cached.renderNote) setRenderNote(cached.renderNote);
+    if (cached.appliedEditPrompt) setAppliedEditPrompt(cached.appliedEditPrompt);
+  }, []);
+
+  // Persist Apply page state to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const cache: ApplyStateCache = {
+      uploadedImages,
+      sceneControls,
+      renderNote,
+      appliedEditPrompt,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      window.localStorage.setItem(APPLY_STATE_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [uploadedImages, sceneControls, renderNote, appliedEditPrompt]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -307,6 +447,8 @@ const App: React.FC = () => {
             onBriefingInvalidatedMessageChange={setBriefingInvalidatedMessage}
             initialPrecedents={savedPrecedents}
             onPrecedentsChange={setSavedPrecedents}
+            moodboardEditPrompt={moodboardEditPrompt}
+            onMoodboardEditPromptChange={setMoodboardEditPrompt}
           />
         );
       case 'apply':
@@ -320,6 +462,14 @@ const App: React.FC = () => {
             onAppliedRenderUrlChange={setAppliedRenderUrl}
             restoredWithoutMoodboard={restoredWithoutMoodboard}
             onClearRestoredFlag={() => setRestoredWithoutMoodboard(false)}
+            uploadedImages={uploadedImages}
+            onUploadedImagesChange={setUploadedImages}
+            sceneControls={sceneControls}
+            onSceneControlsChange={setSceneControls}
+            renderNote={renderNote}
+            onRenderNoteChange={setRenderNote}
+            appliedEditPrompt={appliedEditPrompt}
+            onAppliedEditPromptChange={setAppliedEditPrompt}
           />
         );
       case 'product':

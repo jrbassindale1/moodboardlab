@@ -38,7 +38,8 @@
       "Bash(/opt/homebrew/bin/npm run build)",
       "Bash(pnpm run build:*)",
       "Bash(source ~/.zshrc)",
-      "Bash(source ~/.bashrc)"
+      "Bash(source ~/.bashrc)",
+      "Bash(./node_modules/.bin/tsc:*)"
     ]
   }
 }

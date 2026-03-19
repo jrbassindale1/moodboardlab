@@ -10,17 +10,6 @@ import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils
 import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
 import UsageDisplay from './UsageDisplay';
 
-interface ApplyMaterialsProps {
-  onNavigate?: (page: string) => void;
-  board: MaterialOption[];
-  onBoardChange?: (items: MaterialOption[]) => void;
-  moodboardRenderUrl: string | null;
-  appliedRenderUrl: string | null;
-  onAppliedRenderUrlChange: (url: string | null) => void;
-  restoredWithoutMoodboard?: boolean;
-  onClearRestoredFlag?: () => void;
-}
-
 type SceneControl = {
   enabled: boolean;
   value: number;
@@ -33,6 +22,26 @@ type SceneControls = {
   season: SceneControl;
   viewCharacter: SceneControl;
 };
+
+interface ApplyMaterialsProps {
+  onNavigate?: (page: string) => void;
+  board: MaterialOption[];
+  onBoardChange?: (items: MaterialOption[]) => void;
+  moodboardRenderUrl: string | null;
+  appliedRenderUrl: string | null;
+  onAppliedRenderUrlChange: (url: string | null) => void;
+  restoredWithoutMoodboard?: boolean;
+  onClearRestoredFlag?: () => void;
+  // Lifted state from App.tsx (persists across navigation)
+  uploadedImages: UploadedImage[];
+  onUploadedImagesChange: (images: UploadedImage[]) => void;
+  sceneControls: SceneControls;
+  onSceneControlsChange: (controls: SceneControls) => void;
+  renderNote: string;
+  onRenderNoteChange: (note: string) => void;
+  appliedEditPrompt: string;
+  onAppliedEditPromptChange: (prompt: string) => void;
+}
 
 const WEATHER_OPTIONS = ['clear / sunny', 'soft overcast', 'heavy overcast', 'misty / moody', 'wet after rain'];
 const ACTIVITY_OPTIONS = ['empty', 'sparse', 'moderate', 'busy'];
@@ -162,30 +171,42 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   appliedRenderUrl,
   onAppliedRenderUrlChange,
   restoredWithoutMoodboard,
-  onClearRestoredFlag
+  onClearRestoredFlag,
+  // Lifted state from App.tsx
+  uploadedImages,
+  onUploadedImagesChange,
+  sceneControls,
+  onSceneControlsChange,
+  renderNote,
+  onRenderNoteChange,
+  appliedEditPrompt,
+  onAppliedEditPromptChange
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate } = useUsage();
 
-  const [renderNote, setRenderNote] = useState('');
-  const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  // Local UI state only (transient, doesn't need to persist)
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
-  const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
+
+  // Convenience setters that call parent callbacks
+  const setUploadedImages = onUploadedImagesChange;
+  const setSceneControls = onSceneControlsChange;
+  const setRenderNote = onRenderNoteChange;
+  const setAppliedEditPrompt = onAppliedEditPromptChange;
 
   // Reset scene controls only when a NEW moodboard is generated
   useEffect(() => {
     if (moodboardRenderUrl && moodboardRenderUrl !== prevMoodboardRef.current) {
-      setSceneControls(DEFAULT_SCENE_CONTROLS);
+      onSceneControlsChange(DEFAULT_SCENE_CONTROLS);
       prevMoodboardRef.current = moodboardRenderUrl;
     }
-  }, [moodboardRenderUrl]);
+  }, [moodboardRenderUrl, onSceneControlsChange]);
 
   const renderMaterials = useMemo(
     () => board.filter((item) => !item.excludeFromMoodboardRender),

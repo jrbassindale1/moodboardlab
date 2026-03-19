@@ -69,6 +69,9 @@ interface MoodboardProps {
   onBriefingInvalidatedMessageChange?: (value: string | null) => void;
   initialPrecedents?: PrecedentResult[] | null;
   onPrecedentsChange?: (precedents: PrecedentResult[] | null) => void;
+  // Lifted state from App.tsx (persists across navigation)
+  moodboardEditPrompt?: string;
+  onMoodboardEditPromptChange?: (prompt: string) => void;
 }
 
 type MoodboardFlowProgress = {
@@ -403,7 +406,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
   briefingInvalidatedMessage,
   onBriefingInvalidatedMessageChange,
   initialPrecedents,
-  onPrecedentsChange
+  onPrecedentsChange,
+  // Lifted state from App.tsx
+  moodboardEditPrompt: moodboardEditPromptProp,
+  onMoodboardEditPromptChange
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -432,7 +438,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [briefingPayloadState, setBriefingPayloadState] = useState<SustainabilityBriefingPayload | null>(
     briefingPayloadProp ?? null
   );
-  const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
+  // Use prop for edit prompt if provided, otherwise use local state as fallback
+  const [moodboardEditPromptLocal, setMoodboardEditPromptLocal] = useState('');
+  const moodboardEditPrompt = moodboardEditPromptProp ?? moodboardEditPromptLocal;
+  const setMoodboardEditPrompt = (value: string) => {
+    setMoodboardEditPromptLocal(value);
+    onMoodboardEditPromptChange?.(value);
+  };
   const [status, setStatus] = useState<
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
