@@ -526,7 +526,19 @@ const App: React.FC = () => {
     }
 
     if (targetPage === 'moodboard') {
-      setMoodboardRenderUrl(generationImageUrl);
+      // Convert to data URI to prevent "Load failed" errors when the URL expires
+      if (generationImageUrl) {
+        try {
+          const dataUri = await resolveImageSourceToDataUrl(generationImageUrl);
+          setMoodboardRenderUrl(dataUri);
+        } catch (err) {
+          console.warn('Failed to convert restored moodboard image to data URI:', err);
+          // Fallback to using the original URL
+          setMoodboardRenderUrl(generationImageUrl);
+        }
+      } else {
+        setMoodboardRenderUrl(null);
+      }
       // Restore sustainability briefing if available
       if (restoredBriefing) {
         setSustainabilityBriefing(restoredBriefing);
