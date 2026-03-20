@@ -117,10 +117,11 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
       setStatus('success');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Precedent search error:', errorMessage, err);
 
       if (errorMessage === 'rate_limit') {
         setError({ type: 'rate_limit', message: ERROR_MESSAGES.rate_limit });
-      } else if (errorMessage.includes('timed out') || errorMessage.includes('network')) {
+      } else if (errorMessage.includes('timed out') || errorMessage.includes('network') || errorMessage.includes('fetch')) {
         setError({ type: 'network', message: ERROR_MESSAGES.network });
       } else {
         setError({ type: 'api_error', message: ERROR_MESSAGES.api_error });
