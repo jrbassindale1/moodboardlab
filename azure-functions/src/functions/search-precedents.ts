@@ -141,6 +141,35 @@ const EXCLUDED_URL_PATTERNS = [
   /\/materials\//i,
   /\/about/i,
   /\/contact/i,
+  // Exclude guides, listicles, and editorial content
+  /\/guide/i,
+  /\/guides\//i,
+  /-guide-to-/i,
+  /\/tips\//i,
+  /\/how-to\//i,
+  /\/best-/i,
+  /\/top-\d+/i,
+  /\d+-best-/i,
+  /\d+-top-/i,
+  /\/lookbook/i,
+  /\/roundup/i,
+  /\/collection\//i,
+  /\/inspiration\//i,
+  /\/trends\//i,
+  /\/event\//i,
+  /\/events\//i,
+  /\/exhibition\//i,
+  /\/fair\//i,
+  /\/week\//i,
+  /dutch-design-week/i,
+  /milan-design-week/i,
+  /london-design-festival/i,
+  // Exclude manufacturer/supplier pages
+  /\/manufacturer\//i,
+  /\/supplier\//i,
+  /\/company\//i,
+  /\/brand\//i,
+  /co\.,?\s*ltd/i,
 ];
 
 function isProjectUrl(url: string): boolean {
@@ -280,41 +309,43 @@ function generateSearchQueries(brief: MaterialsBrief): string[] {
   const queries: string[] = [];
   const publicationSites =
     'site:archdaily.com OR site:dezeen.com OR site:architizer.com OR site:designboom.com OR site:divisare.com';
+  // Exclude editorial content from searches
+  const excludeTerms = '-guide -"best of" -roundup -trends -event -exhibition -week';
 
-  // Query 1: Primary material types + architecture (publication sites)
+  // Query 1: Primary material types + house/residence (publication sites)
   if (brief.materialTypes.length > 0) {
     const types = brief.materialTypes.slice(0, 2).join(' ');
-    queries.push(`${types} architecture project ${publicationSites}`);
+    queries.push(`${types} house OR residence ${publicationSites} ${excludeTerms}`);
   }
 
-  // Query 2: Special keywords (CLT, terrazzo, corten, etc.) (publication sites)
+  // Query 2: Special keywords + building (publication sites)
   if (brief.keywords.length > 0) {
     const keyword = brief.keywords[0];
-    queries.push(`${keyword} architecture building ${publicationSites}`);
+    queries.push(`${keyword} building completed ${publicationSites} ${excludeTerms}`);
   }
 
-  // Query 3: Architect websites - materials + "architects" or "studio"
+  // Query 3: Material types + office/commercial (publication sites)
   if (brief.materialTypes.length > 0) {
     const types = brief.materialTypes.slice(0, 2).join(' ');
-    queries.push(`${types} architecture project architects studio`);
+    queries.push(`${types} office OR museum OR school ${publicationSites} ${excludeTerms}`);
   }
 
   // Query 4: Material + finish combination (open search for architect sites)
   if (brief.materialTypes.length > 0 && brief.finishes.length > 0) {
     const type = brief.materialTypes[0];
     const finish = brief.finishes[0];
-    queries.push(`${finish} ${type} building design architect`);
+    queries.push(`${finish} ${type} house OR building architect completed ${excludeTerms}`);
   }
 
   // Query 5: Material combination (publication sites)
   if (brief.materialTypes.length >= 2) {
     const combo = brief.materialTypes.slice(0, 2).join(' and ');
-    queries.push(`${combo} architecture ${publicationSites}`);
+    queries.push(`${combo} architecture building ${publicationSites} ${excludeTerms}`);
   }
 
   // Ensure at least 3 queries
   if (queries.length < 3 && brief.materialTypes.length > 0) {
-    queries.push(`${brief.materialTypes[0]} facade design architecture`);
+    queries.push(`${brief.materialTypes[0]} facade house residence ${publicationSites} ${excludeTerms}`);
   }
 
   return queries.slice(0, MAX_QUERIES);
@@ -413,7 +444,7 @@ function filterProjectUrls(
 // Step 6: LLM Selection with Gemini
 // =============================================================================
 
-const SELECTION_PROMPT = `You are an expert architectural curator helping designers find project precedents that match their material palette.
+const SELECTION_PROMPT = `You are an expert architectural curator helping designers find REAL BUILDING project precedents that match their material palette.
 
 ## Material Brief
 The designer is working with these materials:
@@ -425,13 +456,21 @@ The designer is working with these materials:
 {candidatesList}
 
 ## Your Task
-Select exactly 3 projects that:
-1. BEST exemplify creative or innovative use of the specified materials
-2. Are specific building projects (residential, commercial, cultural, etc.)
+Select exactly 3 COMPLETED BUILDING PROJECTS that:
+1. Are REAL, BUILT architectural projects (houses, offices, museums, schools, etc.)
+2. BEST exemplify creative or innovative use of the specified materials
 3. Show diverse applications (avoid selecting 3 very similar buildings)
 4. Prioritize projects where materials are a key design feature
 
-If fewer than 3 strong matches exist, select only the strong ones.
+## STRICT EXCLUSIONS - Never select:
+- Editorial articles, guides, roundups, or "best of" lists
+- Design week exhibitions, pavilions, or temporary installations
+- Product pages or manufacturer showcases
+- Company/firm profile pages
+- Material guides or how-to articles
+- News articles about trends or events
+
+If fewer than 3 REAL BUILDING projects exist in the candidates, select only the valid ones. Return an empty array rather than selecting non-building content.
 
 ## Output Format
 Respond with ONLY valid JSON:
