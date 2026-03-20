@@ -566,7 +566,7 @@ export async function searchPrecedents(
   options?: { maxResults?: number; timeoutMs?: number }
 ): Promise<SearchPrecedentsResponse> {
   const API_BASE = getApiBase();
-  const timeoutMs = options?.timeoutMs ?? 30000;
+  const timeoutMs = options?.timeoutMs ?? 90000; // 90s - precedent search is complex (multiple searches + LLM calls)
 
   const res = await fetchWithTimeout(
     `${API_BASE}/api/search-precedents`,
