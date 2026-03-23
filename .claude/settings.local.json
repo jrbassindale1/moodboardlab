@@ -40,7 +40,8 @@
       "Bash(source ~/.zshrc)",
       "Bash(source ~/.bashrc)",
       "Bash(./node_modules/.bin/tsc:*)",
-      "Bash(/opt/homebrew/bin/npx tsc --noEmit)"
+      "Bash(/opt/homebrew/bin/npx tsc --noEmit)",
+      "Bash(export PATH=\"/Users/jr-bassindale/.nvm/versions/node/v22.20.0/bin:$PATH\")"
     ]
   }
 }
