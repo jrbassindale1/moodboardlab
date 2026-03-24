@@ -171,7 +171,7 @@ type ProjectGroup = {
 
 const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
-  const { usage, remaining, limit } = useUsage();
+  const { usage, remaining, limit, purchasedCredits } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
@@ -478,14 +478,27 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
         </div>
 
         {/* Usage Stats */}
-        <div className="grid md:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 xl:grid-cols-5 gap-6">
           <div className="border border-gray-200 p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-              Remaining This Month
+              Available Credits
             </div>
             <div className="font-display text-4xl font-bold">
-              {remaining}{' '}
-              <span className="text-gray-400 text-2xl">/ {limit}</span>
+              {remaining}
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              {purchasedCredits > 0 ? `Includes ${purchasedCredits} purchased credits` : `${limit} free each month`}
+            </div>
+          </div>
+          <div className="border border-gray-200 p-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
+              Purchased Credits
+            </div>
+            <div className="font-display text-4xl font-bold text-green-600">
+              {purchasedCredits}
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              Non-expiring balance
             </div>
           </div>
           <div className="border border-gray-200 p-6">
