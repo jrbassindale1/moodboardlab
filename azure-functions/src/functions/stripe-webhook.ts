@@ -8,14 +8,16 @@
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
+import Stripe from 'stripe';
 import {
   getContainer,
   CreditsDocument,
   CreditTransactionDocument,
+  isCosmosConflict,
   isCosmosNotFound,
   getCreditPackage,
 } from '../shared/cosmosClient';
-import Stripe from 'stripe';
+import { requireAuth, ValidatedUser } from '../shared/validateToken';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
@@ -29,55 +31,21 @@ function getStripe(): Stripe {
   });
 }
 
-async function addCreditsToUser(
+function getTransactionId(sessionId: string): string {
+  return `txn_${sessionId}`;
+}
+
+async function tryReservePurchaseTransaction(
   userId: string,
   credits: number,
   sessionId: string,
   paymentIntentId: string | null,
   amountPence: number,
   context: InvocationContext
-): Promise<void> {
-  const creditsContainer = getContainer('credits');
+): Promise<boolean> {
   const transactionsContainer = getContainer('credit_transactions');
-  const now = new Date().toISOString();
+  const transactionId = getTransactionId(sessionId);
 
-  // Create or update the credits document
-  try {
-    const { resource: existingCredits } = await creditsContainer
-      .item(userId, userId)
-      .read<CreditsDocument>();
-
-    if (existingCredits) {
-      // Update existing credits
-      await creditsContainer.item(userId, userId).replace<CreditsDocument>({
-        ...existingCredits,
-        purchasedCredits: existingCredits.purchasedCredits + credits,
-        totalPurchased: existingCredits.totalPurchased + credits,
-        lastPurchaseAt: now,
-        updatedAt: now,
-      });
-      context.log(`Updated credits for user ${userId}: +${credits} (total: ${existingCredits.purchasedCredits + credits})`);
-    }
-  } catch (error) {
-    if (isCosmosNotFound(error)) {
-      // Create new credits document
-      await creditsContainer.items.create<CreditsDocument>({
-        id: userId,
-        userId,
-        purchasedCredits: credits,
-        totalPurchased: credits,
-        lastPurchaseAt: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-      context.log(`Created credits for user ${userId}: ${credits}`);
-    } else {
-      throw error;
-    }
-  }
-
-  // Record the transaction
-  const transactionId = `txn_${sessionId}`;
   try {
     await transactionsContainer.items.create<CreditTransactionDocument>({
       id: transactionId,
@@ -87,13 +55,178 @@ async function addCreditsToUser(
       amountPence,
       stripeSessionId: sessionId,
       stripePaymentIntentId: paymentIntentId,
-      createdAt: now,
+      createdAt: new Date().toISOString(),
     });
-    context.log(`Recorded transaction ${transactionId} for user ${userId}`);
+    context.log(`Reserved transaction ${transactionId} for user ${userId}`);
+    return true;
   } catch (error) {
-    // Transaction might already exist (idempotency)
-    context.warn(`Transaction ${transactionId} may already exist:`, error);
+    if (isCosmosConflict(error)) {
+      context.log(`Transaction ${transactionId} already exists for user ${userId}`);
+      return false;
+    }
+    throw error;
   }
+}
+
+async function releaseReservedPurchaseTransaction(
+  userId: string,
+  sessionId: string,
+  context: InvocationContext
+): Promise<void> {
+  const transactionsContainer = getContainer('credit_transactions');
+  const transactionId = getTransactionId(sessionId);
+
+  try {
+    await transactionsContainer.item(transactionId, userId).delete();
+    context.warn(`Rolled back transaction ${transactionId} for user ${userId}`);
+  } catch (error) {
+    if (!isCosmosNotFound(error)) {
+      context.warn(`Failed to roll back transaction ${transactionId}:`, error);
+    }
+  }
+}
+
+async function addCreditsToUser(
+  userId: string,
+  credits: number,
+  sessionId: string,
+  paymentIntentId: string | null,
+  amountPence: number,
+  context: InvocationContext
+): Promise<{ processed: boolean; alreadyProcessed: boolean }> {
+  const creditsContainer = getContainer('credits');
+  const now = new Date().toISOString();
+
+  const transactionReserved = await tryReservePurchaseTransaction(
+    userId,
+    credits,
+    sessionId,
+    paymentIntentId,
+    amountPence,
+    context
+  );
+
+  if (!transactionReserved) {
+    return {
+      processed: false,
+      alreadyProcessed: true,
+    };
+  }
+
+  const createCreditsDocument = async () => {
+    await creditsContainer.items.create<CreditsDocument>({
+      id: userId,
+      userId,
+      purchasedCredits: credits,
+      totalPurchased: credits,
+      lastPurchaseAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+    context.log(`Created credits for user ${userId}: ${credits}`);
+  };
+
+  try {
+    const { resource: existingCredits } = await creditsContainer
+      .item(userId, userId)
+      .read<CreditsDocument>();
+
+    if (existingCredits) {
+      await creditsContainer.item(userId, userId).replace<CreditsDocument>({
+        ...existingCredits,
+        purchasedCredits: existingCredits.purchasedCredits + credits,
+        totalPurchased: existingCredits.totalPurchased + credits,
+        lastPurchaseAt: now,
+        updatedAt: now,
+      });
+      context.log(`Updated credits for user ${userId}: +${credits} (total: ${existingCredits.purchasedCredits + credits})`);
+    } else {
+      await createCreditsDocument();
+    }
+  } catch (error) {
+    if (isCosmosNotFound(error)) {
+      try {
+        await createCreditsDocument();
+      } catch (createError) {
+        await releaseReservedPurchaseTransaction(userId, sessionId, context);
+        throw createError;
+      }
+    } else {
+      await releaseReservedPurchaseTransaction(userId, sessionId, context);
+      throw error;
+    }
+  }
+
+  return {
+    processed: true,
+    alreadyProcessed: false,
+  };
+}
+
+function getCheckoutSessionPurchaseDetails(session: Stripe.Checkout.Session): {
+  userId: string;
+  credits: number;
+  amountPence: number;
+  paymentIntentId: string | null;
+} {
+  const userId = session.metadata?.userId?.trim() || '';
+  const packageId = session.metadata?.packageId?.trim() || '';
+  const creditsFromMetadata = session.metadata?.credits;
+
+  let credits = 0;
+  if (packageId) {
+    const pkg = getCreditPackage(packageId);
+    if (pkg) {
+      credits = pkg.credits;
+    }
+  }
+  if (!credits && creditsFromMetadata) {
+    credits = parseInt(creditsFromMetadata, 10);
+  }
+
+  const amountPence = session.amount_total || 0;
+  const paymentIntentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
+    : session.payment_intent?.id || null;
+
+  return {
+    userId,
+    credits,
+    amountPence,
+    paymentIntentId,
+  };
+}
+
+async function processCheckoutSessionPurchase(
+  session: Stripe.Checkout.Session,
+  context: InvocationContext
+): Promise<{ processed: boolean; alreadyProcessed: boolean }> {
+  if (session.payment_status !== 'paid') {
+    context.log(`Session ${session.id} not paid, skipping.`);
+    return {
+      processed: false,
+      alreadyProcessed: false,
+    };
+  }
+
+  const { userId, credits, amountPence, paymentIntentId } = getCheckoutSessionPurchaseDetails(session);
+
+  if (!userId) {
+    throw new Error('Missing userId in session metadata');
+  }
+
+  if (!credits || credits <= 0) {
+    throw new Error('Invalid credits amount');
+  }
+
+  return addCreditsToUser(
+    userId,
+    credits,
+    session.id,
+    paymentIntentId,
+    amountPence,
+    context
+  );
 }
 
 export async function stripeWebhook(
@@ -139,70 +272,16 @@ export async function stripeWebhook(
 
   context.log(`Received Stripe event: ${event.type}`);
 
-  // Handle the event
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Ensure payment was successful
-    if (session.payment_status !== 'paid') {
-      context.log(`Session ${session.id} not paid, skipping.`);
-      return {
-        status: 200,
-        body: JSON.stringify({ received: true, processed: false }),
-        headers: { 'Content-Type': 'application/json' },
-      };
-    }
-
-    const userId = session.metadata?.userId;
-    const packageId = session.metadata?.packageId;
-    const creditsFromMetadata = session.metadata?.credits;
-
-    if (!userId) {
-      context.error('No userId in session metadata');
-      return {
-        status: 400,
-        body: JSON.stringify({ error: 'Missing userId in metadata' }),
-        headers: { 'Content-Type': 'application/json' },
-      };
-    }
-
-    // Get credits from package or metadata
-    let credits = 0;
-    if (packageId) {
-      const pkg = getCreditPackage(packageId);
-      if (pkg) {
-        credits = pkg.credits;
-      }
-    }
-    if (!credits && creditsFromMetadata) {
-      credits = parseInt(creditsFromMetadata, 10);
-    }
-
-    if (!credits || credits <= 0) {
-      context.error('Could not determine credits from session');
-      return {
-        status: 400,
-        body: JSON.stringify({ error: 'Invalid credits amount' }),
-        headers: { 'Content-Type': 'application/json' },
-      };
-    }
-
-    const amountPence = session.amount_total || 0;
-    const paymentIntentId = typeof session.payment_intent === 'string'
-      ? session.payment_intent
-      : session.payment_intent?.id || null;
-
     try {
-      await addCreditsToUser(
-        userId,
-        credits,
-        session.id,
-        paymentIntentId,
-        amountPence,
-        context
+      const result = await processCheckoutSessionPurchase(session, context);
+      context.log(
+        result.alreadyProcessed
+          ? `Stripe session ${session.id} was already processed.`
+          : `Stripe session ${session.id} processed successfully.`
       );
-
-      context.log(`Successfully added ${credits} credits to user ${userId}`);
     } catch (error) {
       context.error('Failed to add credits:', error);
       return {
@@ -220,8 +299,94 @@ export async function stripeWebhook(
   };
 }
 
+export async function confirmCheckoutSession(
+  req: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  context.log('Checkout session confirmation received.');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  if (req.method === 'OPTIONS') {
+    return { status: 204, headers };
+  }
+
+  const authResult = await requireAuth(req);
+  if ('status' in authResult) {
+    return {
+      status: authResult.status,
+      body: authResult.body,
+      headers,
+    };
+  }
+
+  const user = authResult as ValidatedUser;
+
+  try {
+    const body = await req.json() as { sessionId?: string };
+    const sessionId = typeof body.sessionId === 'string' ? body.sessionId.trim() : '';
+
+    if (!sessionId) {
+      return {
+        status: 400,
+        body: JSON.stringify({ error: 'sessionId is required' }),
+        headers,
+      };
+    }
+
+    const stripe = getStripe();
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const sessionUserId = session.metadata?.userId?.trim() || '';
+
+    if (!sessionUserId) {
+      return {
+        status: 400,
+        body: JSON.stringify({ error: 'Missing userId in session metadata' }),
+        headers,
+      };
+    }
+
+    if (sessionUserId !== user.userId) {
+      return {
+        status: 403,
+        body: JSON.stringify({ error: 'Checkout session does not belong to the authenticated user' }),
+        headers,
+      };
+    }
+
+    const result = await processCheckoutSessionPurchase(session, context);
+    return {
+      status: 200,
+      body: JSON.stringify({
+        success: true,
+        processed: result.processed,
+        alreadyProcessed: result.alreadyProcessed,
+      }),
+      headers,
+    };
+  } catch (error) {
+    context.error('Failed to confirm checkout session:', error);
+    return {
+      status: 500,
+      body: JSON.stringify({ error: 'Failed to confirm checkout session' }),
+      headers,
+    };
+  }
+}
+
 app.http('stripe-webhook', {
   methods: ['POST'],
   authLevel: 'anonymous',
   handler: stripeWebhook,
+});
+
+app.http('confirm-checkout-session', {
+  methods: ['POST', 'OPTIONS'],
+  authLevel: 'anonymous',
+  handler: confirmCheckoutSession,
 });

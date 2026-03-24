@@ -98,6 +98,12 @@ export interface CheckoutSessionResponse {
   url: string;
 }
 
+export interface ConfirmCheckoutSessionResponse {
+  success: boolean;
+  processed: boolean;
+  alreadyProcessed: boolean;
+}
+
 export interface MaterialsResponse {
   items: MaterialOption[];
   count?: number;
@@ -618,6 +624,38 @@ export async function createCheckoutSession(
 
   if (!res.ok) {
     let message = 'Failed to create checkout session';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+export async function confirmCheckoutSession(
+  accessToken: string,
+  sessionId: string
+): Promise<ConfirmCheckoutSessionResponse> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/confirm-checkout-session`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ sessionId }),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to confirm checkout session';
     try {
       const data = await res.json() as { error?: string; message?: string };
       message = data.message || data.error || message;

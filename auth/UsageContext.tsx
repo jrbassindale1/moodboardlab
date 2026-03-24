@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
-import { getUsage, checkQuota } from '../api';
+import { getUsage, checkQuota, confirmCheckoutSession } from '../api';
 
 type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
 
@@ -88,6 +88,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   const [anonymousCount, setAnonymousCount] = useState(0);
   const [purchasedCredits, setPurchasedCredits] = useState(0);
   const [freeRemaining, setFreeRemaining] = useState(FREE_MONTHLY_LIMIT);
+  const processedCheckoutSessionsRef = useRef<Set<string>>(new Set());
 
   // Fetch usage from server for authenticated users
   const refreshUsage = useCallback(async () => {
@@ -127,6 +128,63 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
       refreshUsage();
     }
   }, [isAuthenticated, authLoading, refreshUsage]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || authLoading || !isAuthenticated) {
+      return;
+    }
+
+    const currentUrl = new URL(window.location.href);
+    const creditsPurchased = currentUrl.searchParams.get('credits_purchased') === 'true';
+    const sessionId = currentUrl.searchParams.get('session_id')?.trim() || '';
+
+    if (!creditsPurchased || !sessionId || processedCheckoutSessionsRef.current.has(sessionId)) {
+      return;
+    }
+
+    processedCheckoutSessionsRef.current.add(sessionId);
+    let cancelled = false;
+
+    const clearCheckoutParams = () => {
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.delete('credits_purchased');
+      nextUrl.searchParams.delete('credits_cancelled');
+      nextUrl.searchParams.delete('session_id');
+      window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+    };
+
+    const confirmPurchase = async () => {
+      let shouldClearParams = false;
+
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          processedCheckoutSessionsRef.current.delete(sessionId);
+          return;
+        }
+
+        await confirmCheckoutSession(token, sessionId);
+        shouldClearParams = true;
+
+        if (!cancelled) {
+          await refreshUsage();
+        }
+      } catch (error) {
+        processedCheckoutSessionsRef.current.delete(sessionId);
+        console.error('Failed to confirm credit purchase:', error);
+      } finally {
+        if (!cancelled && shouldClearParams) {
+          clearCheckoutParams();
+        }
+      }
+    };
+
+    void confirmPurchase();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, isAuthenticated, getAccessToken, refreshUsage]);
 
   // Increment local anonymous usage (skips free generation types like materialIcon)
   const incrementLocalUsage = useCallback((count = 1, generationType?: GenerationType) => {
