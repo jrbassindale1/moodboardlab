@@ -300,11 +300,11 @@ export function isPaidUser(creditsDoc: CreditsDocument | null): boolean {
 
 /**
  * Check if 4K generation is allowed for a user
- * 4K requires being a paid user (has purchased credits)
+ * 4K requires at least 5 purchased credits available
  */
 export function canGenerate4K(creditsDoc: CreditsDocument | null, isAdmin: boolean): boolean {
   if (isAdmin) return true;
-  return isPaidUser(creditsDoc);
+  return (creditsDoc?.purchasedCredits || 0) >= CREDIT_COSTS.FOUR_K_GENERATION;
 }
 
 // Admin users with unlimited credits

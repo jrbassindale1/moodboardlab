@@ -120,7 +120,7 @@ export async function consumeCredits(
         status: 403,
         headers,
         body: JSON.stringify({
-          error: '4K generation is available to paid users only. Purchase credits to unlock 4K.',
+          error: '4K generation requires at least 5 purchased credits. Free monthly credits do not unlock 4K.',
           code: '4K_REQUIRES_PAID',
           remaining: totalRemaining,
           freeRemaining,
@@ -146,16 +146,16 @@ export async function consumeCredits(
       };
     }
 
-    // Determine how to split the credit consumption
-    // Priority: Use purchased credits first (they don't expire), then free monthly
+    // Determine how to split the credit consumption.
+    // Priority: Use free monthly credits first, then purchased credits.
     let purchasedToUse = 0;
     let freeToUse = 0;
 
     if (!isFreeGeneration && !userIsAdmin) {
-      // First use purchased credits
-      purchasedToUse = Math.min(credits, purchasedCredits);
-      // Then use free credits for the remainder
-      freeToUse = credits - purchasedToUse;
+      // First use the remaining free monthly allowance.
+      freeToUse = Math.min(credits, freeRemaining);
+      // Then use purchased credits for the remainder.
+      purchasedToUse = credits - freeToUse;
 
       // Deduct purchased credits if any were used
       if (purchasedToUse > 0 && creditsDoc) {

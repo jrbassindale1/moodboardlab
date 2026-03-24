@@ -65,6 +65,7 @@ export interface QuotaResponse {
   used: number;
   freeRemaining?: number;
   purchasedCredits?: number;
+  isAdmin?: boolean;
 }
 
 /**
@@ -413,7 +414,8 @@ export async function consumeCredits(
   accessToken: string,
   payload: {
     generationType: GenerationType;
-    credits: number;
+    generationMode?: GenerationMode;
+    credits?: number;
     reason?: string;
   }
 ): Promise<{
@@ -438,7 +440,14 @@ export async function consumeCredits(
   );
 
   if (!res.ok) {
-    throw new Error('Failed to consume credits');
+    let message = 'Failed to consume credits';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
   }
   return res.json();
 }

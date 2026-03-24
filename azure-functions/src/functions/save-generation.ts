@@ -5,16 +5,14 @@
  * - Validates JWT token for authenticated requests
  * - Saves image to Azure Blob Storage
  * - Records generation in CosmosDB for user history
- * - Increments usage count
  */
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth, ValidatedUser } from '../shared/validateToken';
-import { incrementUsage, saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
+import { saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
 import { getSasUrlForBlob } from '../shared/blobSas';
-import { isAdminUser } from '../shared/cosmosClient';
 
 const BLOB_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const BLOB_CONTAINER = process.env.BLOB_CONTAINER || 'generations';
@@ -228,7 +226,6 @@ export async function saveGeneration(
 
     const user = authResult as ValidatedUser;
     const userId = user.userId;
-    const userIsAdmin = isAdminUser(user.email, user.userId);
     context.log(`Authenticated user: ${userId}`);
 
     // Upload to blob storage
@@ -241,7 +238,7 @@ export async function saveGeneration(
       context
     );
 
-    // Save to their history and increment usage when generation type is provided
+    // Save generation history when a generation type is provided.
     if (generationType) {
       await saveGenerationRecord(
         userId,
@@ -250,12 +247,7 @@ export async function saveGeneration(
         blobUrl,
         materialsWithArchivedUploads
       );
-      if (!userIsAdmin) {
-        await incrementUsage(userId, generationType);
-        context.log(`Saved generation record and incremented usage for ${userId}`);
-      } else {
-        context.log(`Saved generation record for admin user ${userId} without incrementing usage`);
-      }
+      context.log(`Saved generation record for ${userId}`);
     }
 
     return {

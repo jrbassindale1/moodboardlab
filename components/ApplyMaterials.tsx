@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ImageDown, Loader2, Wand2 } from 'lucide-react';
-import { callGeminiImage, saveGenerationAuth, checkQuota } from '../api';
+import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
@@ -195,7 +195,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
-  const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate } = useUsage();
+  const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate, remaining, purchasedCredits, isAdmin } = useUsage();
 
   // Local UI state only (transient, doesn't need to persist)
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
@@ -279,6 +279,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const persistGeneration = async (
     imageDataUri: string,
     prompt: string,
+    generationType: Extract<GenerationType, 'applyMaterials' | 'upscale'>,
     generationMeta?: {
       imageModelUsed?: string;
       imageFallbackUsed?: boolean;
@@ -289,7 +290,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     console.log('moodboardRenderUrl prop:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
 
     const metadata = {
-      renderMode: 'apply-to-upload',
+      renderMode: generationType === 'upscale' ? 'upscale-4k' : 'apply-to-upload',
       materialKey: buildMaterialKey(),
       summary: summaryText,
       imageModelUsed: generationMeta?.imageModelUsed || undefined,
@@ -329,7 +330,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         prompt,
         imageDataUri,
         materials: metadata,
-        generationType: 'applyMaterials'
+        generationType
       }, token);
     } catch (err) {
       console.error('Authenticated save failed:', err);
@@ -414,6 +415,25 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
   }): Promise<boolean> => {
+    const currentBaseImageDataUrl =
+      options?.baseImageDataUrl ??
+      (options?.renderMode === 'upscale-4k' ? appliedRenderUrl : null);
+    const isEditingRender = Boolean(currentBaseImageDataUrl && options?.renderMode === 'edit');
+    const isUpscalingRender = Boolean(currentBaseImageDataUrl && options?.renderMode === 'upscale-4k');
+    const generationMode =
+      options?.renderMode === 'upscale-4k'
+        ? '4k'
+        : isEditingRender
+        ? 'iterative'
+        : 'standard';
+    const requiredCredits =
+      generationMode === '4k'
+        ? CREDIT_COSTS.FOUR_K_GENERATION
+        : generationMode === 'iterative'
+        ? CREDIT_COSTS.ITERATIVE_GENERATION
+        : CREDIT_COSTS.STANDARD_GENERATION;
+    const billedGenerationType = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
+
     // Check quota - server-side for authenticated users, shared local quota for anonymous users
     if (isAuthenticated) {
       // Refresh and check server-side quota
@@ -421,8 +441,16 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         const token = await getAccessToken();
         if (token) {
           const quotaCheck = await checkQuota(token);
-          if (!quotaCheck.canGenerate) {
-            setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+          if (generationMode === '4k' && !quotaCheck.isAdmin && (quotaCheck.purchasedCredits || 0) < CREDIT_COSTS.FOUR_K_GENERATION) {
+            setError('Render 4K requires at least 5 purchased credits.');
+            return false;
+          }
+          if (!quotaCheck.canGenerate || quotaCheck.remaining < requiredCredits) {
+            setError(
+              requiredCredits === 1
+                ? 'Not enough credits. This action costs 1 credit.'
+                : `Not enough credits. This action costs ${requiredCredits} credits.`
+            );
             return false;
           }
         }
@@ -431,8 +459,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         // Continue with render if quota check fails (graceful degradation)
       }
     } else {
-      if (!canGenerate) {
-        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+      if (remaining < requiredCredits) {
+        setError(
+          requiredCredits === 1
+            ? 'Not enough credits. This action costs 1 credit.'
+            : `Not enough credits. This action costs ${requiredCredits} credits.`
+        );
         return false;
       }
     }
@@ -445,8 +477,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('All materials are excluded from the render. Uncheck at least one material.');
       return false;
     }
-    const isEditingRender = Boolean(options?.baseImageDataUrl && options?.renderMode === 'edit');
-    if (!isEditingRender && uploadedImages.length === 0) {
+    if (isUpscalingRender && !currentBaseImageDataUrl) {
+      setError('Create a render first before generating a 4K version.');
+      return false;
+    }
+    if (!isEditingRender && !isUpscalingRender && uploadedImages.length === 0) {
       setError('Upload at least one base image first.');
       return false;
     }
@@ -508,7 +543,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ? '- Use neutral, even lighting and keep edges/cut geometry crisp; avoid cinematic haze, vignette, and dramatic color grading.'
       : '- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading.';
 
-    const prompt = isEditingRender
+    const prompt = isUpscalingRender
+      ? `Create a 4K upscaled version of the provided architectural render. Preserve the exact composition, camera position, geometry, materials, entourage, and lighting from the source image. Do not redesign or reinterpret the image. Increase resolution, sharpen material detail, and improve fine-grain realism only.`
+      : isEditingRender
       ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
       : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
@@ -517,8 +554,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     console.log('=== END PROMPT ===');
 
     try {
-      let baseImageDataUrl: string | null = options?.baseImageDataUrl ?? null;
-      if (isEditingRender && baseImageDataUrl && !isDataUri(baseImageDataUrl)) {
+      let baseImageDataUrl: string | null = currentBaseImageDataUrl;
+      if ((isEditingRender || isUpscalingRender) && baseImageDataUrl && !isDataUri(baseImageDataUrl)) {
         try {
           baseImageDataUrl = await resolveImageSourceToDataUrl(baseImageDataUrl);
         } catch (loadErr) {
@@ -530,7 +567,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       const imageSize = options?.imageSize ?? '1K';
       let aspectRatio = '1:1';
-      if (isEditingRender && baseImageDataUrl) {
+      if ((isEditingRender || isUpscalingRender) && baseImageDataUrl) {
         const inferredRatio = await inferAspectRatioFromDataUrl(baseImageDataUrl);
         if (inferredRatio) {
           aspectRatio = inferredRatio;
@@ -547,7 +584,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           {
             parts: [
               { text: prompt },
-              ...(isEditingRender && baseImageDataUrl
+              ...((isEditingRender || isUpscalingRender) && baseImageDataUrl
                 ? [dataUrlToInlineData(baseImageDataUrl)]
                 : uploadedImages.map((img) => dataUrlToInlineData(img.dataUrl)))
             ]
@@ -585,6 +622,28 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
       if (!img) throw new Error('Gemini did not return an image payload.');
       const newUrl = `data:${mime || 'image/png'};base64,${img}`;
+
+      if (isAuthenticated) {
+        const token = await getAccessToken();
+        if (!token) {
+          throw new Error('Please sign in to continue.');
+        }
+
+        await consumeCredits(token, {
+          generationType: billedGenerationType,
+          generationMode,
+          reason:
+            generationMode === '4k'
+              ? 'apply-render-4k'
+              : generationMode === 'iterative'
+              ? 'apply-render-edit'
+              : 'apply-render-standard',
+        });
+        await refreshUsage();
+      } else {
+        incrementLocalUsage(requiredCredits, billedGenerationType);
+      }
+
       onAppliedRenderUrlChange(newUrl);
 
       // Reset scene controls after successful render
@@ -601,16 +660,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         event_label: eventLabel,
       });
 
-      // Update quota tracking based on auth status
-      if (isAuthenticated) {
-        // Refresh server-side usage count
-        await refreshUsage();
-      } else {
-        // Increment shared local anonymous usage count
-        incrementLocalUsage();
-      }
-
-      void persistGeneration(newUrl, prompt, {
+      void persistGeneration(newUrl, prompt, billedGenerationType, {
         imageModelUsed: modelUsed,
         imageFallbackUsed: fallbackUsed
       });
@@ -646,6 +696,37 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
+  const handleRender4K = async () => {
+    if (!appliedRenderUrl) {
+      setError('Create a render first before generating a 4K version.');
+      return;
+    }
+    if (!canUse4K) {
+      setError('Render 4K requires at least 5 purchased credits.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Render 4K will upscale the current image and cost 5 credits. Continue?'
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    await runApplyRender({
+      baseImageDataUrl: appliedRenderUrl,
+      imageSize: '4K',
+      renderMode: 'upscale-4k'
+    });
+  };
+
+
+  const canUse4K = Boolean(isAuthenticated && (isAdmin || purchasedCredits >= CREDIT_COSTS.FOUR_K_GENERATION));
+  const fourKTooltip = isAdmin
+    ? 'Generate a 4K upscale of the current render'
+    : canUse4K
+    ? 'Generate a 4K upscale of the current render'
+    : 'Requires at least 5 purchased credits';
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
@@ -1303,14 +1384,24 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       </button>
                       <div className="relative group">
                         <button
-                          disabled
-                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-gray-100 text-gray-400 font-mono text-[11px] uppercase tracking-widest cursor-not-allowed"
+                          onClick={handleRender4K}
+                          disabled={status !== 'idle' || !appliedRenderUrl || !canUse4K}
+                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300"
                         >
-                          <Wand2 className="w-4 h-4" />
-                          Render 4K
+                          {status === 'render' && renderingMode === 'upscale-4k' ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Rendering 4K
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="w-4 h-4" />
+                              Render 4K
+                            </>
+                          )}
                         </button>
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          Feature coming soon
+                          {canUse4K ? 'Upscale current render to 4K. Costs 5 credits.' : fourKTooltip}
                           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
                         </div>
                       </div>

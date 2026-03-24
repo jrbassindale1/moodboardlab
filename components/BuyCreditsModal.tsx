@@ -129,7 +129,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             </div>
           </div>
           <p className="mt-2 text-[10px] text-gray-500">
-            4K generation is available to paid users only.
+            4K generation unlocks when you have at least 5 purchased credits.
           </p>
         </div>
 

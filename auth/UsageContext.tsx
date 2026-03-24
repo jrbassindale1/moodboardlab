@@ -28,6 +28,7 @@ export interface QuotaData {
   used: number;
   freeRemaining?: number;
   purchasedCredits?: number;
+  isAdmin?: boolean;
 }
 
 interface UsageContextType {
@@ -41,6 +42,7 @@ interface UsageContextType {
   isAnonymous: boolean;
   purchasedCredits: number;
   freeRemaining: number;
+  isAdmin: boolean;
 }
 
 const UsageContext = createContext<UsageContextType | null>(null);
@@ -88,6 +90,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   const [anonymousCount, setAnonymousCount] = useState(0);
   const [purchasedCredits, setPurchasedCredits] = useState(0);
   const [freeRemaining, setFreeRemaining] = useState(FREE_MONTHLY_LIMIT);
+  const [isAdmin, setIsAdmin] = useState(false);
   const processedCheckoutSessionsRef = useRef<Set<string>>(new Set());
 
   // Fetch usage from server for authenticated users
@@ -99,6 +102,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
       setUsage(null);
       setPurchasedCredits(0);
       setFreeRemaining(Math.max(0, ANONYMOUS_MONTHLY_LIMIT - quota.count));
+      setIsAdmin(false);
       return;
     }
 
@@ -114,6 +118,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
         setUsage(usageData);
         setPurchasedCredits(quotaData.purchasedCredits || 0);
         setFreeRemaining(quotaData.freeRemaining ?? Math.max(0, FREE_MONTHLY_LIMIT - usageData.total));
+        setIsAdmin(Boolean(quotaData.isAdmin));
       }
     } catch (error) {
       console.error('Failed to fetch usage:', error);
@@ -207,8 +212,10 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   // Total remaining = free remaining + purchased credits
   const remaining = isAnonymous
     ? Math.max(0, limit - used)
+    : isAdmin
+    ? 999999
     : freeRemaining + purchasedCredits;
-  const canGenerate = remaining > 0;
+  const canGenerate = isAdmin || remaining > 0;
 
   return (
     <UsageContext.Provider
@@ -223,6 +230,7 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
         isAnonymous,
         purchasedCredits,
         freeRemaining,
+        isAdmin,
       }}
     >
       {children}

@@ -17,6 +17,8 @@ import {
   callGeminiImage,
   callGeminiText,
   checkQuota,
+  consumeCredits,
+  CREDIT_COSTS,
   saveGenerationAuth,
   savePdfAuth,
   generateSustainabilityBriefing,
@@ -494,7 +496,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return false;
   };
 
-  const ensureQuotaForMoodboard = async () => {
+  const ensureQuotaForMoodboard = async (requiredCredits = CREDIT_COSTS.STANDARD_GENERATION) => {
     // If auth bypass is enabled, skip quota check
     if (isAuthBypassEnabled) {
       console.log('[Quota Check] Bypassed (auth bypass enabled)');
@@ -519,9 +521,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
         limit: quota.limit,
         used: quota.used
       });
-      if (!quota.canGenerate) {
+      if (!quota.canGenerate || quota.remaining < requiredCredits) {
         console.warn('[Quota Check] Failed: quota exceeded', quota);
-        setError('Monthly generation limit reached. Your quota resets on the 1st of next month.');
+        setError(
+          requiredCredits === 1
+            ? 'Not enough credits. This action costs 1 credit.'
+            : `Not enough credits. This action costs ${requiredCredits} credits.`
+        );
         return false;
       }
       return true;
@@ -754,8 +760,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
         materials: metadata,
         generationType: 'moodboard'
       }, token);
-
-      await refreshUsage();
       console.log('[Persist Generation] Successfully saved moodboard generation');
 
       // Show success notification briefly
@@ -1274,7 +1278,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     setError(null);
     setImageModelFallbackWarning(null);
-    const canGenerate = await ensureQuotaForMoodboard();
+    const canGenerate = await ensureQuotaForMoodboard(CREDIT_COSTS.STANDARD_GENERATION);
     if (!canGenerate || !isMountedRef.current) return;
 
     setIsCreatingMoodboard(true);
@@ -1362,7 +1366,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setError('Generate a moodboard render first.');
       return;
     }
-    const canGenerate = await ensureQuotaForMoodboard();
+    const canGenerate = await ensureQuotaForMoodboard(CREDIT_COSTS.ITERATIVE_GENERATION);
     if (!canGenerate || !isMountedRef.current) return;
 
     setIsCreatingMoodboard(true);
@@ -1859,6 +1863,20 @@ ${JSON.stringify(proseContext)}`;
         }
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
+
+        if (isAuthenticated) {
+          const token = await getAccessToken();
+          if (!token) {
+            throw new Error('Please sign in to continue.');
+          }
+
+          await consumeCredits(token, {
+            generationType: 'moodboard',
+            generationMode: isEditingRender ? 'iterative' : 'standard',
+            reason: isEditingRender ? 'moodboard-edit' : 'moodboard-render',
+          });
+          await refreshUsage();
+        }
 
         // Final check before setting state
         if (abortController.signal.aborted || !isMountedRef.current) {
