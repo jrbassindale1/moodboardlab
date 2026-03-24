@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, ShoppingCart, X } from 'lucide-react';
+import { Menu, X, Zap } from 'lucide-react';
 import AuthButton from './AuthButton';
-import { useAuth } from '../auth';
+import { useAuth, useUsage } from '../auth';
 import { getPathForPage } from '../utils/siteSeo';
 
 interface NavbarProps {
@@ -17,7 +17,10 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const { remaining, isLoading: isUsageLoading } = useUsage();
   const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
+  const materialCountLabel = boardCount > 99 ? '99+' : `${boardCount}`;
+  const creditBalanceLabel = isUsageLoading ? '...' : remaining > 9999 ? '9999+' : `${remaining}`;
 
   const baseNavItems = [
     { id: 'concept', label: 'Home' },
@@ -82,8 +85,13 @@ const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={getPathForPage(item.id)}
                 onClick={(event) => handleNavigateClick(event, item.id)}
-                className={`relative py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`relative inline-flex py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
+                {item.id === 'materials' && boardCount > 0 && (
+                  <span className="absolute -top-2 -left-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
+                    {materialCountLabel}
+                  </span>
+                )}
                 {item.label}
                 {currentPage === item.id && (
                   <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>
@@ -91,19 +99,17 @@ const Navbar: React.FC<NavbarProps> = ({
               </a>
             ))}
           </div>
-          {/* Shopping basket - visible on all screens */}
+
           <a
-            href={getPathForPage('moodboard')}
-            className="relative p-2 rounded-md hover:bg-gray-100 transition-colors"
-            onClick={(event) => handleNavigateClick(event, 'moodboard')}
-            aria-label={`Go to moodboard (${boardCount} items)`}
+            href={getPathForPage('dashboard')}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-black"
+            onClick={(event) => handleNavigateClick(event, 'dashboard')}
+            aria-label={`Go to dashboard (${creditBalanceLabel} credits available)`}
           >
-            <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-            {boardCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center rounded-full bg-black px-1.5 text-[10px] font-mono font-semibold text-white">
-                {boardCount}
-              </span>
-            )}
+            <Zap className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-widest">
+              {creditBalanceLabel}
+            </span>
           </a>
 
           {/* Auth Button */}
@@ -128,8 +134,13 @@ const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={getPathForPage(item.id)}
                 onClick={(event) => handleNavigateClick(event, item.id)}
-                className={`text-left transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`relative inline-flex w-fit text-left transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
+                {item.id === 'materials' && boardCount > 0 && (
+                  <span className="absolute -top-2 -left-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
+                    {materialCountLabel}
+                  </span>
+                )}
                 {item.label}
               </a>
             ))}

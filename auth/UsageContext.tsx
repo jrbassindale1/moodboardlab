@@ -2,10 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useAuth } from './AuthProvider';
 import { getUsage, checkQuota, confirmCheckoutSession } from '../api';
 
-type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
+type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'materialDetection' | 'sustainabilityBriefing';
 
 // Generation types that don't count towards the user's free limit
-const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
+// materialIcon is admin-only and doesn't use credits at all
+const FREE_GENERATION_TYPES: GenerationType[] = [];
 
 const FREE_MONTHLY_LIMIT = 10;
 const ANONYMOUS_MONTHLY_LIMIT = 10;
@@ -16,6 +17,7 @@ export interface UsageData {
   applyMaterials: number;
   upscale: number;
   materialIcon: number;
+  materialDetection: number;
   sustainabilityBriefing: number;
   total: number;
   yearMonth?: string;

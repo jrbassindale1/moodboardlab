@@ -759,7 +759,7 @@ IMPORTANT:
           const token = await getAccessToken();
           if (token) {
             await consumeCredits(token, {
-              generationType: 'materialIcon',
+              generationType: 'materialDetection',
               credits: DETECTION_CREDIT_COST,
               reason: 'material-detection',
             });
@@ -769,7 +769,7 @@ IMPORTANT:
           console.error('Failed to consume credits:', err);
         }
       } else if (isAnonymous) {
-        incrementLocalUsage(DETECTION_CREDIT_COST, 'materialIcon');
+        incrementLocalUsage(DETECTION_CREDIT_COST, 'materialDetection');
       }
 
       if (materials.length === 0) {
@@ -1097,7 +1097,10 @@ IMPORTANT:
                   /* AI Photo Analysis */
                   <div className="max-w-2xl space-y-6 border border-arch-line p-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display uppercase tracking-widest text-lg">Analyze Photo</h3>
+                      <div>
+                        <h3 className="font-display uppercase tracking-widest text-lg">Analyze Photo</h3>
+                        <p className="text-xs text-gray-500 font-sans mt-1">Uses 2 credits</p>
+                      </div>
                       <button
                         onClick={() => {
                           setCustomMaterialMode('analyse');

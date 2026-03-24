@@ -82,6 +82,7 @@ export interface UsageDocument {
     applyMaterials: number;
     upscale: number;
     materialIcon: number;
+    materialDetection: number;
     sustainabilityBriefing: number;
     precedentSearch: number;
   };

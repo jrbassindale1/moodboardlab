@@ -13,12 +13,14 @@ interface MaterialIconManagerProps {
   materials: MaterialOption[];
   autoGenerate?: boolean;
   compact?: boolean;
+  isAdmin?: boolean;
 }
 
 export function MaterialIconManager({
   materials,
   autoGenerate = true,
-  compact = false
+  compact = false,
+  isAdmin = false
 }: MaterialIconManagerProps) {
   const {
     icons,
@@ -27,12 +29,17 @@ export function MaterialIconManager({
     error,
     regenerateIcons,
     generateMissingIcons
-  } = useMaterialIcons(materials, autoGenerate);
+  } = useMaterialIcons(materials, autoGenerate, isAdmin);
 
   const missingCount = materials.length - icons.size;
   const percentage = progress.total > 0
     ? Math.round((progress.current / progress.total) * 100)
     : 0;
+
+  // Hide completely for non-admin users
+  if (!isAdmin) {
+    return null;
+  }
 
   if (compact && !isGenerating && missingCount === 0) {
     return null; // Hide when complete in compact mode

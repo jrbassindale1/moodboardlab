@@ -60,6 +60,11 @@ const PAGE_SEO: Record<string, PageSeo> = {
     title: 'Contact | Moodboard Lab',
     description: 'Contact Moodboard Lab for support, partnership conversations, and product questions.',
   },
+  pricing: {
+    path: '/pricing',
+    title: 'Pricing & Credits | Moodboard Lab',
+    description: 'Simple, transparent pricing for Moodboard Lab. Start with 10 free credits monthly, purchase more when you need them.',
+  },
   'material-admin': {
     path: '/material-admin',
     title: 'Material Admin | Moodboard Lab',
@@ -78,6 +83,7 @@ const PAGE_TYPES: Record<string, string> = {
   privacy: 'WebPage',
   terms: 'WebPage',
   contact: 'ContactPage',
+  pricing: 'WebPage',
   'material-admin': 'WebPage',
 };
 

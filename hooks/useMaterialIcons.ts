@@ -28,7 +28,8 @@ export interface UseMaterialIconsResult {
 
 export function useMaterialIcons(
   materials: MaterialOption[],
-  autoGenerateMissing: boolean = true
+  autoGenerateMissing: boolean = true,
+  isAdmin: boolean = false
 ): UseMaterialIconsResult {
   const [icons, setIcons] = useState<Map<string, MaterialIcon>>(new Map());
   const [isGenerating, setIsGenerating] = useState(false);
@@ -41,9 +42,9 @@ export function useMaterialIcons(
     setIcons(loadedIcons);
   }, []);
 
-  // Auto-generate missing icons in background
+  // Auto-generate missing icons in background (admin only)
   useEffect(() => {
-    if (!autoGenerateMissing || isGenerating) return;
+    if (!autoGenerateMissing || isGenerating || !isAdmin) return;
 
     const missingMaterials = getMissingIconMaterials(
       materials.map(m => ({
@@ -100,6 +101,12 @@ export function useMaterialIcons(
   }, [icons]);
 
   const generateMissingIcons = useCallback(async () => {
+    // Only admins can generate icons
+    if (!isAdmin) {
+      setError('Icon generation is only available for admin users');
+      return;
+    }
+
     const missingMaterials = getMissingIconMaterials(
       materials.map(m => ({
         id: m.id,
@@ -113,9 +120,15 @@ export function useMaterialIcons(
     );
 
     await generateMissing(missingMaterials);
-  }, [materials, icons, generateMissing]);
+  }, [materials, icons, generateMissing, isAdmin]);
 
   const regenerateIcons = useCallback(async (materialsToRegenerate?: MaterialOption[]) => {
+    // Only admins can regenerate icons
+    if (!isAdmin) {
+      setError('Icon generation is only available for admin users');
+      return;
+    }
+
     const targetMaterials = materialsToRegenerate || materials;
 
     setIsGenerating(true);
@@ -151,7 +164,7 @@ export function useMaterialIcons(
       setIsGenerating(false);
       setProgress({ current: 0, total: 0, materialName: '' });
     }
-  }, [materials, icons]);
+  }, [materials, icons, isAdmin]);
 
   const getIcon = useCallback(
     (materialId: string): string | null => {

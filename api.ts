@@ -31,6 +31,7 @@ export type GenerationType =
   | 'applyMaterials'
   | 'upscale'
   | 'materialIcon'
+  | 'materialDetection'
   | 'sustainabilityBriefing'
   | 'precedentSearch';
 
@@ -39,6 +40,7 @@ export interface UsageData {
   applyMaterials: number;
   upscale: number;
   materialIcon: number;
+  materialDetection: number;
   sustainabilityBriefing: number;
   total: number;
   yearMonth?: string;

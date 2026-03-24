@@ -8,6 +8,7 @@ import Product from './components/Product';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import Contact from './components/Contact';
+import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
@@ -646,6 +647,8 @@ const App: React.FC = () => {
         return <TermsOfService />;
       case 'contact':
         return <Contact />;
+      case 'pricing':
+        return <Pricing />;
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
       case 'material-admin':
@@ -705,6 +708,13 @@ const App: React.FC = () => {
                 className="hover:text-white transition-colors"
               >
                 Product
+              </a>
+              <a
+                href={getPathForPage('pricing')}
+                onClick={(event) => handlePageLinkClick(event, 'pricing')}
+                className="hover:text-white transition-colors"
+              >
+                Pricing
               </a>
               <button onClick={() => setIsHelpOpen(true)} className="hover:text-white transition-colors">Help</button>
               <a

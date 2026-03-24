@@ -22,11 +22,13 @@ export type GenerationType =
   | 'applyMaterials'
   | 'upscale'
   | 'materialIcon'
+  | 'materialDetection'
   | 'sustainabilityBriefing'
   | 'precedentSearch';
 
 // Generation types that don't count towards the user's monthly free limit
-export const FREE_GENERATION_TYPES: GenerationType[] = ['materialIcon'];
+// materialIcon is admin-only and doesn't use credits at all
+export const FREE_GENERATION_TYPES: GenerationType[] = [];
 
 function stripDataUrls(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -138,6 +140,7 @@ export async function incrementUsage(
       applyMaterials: generationType === 'applyMaterials' ? incrementBy : 0,
       upscale: generationType === 'upscale' ? incrementBy : 0,
       materialIcon: generationType === 'materialIcon' ? incrementBy : 0,
+      materialDetection: generationType === 'materialDetection' ? incrementBy : 0,
       sustainabilityBriefing: generationType === 'sustainabilityBriefing' ? incrementBy : 0,
       precedentSearch: generationType === 'precedentSearch' ? incrementBy : 0,
     },

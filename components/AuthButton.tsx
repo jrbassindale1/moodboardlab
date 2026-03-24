@@ -25,8 +25,11 @@ const AuthButton: React.FC = () => {
         <UserButton
           afterSignOutUrl="/"
           appearance={{
+            variables: {
+              colorPrimary: '#000000',
+            },
             elements: {
-              avatarBox: 'w-8 h-8',
+              avatarBox: 'w-8 h-8 bg-black text-white border border-black',
             },
           }}
         />

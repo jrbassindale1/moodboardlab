@@ -45,6 +45,7 @@ export async function usage(
       applyMaterials: 0,
       upscale: 0,
       materialIcon: 0,
+      materialDetection: 0,
       sustainabilityBriefing: 0,
       precedentSearch: 0,
     };

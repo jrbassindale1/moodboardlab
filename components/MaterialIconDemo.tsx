@@ -15,7 +15,8 @@ import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/ma
 export function MaterialIconDemo() {
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialOption | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const { icons, isGenerating, progress, generateMissingIcons } = useMaterialIcons(MATERIAL_PALETTE);
+  // Demo component is admin-only, so always pass isAdmin=true
+  const { icons, isGenerating, progress, generateMissingIcons } = useMaterialIcons(MATERIAL_PALETTE, true, true);
 
   const missingCount = MATERIAL_PALETTE.length - icons.size;
 
