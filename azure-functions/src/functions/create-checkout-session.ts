@@ -14,7 +14,7 @@ import Stripe from 'stripe';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://moodboardlab.com';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://moodboard-lab.com';
 
 function getStripe(): Stripe {
   if (!STRIPE_SECRET_KEY) {
@@ -90,8 +90,8 @@ export async function createCheckoutSession(
         },
       ],
       mode: 'payment',
-      success_url: `${FRONTEND_URL}?credits_purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}?credits_cancelled=true`,
+      success_url: `${FRONTEND_URL}/apply?credits_purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/apply?credits_cancelled=true`,
       customer_email: user.email || undefined,
       metadata: {
         userId: user.userId,
