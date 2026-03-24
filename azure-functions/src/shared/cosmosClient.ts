@@ -123,7 +123,7 @@ export interface CreditTransactionDocument {
 export interface GenerationDocument {
   id: string;
   userId: string; // Partition key
-  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing' | 'precedentSearch';
+  type: 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'materialDetection' | 'sustainabilityBriefing' | 'precedentSearch';
   prompt: string;
   blobUrl?: string;
   materials?: unknown;
