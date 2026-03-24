@@ -15,12 +15,18 @@ import {
   getCurrentYearMonth,
   FREE_MONTHLY_LIMIT,
   UsageDocument,
+  CreditsDocument,
+  CreditTransactionDocument,
   isCosmosNotFound,
   isAdminUser,
+  GenerationMode,
+  getGenerationCost,
+  canGenerate4K,
+  CREDIT_COSTS,
 } from '../shared/cosmosClient';
 import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from '../shared/usageHelpers';
 
-const MAX_CREDIT_CHARGE = 5;
+const MAX_CREDIT_CHARGE = CREDIT_COSTS.FOUR_K_GENERATION; // 5 credits max (for 4K)
 
 export async function consumeCredits(
   req: HttpRequest,
@@ -53,19 +59,30 @@ export async function consumeCredits(
   try {
     const body = await req.json() as {
       generationType?: GenerationType;
+      generationMode?: GenerationMode;
       credits?: number;
       reason?: string;
     };
 
     const generationType = body.generationType || 'materialIcon';
-    const rawCredits = Number.isFinite(body.credits) ? Number(body.credits) : 1;
+    const generationMode: GenerationMode = body.generationMode || 'standard';
+
+    // Calculate credits based on generation mode if not explicitly provided
+    const modeCredits = getGenerationCost(generationMode);
+    const rawCredits = Number.isFinite(body.credits) ? Number(body.credits) : modeCredits;
     const credits = Math.max(1, Math.min(MAX_CREDIT_CHARGE, Math.round(rawCredits)));
 
     const yearMonth = getCurrentYearMonth();
     const documentId = getUsageDocumentId(user.userId, yearMonth);
     const usageContainer = getContainer('usage');
+    const creditsContainer = getContainer('credits');
+    const transactionsContainer = getContainer('credit_transactions');
 
     let totalUsed = 0;
+    let purchasedCredits = 0;
+    let creditsDoc: CreditsDocument | null = null;
+
+    // Get monthly usage
     try {
       const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
       if (resource) {
@@ -77,18 +94,51 @@ export async function consumeCredits(
       }
     }
 
-    const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    // Get purchased credits
+    try {
+      const { resource } = await creditsContainer
+        .item(user.userId, user.userId)
+        .read<CreditsDocument>();
+      if (resource) {
+        creditsDoc = resource;
+        purchasedCredits = resource.purchasedCredits || 0;
+      }
+    } catch (error: unknown) {
+      if (!isCosmosNotFound(error)) {
+        throw error;
+      }
+    }
+
+    const freeRemaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    const totalRemaining = freeRemaining + purchasedCredits;
     const userIsAdmin = isAdminUser(user.email, user.userId);
     const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
 
+    // 4K generation requires paid user status
+    if (generationMode === '4k' && !canGenerate4K(creditsDoc, userIsAdmin)) {
+      return {
+        status: 403,
+        headers,
+        body: JSON.stringify({
+          error: '4K generation is available to paid users only. Purchase credits to unlock 4K.',
+          code: '4K_REQUIRES_PAID',
+          remaining: totalRemaining,
+          freeRemaining,
+          purchasedCredits,
+        }),
+      };
+    }
+
     // Skip quota check for free generation types (e.g., materialIcon)
-    if (!userIsAdmin && !isFreeGeneration && remaining < credits) {
+    if (!userIsAdmin && !isFreeGeneration && totalRemaining < credits) {
       return {
         status: 429,
         headers,
         body: JSON.stringify({
-          error: 'Monthly generation limit reached.',
-          remaining,
+          error: 'Generation limit reached. Purchase more credits to continue.',
+          remaining: totalRemaining,
+          freeRemaining,
+          purchasedCredits,
           limit: FREE_MONTHLY_LIMIT,
           used: totalUsed,
           yearMonth,
@@ -96,18 +146,67 @@ export async function consumeCredits(
       };
     }
 
+    // Determine how to split the credit consumption
+    // Priority: Use purchased credits first (they don't expire), then free monthly
+    let purchasedToUse = 0;
+    let freeToUse = 0;
+
+    if (!isFreeGeneration && !userIsAdmin) {
+      // First use purchased credits
+      purchasedToUse = Math.min(credits, purchasedCredits);
+      // Then use free credits for the remainder
+      freeToUse = credits - purchasedToUse;
+
+      // Deduct purchased credits if any were used
+      if (purchasedToUse > 0 && creditsDoc) {
+        const now = new Date().toISOString();
+        await creditsContainer.item(user.userId, user.userId).replace<CreditsDocument>({
+          ...creditsDoc,
+          purchasedCredits: creditsDoc.purchasedCredits - purchasedToUse,
+          updatedAt: now,
+        });
+
+        // Record the consumption transaction
+        const txnId = `consume_${user.userId}_${Date.now()}`;
+        await transactionsContainer.items.create<CreditTransactionDocument>({
+          id: txnId,
+          userId: user.userId,
+          type: 'consume',
+          credits: -purchasedToUse,
+          amountPence: 0,
+          stripeSessionId: null,
+          stripePaymentIntentId: null,
+          createdAt: now,
+          metadata: { generationType, generationMode, reason: body.reason },
+        });
+      }
+    }
+
+    // Increment the monthly usage (tracks all generations, even if paid from purchased)
     await incrementUsage(user.userId, generationType, credits);
+
+    // Calculate new remaining values
+    const newPurchasedCredits = purchasedCredits - purchasedToUse;
+    const newFreeRemaining = isFreeGeneration ? freeRemaining : Math.max(0, freeRemaining - freeToUse);
+    const newTotalRemaining = newFreeRemaining + newPurchasedCredits;
 
     return {
       status: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        // Free generation types don't affect the remaining count
-        remaining: isFreeGeneration ? remaining : Math.max(0, remaining - credits),
+        remaining: isFreeGeneration ? totalRemaining : newTotalRemaining,
+        freeRemaining: newFreeRemaining,
+        purchasedCredits: newPurchasedCredits,
         limit: FREE_MONTHLY_LIMIT,
         used: isFreeGeneration ? totalUsed : totalUsed + credits,
         yearMonth,
+        generationMode,
+        creditsCharged: credits,
+        creditsUsed: {
+          purchased: purchasedToUse,
+          free: freeToUse,
+        },
       }),
     };
   } catch (error) {

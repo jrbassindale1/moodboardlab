@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
-import { getUsage } from '../api';
+import { getUsage, checkQuota } from '../api';
 
 type GenerationType = 'moodboard' | 'applyMaterials' | 'upscale' | 'materialIcon' | 'sustainabilityBriefing';
 
@@ -21,6 +21,15 @@ export interface UsageData {
   yearMonth?: string;
 }
 
+export interface QuotaData {
+  canGenerate: boolean;
+  remaining: number;
+  limit: number;
+  used: number;
+  freeRemaining?: number;
+  purchasedCredits?: number;
+}
+
 interface UsageContextType {
   usage: UsageData | null;
   remaining: number;
@@ -30,6 +39,8 @@ interface UsageContextType {
   canGenerate: boolean;
   incrementLocalUsage: (count?: number, generationType?: GenerationType) => void;
   isAnonymous: boolean;
+  purchasedCredits: number;
+  freeRemaining: number;
 }
 
 const UsageContext = createContext<UsageContextType | null>(null);
@@ -75,6 +86,8 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [anonymousCount, setAnonymousCount] = useState(0);
+  const [purchasedCredits, setPurchasedCredits] = useState(0);
+  const [freeRemaining, setFreeRemaining] = useState(FREE_MONTHLY_LIMIT);
 
   // Fetch usage from server for authenticated users
   const refreshUsage = useCallback(async () => {
@@ -83,6 +96,8 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
       const quota = getAnonymousQuota();
       setAnonymousCount(quota.count);
       setUsage(null);
+      setPurchasedCredits(0);
+      setFreeRemaining(Math.max(0, ANONYMOUS_MONTHLY_LIMIT - quota.count));
       return;
     }
 
@@ -90,8 +105,14 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
     try {
       const token = await getAccessToken();
       if (token) {
-        const data = await getUsage(token);
-        setUsage(data);
+        // Fetch both usage details and quota (which includes purchased credits)
+        const [usageData, quotaData] = await Promise.all([
+          getUsage(token),
+          checkQuota(token),
+        ]);
+        setUsage(usageData);
+        setPurchasedCredits(quotaData.purchasedCredits || 0);
+        setFreeRemaining(quotaData.freeRemaining ?? Math.max(0, FREE_MONTHLY_LIMIT - usageData.total));
       }
     } catch (error) {
       console.error('Failed to fetch usage:', error);
@@ -125,7 +146,10 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   const isAnonymous = !isAuthenticated;
   const limit = isAnonymous ? ANONYMOUS_MONTHLY_LIMIT : FREE_MONTHLY_LIMIT;
   const used = isAnonymous ? anonymousCount : (usage?.total ?? 0);
-  const remaining = Math.max(0, limit - used);
+  // Total remaining = free remaining + purchased credits
+  const remaining = isAnonymous
+    ? Math.max(0, limit - used)
+    : freeRemaining + purchasedCredits;
   const canGenerate = remaining > 0;
 
   return (
@@ -139,6 +163,8 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
         canGenerate,
         incrementLocalUsage,
         isAnonymous,
+        purchasedCredits,
+        freeRemaining,
       }}
     >
       {children}

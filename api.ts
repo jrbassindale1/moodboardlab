@@ -63,6 +63,39 @@ export interface QuotaResponse {
   remaining: number;
   limit: number;
   used: number;
+  freeRemaining?: number;
+  purchasedCredits?: number;
+}
+
+/**
+ * Credit package definitions (must match backend)
+ * "Credits start at £0.20 each, with better value on larger bundles."
+ */
+export const CREDIT_PACKAGES = [
+  { id: 'starter', name: 'Starter', credits: 25, pricePence: 500, priceDisplay: '£5' },
+  { id: 'standard', name: 'Standard', credits: 50, pricePence: 1000, priceDisplay: '£10' },
+  { id: 'pro', name: 'Pro', credits: 150, pricePence: 2500, priceDisplay: '£25' },
+] as const;
+
+export type CreditPackageId = typeof CREDIT_PACKAGES[number]['id'];
+
+/**
+ * Credit costs for different generation modes
+ */
+export const CREDIT_COSTS = {
+  /** Standard one-shot image generation */
+  STANDARD_GENERATION: 1,
+  /** Turn-by-turn / iterative image generation */
+  ITERATIVE_GENERATION: 2,
+  /** 4K image generation (paid users only) */
+  FOUR_K_GENERATION: 5,
+} as const;
+
+export type GenerationMode = 'standard' | 'iterative' | '4k';
+
+export interface CheckoutSessionResponse {
+  sessionId: string;
+  url: string;
 }
 
 export interface MaterialsResponse {
@@ -557,6 +590,45 @@ export async function savePdfAuth(
 // ============================================
 // Precedent Search
 // ============================================
+
+// ============================================
+// Credit Purchase Functions
+// ============================================
+
+/**
+ * Create a Stripe checkout session for purchasing credits
+ */
+export async function createCheckoutSession(
+  accessToken: string,
+  packageId: CreditPackageId
+): Promise<CheckoutSessionResponse> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/create-checkout-session`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ packageId }),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to create checkout session';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
 
 /**
  * Search for architectural precedents based on selected materials

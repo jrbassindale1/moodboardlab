@@ -1,5 +1,6 @@
 import './functions/check-quota';
 import './functions/consume-credits';
+import './functions/create-checkout-session';
 import './functions/generateMoodboard';
 import './functions/generations';
 import './functions/materials';
@@ -7,4 +8,6 @@ import './functions/save-generation';
 import './functions/save-material-icon';
 import './functions/save-pdf';
 import './functions/saveColoredIcon';
+import './functions/search-precedents';
+import './functions/stripe-webhook';
 import './functions/usage';

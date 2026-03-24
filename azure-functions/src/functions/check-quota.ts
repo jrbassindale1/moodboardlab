@@ -15,6 +15,7 @@ import {
   getCurrentYearMonth,
   FREE_MONTHLY_LIMIT,
   UsageDocument,
+  CreditsDocument,
   isCosmosNotFound,
   isAdminUser,
 } from '../shared/cosmosClient';
@@ -57,9 +58,12 @@ export async function checkQuota(
 
   try {
     const usageContainer = getContainer('usage');
+    const creditsContainer = getContainer('credits');
 
     let totalUsed = 0;
+    let purchasedCredits = 0;
 
+    // Get monthly usage
     try {
       // Partition key is userId, document id is "userId:YYYY-MM"
       const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
@@ -73,16 +77,35 @@ export async function checkQuota(
       }
     }
 
-    const remaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    // Get purchased credits (non-expiring)
+    try {
+      const { resource: creditsDoc } = await creditsContainer
+        .item(user.userId, user.userId)
+        .read<CreditsDocument>();
+      if (creditsDoc) {
+        purchasedCredits = creditsDoc.purchasedCredits || 0;
+      }
+    } catch (error: unknown) {
+      if (!isCosmosNotFound(error)) {
+        throw error;
+      }
+    }
+
+    // Free monthly credits remaining
+    const freeRemaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
+    // Total available = free + purchased
+    const totalRemaining = freeRemaining + purchasedCredits;
 
     return {
       status: 200,
       body: JSON.stringify({
-        canGenerate: remaining > 0,
-        remaining,
+        canGenerate: totalRemaining > 0,
+        remaining: totalRemaining,
         limit: FREE_MONTHLY_LIMIT,
         used: totalUsed,
         yearMonth,
+        freeRemaining,
+        purchasedCredits,
       }),
       headers: { 'Content-Type': 'application/json' },
     };

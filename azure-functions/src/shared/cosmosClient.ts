@@ -52,6 +52,8 @@ export function getContainer(
     | 'material_finish_links'
     | 'material_finish_set_links'
     | 'lifecycle_profiles'
+    | 'credits'
+    | 'credit_transactions'
 ): Container {
   if (!containers[containerName]) {
     containers[containerName] = getDatabase().container(containerName);
@@ -85,6 +87,36 @@ export interface UsageDocument {
   };
   totalGenerations: number;
   lastUpdatedAt: string;
+}
+
+/**
+ * Document for tracking purchased credits (non-expiring)
+ * Stored in the 'credits' container with userId as partition key
+ */
+export interface CreditsDocument {
+  id: string; // Same as userId
+  userId: string; // Partition key
+  purchasedCredits: number; // Total purchased credits remaining
+  totalPurchased: number; // Lifetime total purchased (for analytics)
+  lastPurchaseAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Document for tracking credit purchase transactions
+ * Stored in the 'credit_transactions' container
+ */
+export interface CreditTransactionDocument {
+  id: string; // Stripe session ID or transaction ID
+  userId: string; // Partition key
+  type: 'purchase' | 'consume' | 'refund' | 'bonus';
+  credits: number; // Positive for purchase/bonus, negative for consume
+  amountPence: number; // Amount in pence (GBP)
+  stripeSessionId: string | null;
+  stripePaymentIntentId: string | null;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface GenerationDocument {
@@ -206,6 +238,74 @@ export function getUsageDocumentId(userId: string, yearMonth?: string): string {
 }
 
 export const FREE_MONTHLY_LIMIT = 10;
+
+/**
+ * Credit pricing tiers (amounts in pence GBP)
+ * "Credits start at £0.20 each, with better value on larger bundles."
+ */
+export const CREDIT_PACKAGES = [
+  { id: 'starter', name: 'Starter', credits: 25, pricePence: 500, priceDisplay: '£5' },
+  { id: 'standard', name: 'Standard', credits: 50, pricePence: 1000, priceDisplay: '£10' },
+  { id: 'pro', name: 'Pro', credits: 150, pricePence: 2500, priceDisplay: '£25' },
+] as const;
+
+export type CreditPackageId = typeof CREDIT_PACKAGES[number]['id'];
+
+export function getCreditPackage(packageId: string) {
+  return CREDIT_PACKAGES.find(p => p.id === packageId) || null;
+}
+
+/**
+ * Credit costs for different generation modes
+ */
+export const CREDIT_COSTS = {
+  /** Standard one-shot image generation */
+  STANDARD_GENERATION: 1,
+  /** Turn-by-turn / iterative image generation (multi-step workflow) */
+  ITERATIVE_GENERATION: 2,
+  /** 4K image generation (paid users only) */
+  FOUR_K_GENERATION: 5,
+} as const;
+
+/**
+ * Generation modes that determine credit cost
+ */
+export type GenerationMode = 'standard' | 'iterative' | '4k';
+
+/**
+ * Get the credit cost for a generation mode
+ */
+export function getGenerationCost(mode: GenerationMode): number {
+  switch (mode) {
+    case 'standard':
+      return CREDIT_COSTS.STANDARD_GENERATION;
+    case 'iterative':
+      return CREDIT_COSTS.ITERATIVE_GENERATION;
+    case '4k':
+      return CREDIT_COSTS.FOUR_K_GENERATION;
+    default:
+      return CREDIT_COSTS.STANDARD_GENERATION;
+  }
+}
+
+/**
+ * Check if a user is a paid user (has purchased credits or has active subscription)
+ * Paid users unlock 4K generation
+ */
+export function isPaidUser(creditsDoc: CreditsDocument | null): boolean {
+  if (!creditsDoc) return false;
+  // User is "paid" if they have ever purchased credits
+  return creditsDoc.totalPurchased > 0;
+}
+
+/**
+ * Check if 4K generation is allowed for a user
+ * 4K requires being a paid user (has purchased credits)
+ */
+export function canGenerate4K(creditsDoc: CreditsDocument | null, isAdmin: boolean): boolean {
+  if (isAdmin) return true;
+  return isPaidUser(creditsDoc);
+}
 
 // Admin users with unlimited credits
 export const ADMIN_EMAILS: string[] = [

@@ -16,9 +16,11 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_WEB_URL = 'https://google.serper.dev/search';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+// NOTE: gemini-2.0-flash deprecated, shuts down 1 June 2026
+// Migrated to gemini-2.5-flash for precedent curation
 const GEMINI_TEXT_URL =
   process.env.GEMINI_TEXT_ENDPOINT ||
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 const RESULTS_PER_QUERY = 10;
 const MAX_QUERIES = 6;

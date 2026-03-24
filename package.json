@@ -26,7 +26,8 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "recharts": "^3.7.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "@azure/functions": "^4.11.2",
