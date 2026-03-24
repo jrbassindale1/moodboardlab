@@ -40,21 +40,7 @@ export async function checkQuota(
   const yearMonth = getCurrentYearMonth();
   const documentId = getUsageDocumentId(user.userId, yearMonth);
 
-  // Admin users get unlimited credits
-  if (isAdminUser(user.email, user.userId)) {
-    return {
-      status: 200,
-      body: JSON.stringify({
-        canGenerate: true,
-        remaining: 999999,
-        limit: 999999,
-        used: 0,
-        yearMonth,
-        isAdmin: true,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    };
-  }
+  const userIsAdmin = isAdminUser(user.email, user.userId);
 
   try {
     const usageContainer = getContainer('usage');
@@ -96,16 +82,21 @@ export async function checkQuota(
     // Total available = free + purchased
     const totalRemaining = freeRemaining + purchasedCredits;
 
+    // Admin users get unlimited free credits but still show purchased credits
+    const effectiveRemaining = userIsAdmin ? 999999 : totalRemaining;
+    const effectiveFreeRemaining = userIsAdmin ? 999999 : freeRemaining;
+
     return {
       status: 200,
       body: JSON.stringify({
-        canGenerate: totalRemaining > 0,
-        remaining: totalRemaining,
-        limit: FREE_MONTHLY_LIMIT,
+        canGenerate: userIsAdmin || totalRemaining > 0,
+        remaining: effectiveRemaining,
+        limit: userIsAdmin ? 999999 : FREE_MONTHLY_LIMIT,
         used: totalUsed,
         yearMonth,
-        freeRemaining,
+        freeRemaining: effectiveFreeRemaining,
         purchasedCredits,
+        isAdmin: userIsAdmin,
       }),
       headers: { 'Content-Type': 'application/json' },
     };

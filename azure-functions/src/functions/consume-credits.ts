@@ -182,31 +182,39 @@ export async function consumeCredits(
       }
     }
 
-    // Increment the monthly usage (tracks all generations, even if paid from purchased)
-    await incrementUsage(user.userId, generationType, credits);
+    // Admin users have unlimited usage and should not accumulate monthly usage.
+    if (!userIsAdmin) {
+      // Tracks all generations, even if paid from purchased credits.
+      await incrementUsage(user.userId, generationType, credits);
+    }
 
     // Calculate new remaining values
     const newPurchasedCredits = purchasedCredits - purchasedToUse;
     const newFreeRemaining = isFreeGeneration ? freeRemaining : Math.max(0, freeRemaining - freeToUse);
     const newTotalRemaining = newFreeRemaining + newPurchasedCredits;
+    const effectiveRemaining = userIsAdmin
+      ? 999999
+      : (isFreeGeneration ? totalRemaining : newTotalRemaining);
+    const effectiveFreeRemaining = userIsAdmin ? 999999 : newFreeRemaining;
 
     return {
       status: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        remaining: isFreeGeneration ? totalRemaining : newTotalRemaining,
-        freeRemaining: newFreeRemaining,
+        remaining: effectiveRemaining,
+        freeRemaining: effectiveFreeRemaining,
         purchasedCredits: newPurchasedCredits,
-        limit: FREE_MONTHLY_LIMIT,
-        used: isFreeGeneration ? totalUsed : totalUsed + credits,
+        limit: userIsAdmin ? 999999 : FREE_MONTHLY_LIMIT,
+        used: userIsAdmin ? totalUsed : (isFreeGeneration ? totalUsed : totalUsed + credits),
         yearMonth,
         generationMode,
-        creditsCharged: credits,
+        creditsCharged: userIsAdmin ? 0 : credits,
         creditsUsed: {
           purchased: purchasedToUse,
           free: freeToUse,
         },
+        isAdmin: userIsAdmin,
       }),
     };
   } catch (error) {
