@@ -979,6 +979,37 @@ IMPORTANT:
                   </div>
                 </div>
 
+                {board.length > 0 && (
+                  <div className="mt-3">
+                    {showClearConfirmation ? (
+                      <div className="rounded border border-amber-200 bg-amber-50 p-3 space-y-2">
+                        <p className="text-sm text-amber-800">Clear all {board.length} materials?</p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleClearAllMaterials}
+                            className="rounded bg-red-600 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-white hover:bg-red-700"
+                          >
+                            Yes, Clear All
+                          </button>
+                          <button
+                            onClick={() => setShowClearConfirmation(false)}
+                            className="rounded border border-gray-300 bg-white px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowClearConfirmation(true)}
+                        className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+                      >
+                        Clear all materials
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <button
                   onClick={() => onNavigate('moodboard')}
                   disabled={!board.length}
@@ -991,7 +1022,7 @@ IMPORTANT:
                 <p className="mt-2 text-xs font-sans text-gray-500">
                   {board.length === 0
                     ? 'Select at least one material to continue.'
-                    : 'Continue to the next page to review your board and generate the moodboard.'}
+                    : 'Continue to the next page to generate your moodboard and sustainability report.'}
                 </p>
               </div>
 
@@ -1047,36 +1078,6 @@ IMPORTANT:
                     </div>
                     ));
                   })()}
-
-                  {/* Clear all materials button */}
-                  <div className="pt-3 border-t border-gray-100">
-                    {showClearConfirmation ? (
-                      <div className="p-3 border border-amber-200 bg-amber-50 rounded space-y-2">
-                        <p className="text-sm text-amber-800">Clear all {board.length} materials?</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleClearAllMaterials}
-                            className="px-3 py-1.5 bg-red-600 text-white font-mono text-[10px] uppercase tracking-widest hover:bg-red-700 rounded"
-                          >
-                            Yes, Clear All
-                          </button>
-                          <button
-                            onClick={() => setShowClearConfirmation(false)}
-                            className="px-3 py-1.5 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50 rounded"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowClearConfirmation(true)}
-                        className="text-xs text-gray-500 hover:text-red-600 transition-colors"
-                      >
-                        Clear all materials
-                      </button>
-                    )}
-                  </div>
                 </div>
               )}
             </div>
