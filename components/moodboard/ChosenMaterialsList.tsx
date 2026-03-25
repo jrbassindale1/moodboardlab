@@ -3,7 +3,7 @@ import { ShoppingCart, ChevronUp, ChevronDown, Trash2, StickyNote, Leaf } from '
 import { buildMaterialFact, type MaterialFact } from '../../data/materialFacts';
 import { MaterialOption, MaterialCategory } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
-import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
+import { formatFinishForDisplay } from '../../utils/materialDisplay';
 import { getCachedColoredIcon } from '../../hooks/useColoredIconGenerator';
 import MaterialSustainabilityModal from '../MaterialSustainabilityModal';
 import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../../utils/materialCarbon';
@@ -264,17 +264,14 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
 
                         {/* Material details */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-display text-sm uppercase tracking-wide text-gray-900 mb-1">
-                            {item.name}
-                          </h4>
-                          <p className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-1">
-                            {formatFinishForDisplay(item.finish)}
-                          </p>
-                          {item.description && (
-                            <p className="font-sans text-xs text-gray-500 line-clamp-2">
-                              {formatDescriptionForDisplay(item.description)}
+                          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <h4 className="font-display text-sm uppercase tracking-wide text-gray-900">
+                              {item.name}
+                            </h4>
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                              {formatFinishForDisplay(item.finish)}
                             </p>
-                          )}
+                          </div>
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <span
                               className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[materialFact.carbonIntensity]}`}
@@ -290,8 +287,6 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                               <Leaf className="w-3.5 h-3.5" />
                               Material Info
                             </button>
-                          </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-3">
                             <label className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500">
                               <input
                                 type="checkbox"
