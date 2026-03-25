@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import Concept from './components/Concept';
 import Moodboard from './components/Moodboard';
@@ -12,6 +12,7 @@ import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
+import { useAuth } from './auth';
 import { MaterialOption, UploadedImage } from './types';
 import type { PrecedentResult } from './api';
 import type {
@@ -20,6 +21,7 @@ import type {
 } from './utils/sustainabilityBriefing';
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 import { trackPageView } from './utils/analytics';
+import { clearMoodboardCache } from './utils/clearCache';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
 
@@ -216,6 +218,7 @@ const getInitialPage = (): string => {
 };
 
 const App: React.FC = () => {
+  const { isAuthenticated } = useAuth();
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
@@ -246,12 +249,49 @@ const App: React.FC = () => {
   const boardCacheRestoredRef = useRef(false);
   const hasSyncedLocationRef = useRef(false);
   const projectCacheRestoredRef = useRef(false);
+  const hasInitializedAuthStateRef = useRef(false);
+  const wasAuthenticatedRef = useRef(false);
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
+
+  const clearWorkspaceAfterSignOut = useCallback(() => {
+    clearMoodboardCache();
+    briefingCacheRef.current = null;
+    setCurrentPage('concept');
+    setSelectedMaterials([]);
+    setMoodboardRenderUrl(null);
+    setRestoredWithoutMoodboard(false);
+    setAppliedRenderUrl(null);
+    setSustainabilityBriefing(null);
+    setBriefingPayload(null);
+    setBriefingMaterialsKey(null);
+    setBriefingInvalidatedMessage(null);
+    setSavedPrecedents(null);
+    setUploadedImages([]);
+    setSceneControls(DEFAULT_SCENE_CONTROLS);
+    setRenderNote('');
+    setAppliedEditPrompt('');
+    setMoodboardEditPrompt('');
+    setCurrentProject(null);
+  }, []);
 
   useEffect(() => {
     briefingCacheRef.current = readBriefingCache();
   }, []);
+
+  useEffect(() => {
+    if (!hasInitializedAuthStateRef.current) {
+      hasInitializedAuthStateRef.current = true;
+      wasAuthenticatedRef.current = isAuthenticated;
+      return;
+    }
+
+    if (wasAuthenticatedRef.current && !isAuthenticated) {
+      clearWorkspaceAfterSignOut();
+    }
+
+    wasAuthenticatedRef.current = isAuthenticated;
+  }, [clearWorkspaceAfterSignOut, isAuthenticated]);
 
   // Restore project from localStorage on mount
   useEffect(() => {
