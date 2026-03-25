@@ -795,9 +795,9 @@ const App: React.FC = () => {
                 <h3 className="font-display uppercase tracking-widest text-sm mb-2">Quick Steps</h3>
                 <ol className="text-sm text-gray-700 font-sans space-y-2 list-decimal list-inside">
                   <li>Go to `Materials`, search or browse, then click `Add to Board`.</li>
-                  <li>Open `Moodboard Lab` and click `Create Moodboard`.</li>
+                  <li>Open `Workspace` and click `Create Moodboard`.</li>
                   <li>In the Sustainability Briefing section, review the summary and download PDFs.</li>
-                  <li>Open `Apply`, upload a JPG/PNG, then `Render with Upload` and refine.</li>
+                  <li>Open `Render`, upload a JPG/PNG, then `Render with Upload` and refine.</li>
                 </ol>
               </div>
 
@@ -805,7 +805,7 @@ const App: React.FC = () => {
                 <h3 className="font-display uppercase tracking-widest text-sm mb-2">Important Notes</h3>
                 <ul className="text-sm text-gray-700 font-sans space-y-2 list-disc list-inside">
                   <li>Sign in may be required to add materials or generate images.</li>
-                  <li>The `Apply` tab unlocks only after you create a moodboard.</li>
+                  <li>The `Render` tab unlocks only after you create a moodboard.</li>
                   <li>Generations are limited and reset on a schedule.</li>
                   <li>
                     AI-generated content must be used carefully. Verify materials, performance claims,

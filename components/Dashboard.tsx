@@ -618,7 +618,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                 const targetPage =
                                   gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
                                 const restoreLabel =
-                                  gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                                  gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                                 const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                                 const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
 
@@ -736,7 +736,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                           const targetPage =
                             gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
                           const restoreLabel =
-                            gen.type === 'moodboard' ? 'Open in Moodboard Lab' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Apply' : null;
+                            gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                           const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                           const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
 

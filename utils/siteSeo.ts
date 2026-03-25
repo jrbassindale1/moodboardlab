@@ -23,21 +23,21 @@ const PAGE_SEO: Record<string, PageSeo> = {
   },
   materials: {
     path: '/materials',
-    title: 'Materials Workspace | Moodboard Lab',
+    title: 'Materials | Moodboard Lab',
     description:
       'Browse material options, compare specifications, and build a project palette for architecture and interior design workflows.',
   },
   moodboard: {
     path: '/moodboard',
-    title: 'AI Moodboard Generator | Moodboard Lab',
+    title: 'Workspace | Moodboard Lab',
     description:
-      'Generate photoreal moodboards from your selected materials and create presentation-ready visuals for design reviews and client conversations.',
+      'Review selected materials, generate photoreal moodboards, and create presentation-ready visuals for design reviews and client conversations.',
   },
   apply: {
     path: '/apply',
-    title: 'Apply Materials to Images | Moodboard Lab',
+    title: 'Render | Moodboard Lab',
     description:
-      'Upload a sketch or reference image and apply your selected materials to test palettes in context before committing to design decisions.',
+      'Upload a sketch or reference image and render your selected materials in context before committing to design decisions.',
   },
   dashboard: {
     path: '/dashboard',

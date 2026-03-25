@@ -734,17 +734,17 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
           <div>
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter">
-              Apply Your Materials
+              Render
             </h1>
             <p className="font-sans text-gray-600 max-w-2xl mt-3">
-              Upload a base image and apply the materials from your moodboard to generate a new render.
+              Upload a base image and apply the materials from your workspace to generate a new render.
             </p>
             <div className="flex flex-wrap gap-3 mt-4">
               <button
                 onClick={() => onNavigate?.('moodboard')}
                 className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
               >
-                Back to moodboard
+                Back to workspace
               </button>
             </div>
           </div>
@@ -811,7 +811,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                   }}
                   className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
                 >
-                  Go to Moodboard Lab
+                  Go to workspace
                 </button>
               </div>
             </div>

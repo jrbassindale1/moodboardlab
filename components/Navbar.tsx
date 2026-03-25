@@ -23,10 +23,9 @@ const Navbar: React.FC<NavbarProps> = ({
   const creditBalanceLabel = isUsageLoading ? '...' : remaining > 9999 ? '9999+' : `${remaining}`;
 
   const baseNavItems = [
-    { id: 'concept', label: 'Home' },
     { id: 'materials', label: 'Materials' },
-    { id: 'moodboard', label: 'Moodboard Lab' },
-    { id: 'apply', label: 'Apply' },
+    { id: 'moodboard', label: 'Workspace' },
+    { id: 'apply', label: 'Render' },
     { id: 'dashboard', label: 'Dashboard' }
   ];
   const navItemsDesktop = [
@@ -79,24 +78,26 @@ const Navbar: React.FC<NavbarProps> = ({
         </a>
 
         <div className="flex items-center gap-4 md:gap-8">
-          <div className="hidden md:flex gap-8 font-mono text-xs uppercase tracking-widest text-gray-600">
-            {navItemsDesktop.map((item) => (
-              <a
-                key={item.id}
-                href={getPathForPage(item.id)}
-                onClick={(event) => handleNavigateClick(event, item.id)}
-                className={`relative inline-flex items-center gap-2 py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
-              >
-                {item.label}
-                {item.id === 'materials' && boardCount > 0 && (
-                  <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
-                    {materialCountLabel}
-                  </span>
-                )}
-                {currentPage === item.id && (
-                  <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>
-                )}
-              </a>
+          <div className="hidden md:flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-gray-600">
+            {navItemsDesktop.map((item, index) => (
+              <React.Fragment key={item.id}>
+                {index > 0 && <span aria-hidden className="text-gray-300">·</span>}
+                <a
+                  href={getPathForPage(item.id)}
+                  onClick={(event) => handleNavigateClick(event, item.id)}
+                  className={`relative inline-flex items-center gap-2 py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                >
+                  {item.label}
+                  {item.id === 'materials' && boardCount > 0 && (
+                    <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
+                      {materialCountLabel}
+                    </span>
+                  )}
+                  {currentPage === item.id && (
+                    <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>
+                  )}
+                </a>
+              </React.Fragment>
             ))}
           </div>
 

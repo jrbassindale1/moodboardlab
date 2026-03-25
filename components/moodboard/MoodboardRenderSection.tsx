@@ -103,7 +103,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
           >
             <Wand2 className="w-4 h-4" />
-            Apply your materials
+            Open render
           </button>
         </div>
       </div>

@@ -1045,14 +1045,14 @@ IMPORTANT:
                   disabled={!board.length}
                   className="mt-4 inline-flex w-full items-center justify-between border border-black bg-black px-4 py-3 font-mono text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
                 >
-                  <span>Create moodboard</span>
+                  <span>Open workspace</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
 
                 <p className="mt-2 text-xs font-sans text-gray-500">
                   {board.length === 0
                     ? 'Select at least one material to continue.'
-                    : 'Continue to the next page to generate your moodboard and sustainability report.'}
+                    : 'Continue to the workspace to generate your moodboard and sustainability report.'}
                 </p>
               </div>
 

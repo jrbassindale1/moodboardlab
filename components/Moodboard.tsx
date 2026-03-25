@@ -2284,7 +2284,7 @@ ${JSON.stringify(proseContext)}`;
         <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
           <div>
             <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter">
-              Moodboard Lab
+              Workspace
             </h1>
             <p className="font-sans text-gray-600 max-w-2xl mt-3">
               Review the materials you've selected, then let Ai (Nano Banana) assemble a moodboard plus UK-focused sustainability briefing.

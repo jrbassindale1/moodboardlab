@@ -160,17 +160,17 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
       {/* Workflow Strip */}
       <WorkflowStrip />
 
-      {/* Recent Renders */}
+      {/* Recent Generations */}
       <section className="bg-white py-12 border-b border-gray-100">
         <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent renders</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent generations</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
               <p className="font-sans text-gray-700 leading-relaxed">
-                Recent palette renders created in Moodboard Lab. Each one shows how real material choices can become fast, presentation-ready visuals.
+                Recent generations created in Moodboard Lab. Each one shows how real material choices can become fast, presentation-ready visuals.
               </p>
             </div>
             <div className="lg:col-span-2">
