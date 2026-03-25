@@ -1,9 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { ShoppingCart, ChevronUp, ChevronDown, Trash2, StickyNote } from 'lucide-react';
+import { ShoppingCart, ChevronUp, ChevronDown, Trash2, StickyNote, Leaf } from 'lucide-react';
+import { buildMaterialFact, type MaterialFact } from '../../data/materialFacts';
 import { MaterialOption, MaterialCategory } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
 import { getCachedColoredIcon } from '../../hooks/useColoredIconGenerator';
+import MaterialSustainabilityModal from '../MaterialSustainabilityModal';
+import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../../utils/materialCarbon';
 
 interface ChosenMaterialsListProps {
   board: MaterialOption[];
@@ -92,6 +95,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
   onNoteChange,
 }) => {
   const [expandedNoteIdx, setExpandedNoteIdx] = useState<number | null>(null);
+  const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
 
   const helperCopy =
     board.length < 5
@@ -199,6 +203,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                 </div>
                 {group.items.map(({ item, originalIdx }) => {
                   const { webpUrl, pngUrl } = getMaterialIconUrls(item);
+                  const materialFact = buildMaterialFact(item);
                   const coloredIconDataUri = item.coloredIconBlobUrl?.startsWith('data:')
                     ? item.coloredIconBlobUrl
                     : (item.colorVariantId ? getCachedColoredIcon(item.colorVariantId) : null);
@@ -270,6 +275,22 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                               {formatDescriptionForDisplay(item.description)}
                             </p>
                           )}
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[materialFact.carbonIntensity]}`}
+                            >
+                              {CARBON_IMPACT_LABELS[materialFact.carbonIntensity]}
+                            </span>
+                            <button
+                              onClick={() => setSustainabilityMaterial({ material: item, fact: materialFact })}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-emerald-700 transition-colors hover:bg-emerald-100"
+                              title="View material sustainability credentials"
+                              aria-label={`View sustainability credentials for ${item.name}`}
+                            >
+                              <Leaf className="w-3.5 h-3.5" />
+                              Material Info
+                            </button>
+                          </div>
                           <div className="mt-2 flex flex-wrap items-center gap-3">
                             <label className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-gray-500">
                               <input
@@ -326,6 +347,14 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
           </div>
         )}
       </div>
+
+      {sustainabilityMaterial && (
+        <MaterialSustainabilityModal
+          material={sustainabilityMaterial.material}
+          fact={sustainabilityMaterial.fact}
+          onClose={() => setSustainabilityMaterial(null)}
+        />
+      )}
     </>
   );
 };
