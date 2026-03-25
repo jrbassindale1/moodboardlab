@@ -926,19 +926,15 @@ IMPORTANT:
                 ref={cartButtonRef}
                 className={`mb-4 border border-gray-200 bg-white p-4 transition-transform ${isCartPulsing ? 'animate-cart-pulse' : ''}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2">
-                    <ShoppingCart className="mt-0.5 h-4 w-4" />
-                    <div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">My board</p>
-                      <p className="text-sm font-sans text-gray-900">
-                        {board.length === 0
-                          ? 'Add materials to start your moodboard'
-                          : `${board.length} material${board.length === 1 ? '' : 's'} selected`}
-                      </p>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <div>
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">My board</p>
+                    <p className="text-sm font-sans text-gray-900">
+                      {board.length === 0
+                        ? 'Add materials to start your moodboard'
+                        : `${board.length} material${board.length === 1 ? '' : 's'} selected`}
+                    </p>
                   </div>
-                  <span className="text-xs font-sans text-gray-600">{board.length}</span>
                 </div>
 
                 <button

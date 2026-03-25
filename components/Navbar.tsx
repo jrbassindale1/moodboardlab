@@ -85,14 +85,14 @@ const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={getPathForPage(item.id)}
                 onClick={(event) => handleNavigateClick(event, item.id)}
-                className={`relative inline-flex py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`relative inline-flex items-center gap-2 py-1 transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
+                {item.label}
                 {item.id === 'materials' && boardCount > 0 && (
-                  <span className="absolute -top-2 -left-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
+                  <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
                     {materialCountLabel}
                   </span>
                 )}
-                {item.label}
                 {currentPage === item.id && (
                   <span className="absolute bottom-0 left-0 w-full h-[1px] bg-black"></span>
                 )}
@@ -134,14 +134,14 @@ const Navbar: React.FC<NavbarProps> = ({
                 key={item.id}
                 href={getPathForPage(item.id)}
                 onClick={(event) => handleNavigateClick(event, item.id)}
-                className={`relative inline-flex w-fit text-left transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
+                className={`relative inline-flex w-fit items-center gap-2 text-left transition-colors hover:text-black ${currentPage === item.id ? 'text-black font-bold' : ''}`}
               >
+                {item.label}
                 {item.id === 'materials' && boardCount > 0 && (
-                  <span className="absolute -top-2 -left-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
+                  <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center rounded-full bg-black px-1 text-[10px] font-semibold text-white">
                     {materialCountLabel}
                   </span>
                 )}
-                {item.label}
               </a>
             ))}
           </div>
