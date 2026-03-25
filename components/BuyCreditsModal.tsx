@@ -22,6 +22,18 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getCheckoutReturnPath = () => {
+    if (typeof window === 'undefined') return '/apply';
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('credits_purchased');
+    url.searchParams.delete('credits_cancelled');
+    url.searchParams.delete('session_id');
+
+    const nextPath = `${url.pathname}${url.search}${url.hash}`;
+    return nextPath || '/apply';
+  };
+
   // Update selection when initialPackage changes (e.g., opening modal from different pricing tier)
   useEffect(() => {
     if (isOpen) {
@@ -70,7 +82,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         return;
       }
 
-      const { url } = await createCheckoutSession(token, selectedPackage);
+      const { url } = await createCheckoutSession(
+        token,
+        selectedPackage,
+        getCheckoutReturnPath()
+      );
 
       if (url) {
         // Redirect to Stripe checkout

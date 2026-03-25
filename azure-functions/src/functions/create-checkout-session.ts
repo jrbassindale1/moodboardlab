@@ -13,8 +13,8 @@ import { getCreditPackage, CREDIT_PACKAGES } from '../shared/cosmosClient';
 import Stripe from 'stripe';
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://moodboard-lab.com';
+const DEFAULT_RETURN_PATH = '/apply';
 
 function getStripe(): Stripe {
   if (!STRIPE_SECRET_KEY) {
@@ -23,6 +23,44 @@ function getStripe(): Stripe {
   return new Stripe(STRIPE_SECRET_KEY, {
     apiVersion: '2025-02-24.acacia',
   });
+}
+
+function sanitizeReturnPath(value: unknown): string {
+  if (typeof value !== 'string') return DEFAULT_RETURN_PATH;
+
+  const trimmed = value.trim();
+  if (!trimmed) return DEFAULT_RETURN_PATH;
+
+  try {
+    const frontendUrl = new URL(FRONTEND_URL);
+    const resolvedUrl = new URL(trimmed, FRONTEND_URL);
+
+    if (resolvedUrl.origin !== frontendUrl.origin) {
+      return DEFAULT_RETURN_PATH;
+    }
+
+    resolvedUrl.searchParams.delete('credits_purchased');
+    resolvedUrl.searchParams.delete('credits_cancelled');
+    resolvedUrl.searchParams.delete('session_id');
+
+    const nextPath = `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`;
+    return nextPath.startsWith('/') ? nextPath : DEFAULT_RETURN_PATH;
+  } catch {
+    return DEFAULT_RETURN_PATH;
+  }
+}
+
+function buildCheckoutRedirectUrl(
+  returnPath: string,
+  searchParams: Record<string, string>
+): string {
+  const redirectUrl = new URL(returnPath, FRONTEND_URL);
+
+  for (const [key, value] of Object.entries(searchParams)) {
+    redirectUrl.searchParams.set(key, value);
+  }
+
+  return redirectUrl.toString();
 }
 
 export async function createCheckoutSession(
@@ -44,7 +82,7 @@ export async function createCheckoutSession(
   const user = authResult as ValidatedUser;
 
   try {
-    const body = await req.json() as { packageId?: string };
+    const body = await req.json() as { packageId?: string; returnPath?: string };
     const { packageId } = body;
 
     if (!packageId) {
@@ -68,6 +106,7 @@ export async function createCheckoutSession(
     }
 
     const stripe = getStripe();
+    const returnPath = sanitizeReturnPath(body.returnPath);
 
     // Create a checkout session
     const session = await stripe.checkout.sessions.create({
@@ -90,8 +129,13 @@ export async function createCheckoutSession(
         },
       ],
       mode: 'payment',
-      success_url: `${FRONTEND_URL}/apply?credits_purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/apply?credits_cancelled=true`,
+      success_url: buildCheckoutRedirectUrl(returnPath, {
+        credits_purchased: 'true',
+        session_id: '{CHECKOUT_SESSION_ID}',
+      }),
+      cancel_url: buildCheckoutRedirectUrl(returnPath, {
+        credits_cancelled: 'true',
+      }),
       customer_email: user.email || undefined,
       metadata: {
         userId: user.userId,

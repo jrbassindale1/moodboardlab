@@ -126,28 +126,56 @@ async function addCreditsToUser(
     context.log(`Created credits for user ${userId}: ${credits}`);
   };
 
-  try {
-    const { resource: existingCredits } = await creditsContainer
+  const incrementExistingCreditsDocument = async () => {
+    const { resource: updatedCredits } = await creditsContainer
       .item(userId, userId)
-      .read<CreditsDocument>();
+      .patch<CreditsDocument>([
+        {
+          op: 'incr',
+          path: '/purchasedCredits',
+          value: credits,
+        },
+        {
+          op: 'incr',
+          path: '/totalPurchased',
+          value: credits,
+        },
+        {
+          op: 'set',
+          path: '/lastPurchaseAt',
+          value: now,
+        },
+        {
+          op: 'set',
+          path: '/updatedAt',
+          value: now,
+        },
+      ]);
 
-    if (existingCredits) {
-      await creditsContainer.item(userId, userId).replace<CreditsDocument>({
-        ...existingCredits,
-        purchasedCredits: existingCredits.purchasedCredits + credits,
-        totalPurchased: existingCredits.totalPurchased + credits,
-        lastPurchaseAt: now,
-        updatedAt: now,
-      });
-      context.log(`Updated credits for user ${userId}: +${credits} (total: ${existingCredits.purchasedCredits + credits})`);
-    } else {
-      await createCreditsDocument();
-    }
+    context.log(
+      `Updated credits for user ${userId}: +${credits} (total: ${updatedCredits?.purchasedCredits ?? 'unknown'})`
+    );
+  };
+
+  try {
+    await incrementExistingCreditsDocument();
   } catch (error) {
     if (isCosmosNotFound(error)) {
       try {
         await createCreditsDocument();
       } catch (createError) {
+        if (isCosmosConflict(createError)) {
+          try {
+            await incrementExistingCreditsDocument();
+          } catch (patchError) {
+            await releaseReservedPurchaseTransaction(userId, sessionId, context);
+            throw patchError;
+          }
+          return {
+            processed: true,
+            alreadyProcessed: false,
+          };
+        }
         await releaseReservedPurchaseTransaction(userId, sessionId, context);
         throw createError;
       }

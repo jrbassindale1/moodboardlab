@@ -12,7 +12,7 @@ import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
-import { useAuth } from './auth';
+import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage } from './types';
 import type { PrecedentResult } from './api';
 import type {
@@ -219,6 +219,7 @@ const getInitialPage = (): string => {
 
 const App: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const { checkoutStatus, dismissCheckoutStatus } = useUsage();
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
@@ -717,6 +718,26 @@ const App: React.FC = () => {
     setCurrentPage(page);
   };
 
+  const checkoutBannerClasses = checkoutStatus
+    ? {
+        wrapper:
+          checkoutStatus.type === 'success'
+            ? 'border-green-200 bg-green-50 text-green-900'
+            : checkoutStatus.type === 'cancelled'
+            ? 'border-amber-200 bg-amber-50 text-amber-900'
+            : checkoutStatus.type === 'processing'
+            ? 'border-sky-200 bg-sky-50 text-sky-900'
+            : 'border-red-200 bg-red-50 text-red-900',
+        eyebrow:
+          checkoutStatus.type === 'success'
+            ? 'text-green-700'
+            : checkoutStatus.type === 'cancelled'
+            ? 'text-amber-700'
+            : checkoutStatus.type === 'processing'
+            ? 'text-sky-700'
+            : 'text-red-700',
+      }
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -726,7 +747,30 @@ const App: React.FC = () => {
         boardCount={selectedMaterials.length}
       />
 
-      <main className="flex-grow relative">
+      {checkoutStatus && checkoutBannerClasses && (
+        <div className="fixed inset-x-0 top-20 z-40 px-4 sm:px-6">
+          <div className="mx-auto max-w-screen-2xl">
+            <div className={`border shadow-sm ${checkoutBannerClasses.wrapper}`}>
+              <div className="flex items-start justify-between gap-4 px-4 py-3">
+                <div>
+                  <p className={`font-mono text-[11px] uppercase tracking-widest ${checkoutBannerClasses.eyebrow}`}>
+                    Credit Checkout
+                  </p>
+                  <p className="mt-1 text-sm font-sans">{checkoutStatus.message}</p>
+                </div>
+                <button
+                  onClick={dismissCheckoutStatus}
+                  className="shrink-0 font-mono text-[11px] uppercase tracking-widest text-current opacity-70 transition-opacity hover:opacity-100"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className={`flex-grow relative ${checkoutStatus ? 'pt-20 sm:pt-16' : ''}`}>
         <div className="relative">
           {renderPage()}
         </div>

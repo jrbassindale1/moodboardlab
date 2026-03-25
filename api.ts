@@ -617,7 +617,8 @@ export async function savePdfAuth(
  */
 export async function createCheckoutSession(
   accessToken: string,
-  packageId: CreditPackageId
+  packageId: CreditPackageId,
+  returnPath?: string
 ): Promise<CheckoutSessionResponse> {
   const API_BASE = getApiBase();
   const res = await fetchWithTimeout(
@@ -628,7 +629,11 @@ export async function createCheckoutSession(
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ packageId }),
+      body: JSON.stringify(
+        returnPath
+          ? { packageId, returnPath }
+          : { packageId }
+      ),
     },
     15000
   );

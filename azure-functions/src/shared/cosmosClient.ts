@@ -359,3 +359,17 @@ export function isCosmosConflict(error: unknown): boolean {
     err.body?.code === 'Conflict'
   );
 }
+
+export function isCosmosPreconditionFailed(error: unknown): boolean {
+  const err = error as {
+    code?: number | string;
+    statusCode?: number;
+    body?: { code?: string };
+  };
+  return (
+    err.code === 412 ||
+    err.code === 'PreconditionFailed' ||
+    err.statusCode === 412 ||
+    err.body?.code === 'PreconditionFailed'
+  );
+}

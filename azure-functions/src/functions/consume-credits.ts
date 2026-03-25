@@ -23,10 +23,125 @@ import {
   getGenerationCost,
   canGenerate4K,
   CREDIT_COSTS,
+  isCosmosPreconditionFailed,
 } from '../shared/cosmosClient';
 import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from '../shared/usageHelpers';
 
 const MAX_CREDIT_CHARGE = CREDIT_COSTS.FOUR_K_GENERATION; // 5 credits max (for 4K)
+const MAX_CREDIT_MUTATION_RETRIES = 3;
+
+type UsageSnapshot = {
+  yearMonth: string;
+  totalUsed: number;
+  freeRemaining: number;
+};
+
+async function readUsageSnapshot(userId: string): Promise<UsageSnapshot> {
+  const yearMonth = getCurrentYearMonth();
+  const documentId = getUsageDocumentId(userId, yearMonth);
+  const usageContainer = getContainer('usage');
+
+  try {
+    const { resource } = await usageContainer.item(documentId, userId).read<UsageDocument>();
+    const totalUsed = resource?.totalGenerations || 0;
+
+    return {
+      yearMonth,
+      totalUsed,
+      freeRemaining: Math.max(0, FREE_MONTHLY_LIMIT - totalUsed),
+    };
+  } catch (error: unknown) {
+    if (!isCosmosNotFound(error)) {
+      throw error;
+    }
+
+    return {
+      yearMonth,
+      totalUsed: 0,
+      freeRemaining: FREE_MONTHLY_LIMIT,
+    };
+  }
+}
+
+async function readPurchasedCredits(userId: string): Promise<{
+  creditsDoc: CreditsDocument | null;
+  purchasedCredits: number;
+}> {
+  const creditsContainer = getContainer('credits');
+
+  try {
+    const { resource } = await creditsContainer.item(userId, userId).read<CreditsDocument>();
+    return {
+      creditsDoc: resource || null,
+      purchasedCredits: resource?.purchasedCredits || 0,
+    };
+  } catch (error: unknown) {
+    if (!isCosmosNotFound(error)) {
+      throw error;
+    }
+
+    return {
+      creditsDoc: null,
+      purchasedCredits: 0,
+    };
+  }
+}
+
+function getPurchasedCreditsCondition(minimumBalance: number): string {
+  return `from c where IS_DEFINED(c.purchasedCredits) AND c.purchasedCredits >= ${minimumBalance}`;
+}
+
+async function deductPurchasedCreditsAtomic(
+  userId: string,
+  purchasedToUse: number
+): Promise<number> {
+  const creditsContainer = getContainer('credits');
+  const now = new Date().toISOString();
+
+  const { resource } = await creditsContainer.item(userId, userId).patch<CreditsDocument>({
+    condition: getPurchasedCreditsCondition(purchasedToUse),
+    operations: [
+      {
+        op: 'incr',
+        path: '/purchasedCredits',
+        value: -purchasedToUse,
+      },
+      {
+        op: 'set',
+        path: '/updatedAt',
+        value: now,
+      },
+    ],
+  });
+
+  return resource?.purchasedCredits ?? 0;
+}
+
+async function restorePurchasedCreditsAtomic(
+  userId: string,
+  purchasedToRestore: number,
+  context: InvocationContext
+): Promise<void> {
+  const creditsContainer = getContainer('credits');
+  const now = new Date().toISOString();
+
+  try {
+    await creditsContainer.item(userId, userId).patch<CreditsDocument>([
+      {
+        op: 'incr',
+        path: '/purchasedCredits',
+        value: purchasedToRestore,
+      },
+      {
+        op: 'set',
+        path: '/updatedAt',
+        value: now,
+      },
+    ]);
+  } catch (error) {
+    context.error(`Failed to restore ${purchasedToRestore} purchased credits for user ${userId}:`, error);
+  }
+}
 
 export async function consumeCredits(
   req: HttpRequest,
@@ -73,148 +188,175 @@ export async function consumeCredits(
     const credits = Math.max(1, Math.min(MAX_CREDIT_CHARGE, Math.round(rawCredits)));
 
     const yearMonth = getCurrentYearMonth();
-    const documentId = getUsageDocumentId(user.userId, yearMonth);
-    const usageContainer = getContainer('usage');
-    const creditsContainer = getContainer('credits');
     const transactionsContainer = getContainer('credit_transactions');
-
-    let totalUsed = 0;
-    let purchasedCredits = 0;
-    let creditsDoc: CreditsDocument | null = null;
-
-    // Get monthly usage
-    try {
-      const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
-      if (resource) {
-        totalUsed = resource.totalGenerations || 0;
-      }
-    } catch (error: unknown) {
-      if (!isCosmosNotFound(error)) {
-        throw error;
-      }
-    }
-
-    // Get purchased credits
-    try {
-      const { resource } = await creditsContainer
-        .item(user.userId, user.userId)
-        .read<CreditsDocument>();
-      if (resource) {
-        creditsDoc = resource;
-        purchasedCredits = resource.purchasedCredits || 0;
-      }
-    } catch (error: unknown) {
-      if (!isCosmosNotFound(error)) {
-        throw error;
-      }
-    }
-
-    const freeRemaining = Math.max(0, FREE_MONTHLY_LIMIT - totalUsed);
-    const totalRemaining = freeRemaining + purchasedCredits;
     const userIsAdmin = isAdminUser(user.email, user.userId);
     const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
+    const usageSnapshot = await readUsageSnapshot(user.userId);
 
-    // 4K generation requires paid user status
-    if (generationMode === '4k' && !canGenerate4K(creditsDoc, userIsAdmin)) {
+    if (userIsAdmin) {
       return {
-        status: 403,
+        status: 200,
         headers,
         body: JSON.stringify({
-          error: '4K generation requires at least 5 purchased credits. Free monthly credits do not unlock 4K.',
-          code: '4K_REQUIRES_PAID',
-          remaining: totalRemaining,
-          freeRemaining,
-          purchasedCredits,
-        }),
-      };
-    }
-
-    // Skip quota check for free generation types (e.g., materialIcon)
-    if (!userIsAdmin && !isFreeGeneration && totalRemaining < credits) {
-      return {
-        status: 429,
-        headers,
-        body: JSON.stringify({
-          error: 'Generation limit reached. Purchase more credits to continue.',
-          remaining: totalRemaining,
-          freeRemaining,
-          purchasedCredits,
-          limit: FREE_MONTHLY_LIMIT,
-          used: totalUsed,
+          success: true,
+          remaining: 999999,
+          freeRemaining: 999999,
+          purchasedCredits: 0,
+          limit: 999999,
+          used: usageSnapshot.totalUsed,
           yearMonth,
+          generationMode,
+          creditsCharged: 0,
+          creditsUsed: {
+            purchased: 0,
+            free: 0,
+          },
+          isAdmin: true,
         }),
       };
     }
 
-    // Determine how to split the credit consumption.
-    // Priority: Use free monthly credits first, then purchased credits.
-    let purchasedToUse = 0;
-    let freeToUse = 0;
+    let concurrencyConflict = false;
 
-    if (!isFreeGeneration && !userIsAdmin) {
-      // First use the remaining free monthly allowance.
-      freeToUse = Math.min(credits, freeRemaining);
-      // Then use purchased credits for the remainder.
-      purchasedToUse = credits - freeToUse;
+    for (let attempt = 0; attempt < MAX_CREDIT_MUTATION_RETRIES; attempt += 1) {
+      const currentUsage = attempt === 0 ? usageSnapshot : await readUsageSnapshot(user.userId);
+      const { creditsDoc, purchasedCredits } = await readPurchasedCredits(user.userId);
+      const freeRemaining = currentUsage.freeRemaining;
+      const totalUsed = currentUsage.totalUsed;
+      const totalRemaining = freeRemaining + purchasedCredits;
 
-      // Deduct purchased credits if any were used
-      if (purchasedToUse > 0 && creditsDoc) {
-        const now = new Date().toISOString();
-        await creditsContainer.item(user.userId, user.userId).replace<CreditsDocument>({
-          ...creditsDoc,
-          purchasedCredits: creditsDoc.purchasedCredits - purchasedToUse,
-          updatedAt: now,
-        });
-
-        // Record the consumption transaction
-        const txnId = `consume_${user.userId}_${Date.now()}`;
-        await transactionsContainer.items.create<CreditTransactionDocument>({
-          id: txnId,
-          userId: user.userId,
-          type: 'consume',
-          credits: -purchasedToUse,
-          amountPence: 0,
-          stripeSessionId: null,
-          stripePaymentIntentId: null,
-          createdAt: now,
-          metadata: { generationType, generationMode, reason: body.reason },
-        });
+      // 4K generation requires paid user status
+      if (generationMode === '4k' && !canGenerate4K(creditsDoc, userIsAdmin)) {
+        return {
+          status: 403,
+          headers,
+          body: JSON.stringify({
+            error: '4K generation requires at least 5 purchased credits. Free monthly credits do not unlock 4K.',
+            code: '4K_REQUIRES_PAID',
+            remaining: totalRemaining,
+            freeRemaining,
+            purchasedCredits,
+          }),
+        };
       }
+
+      // Skip quota check for free generation types (e.g., materialIcon)
+      if (!isFreeGeneration && totalRemaining < credits) {
+        return {
+          status: 429,
+          headers,
+          body: JSON.stringify({
+            error: 'Generation limit reached. Purchase more credits to continue.',
+            remaining: totalRemaining,
+            freeRemaining,
+            purchasedCredits,
+            limit: FREE_MONTHLY_LIMIT,
+            used: totalUsed,
+            yearMonth: currentUsage.yearMonth,
+          }),
+        };
+      }
+
+      let purchasedToUse = 0;
+      let freeToUse = 0;
+      let newPurchasedCredits = purchasedCredits;
+      let consumeTransactionId: string | null = null;
+
+      if (!isFreeGeneration) {
+        freeToUse = Math.min(credits, freeRemaining);
+        purchasedToUse = credits - freeToUse;
+      }
+
+      try {
+        if (purchasedToUse > 0) {
+          newPurchasedCredits = await deductPurchasedCreditsAtomic(user.userId, purchasedToUse);
+
+          const now = new Date().toISOString();
+          consumeTransactionId = `consume_${user.userId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          await transactionsContainer.items.create<CreditTransactionDocument>({
+            id: consumeTransactionId,
+            userId: user.userId,
+            type: 'consume',
+            credits: -purchasedToUse,
+            amountPence: 0,
+            stripeSessionId: null,
+            stripePaymentIntentId: null,
+            createdAt: now,
+            metadata: { generationType, generationMode, reason: body.reason },
+          });
+        }
+
+        // Tracks all generations, even if paid from purchased credits.
+        await incrementUsage(user.userId, generationType, credits);
+      } catch (error) {
+        const isConcurrentMutation =
+          purchasedToUse > 0 &&
+          (isCosmosPreconditionFailed(error) || isCosmosNotFound(error));
+
+        if (isConcurrentMutation) {
+          concurrencyConflict = true;
+          continue;
+        }
+
+        if (purchasedToUse > 0) {
+          await restorePurchasedCreditsAtomic(user.userId, purchasedToUse, context);
+
+          if (consumeTransactionId) {
+            try {
+              await transactionsContainer.item(consumeTransactionId, user.userId).delete();
+            } catch (deleteError) {
+              if (!isCosmosNotFound(deleteError)) {
+                context.warn(`Failed to remove consume transaction ${consumeTransactionId}:`, deleteError);
+              }
+            }
+          }
+        }
+
+        throw error;
+      }
+
+      const newFreeRemaining = isFreeGeneration ? freeRemaining : Math.max(0, freeRemaining - freeToUse);
+      const newTotalRemaining = newFreeRemaining + newPurchasedCredits;
+
+      return {
+        status: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          remaining: isFreeGeneration ? totalRemaining : newTotalRemaining,
+          freeRemaining: newFreeRemaining,
+          purchasedCredits: newPurchasedCredits,
+          limit: FREE_MONTHLY_LIMIT,
+          used: isFreeGeneration ? totalUsed : totalUsed + credits,
+          yearMonth: currentUsage.yearMonth,
+          generationMode,
+          creditsCharged: credits,
+          creditsUsed: {
+            purchased: purchasedToUse,
+            free: freeToUse,
+          },
+          isAdmin: false,
+        }),
+      };
     }
 
-    // Admin users have unlimited usage and should not accumulate monthly usage.
-    if (!userIsAdmin) {
-      // Tracks all generations, even if paid from purchased credits.
-      await incrementUsage(user.userId, generationType, credits);
-    }
-
-    // Calculate new remaining values
-    const newPurchasedCredits = purchasedCredits - purchasedToUse;
-    const newFreeRemaining = isFreeGeneration ? freeRemaining : Math.max(0, freeRemaining - freeToUse);
-    const newTotalRemaining = newFreeRemaining + newPurchasedCredits;
-    const effectiveRemaining = userIsAdmin
-      ? 999999
-      : (isFreeGeneration ? totalRemaining : newTotalRemaining);
-    const effectiveFreeRemaining = userIsAdmin ? 999999 : newFreeRemaining;
+    const latestUsage = await readUsageSnapshot(user.userId);
+    const latestCredits = await readPurchasedCredits(user.userId);
+    const latestRemaining = latestUsage.freeRemaining + latestCredits.purchasedCredits;
 
     return {
-      status: 200,
+      status: concurrencyConflict ? 409 : 500,
       headers,
       body: JSON.stringify({
-        success: true,
-        remaining: effectiveRemaining,
-        freeRemaining: effectiveFreeRemaining,
-        purchasedCredits: newPurchasedCredits,
-        limit: userIsAdmin ? 999999 : FREE_MONTHLY_LIMIT,
-        used: userIsAdmin ? totalUsed : (isFreeGeneration ? totalUsed : totalUsed + credits),
-        yearMonth,
-        generationMode,
-        creditsCharged: userIsAdmin ? 0 : credits,
-        creditsUsed: {
-          purchased: purchasedToUse,
-          free: freeToUse,
-        },
-        isAdmin: userIsAdmin,
+        error: concurrencyConflict
+          ? 'Credits changed while this request was processing. Please try again.'
+          : 'Internal server error',
+        remaining: latestRemaining,
+        freeRemaining: latestUsage.freeRemaining,
+        purchasedCredits: latestCredits.purchasedCredits,
+        limit: FREE_MONTHLY_LIMIT,
+        used: latestUsage.totalUsed,
+        yearMonth: latestUsage.yearMonth,
       }),
     };
   } catch (error) {

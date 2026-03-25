@@ -33,6 +33,11 @@ export interface QuotaData {
   isAdmin?: boolean;
 }
 
+export interface CheckoutStatusNotice {
+  type: 'success' | 'cancelled' | 'error' | 'processing';
+  message: string;
+}
+
 interface UsageContextType {
   usage: UsageData | null;
   remaining: number;
@@ -45,6 +50,8 @@ interface UsageContextType {
   purchasedCredits: number;
   freeRemaining: number;
   isAdmin: boolean;
+  checkoutStatus: CheckoutStatusNotice | null;
+  dismissCheckoutStatus: () => void;
 }
 
 const UsageContext = createContext<UsageContextType | null>(null);
@@ -93,7 +100,12 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   const [purchasedCredits, setPurchasedCredits] = useState(0);
   const [freeRemaining, setFreeRemaining] = useState(FREE_MONTHLY_LIMIT);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatusNotice | null>(null);
   const processedCheckoutSessionsRef = useRef<Set<string>>(new Set());
+
+  const dismissCheckoutStatus = useCallback(() => {
+    setCheckoutStatus(null);
+  }, []);
 
   // Fetch usage from server for authenticated users
   const refreshUsage = useCallback(async () => {
@@ -137,20 +149,14 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
   }, [isAuthenticated, authLoading, refreshUsage]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || authLoading || !isAuthenticated) {
+    if (typeof window === 'undefined') {
       return;
     }
 
     const currentUrl = new URL(window.location.href);
+    const creditsCancelled = currentUrl.searchParams.get('credits_cancelled') === 'true';
     const creditsPurchased = currentUrl.searchParams.get('credits_purchased') === 'true';
     const sessionId = currentUrl.searchParams.get('session_id')?.trim() || '';
-
-    if (!creditsPurchased || !sessionId || processedCheckoutSessionsRef.current.has(sessionId)) {
-      return;
-    }
-
-    processedCheckoutSessionsRef.current.add(sessionId);
-    let cancelled = false;
 
     const clearCheckoutParams = () => {
       const nextUrl = new URL(window.location.href);
@@ -160,6 +166,42 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
       window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
     };
 
+    if (creditsCancelled) {
+      setCheckoutStatus({
+        type: 'cancelled',
+        message: 'Credit purchase cancelled. No charges were made.',
+      });
+      clearCheckoutParams();
+      return;
+    }
+
+    if (!creditsPurchased || !sessionId || processedCheckoutSessionsRef.current.has(sessionId)) {
+      return;
+    }
+
+    if (authLoading) {
+      setCheckoutStatus({
+        type: 'processing',
+        message: 'Confirming your credit purchase...',
+      });
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setCheckoutStatus({
+        type: 'error',
+        message: 'Payment completed, but you need to sign in again to refresh your credits.',
+      });
+      return;
+    }
+
+    processedCheckoutSessionsRef.current.add(sessionId);
+    let cancelled = false;
+    setCheckoutStatus({
+      type: 'processing',
+      message: 'Confirming your credit purchase...',
+    });
+
     const confirmPurchase = async () => {
       let shouldClearParams = false;
 
@@ -167,18 +209,36 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
         const token = await getAccessToken();
         if (!token) {
           processedCheckoutSessionsRef.current.delete(sessionId);
+          if (!cancelled) {
+            setCheckoutStatus({
+              type: 'error',
+              message: 'Payment completed, but you need to sign in again to refresh your credits.',
+            });
+          }
           return;
         }
 
-        await confirmCheckoutSession(token, sessionId);
+        const result = await confirmCheckoutSession(token, sessionId);
         shouldClearParams = true;
 
         if (!cancelled) {
           await refreshUsage();
+          setCheckoutStatus({
+            type: 'success',
+            message: result.alreadyProcessed
+              ? 'Credits are already available on your account.'
+              : 'Credits added to your account.',
+          });
         }
       } catch (error) {
         processedCheckoutSessionsRef.current.delete(sessionId);
         console.error('Failed to confirm credit purchase:', error);
+        if (!cancelled) {
+          setCheckoutStatus({
+            type: 'error',
+            message: 'Payment completed, but credit confirmation is still pending. Refresh in a moment.',
+          });
+        }
       } finally {
         if (!cancelled && shouldClearParams) {
           clearCheckoutParams();
@@ -233,6 +293,8 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
         purchasedCredits,
         freeRemaining,
         isAdmin,
+        checkoutStatus,
+        dismissCheckoutStatus,
       }}
     >
       {children}
