@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode, useEffect, useRef } from '
 import { ClerkProvider, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { clerkPubKey, isClerkAuthEnabled } from './authConfig';
 import { trackEvent } from '../utils/analytics';
+import { clearMoodboardCache } from '../utils/clearCache';
 
 export interface AuthContextType {
   user: {
@@ -53,6 +54,7 @@ const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children, onS
   };
 
   const logout = async () => {
+    clearMoodboardCache();
     await signOut();
   };
 
