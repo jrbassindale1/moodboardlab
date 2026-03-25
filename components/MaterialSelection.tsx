@@ -44,6 +44,40 @@ const CARBON_SORT_ORDER: Record<NonNullable<MaterialOption['carbonIntensity']>, 
 
 const DEFAULT_LOW_CARBON_PICK_COUNT = 16;
 
+const getLocalDateRotationKey = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const hashString = (value: string): number => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+const seededShuffle = <T,>(items: T[], seed: number): T[] => {
+  const output = [...items];
+  let state = seed >>> 0 || 1;
+
+  const next = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+
+  for (let i = output.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [output[i], output[j]] = [output[j], output[i]];
+  }
+
+  return output;
+};
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -418,32 +452,38 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return next;
   }, [searchTokens, materialsByPath, materialMatchesSearch]);
 
+  const lowCarbonRotationKey = getLocalDateRotationKey();
+
   const defaultLowCarbonPicks = useMemo(() => {
     const lowCarbonMaterials = migratedMaterials.filter((mat) => mat.carbonIntensity === 'low');
-    const candidates = (lowCarbonMaterials.length > 0 ? lowCarbonMaterials : migratedMaterials)
-      .slice()
-      .sort((a, b) => {
-        const categoryComparison = a.category.localeCompare(b.category);
-        if (categoryComparison !== 0) {
-          return categoryComparison;
-        }
-        return a.name.localeCompare(b.name);
+    const candidates = (lowCarbonMaterials.length > 0 ? lowCarbonMaterials : migratedMaterials).slice();
+    const seedBase = hashString(lowCarbonRotationKey);
+    const groupedByCategory = new Map<string, MaterialOption[]>();
+
+    candidates
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach((mat) => {
+        const group = groupedByCategory.get(mat.category) || [];
+        group.push(mat);
+        groupedByCategory.set(mat.category, group);
       });
 
-    const groupedByCategory = new Map<string, MaterialOption[]>();
-    candidates.forEach((mat) => {
-      const group = groupedByCategory.get(mat.category) || [];
-      group.push(mat);
-      groupedByCategory.set(mat.category, group);
-    });
+    const categoryOrder = seededShuffle([...groupedByCategory.keys()].sort(), seedBase);
+    const shuffledGroups = new Map<string, MaterialOption[]>(
+      categoryOrder.map((category) => [
+        category,
+        seededShuffle(groupedByCategory.get(category) || [], hashString(`${lowCarbonRotationKey}:${category}`)),
+      ])
+    );
 
     const picks: MaterialOption[] = [];
     while (picks.length < DEFAULT_LOW_CARBON_PICK_COUNT) {
       let addedInPass = false;
 
-      groupedByCategory.forEach((group) => {
+      categoryOrder.forEach((category) => {
         if (picks.length >= DEFAULT_LOW_CARBON_PICK_COUNT) return;
-        const next = group.shift();
+        const group = shuffledGroups.get(category);
+        const next = group?.shift();
         if (!next) return;
         picks.push(next);
         addedInPass = true;
@@ -455,7 +495,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     }
 
     return picks;
-  }, [migratedMaterials]);
+  }, [migratedMaterials, lowCarbonRotationKey]);
 
   // Use category browsing when a category is selected, otherwise search the full library.
   const displayedMaterials = useMemo(() => {
@@ -1088,7 +1128,7 @@ IMPORTANT:
                         ? `${sortedMaterials.length} product${sortedMaterials.length === 1 ? '' : 's'}`
                         : searchTokens.length
                         ? `${sortedMaterials.length} result${sortedMaterials.length === 1 ? '' : 's'} across all categories`
-                        : `${sortedMaterials.length} curated low-carbon pick${sortedMaterials.length === 1 ? '' : 's'} to start with. Search the whole library or choose a category to browse all materials.`}
+                        : `${sortedMaterials.length} curated low-carbon pick${sortedMaterials.length === 1 ? '' : 's'}, rotated daily. Search the whole library or choose a category to browse all materials.`}
                     </p>
                   </div>
                   {selectedCategory && (
