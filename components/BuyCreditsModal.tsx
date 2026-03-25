@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Zap, Check, Loader2, Image, RefreshCw, Maximize2 } from 'lucide-react';
 import { useAuth } from '../auth';
 import { createCheckoutSession, CREDIT_PACKAGES, CreditPackageId, CREDIT_COSTS } from '../api';
@@ -7,17 +7,26 @@ interface BuyCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialPackage?: CreditPackageId;
 }
 
 const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  initialPackage = 'standard',
 }) => {
   const { getAccessToken } = useAuth();
-  const [selectedPackage, setSelectedPackage] = useState<CreditPackageId>('standard');
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackageId>(initialPackage);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update selection when initialPackage changes (e.g., opening modal from different pricing tier)
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedPackage(initialPackage);
+    }
+  }, [isOpen, initialPackage]);
 
   if (!isOpen) return null;
 

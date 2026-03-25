@@ -1,12 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sparkles, Zap, Image, Camera } from 'lucide-react';
+import BuyCreditsModal from './BuyCreditsModal';
+import { CreditPackageId } from '../api';
+import { useAuth } from '../auth';
+import { SignUpButton } from '@clerk/clerk-react';
+import { isClerkAuthEnabled } from '../auth';
 
 const Pricing: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<CreditPackageId>('standard');
+
+  const openModalWithPackage = (packageId: CreditPackageId) => {
+    setSelectedPackage(packageId);
+    setShowBuyModal(true);
+  };
+
   return (
     <div className="w-full pt-24 pb-16 bg-white animate-in fade-in duration-700">
       <div className="max-w-screen-2xl mx-auto px-6 space-y-16">
         {/* Header */}
-        <header className="space-y-4">
+        <header className="space-y-6">
           <div className="inline-flex items-center gap-2 border border-black px-3 py-1">
             <span className="font-mono text-xs uppercase tracking-widest font-bold">Pricing & Credits</span>
           </div>
@@ -17,6 +31,24 @@ const Pricing: React.FC = () => {
             Start with 10 free credits each month. Purchase more when you need them, with better value on larger packs.
             Credits never expire.
           </p>
+          {isAuthenticated ? (
+            <button
+              onClick={() => openModalWithPackage('standard')}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-mono text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              Buy Credits
+            </button>
+          ) : (
+            isClerkAuthEnabled && (
+              <SignUpButton mode="modal">
+                <button className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-mono text-sm uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                  <Sparkles className="w-4 h-4" />
+                  Get Started Free
+                </button>
+              </SignUpButton>
+            )
+          )}
         </header>
 
         {/* Credit Packages */}
@@ -34,6 +66,22 @@ const Pricing: React.FC = () => {
                 <span className="font-sans text-gray-500">/ 25 credits</span>
               </div>
               <p className="font-mono text-xs text-gray-500 uppercase">£0.20 per credit</p>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => openModalWithPackage('starter')}
+                  className="w-full mt-2 py-2 px-4 border border-gray-900 text-gray-900 font-mono text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
+                >
+                  Buy Starter
+                </button>
+              ) : (
+                isClerkAuthEnabled && (
+                  <SignUpButton mode="modal">
+                    <button className="w-full mt-2 py-2 px-4 border border-gray-900 text-gray-900 font-mono text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors">
+                      Sign Up to Buy
+                    </button>
+                  </SignUpButton>
+                )
+              )}
             </div>
 
             {/* Standard */}
@@ -50,6 +98,22 @@ const Pricing: React.FC = () => {
                 <span className="font-sans text-gray-500">/ 50 credits</span>
               </div>
               <p className="font-mono text-xs text-gray-500 uppercase">£0.20 per credit</p>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => openModalWithPackage('standard')}
+                  className="w-full mt-2 py-2 px-4 bg-black text-white font-mono text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors"
+                >
+                  Buy Standard
+                </button>
+              ) : (
+                isClerkAuthEnabled && (
+                  <SignUpButton mode="modal">
+                    <button className="w-full mt-2 py-2 px-4 bg-black text-white font-mono text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors">
+                      Sign Up to Buy
+                    </button>
+                  </SignUpButton>
+                )
+              )}
             </div>
 
             {/* Pro */}
@@ -63,6 +127,22 @@ const Pricing: React.FC = () => {
                 <span className="font-sans text-gray-500">/ 150 credits</span>
               </div>
               <p className="font-mono text-xs text-green-600 uppercase font-medium">£0.17 per credit — Save 17%</p>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => openModalWithPackage('pro')}
+                  className="w-full mt-2 py-2 px-4 border border-gray-900 text-gray-900 font-mono text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
+                >
+                  Buy Pro
+                </button>
+              ) : (
+                isClerkAuthEnabled && (
+                  <SignUpButton mode="modal">
+                    <button className="w-full mt-2 py-2 px-4 border border-gray-900 text-gray-900 font-mono text-xs uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors">
+                      Sign Up to Buy
+                    </button>
+                  </SignUpButton>
+                )
+              )}
             </div>
           </div>
         </section>
@@ -236,6 +316,13 @@ const Pricing: React.FC = () => {
           </div>
         </section>
       </div>
+
+      {/* Buy Credits Modal */}
+      <BuyCreditsModal
+        isOpen={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+        initialPackage={selectedPackage}
+      />
     </div>
   );
 };

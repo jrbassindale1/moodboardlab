@@ -29,6 +29,7 @@ import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
+import AuthPromptModal from './AuthPromptModal';
 
 // Sustainability report utilities
 import type {
@@ -479,6 +480,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     type: 'info' | 'warning' | 'error';
     message: string;
   } | null>(null);
+  const [showAuthPromptModal, setShowAuthPromptModal] = useState(false);
 
   // Helper to reset all loading states consistently
   const resetLoadingStates = useCallback(() => {
@@ -492,7 +494,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const requireAuthForMoodboard = () => {
     if (isAuthBypassEnabled) return true;
     if (isAuthenticated) return true;
-    setError('You need an account to create moodboards. Please sign in to continue.');
+    setShowAuthPromptModal(true);
     return false;
   };
 
@@ -2470,6 +2472,12 @@ ${JSON.stringify(proseContext)}`;
             )}
         </div>
       </div>
+
+      {/* Auth prompt modal */}
+      <AuthPromptModal
+        isOpen={showAuthPromptModal}
+        onClose={() => setShowAuthPromptModal(false)}
+      />
     </div>
   );
 };

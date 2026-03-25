@@ -6,7 +6,7 @@ import BuyCreditsModal from './BuyCreditsModal';
 import { CREDIT_COSTS } from '../api';
 
 interface UsageDisplayProps {
-  variant?: 'compact' | 'full';
+  variant?: 'compact' | 'full' | 'minimal';
   showSignUpPrompt?: boolean;
   onSignIn?: () => void;
   showBuyCredits?: boolean;
@@ -23,8 +23,88 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
   const [showBuyModal, setShowBuyModal] = useState(false);
 
   const percentage = ((limit - freeRemaining) / limit) * 100;
-  const isLow = remaining <= 3;
+  const isLow = remaining <= 5;
+  const isVeryLow = remaining <= 3;
   const isExhausted = remaining <= 0;
+
+  // Minimal variant: single compact line, expands only when low
+  if (variant === 'minimal') {
+    // Expanded state for low credits
+    if (isLow && !isAnonymous) {
+      return (
+        <>
+          <div className={`flex items-center justify-between px-4 py-3 border ${
+            isExhausted ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
+          }`}>
+            <div className="flex items-center gap-3">
+              <Zap className={`w-4 h-4 ${isExhausted ? 'text-red-600' : 'text-amber-600'}`} />
+              <span className={`font-mono text-sm font-medium ${
+                isExhausted ? 'text-red-700' : 'text-amber-700'
+              }`}>
+                {isExhausted
+                  ? "Out of credits"
+                  : `${remaining} credits remaining — enough for ${remaining} render${remaining !== 1 ? 's' : ''}`}
+              </span>
+            </div>
+            {showBuyCredits && isAuthenticated && (
+              <button
+                onClick={() => setShowBuyModal(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-white font-mono text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                Buy Credits
+              </button>
+            )}
+          </div>
+          <BuyCreditsModal
+            isOpen={showBuyModal}
+            onClose={() => setShowBuyModal(false)}
+          />
+        </>
+      );
+    }
+
+    // Collapsed single line for healthy credits
+    return (
+      <>
+        <div className="flex items-center justify-between px-4 py-2 border border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-gray-600" />
+              <span className="font-mono text-sm text-gray-700">
+                {isLoading ? '...' : `${remaining} credits`}
+              </span>
+            </div>
+            <span className="text-xs text-gray-400">·</span>
+            <span className="text-xs text-gray-500">
+              {CREDIT_COSTS.STANDARD_GENERATION} std / {CREDIT_COSTS.ITERATIVE_GENERATION} iterative / {CREDIT_COSTS.FOUR_K_GENERATION} 4K
+            </span>
+          </div>
+          {showBuyCredits && isAuthenticated && (
+            <button
+              onClick={() => setShowBuyModal(true)}
+              className="inline-flex items-center gap-1 px-3 py-1 text-xs font-mono text-gray-700 hover:text-black transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              Buy Credits
+            </button>
+          )}
+          {isAnonymous && showSignUpPrompt && (
+            <button
+              onClick={onSignIn || login}
+              className="text-xs font-mono text-gray-600 hover:text-black transition-colors"
+            >
+              Sign in for more
+            </button>
+          )}
+        </div>
+        <BuyCreditsModal
+          isOpen={showBuyModal}
+          onClose={() => setShowBuyModal(false)}
+        />
+      </>
+    );
+  }
 
   if (variant === 'compact') {
     return (
@@ -32,7 +112,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
         <div className="inline-flex items-center gap-2">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono ${
             isExhausted ? 'bg-red-100 text-red-700' :
-            isLow ? 'bg-amber-100 text-amber-700' :
+            isVeryLow ? 'bg-amber-100 text-amber-700' :
             'bg-gray-100 text-gray-700'
           }`}>
             <Zap className="w-3 h-3" />
@@ -59,11 +139,12 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
     );
   }
 
+  // Full variant (for dashboard)
   return (
     <>
       <div className={`p-4 border ${
         isExhausted ? 'border-red-200 bg-red-50' :
-        isLow ? 'border-amber-200 bg-amber-50' :
+        isVeryLow ? 'border-amber-200 bg-amber-50' :
         'border-gray-200 bg-gray-50'
       }`}>
         <div className="flex items-center justify-between mb-2">
@@ -72,7 +153,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
           </span>
           <span className={`font-mono text-sm font-medium ${
             isExhausted ? 'text-red-600' :
-            isLow ? 'text-amber-600' :
+            isVeryLow ? 'text-amber-600' :
             'text-gray-700'
           }`}>
             {isLoading ? '...' : `${remaining} remaining`}
@@ -97,7 +178,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
           <div
             className={`h-full transition-all duration-300 ${
               isExhausted ? 'bg-red-500' :
-              isLow ? 'bg-amber-500' :
+              isVeryLow ? 'bg-amber-500' :
               'bg-green-500'
             }`}
             style={{ width: `${Math.min(100, percentage)}%` }}
@@ -119,17 +200,25 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
         )}
 
         {!isAnonymous && showBuyCredits && (
-          <div className="pt-3 border-t border-gray-200 flex items-center justify-between">
-            <p className="text-xs text-gray-600">
+          <div className={`pt-3 border-t flex items-center justify-between ${
+            isExhausted || isVeryLow ? 'border-amber-300' : 'border-gray-200'
+          }`}>
+            <p className={`text-xs ${isExhausted || isVeryLow ? 'font-medium' : ''} ${
+              isExhausted ? 'text-red-700' : isVeryLow ? 'text-amber-700' : 'text-gray-600'
+            }`}>
               {isExhausted
                 ? "You've run out of credits."
-                : isLow
-                ? 'Running low on credits?'
-                : 'Need more credits?'}
+                : isVeryLow
+                ? `Running low — ${remaining} credits remaining`
+                : 'Top up your credits'}
             </p>
             <button
               onClick={() => setShowBuyModal(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-mono uppercase tracking-widest bg-black text-white hover:bg-gray-800 transition-colors"
+              className={`inline-flex items-center gap-1.5 font-mono uppercase tracking-widest transition-colors ${
+                isExhausted || isVeryLow
+                  ? 'px-4 py-2 text-xs bg-black text-white hover:bg-gray-800'
+                  : 'px-3 py-1.5 text-xs bg-black text-white hover:bg-gray-800'
+              }`}
             >
               <Plus className="w-3 h-3" />
               Buy Credits

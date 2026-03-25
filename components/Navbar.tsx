@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, Zap } from 'lucide-react';
 import AuthButton from './AuthButton';
+import BuyCreditsModal from './BuyCreditsModal';
 import { useAuth, useUsage } from '../auth';
 import { getPathForPage } from '../utils/siteSeo';
 
@@ -16,7 +17,8 @@ const Navbar: React.FC<NavbarProps> = ({
   boardCount = 0
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const { user, isAuthenticated } = useAuth();
   const { remaining, isLoading: isUsageLoading } = useUsage();
   const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
   const materialCountLabel = boardCount > 99 ? '99+' : `${boardCount}`;
@@ -101,17 +103,30 @@ const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          <a
-            href={getPathForPage('dashboard')}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-black"
-            onClick={(event) => handleNavigateClick(event, 'dashboard')}
-            aria-label={`Go to dashboard (${creditBalanceLabel} credits available)`}
-          >
-            <Zap className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-widest">
-              {creditBalanceLabel}
-            </span>
-          </a>
+          {isAuthenticated ? (
+            <button
+              onClick={() => setShowBuyCreditsModal(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-black"
+              aria-label={`${creditBalanceLabel} credits available. Click to buy more.`}
+            >
+              <Zap className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-widest">
+                {creditBalanceLabel}
+              </span>
+            </button>
+          ) : (
+            <a
+              href={getPathForPage('pricing')}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-black"
+              onClick={(event) => handleNavigateClick(event, 'pricing')}
+              aria-label="View pricing"
+            >
+              <Zap className="w-5 h-5 md:w-6 md:h-6" />
+              <span className="font-mono text-[11px] font-semibold uppercase tracking-widest">
+                {creditBalanceLabel}
+              </span>
+            </a>
+          )}
 
           {/* Auth Button */}
           <AuthButton />
@@ -148,6 +163,12 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
+      {/* Buy Credits Modal */}
+      <BuyCreditsModal
+        isOpen={showBuyCreditsModal}
+        onClose={() => setShowBuyCreditsModal(false)}
+      />
     </nav>
   );
 };

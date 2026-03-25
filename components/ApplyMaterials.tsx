@@ -763,7 +763,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        <UsageDisplay variant="full" showSignUpPrompt={!isAuthBypassEnabled && isAnonymous} />
+        <UsageDisplay variant="minimal" showSignUpPrompt={!isAuthBypassEnabled && isAnonymous} />
 
         {board.length === 0 && !appliedRenderUrl && (
           <div className="border border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
