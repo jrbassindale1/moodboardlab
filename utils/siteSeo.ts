@@ -133,6 +133,51 @@ const ensureJsonLdTag = () => {
   return tag;
 };
 
+const ORGANIZATION_SCHEMA = {
+  '@type': 'Organization',
+  name: 'Moodboard Lab',
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.png`,
+};
+
+const SOFTWARE_FEATURES = [
+  'AI-powered moodboard generation',
+  'Material palette curation',
+  'Sustainability trade-off analysis',
+  'Photoreal rendering',
+  'Material application to reference images',
+  'EPD and carbon data integration',
+];
+
+const buildSoftwareApplicationSchema = (url: string, description: string, includeOffers = true) => {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Moodboard Lab',
+    applicationCategory: 'DesignApplication',
+    applicationSubCategory: 'Architecture & Interior Design Tools',
+    operatingSystem: 'Any (Web-based)',
+    url,
+    image: DEFAULT_OG_IMAGE,
+    description,
+    featureList: SOFTWARE_FEATURES,
+    publisher: ORGANIZATION_SCHEMA,
+    author: ORGANIZATION_SCHEMA,
+  };
+
+  if (includeOffers) {
+    schema.offers = {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'GBP',
+      description: '10 free credits monthly included',
+      availability: 'https://schema.org/InStock',
+    };
+  }
+
+  return schema;
+};
+
 const buildStructuredData = (page: string, seo: PageSeo) => {
   const url = `${SITE_URL}${seo.path}`;
   const sharedWebPage = {
@@ -147,10 +192,7 @@ const buildStructuredData = (page: string, seo: PageSeo) => {
     return [
       {
         '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'Moodboard Lab',
-        url: SITE_URL,
-        logo: `${SITE_URL}/favicon.png`,
+        ...ORGANIZATION_SCHEMA,
       },
       {
         '@context': 'https://schema.org',
@@ -159,29 +201,45 @@ const buildStructuredData = (page: string, seo: PageSeo) => {
         url: SITE_URL,
         description: seo.description,
       },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'SoftwareApplication',
-        name: 'Moodboard Lab',
-        applicationCategory: 'DesignApplication',
-        operatingSystem: 'Any',
-        url,
-        image: DEFAULT_OG_IMAGE,
-        description: seo.description,
-      },
+      buildSoftwareApplicationSchema(url, seo.description),
     ];
   }
 
   if (page === 'moodboard' || page === 'apply') {
+    return buildSoftwareApplicationSchema(url, seo.description);
+  }
+
+  if (page === 'pricing') {
     return {
       '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
+      '@type': 'WebPage',
       name: seo.title,
-      applicationCategory: 'DesignApplication',
-      operatingSystem: 'Any',
-      url,
-      image: DEFAULT_OG_IMAGE,
       description: seo.description,
+      url,
+      mainEntity: {
+        '@type': 'Product',
+        name: 'Moodboard Lab Credits',
+        description: 'Credits for AI moodboard generation and material application',
+        brand: ORGANIZATION_SCHEMA,
+        offers: [
+          {
+            '@type': 'Offer',
+            name: 'Free Tier',
+            price: '0',
+            priceCurrency: 'GBP',
+            description: '10 free credits monthly',
+            availability: 'https://schema.org/InStock',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Credit Pack',
+            price: '5',
+            priceCurrency: 'GBP',
+            description: '50 credits',
+            availability: 'https://schema.org/InStock',
+          },
+        ],
+      },
     };
   }
 
