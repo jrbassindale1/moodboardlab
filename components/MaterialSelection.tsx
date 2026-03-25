@@ -52,6 +52,8 @@ const CARBON_SORT_ORDER: Record<NonNullable<MaterialOption['carbonIntensity']>, 
   high: 2,
 };
 
+const DEFAULT_LOW_CARBON_PICK_COUNT = 16;
+
 const dataUrlSizeBytes = (dataUrl: string) => {
   const base64 = dataUrl.split(',')[1] || '';
   const padding = (base64.match(/=+$/)?.[0].length ?? 0);
@@ -426,16 +428,55 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return next;
   }, [searchTokens, materialsByPath, materialMatchesSearch]);
 
+  const defaultLowCarbonPicks = useMemo(() => {
+    const lowCarbonMaterials = migratedMaterials.filter((mat) => mat.carbonIntensity === 'low');
+    const candidates = (lowCarbonMaterials.length > 0 ? lowCarbonMaterials : migratedMaterials)
+      .slice()
+      .sort((a, b) => {
+        const categoryComparison = a.category.localeCompare(b.category);
+        if (categoryComparison !== 0) {
+          return categoryComparison;
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+    const groupedByCategory = new Map<string, MaterialOption[]>();
+    candidates.forEach((mat) => {
+      const group = groupedByCategory.get(mat.category) || [];
+      group.push(mat);
+      groupedByCategory.set(mat.category, group);
+    });
+
+    const picks: MaterialOption[] = [];
+    while (picks.length < DEFAULT_LOW_CARBON_PICK_COUNT) {
+      let addedInPass = false;
+
+      groupedByCategory.forEach((group) => {
+        if (picks.length >= DEFAULT_LOW_CARBON_PICK_COUNT) return;
+        const next = group.shift();
+        if (!next) return;
+        picks.push(next);
+        addedInPass = true;
+      });
+
+      if (!addedInPass) {
+        break;
+      }
+    }
+
+    return picks;
+  }, [migratedMaterials]);
+
   // Use category browsing when a category is selected, otherwise search the full library.
   const displayedMaterials = useMemo(() => {
     if (selectedCategory) {
       return filteredMaterialsByPath[selectedCategory] || [];
     }
     if (!searchTokens.length) {
-      return [];
+      return defaultLowCarbonPicks;
     }
     return migratedMaterials.filter((mat) => materialMatchesSearch(mat));
-  }, [selectedCategory, filteredMaterialsByPath, searchTokens, migratedMaterials, materialMatchesSearch]);
+  }, [selectedCategory, filteredMaterialsByPath, searchTokens, defaultLowCarbonPicks, migratedMaterials, materialMatchesSearch]);
 
   // Sort materials
   const sortedMaterials = useMemo(() => {
@@ -829,8 +870,9 @@ IMPORTANT:
   };
 
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
+  const isDefaultLibraryView = !selectedCategory && searchTokens.length === 0;
   const isLibrarySearchMode = !selectedCategory && searchTokens.length > 0;
-  const showMaterialGrid = Boolean(selectedCategory || isLibrarySearchMode);
+  const showMaterialGrid = Boolean(selectedCategory || isLibrarySearchMode || isDefaultLibraryView);
   const toggleSection = (sectionId: string) => {
     setOpenSections((prev) => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
@@ -1048,14 +1090,14 @@ IMPORTANT:
                 <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
                   <div>
                     <h1 className="text-3xl font-display uppercase tracking-tight mb-2">
-                      {selectedCategory ? getCategoryLabel() : 'Material Library'}
+                      {selectedCategory ? getCategoryLabel() : isDefaultLibraryView ? 'Low Carbon Picks' : 'Material Library'}
                     </h1>
                     <p className="text-sm text-gray-600 font-sans">
                       {selectedCategory
                         ? `${sortedMaterials.length} product${sortedMaterials.length === 1 ? '' : 's'}`
                         : searchTokens.length
                         ? `${sortedMaterials.length} result${sortedMaterials.length === 1 ? '' : 's'} across all categories`
-                        : 'Search the whole library or choose a category to browse materials.'}
+                        : `${sortedMaterials.length} curated low-carbon pick${sortedMaterials.length === 1 ? '' : 's'} to start with. Search the whole library or choose a category to browse all materials.`}
                     </p>
                   </div>
                   {selectedCategory && (
@@ -1351,7 +1393,7 @@ IMPORTANT:
 
                       {/* Product info */}
                       <div className="space-y-2">
-                        {isLibrarySearchMode && (
+                        {(isLibrarySearchMode || isDefaultLibraryView) && (
                           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
                             {getCategoryDisplayName(mat.category)}
                           </p>
@@ -1404,7 +1446,9 @@ IMPORTANT:
                 {sortedMaterials.length === 0 && (
                   <div className="text-center py-16">
                     <p className="text-gray-600 font-sans">
-                      {selectedCategory
+                      {isDefaultLibraryView
+                        ? 'No low-carbon picks are available yet.'
+                        : selectedCategory
                         ? 'No materials found in this category.'
                         : `No materials found for "${searchTerm.trim()}".`}
                     </p>
