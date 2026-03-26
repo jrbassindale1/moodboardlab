@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-01-28T08:31:57.699Z",
-  "totalIcons": 218,
-  "totalSizeMB": 158.38,
+  "generatedAt": "2026-03-26T12:58:20.807Z",
+  "totalIcons": 257,
+  "totalSizeMB": 187.79,
   "icons": [
     {
       "id": "steel-frame",
@@ -645,7 +645,7 @@
     },
     {
       "id": "joinery-built-in",
-      "name": "Built-in Joinery",
+      "name": "Built-in Joinery (Birch Plywood)",
       "exists": true
     },
     {
@@ -864,6 +864,11 @@
       "exists": true
     },
     {
+      "id": "brick-facade",
+      "name": "Brick Façade",
+      "exists": true
+    },
+    {
       "id": "brick-slip-rainscreen",
       "name": "Brick Slip Rainscreen",
       "exists": true
@@ -1021,6 +1026,201 @@
     {
       "id": "modular-shelving",
       "name": "Modular Shelving",
+      "exists": true
+    },
+    {
+      "id": "cork-wallcovering",
+      "name": "Cork Wallcovering",
+      "exists": true
+    },
+    {
+      "id": "veneer-wall-panels",
+      "name": "Timber Veneer Wall Panels",
+      "exists": true
+    },
+    {
+      "id": "bio-based-microcement",
+      "name": "Bio-Based Microcement",
+      "exists": true
+    },
+    {
+      "id": "fsc-kitchen-cabinetry",
+      "name": "FSC Kitchen Cabinetry",
+      "exists": true
+    },
+    {
+      "id": "aac-blockwork",
+      "name": "AAC Blockwork",
+      "exists": true
+    },
+    {
+      "id": "aluminium-cladding",
+      "name": "Aluminium Cladding",
+      "exists": true
+    },
+    {
+      "id": "aluminium-standing-seam-roof",
+      "name": "Aluminium Standing Seam Roof",
+      "exists": true
+    },
+    {
+      "id": "brushed-stainless-fixtures",
+      "name": "Brushed Stainless Fixtures",
+      "exists": true
+    },
+    {
+      "id": "ceramic-subway-tiles",
+      "name": "Ceramic Subway Tiles",
+      "exists": true
+    },
+    {
+      "id": "concrete-block-loadbearing",
+      "name": "Load-Bearing Masonry (Concrete Block)",
+      "exists": true
+    },
+    {
+      "id": "copper-standing-seam-roof",
+      "name": "Copper Standing Seam Roof",
+      "exists": true
+    },
+    {
+      "id": "frameless-shower-screen",
+      "name": "Frameless Shower Screen",
+      "exists": true
+    },
+    {
+      "id": "fsc-mdf-joinery",
+      "name": "FSC MDF Joinery",
+      "exists": true
+    },
+    {
+      "id": "geopolymer-concrete",
+      "name": "Geopolymer Concrete",
+      "exists": true
+    },
+    {
+      "id": "green-oak-structure",
+      "name": "Green Oak Structure",
+      "exists": true
+    },
+    {
+      "id": "insulated-render-system",
+      "name": "Insulated Render (Sto-type)",
+      "exists": true
+    },
+    {
+      "id": "lead-cladding",
+      "name": "Lead Cladding",
+      "exists": true
+    },
+    {
+      "id": "lead-standing-seam-roof",
+      "name": "Lead Standing Seam Roof",
+      "exists": true
+    },
+    {
+      "id": "linen-wallcovering",
+      "name": "Linen Wallcovering",
+      "exists": true
+    },
+    {
+      "id": "linoleum-faced-joinery",
+      "name": "Linoleum-Faced Joinery",
+      "exists": true
+    },
+    {
+      "id": "low-flow-shower-system",
+      "name": "Low-Flow Shower System",
+      "exists": true
+    },
+    {
+      "id": "pet-felt-acoustic-panels",
+      "name": "PET Felt Acoustic Panels",
+      "exists": true
+    },
+    {
+      "id": "porcelain-wetroom-tiles",
+      "name": "Porcelain Wetroom Tiles",
+      "exists": true
+    },
+    {
+      "id": "quartz-composite-worktop",
+      "name": "Quartz Composite Worktop",
+      "exists": true
+    },
+    {
+      "id": "recycled-glass-mosaic",
+      "name": "Recycled Glass Mosaic",
+      "exists": true
+    },
+    {
+      "id": "recycled-glass-splashback",
+      "name": "Recycled Glass Splashback",
+      "exists": true
+    },
+    {
+      "id": "recycled-paper-composite-worktop",
+      "name": "Recycled Paper Composite Worktop",
+      "exists": true
+    },
+    {
+      "id": "recycled-plastic-furniture",
+      "name": "Recycled Plastic Furniture",
+      "exists": true
+    },
+    {
+      "id": "sanitary-ceramic-ware",
+      "name": "Sanitary Ceramic Ware",
+      "exists": true
+    },
+    {
+      "id": "sintered-stone-worktop",
+      "name": "Sintered Stone Worktop",
+      "exists": true
+    },
+    {
+      "id": "solid-surface-worktop",
+      "name": "Solid Surface Worktop",
+      "exists": true
+    },
+    {
+      "id": "space-frame-structure",
+      "name": "Space Frame",
+      "exists": true
+    },
+    {
+      "id": "stainless-cladding",
+      "name": "Stainless Steel Cladding",
+      "exists": true
+    },
+    {
+      "id": "stainless-standing-seam-roof",
+      "name": "Stainless Steel Standing Seam Roof",
+      "exists": true
+    },
+    {
+      "id": "stainless-steel-worktop",
+      "name": "Stainless Steel Worktop",
+      "exists": true
+    },
+    {
+      "id": "straw-insulation-panels",
+      "name": "Straw Insulation Panels",
+      "exists": true
+    },
+    {
+      "id": "water-resistant-bathroom-joinery",
+      "name": "Water-Resistant Bathroom Joinery",
+      "exists": true
+    },
+    {
+      "id": "wood-wool-acoustic-panels",
+      "name": "Wood Wool Acoustic Panels",
+      "exists": true
+    },
+    {
+      "id": "zellige-tiles",
+      "name": "Zellige Clay Tiles",
       "exists": true
     }
   ]
