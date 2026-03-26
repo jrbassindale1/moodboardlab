@@ -44,7 +44,9 @@
       "Bash(export PATH=\"/Users/jr-bassindale/.nvm/versions/node/v22.20.0/bin:$PATH\")",
       "Bash(/usr/local/bin/npm install stripe)",
       "Bash(/opt/homebrew/bin/npm install stripe)",
-      "Bash(npx npm install:*)"
+      "Bash(npx npm install:*)",
+      "Bash(xargs:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

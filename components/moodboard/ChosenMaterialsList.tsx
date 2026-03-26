@@ -215,7 +215,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                     >
                       <div className="flex items-center gap-4 p-4">
                         {/* Material swatch/image */}
-                        <div className="w-20 h-20 flex-shrink-0 border border-gray-200 overflow-hidden bg-gray-50">
+                        <div className="w-[60px] h-[60px] flex-shrink-0 border border-gray-200 overflow-hidden bg-gray-50">
                           {coloredIconDataUri ? (
                             <img
                               src={coloredIconDataUri}
