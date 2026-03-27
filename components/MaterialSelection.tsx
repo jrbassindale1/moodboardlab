@@ -144,6 +144,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
   const [isUsingFallbackPalette, setIsUsingFallbackPalette] = useState(false);
+  const [isLoadingMaterials, setIsLoadingMaterials] = useState(true);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
@@ -277,12 +278,16 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           merged.push(...fallbackById.values());
           setMaterialPalette(merged);
           setIsUsingFallbackPalette(false);
-          return;
+        } else {
+          setIsUsingFallbackPalette(true);
         }
-        setIsUsingFallbackPalette(true);
       } catch (error) {
         console.warn('Falling back to hardcoded material palette:', error);
         setIsUsingFallbackPalette(true);
+      } finally {
+        if (mounted) {
+          setIsLoadingMaterials(false);
+        }
       }
     };
     void loadMaterials();
@@ -1128,6 +1133,8 @@ IMPORTANT:
                         ? `${sortedMaterials.length} product${sortedMaterials.length === 1 ? '' : 's'}`
                         : searchTokens.length
                         ? `${sortedMaterials.length} result${sortedMaterials.length === 1 ? '' : 's'} across all categories`
+                        : isLoadingMaterials
+                        ? 'Loading curated low-carbon picks...'
                         : `${sortedMaterials.length} curated low-carbon pick${sortedMaterials.length === 1 ? '' : 's'}, rotated daily. Search the whole library or choose a category to browse all materials.`}
                     </p>
                   </div>
@@ -1387,6 +1394,20 @@ IMPORTANT:
             ) : showMaterialGrid ? (
               <>
                 {/* Product Grid */}
+                {isLoadingMaterials && isDefaultLibraryView ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 animate-pulse">
+                    {Array.from({ length: 16 }).map((_, i) => (
+                      <div key={i} className="space-y-3">
+                        <div className="aspect-square bg-gray-200 border border-arch-line" />
+                        <div className="space-y-2">
+                          <div className="h-3 w-16 bg-gray-200 rounded" />
+                          <div className="h-4 w-24 bg-gray-200 rounded" />
+                          <div className="h-3 w-20 bg-gray-200 rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                 <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
                   {sortedMaterials.map((mat) => {
                     const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
@@ -1472,6 +1493,7 @@ IMPORTANT:
                     );
                   })}
                 </div>
+                )}
 
                 {/* Empty state when no results */}
                 {sortedMaterials.length === 0 && (
