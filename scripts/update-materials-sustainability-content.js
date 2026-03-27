@@ -9,7 +9,11 @@
  */
 
 const API_URL = 'https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net/api/materials';
-const ADMIN_KEY = '11NarrowPath';
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
+if (!ADMIN_KEY) {
+  console.error('❌ ADMIN_KEY environment variable is required');
+  process.exit(1);
+}
 
 // Pre-generated content for materials based on their carbon intensity and characteristics
 const materialUpdates = [

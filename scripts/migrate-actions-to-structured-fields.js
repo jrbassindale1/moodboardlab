@@ -9,7 +9,13 @@
  */
 
 const API_URL = 'https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net/api/materials';
-const ADMIN_KEY = '11NarrowPath';
+const ADMIN_KEY = process.env.ADMIN_KEY || '';
+
+if (!ADMIN_KEY) {
+  console.error('❌ ADMIN_KEY environment variable is required');
+  console.error('   Usage: ADMIN_KEY=your-key node scripts/migrate-actions-to-structured-fields.js');
+  process.exit(1);
+}
 
 /**
  * Ensure proper sentence formatting: capitalize first letter, end with period

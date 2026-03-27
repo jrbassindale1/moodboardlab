@@ -28,3 +28,6 @@ dist-ssr
 .env.*
 !.env.example
 scripts/admin-bypass.env
+
+# Claude Code local settings (contains permissions with secrets)
+.claude/settings.local.json

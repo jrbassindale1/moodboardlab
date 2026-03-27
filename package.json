@@ -13,6 +13,8 @@
     "sync:functions:dry": "bash scripts/sync-functions-to-backend.sh --dry-run",
     "generate-icons": "tsx scripts/generateIconsToPublic.ts",
     "optimize-icons": "tsx scripts/optimizeIcons.ts",
+    "upload-icons": "tsx scripts/uploadIconsToBlob.ts",
+    "upload-icons-direct": "tsx scripts/uploadIconsDirect.ts",
     "export-cosmos-material-model": "tsx scripts/export-cosmos-material-model.ts",
     "import-cosmos-seed": "tsx scripts/import-cosmos-seed.ts",
     "convert-material-submissions": "node scripts/convert-material-submissions.js"
