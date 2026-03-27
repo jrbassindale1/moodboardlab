@@ -260,8 +260,10 @@ export function getCreditPackage(packageId: string) {
  * Credit costs for different generation modes
  */
 export const CREDIT_COSTS = {
-  /** Standard one-shot image generation */
-  STANDARD_GENERATION: 1,
+  /** Generate a new moodboard image */
+  MOODBOARD_GENERATION: 1,
+  /** Generate or refine a render */
+  RENDER_GENERATION: 2,
   /** Turn-by-turn / iterative image generation (multi-step workflow) */
   ITERATIVE_GENERATION: 2,
   /** 4K image generation (paid users only) */
@@ -279,13 +281,13 @@ export type GenerationMode = 'standard' | 'iterative' | '4k';
 export function getGenerationCost(mode: GenerationMode): number {
   switch (mode) {
     case 'standard':
-      return CREDIT_COSTS.STANDARD_GENERATION;
+      return CREDIT_COSTS.MOODBOARD_GENERATION;
     case 'iterative':
       return CREDIT_COSTS.ITERATIVE_GENERATION;
     case '4k':
       return CREDIT_COSTS.FOUR_K_GENERATION;
     default:
-      return CREDIT_COSTS.STANDARD_GENERATION;
+      return CREDIT_COSTS.MOODBOARD_GENERATION;
   }
 }
 

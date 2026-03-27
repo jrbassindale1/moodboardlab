@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Zap, Image, Camera } from 'lucide-react';
 import BuyCreditsModal from './BuyCreditsModal';
-import { CreditPackageId } from '../api';
+import { CreditPackageId, CREDIT_COSTS } from '../api';
 import { useAuth } from '../auth';
 import { SignUpButton } from '@clerk/clerk-react';
 import { isClerkAuthEnabled } from '../auth';
@@ -10,6 +10,7 @@ const Pricing: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<CreditPackageId>('standard');
+  const formatCreditLabel = (credits: number) => `credit${credits === 1 ? '' : 's'}`;
 
   const openModalWithPackage = (packageId: CreditPackageId) => {
     setSelectedPackage(packageId);
@@ -157,12 +158,12 @@ const Pricing: React.FC = () => {
                 <Sparkles className="w-5 h-5 text-gray-700" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-display text-3xl font-bold">1</span>
-                <span className="font-sans text-sm text-gray-600">credit</span>
+                <span className="font-display text-3xl font-bold">{CREDIT_COSTS.MOODBOARD_GENERATION}</span>
+                <span className="font-sans text-sm text-gray-600">{formatCreditLabel(CREDIT_COSTS.MOODBOARD_GENERATION)}</span>
               </div>
-              <h3 className="font-display text-sm uppercase tracking-wide">Standard Render</h3>
+              <h3 className="font-display text-sm uppercase tracking-wide">Moodboard Generation</h3>
               <p className="font-sans text-sm text-gray-600 leading-relaxed">
-                Generate a new moodboard or apply materials to an image for the first time.
+                Generate a new moodboard image from your selected materials.
               </p>
             </div>
 
@@ -172,12 +173,12 @@ const Pricing: React.FC = () => {
                 <Zap className="w-5 h-5 text-gray-700" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-display text-3xl font-bold">2</span>
-                <span className="font-sans text-sm text-gray-600">credits</span>
+                <span className="font-display text-3xl font-bold">{CREDIT_COSTS.RENDER_GENERATION}</span>
+                <span className="font-sans text-sm text-gray-600">{formatCreditLabel(CREDIT_COSTS.RENDER_GENERATION)}</span>
               </div>
-              <h3 className="font-display text-sm uppercase tracking-wide">Edit & Refine</h3>
+              <h3 className="font-display text-sm uppercase tracking-wide">Render Generation</h3>
               <p className="font-sans text-sm text-gray-600 leading-relaxed">
-                Refine an existing render with additional prompts or adjustments.
+                Generate or refine a render from an uploaded image, and make turn-by-turn edits to a moodboard.
               </p>
             </div>
 
@@ -202,10 +203,10 @@ const Pricing: React.FC = () => {
                 <Image className="w-5 h-5 text-gray-700" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-display text-3xl font-bold">5</span>
-                <span className="font-sans text-sm text-gray-600">credits</span>
+                <span className="font-display text-3xl font-bold">{CREDIT_COSTS.FOUR_K_GENERATION}</span>
+                <span className="font-sans text-sm text-gray-600">{formatCreditLabel(CREDIT_COSTS.FOUR_K_GENERATION)}</span>
               </div>
-              <h3 className="font-display text-sm uppercase tracking-wide">4K Upscale</h3>
+              <h3 className="font-display text-sm uppercase tracking-wide">4K Generation</h3>
               <p className="font-sans text-sm text-gray-600 leading-relaxed">
                 Upscale your render to high-resolution 4K for presentations and print.
               </p>

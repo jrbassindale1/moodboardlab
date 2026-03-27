@@ -20,7 +20,6 @@ import {
   isCosmosNotFound,
   isAdminUser,
   GenerationMode,
-  getGenerationCost,
   canGenerate4K,
   CREDIT_COSTS,
   isCosmosPreconditionFailed,
@@ -29,6 +28,19 @@ import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from '../shared
 
 const MAX_CREDIT_CHARGE = CREDIT_COSTS.FOUR_K_GENERATION; // 5 credits max (for 4K)
 const MAX_CREDIT_MUTATION_RETRIES = 3;
+
+function getRequestedGenerationCost(generationType: GenerationType, generationMode: GenerationMode): number {
+  if (generationMode === '4k') {
+    return CREDIT_COSTS.FOUR_K_GENERATION;
+  }
+  if (generationType === 'applyMaterials') {
+    return CREDIT_COSTS.RENDER_GENERATION;
+  }
+  if (generationMode === 'iterative') {
+    return CREDIT_COSTS.ITERATIVE_GENERATION;
+  }
+  return CREDIT_COSTS.MOODBOARD_GENERATION;
+}
 
 type UsageSnapshot = {
   yearMonth: string;
@@ -182,9 +194,9 @@ export async function consumeCredits(
     const generationType = body.generationType || 'materialIcon';
     const generationMode: GenerationMode = body.generationMode || 'standard';
 
-    // Calculate credits based on generation mode if not explicitly provided
-    const modeCredits = getGenerationCost(generationMode);
-    const rawCredits = Number.isFinite(body.credits) ? Number(body.credits) : modeCredits;
+    // Calculate credits based on the requested action if not explicitly provided
+    const requestedCredits = getRequestedGenerationCost(generationType, generationMode);
+    const rawCredits = Number.isFinite(body.credits) ? Number(body.credits) : requestedCredits;
     const credits = Math.max(1, Math.min(MAX_CREDIT_CHARGE, Math.round(rawCredits)));
 
     const yearMonth = getCurrentYearMonth();

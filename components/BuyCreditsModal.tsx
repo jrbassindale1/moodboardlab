@@ -18,6 +18,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   initialPackage = 'standard',
 }) => {
   const { getAccessToken } = useAuth();
+  const formatCredits = (credits: number) => `${credits} credit${credits === 1 ? '' : 's'}`;
   const [selectedPackage, setSelectedPackage] = useState<CreditPackageId>(initialPackage);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -173,23 +174,23 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <Image className="w-3 h-3" />
-                  Standard generation
+                  Moodboard generation
                 </span>
-                <span className="font-mono">{CREDIT_COSTS.STANDARD_GENERATION} credit</span>
+                <span className="font-mono">{formatCredits(CREDIT_COSTS.MOODBOARD_GENERATION)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <RefreshCw className="w-3 h-3" />
-                  Turn-by-turn generation
+                  Render generation and moodboard edits
                 </span>
-                <span className="font-mono">{CREDIT_COSTS.ITERATIVE_GENERATION} credits</span>
+                <span className="font-mono">{formatCredits(CREDIT_COSTS.RENDER_GENERATION)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-gray-600">
                   <Maximize2 className="w-3 h-3" />
                   4K generation
                 </span>
-                <span className="font-mono">{CREDIT_COSTS.FOUR_K_GENERATION} credits</span>
+                <span className="font-mono">{formatCredits(CREDIT_COSTS.FOUR_K_GENERATION)}</span>
               </div>
             </div>
             <p className="mt-2 text-[10px] text-gray-500">

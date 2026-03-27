@@ -429,9 +429,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const requiredCredits =
       generationMode === '4k'
         ? CREDIT_COSTS.FOUR_K_GENERATION
-        : generationMode === 'iterative'
-        ? CREDIT_COSTS.ITERATIVE_GENERATION
-        : CREDIT_COSTS.STANDARD_GENERATION;
+        : CREDIT_COSTS.RENDER_GENERATION;
     const billedGenerationType = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
 
     // Check quota - server-side for authenticated users, shared local quota for anonymous users

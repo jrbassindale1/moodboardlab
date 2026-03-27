@@ -43,7 +43,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
               }`}>
                 {isExhausted
                   ? "Out of credits"
-                  : `${remaining} credits remaining — enough for ${remaining} render${remaining !== 1 ? 's' : ''}`}
+                  : `${remaining} credits remaining`}
               </span>
             </div>
             {showBuyCredits && isAuthenticated && (
@@ -77,7 +77,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
             </div>
             <span className="text-xs text-gray-400">·</span>
             <span className="text-xs text-gray-500">
-              {CREDIT_COSTS.STANDARD_GENERATION} std / {CREDIT_COSTS.ITERATIVE_GENERATION} iterative / {CREDIT_COSTS.FOUR_K_GENERATION} 4K
+              {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} edits+renders / {CREDIT_COSTS.FOUR_K_GENERATION} 4K
             </span>
           </div>
           {showBuyCredits && isAuthenticated && (
@@ -169,7 +169,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
             )}
             <span className="flex items-center gap-1 text-gray-400">
               <Info className="w-3 h-3" />
-              {CREDIT_COSTS.STANDARD_GENERATION} std / {CREDIT_COSTS.ITERATIVE_GENERATION} iterative / {CREDIT_COSTS.FOUR_K_GENERATION} 4K
+              {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} edits+renders / {CREDIT_COSTS.FOUR_K_GENERATION} 4K
             </span>
           </div>
         )}
@@ -188,7 +188,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({
         {isAnonymous && showSignUpPrompt && (
           <div className="pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-600 mb-2">
-              Sign in to get 10 free generations per month and save your moodboards.
+              Sign in to get 10 free credits each month and save your moodboards.
             </p>
             <button
               onClick={onSignIn || login}

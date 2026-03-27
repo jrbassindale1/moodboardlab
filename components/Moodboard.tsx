@@ -498,7 +498,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return false;
   };
 
-  const ensureQuotaForMoodboard = async (requiredCredits = CREDIT_COSTS.STANDARD_GENERATION) => {
+  const ensureQuotaForMoodboard = async (requiredCredits = CREDIT_COSTS.MOODBOARD_GENERATION) => {
     // If auth bypass is enabled, skip quota check
     if (isAuthBypassEnabled) {
       console.log('[Quota Check] Bypassed (auth bypass enabled)');
@@ -1280,7 +1280,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     setError(null);
     setImageModelFallbackWarning(null);
-    const canGenerate = await ensureQuotaForMoodboard(CREDIT_COSTS.STANDARD_GENERATION);
+    const canGenerate = await ensureQuotaForMoodboard(CREDIT_COSTS.MOODBOARD_GENERATION);
     if (!canGenerate || !isMountedRef.current) return;
 
     setIsCreatingMoodboard(true);

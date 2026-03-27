@@ -86,8 +86,10 @@ export type CreditPackageId = typeof CREDIT_PACKAGES[number]['id'];
  * Credit costs for different generation modes
  */
 export const CREDIT_COSTS = {
-  /** Standard one-shot image generation */
-  STANDARD_GENERATION: 1,
+  /** Generate a new moodboard image */
+  MOODBOARD_GENERATION: 1,
+  /** Generate or refine a render */
+  RENDER_GENERATION: 2,
   /** Turn-by-turn / iterative image generation */
   ITERATIVE_GENERATION: 2,
   /** 4K image generation (paid users only) */
