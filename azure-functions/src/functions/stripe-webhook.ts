@@ -367,6 +367,15 @@ export async function confirmCheckoutSession(
       };
     }
 
+    // Validate session ID format - Stripe session IDs start with cs_ (or cs_test_ in test mode)
+    if (!sessionId.startsWith('cs_')) {
+      return {
+        status: 400,
+        body: JSON.stringify({ error: 'Invalid session ID format' }),
+        headers,
+      };
+    }
+
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const sessionUserId = session.metadata?.userId?.trim() || '';

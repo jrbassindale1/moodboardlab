@@ -156,7 +156,9 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
     const currentUrl = new URL(window.location.href);
     const creditsCancelled = currentUrl.searchParams.get('credits_cancelled') === 'true';
     const creditsPurchased = currentUrl.searchParams.get('credits_purchased') === 'true';
-    const sessionId = currentUrl.searchParams.get('session_id')?.trim() || '';
+    const rawSessionId = currentUrl.searchParams.get('session_id')?.trim() || '';
+    // Validate session ID format - Stripe session IDs start with cs_ (or cs_test_ in test mode)
+    const sessionId = rawSessionId.startsWith('cs_') ? rawSessionId : '';
 
     const clearCheckoutParams = () => {
       const nextUrl = new URL(window.location.href);

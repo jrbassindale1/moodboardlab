@@ -149,9 +149,9 @@ const SOFTWARE_FEATURES = [
   'EPD and carbon data integration',
 ];
 
-const buildSoftwareApplicationSchema = (url: string, description: string, includeOffers = true) => {
+// Build SoftwareApplication schema - optionally without @context for use in @graph
+const buildSoftwareApplicationSchema = (url: string, description: string, includeOffers = true, includeContext = true) => {
   const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'Moodboard Lab',
     applicationCategory: 'DesignApplication',
@@ -164,6 +164,10 @@ const buildSoftwareApplicationSchema = (url: string, description: string, includ
     publisher: ORGANIZATION_SCHEMA,
     author: ORGANIZATION_SCHEMA,
   };
+
+  if (includeContext) {
+    schema['@context'] = 'https://schema.org';
+  }
 
   if (includeOffers) {
     schema.offers = {
@@ -189,20 +193,21 @@ const buildStructuredData = (page: string, seo: PageSeo) => {
   };
 
   if (page === 'concept') {
-    return [
-      {
-        '@context': 'https://schema.org',
-        ...ORGANIZATION_SCHEMA,
-      },
-      {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Moodboard Lab',
-        url: SITE_URL,
-        description: seo.description,
-      },
-      buildSoftwareApplicationSchema(url, seo.description),
-    ];
+    // Use @graph structure instead of array to avoid Safari JSON-LD parsing bug
+    // See: https://bugs.webkit.org/show_bug.cgi?id=255764
+    return {
+      '@context': 'https://schema.org',
+      '@graph': [
+        ORGANIZATION_SCHEMA,
+        {
+          '@type': 'WebSite',
+          name: 'Moodboard Lab',
+          url: SITE_URL,
+          description: seo.description,
+        },
+        buildSoftwareApplicationSchema(url, seo.description, true, false), // no @context in @graph
+      ],
+    };
   }
 
   if (page === 'moodboard' || page === 'apply') {
