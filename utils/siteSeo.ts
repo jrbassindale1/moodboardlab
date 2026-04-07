@@ -71,6 +71,30 @@ const PAGE_SEO: Record<string, PageSeo> = {
     description: 'Administrative tools for managing materials in Moodboard Lab.',
     indexable: false,
   },
+  projects: {
+    path: '/projects',
+    title: 'Projects | Moodboard Lab',
+    description: 'Manage your design projects. Each project groups materials, renders, sustainability insights, and precedents together.',
+    indexable: false,
+  },
+  'project-create': {
+    path: '/projects/new',
+    title: 'New Project | Moodboard Lab',
+    description: 'Create a new project to organize your materials, renders, and design research.',
+    indexable: false,
+  },
+  'project-workspace': {
+    path: '/projects/workspace',
+    title: 'Project Workspace | Moodboard Lab',
+    description: 'View and manage your project materials, renders, sustainability insights, and precedents.',
+    indexable: false,
+  },
+  'project-edit': {
+    path: '/projects/edit',
+    title: 'Edit Project | Moodboard Lab',
+    description: 'Edit your project settings and details.',
+    indexable: false,
+  },
 };
 
 const PAGE_TYPES: Record<string, string> = {
@@ -85,6 +109,10 @@ const PAGE_TYPES: Record<string, string> = {
   contact: 'ContactPage',
   pricing: 'WebPage',
   'material-admin': 'WebPage',
+  projects: 'WebPage',
+  'project-create': 'WebPage',
+  'project-workspace': 'WebPage',
+  'project-edit': 'WebPage',
 };
 
 const normalizePath = (pathname: string): string => {
