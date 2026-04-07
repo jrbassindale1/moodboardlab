@@ -476,7 +476,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const cached = readApplyStateCache();
     if (!cached) return;
-    if (cached.uploadedImages?.length) setUploadedImages(cached.uploadedImages);
+    if (cached.uploadedImages?.length) setUploadedImages(cached.uploadedImages.slice(0, 1));
     if (cached.sceneControls) setSceneControls(cached.sceneControls);
     if (cached.renderNote) setRenderNote(cached.renderNote);
     if (cached.appliedEditPrompt) setAppliedEditPrompt(cached.appliedEditPrompt);

@@ -223,6 +223,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     () => board.filter((item) => !item.excludeFromMoodboardRender),
     [board]
   );
+  const uploadedImage = uploadedImages[0] ?? null;
   const excludedCount = board.length - renderMaterials.length;
 
   const handleToggleExclude = (idxToToggle: number, value: boolean) => {
@@ -300,16 +301,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       generatedPrompt: prompt,
       board,
       moodboardRenderUrl: moodboardRenderUrl || undefined,
-      uploads: uploadedImages.map((img) => ({
-        id: img.id,
-        name: img.name,
-        mimeType: img.mimeType,
-        sizeBytes: img.sizeBytes,
-        originalSizeBytes: img.originalSizeBytes,
-        width: img.width,
-        height: img.height,
-        dataUrl: img.dataUrl
-      })),
+      uploads: uploadedImage
+        ? [{
+            id: uploadedImage.id,
+            name: uploadedImage.name,
+            mimeType: uploadedImage.mimeType,
+            sizeBytes: uploadedImage.sizeBytes,
+            originalSizeBytes: uploadedImage.originalSizeBytes,
+            width: uploadedImage.width,
+            height: uploadedImage.height,
+            dataUrl: uploadedImage.dataUrl
+          }]
+        : [],
       // Project identification
       projectId: currentProject?.id,
       projectName: currentProject?.name
@@ -371,39 +374,38 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const handleFileInput = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const list: UploadedImage[] = [];
-    let errorMessage: string | null = null;
-    for (const file of Array.from(files)) {
-      if (!file.type.startsWith('image/')) continue;
-      if (file.size > MAX_UPLOAD_BYTES) {
-        errorMessage = `Upload "${file.name}" is over the 5 MB limit.`;
-        continue;
-      }
-      try {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        const resized = await downscaleImage(dataUrl);
-        list.push({
-          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          name: file.name,
-          dataUrl: resized.dataUrl,
-          mimeType: resized.mimeType,
-          sizeBytes: resized.sizeBytes,
-          originalSizeBytes: file.size,
-          width: resized.width,
-          height: resized.height
-        });
-      } catch (err) {
-        console.error('Could not process upload', err);
-        errorMessage = `Could not process "${file.name}".`;
-      }
+    const file = Array.from(files).find((candidate) => candidate.type.startsWith('image/'));
+    if (!file) {
+      setError('Please upload a valid image file.');
+      return;
     }
-    if (errorMessage) setError(errorMessage);
-    if (list.length) setUploadedImages(list.slice(-3));
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`Upload "${file.name}" is over the 5 MB limit.`);
+      return;
+    }
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const resized = await downscaleImage(dataUrl);
+      setUploadedImages([{
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        dataUrl: resized.dataUrl,
+        mimeType: resized.mimeType,
+        sizeBytes: resized.sizeBytes,
+        originalSizeBytes: file.size,
+        width: resized.width,
+        height: resized.height
+      }]);
+      setError(null);
+    } catch (err) {
+      console.error('Could not process upload', err);
+      setError(`Could not process "${file.name}".`);
+    }
   };
 
   const onFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
@@ -479,7 +481,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       setError('Create a render first before generating a 4K version.');
       return false;
     }
-    if (!isEditingRender && !isUpscalingRender && uploadedImages.length === 0) {
+    if (!isEditingRender && !isUpscalingRender && !uploadedImage) {
       setError('Upload at least one base image first.');
       return false;
     }
@@ -545,7 +547,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ? `Create a 4K upscaled version of the provided architectural render. Preserve the exact composition, camera position, geometry, materials, entourage, and lighting from the source image. Do not redesign or reinterpret the image. Increase resolution, sharpen material detail, and improve fine-grain realism only.`
       : isEditingRender
       ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
-      : `Transform the provided base image(s) into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
+      : `Transform the provided base image into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
 
     console.log('=== PROMPT BEING SENT TO AI ===');
     console.log(prompt);
@@ -570,10 +572,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         if (inferredRatio) {
           aspectRatio = inferredRatio;
         }
-      } else if (uploadedImages.length > 0) {
-        const firstImage = uploadedImages[0];
-        if (firstImage.width && firstImage.height) {
-          aspectRatio = calculateAspectRatio(firstImage.width, firstImage.height);
+      } else if (uploadedImage?.width && uploadedImage?.height) {
+        if (uploadedImage.width && uploadedImage.height) {
+          aspectRatio = calculateAspectRatio(uploadedImage.width, uploadedImage.height);
         }
       }
 
@@ -584,7 +585,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
               { text: prompt },
               ...((isEditingRender || isUpscalingRender) && baseImageDataUrl
                 ? [dataUrlToInlineData(baseImageDataUrl)]
-                : uploadedImages.map((img) => dataUrlToInlineData(img.dataUrl)))
+                : uploadedImage
+                ? [dataUrlToInlineData(uploadedImage.dataUrl)]
+                : [])
             ]
           }
         ],
@@ -873,13 +876,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                   <input
                     type="file"
                     accept="image/*"
-                    multiple
                     onChange={onFileInputChange}
                     className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
                   />
                 </div>
                 <p className="font-sans text-sm text-gray-600">
-                  Drag and drop an image to apply your own base on the next render. Line drawings and sketches will give the best results. 
+                  Upload one image to use as the base for the next render. Uploading a new image replaces the current one. Line drawings and sketches will give the best results.
                 </p>
                 <div className="space-y-2">
                   <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
@@ -1089,19 +1091,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     )}
                   </div>
                 </div>
-                {uploadedImages.length > 0 && (
+                {uploadedImage && (
                   <>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {uploadedImages.map((img) => (
-                        <div key={img.id} className="border border-gray-200 bg-white p-2">
-                          <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                            <img src={img.dataUrl} alt={img.name} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
-                            {img.name}
-                          </div>
-                        </div>
-                      ))}
+                    <div className="border border-gray-200 bg-white p-2 max-w-sm">
+                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                        <img src={uploadedImage.dataUrl} alt={uploadedImage.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
+                        {uploadedImage.name}
+                      </div>
                     </div>
                     <button
                       onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
