@@ -27,7 +27,7 @@ function hydrateBlobUrlsWithSas(value: unknown): unknown {
   const source = value as Record<string, unknown>;
   const next: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(source)) {
-    if (typeof val === 'string' && (key === 'blobUrl' || key.endsWith('BlobUrl'))) {
+    if (typeof val === 'string' && (key === 'blobUrl' || key.endsWith('BlobUrl') || key === 'styleReferenceUrl')) {
       next[key] = getSasUrlForBlob(val);
       continue;
     }

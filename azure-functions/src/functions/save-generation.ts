@@ -27,6 +27,7 @@ type UploadArchiveCandidate = {
   width?: number;
   height?: number;
   dataUrl?: string;
+  sourceGenerationId?: string | null;
 };
 
 type UploadArchiveRecord = Omit<UploadArchiveCandidate, 'dataUrl'> & {
@@ -115,7 +116,10 @@ async function archiveUploadImages(
   if (!isObject(materials)) return materials;
 
   const rawUploads = materials.uploads;
-  if (!Array.isArray(rawUploads) || rawUploads.length === 0) {
+  const rawStyleReference = isObject(materials.styleReference)
+    ? (materials.styleReference as UploadArchiveCandidate)
+    : null;
+  if ((!Array.isArray(rawUploads) || rawUploads.length === 0) && !rawStyleReference) {
     return materials;
   }
 
@@ -124,56 +128,103 @@ async function archiveUploadImages(
   const batchId = uuidv4();
   const archivedUploads: UploadArchiveRecord[] = [];
 
-  for (let index = 0; index < rawUploads.length; index += 1) {
-    const item = rawUploads[index];
-    if (!isObject(item)) continue;
+  if (Array.isArray(rawUploads)) {
+    for (let index = 0; index < rawUploads.length; index += 1) {
+      const item = rawUploads[index];
+      if (!isObject(item)) continue;
 
-    const candidate: UploadArchiveCandidate = item as UploadArchiveCandidate;
-    const dataUrl = asString(candidate.dataUrl);
-    if (!dataUrl || !dataUrl.startsWith('data:')) {
-      continue;
-    }
+      const candidate: UploadArchiveCandidate = item as UploadArchiveCandidate;
+      const dataUrl = asString(candidate.dataUrl);
+      if (!dataUrl || !dataUrl.startsWith('data:')) {
+        continue;
+      }
 
-    const detectedMime = asString(candidate.mimeType);
-    const mimeFromDataUrlMatch = dataUrl.match(/^data:([^;]+);base64,/i);
-    const mimeType = (detectedMime || mimeFromDataUrlMatch?.[1] || 'image/png').toLowerCase();
-    const extension = getExtensionFromMime(mimeType);
-    const safeId = sanitizePathSegment(asString(candidate.id) || `upload-${index + 1}`) || `upload-${index + 1}`;
-    const blobName = `uploads/${safeUserId}/${generationLabel}/${batchId}/${safeId}.${extension}`;
+      const detectedMime = asString(candidate.mimeType);
+      const mimeFromDataUrlMatch = dataUrl.match(/^data:([^;]+);base64,/i);
+      const mimeType = (detectedMime || mimeFromDataUrlMatch?.[1] || 'image/png').toLowerCase();
+      const extension = getExtensionFromMime(mimeType);
+      const safeId = sanitizePathSegment(asString(candidate.id) || `upload-${index + 1}`) || `upload-${index + 1}`;
+      const blobName = `uploads/${safeUserId}/${generationLabel}/${batchId}/${safeId}.${extension}`;
 
-    try {
-      const blobUrl = await uploadToBlob(dataUrl, mimeType, {
-        containerName: BLOB_UPLOAD_CONTAINER,
-        blobName,
-      });
-      archivedUploads.push({
-        id: asString(candidate.id) || `upload-${index + 1}`,
-        name: asString(candidate.name),
-        mimeType,
-        sizeBytes: asFiniteNumber(candidate.sizeBytes),
-        originalSizeBytes: asFiniteNumber(candidate.originalSizeBytes),
-        width: asFiniteNumber(candidate.width),
-        height: asFiniteNumber(candidate.height),
-        blobUrl,
-        archivedAt: new Date().toISOString(),
-      });
-    } catch (err) {
-      context.warn('Failed to archive uploaded source image', {
-        userId,
-        generationType: generationLabel,
-        uploadId: candidate.id || `upload-${index + 1}`,
-        error: err instanceof Error ? err.message : String(err),
-      });
+      try {
+        const blobUrl = await uploadToBlob(dataUrl, mimeType, {
+          containerName: BLOB_UPLOAD_CONTAINER,
+          blobName,
+        });
+        archivedUploads.push({
+          id: asString(candidate.id) || `upload-${index + 1}`,
+          name: asString(candidate.name),
+          mimeType,
+          sizeBytes: asFiniteNumber(candidate.sizeBytes),
+          originalSizeBytes: asFiniteNumber(candidate.originalSizeBytes),
+          width: asFiniteNumber(candidate.width),
+          height: asFiniteNumber(candidate.height),
+          sourceGenerationId: asString(candidate.sourceGenerationId),
+          blobUrl,
+          archivedAt: new Date().toISOString(),
+        });
+      } catch (err) {
+        context.warn('Failed to archive uploaded source image', {
+          userId,
+          generationType: generationLabel,
+          uploadId: candidate.id || `upload-${index + 1}`,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
   }
 
   const nextMaterials: Record<string, unknown> = { ...materials };
-  nextMaterials.uploads = archivedUploads;
-  nextMaterials.uploadArchive = {
-    container: BLOB_UPLOAD_CONTAINER,
-    path: `uploads/${safeUserId}/${generationLabel}/${batchId}/`,
-    count: archivedUploads.length,
-  };
+  if (Array.isArray(rawUploads)) {
+    nextMaterials.uploads = archivedUploads;
+    nextMaterials.uploadArchive = {
+      container: BLOB_UPLOAD_CONTAINER,
+      path: `uploads/${safeUserId}/${generationLabel}/${batchId}/`,
+      count: archivedUploads.length,
+    };
+  }
+
+  if (rawStyleReference) {
+    const dataUrl = asString(rawStyleReference.dataUrl);
+    if (dataUrl && dataUrl.startsWith('data:')) {
+      const detectedMime = asString(rawStyleReference.mimeType);
+      const mimeFromDataUrlMatch = dataUrl.match(/^data:([^;]+);base64,/i);
+      const mimeType = (detectedMime || mimeFromDataUrlMatch?.[1] || 'image/png').toLowerCase();
+      const extension = getExtensionFromMime(mimeType);
+      const safeId = sanitizePathSegment(asString(rawStyleReference.id) || 'style-reference') || 'style-reference';
+      const blobName = `uploads/${safeUserId}/${generationLabel}/${batchId}/style-reference-${safeId}.${extension}`;
+
+      try {
+        const blobUrl = await uploadToBlob(dataUrl, mimeType, {
+          containerName: BLOB_UPLOAD_CONTAINER,
+          blobName,
+        });
+        const sourceGenerationId =
+          asString(rawStyleReference.sourceGenerationId) ||
+          asString(nextMaterials.styleReferenceSourceId);
+
+        nextMaterials.styleReferenceUrl = blobUrl;
+        nextMaterials.styleReferenceSourceId = sourceGenerationId || undefined;
+        nextMaterials.styleReference = {
+          id: asString(rawStyleReference.id) || 'style-reference',
+          name: asString(rawStyleReference.name),
+          mimeType,
+          sizeBytes: asFiniteNumber(rawStyleReference.sizeBytes),
+          originalSizeBytes: asFiniteNumber(rawStyleReference.originalSizeBytes),
+          width: asFiniteNumber(rawStyleReference.width),
+          height: asFiniteNumber(rawStyleReference.height),
+          sourceGenerationId: sourceGenerationId || undefined,
+          archivedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        context.warn('Failed to archive style reference image', {
+          userId,
+          generationType: generationLabel,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  }
   return nextMaterials;
 }
 

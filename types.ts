@@ -196,4 +196,5 @@ export interface UploadedImage {
   originalSizeBytes?: number;
   width?: number;
   height?: number;
+  sourceGenerationId?: string | null;
 }

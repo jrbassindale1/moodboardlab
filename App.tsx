@@ -135,6 +135,8 @@ const readProjectCache = (): Project | null => {
 
 type ApplyStateCache = {
   uploadedImages: UploadedImage[];
+  styleReferenceImage: UploadedImage | null;
+  styleReferenceSourceId: string | null;
   sceneControls: SceneControls;
   renderNote: string;
   appliedEditPrompt: string;
@@ -236,6 +238,8 @@ const App: React.FC = () => {
 
   // Lifted state from ApplyMaterials (persists across navigation)
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [styleReferenceImage, setStyleReferenceImage] = useState<UploadedImage | null>(null);
+  const [styleReferenceSourceId, setStyleReferenceSourceId] = useState<string | null>(null);
   const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
   const [renderNote, setRenderNote] = useState('');
   const [appliedEditPrompt, setAppliedEditPrompt] = useState('');
@@ -269,6 +273,8 @@ const App: React.FC = () => {
     setBriefingInvalidatedMessage(null);
     setSavedPrecedents(null);
     setUploadedImages([]);
+    setStyleReferenceImage(null);
+    setStyleReferenceSourceId(null);
     setSceneControls(DEFAULT_SCENE_CONTROLS);
     setRenderNote('');
     setAppliedEditPrompt('');
@@ -339,6 +345,8 @@ const App: React.FC = () => {
     setBriefingMaterialsKey(null);
     setSavedPrecedents(null);
     setUploadedImages([]);
+    setStyleReferenceImage(null);
+    setStyleReferenceSourceId(null);
     setSceneControls(DEFAULT_SCENE_CONTROLS);
     setRenderNote('');
     setAppliedEditPrompt('');
@@ -477,6 +485,8 @@ const App: React.FC = () => {
     const cached = readApplyStateCache();
     if (!cached) return;
     if (cached.uploadedImages?.length) setUploadedImages(cached.uploadedImages.slice(0, 1));
+    setStyleReferenceImage(cached.styleReferenceImage ?? null);
+    setStyleReferenceSourceId(cached.styleReferenceSourceId ?? null);
     if (cached.sceneControls) setSceneControls(cached.sceneControls);
     if (cached.renderNote) setRenderNote(cached.renderNote);
     if (cached.appliedEditPrompt) setAppliedEditPrompt(cached.appliedEditPrompt);
@@ -487,6 +497,8 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return;
     const cache: ApplyStateCache = {
       uploadedImages,
+      styleReferenceImage,
+      styleReferenceSourceId,
       sceneControls,
       renderNote,
       appliedEditPrompt,
@@ -497,7 +509,7 @@ const App: React.FC = () => {
     } catch {
       // Ignore storage errors
     }
-  }, [uploadedImages, sceneControls, renderNote, appliedEditPrompt]);
+  }, [uploadedImages, styleReferenceImage, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -671,6 +683,10 @@ const App: React.FC = () => {
             onClearRestoredFlag={() => setRestoredWithoutMoodboard(false)}
             uploadedImages={uploadedImages}
             onUploadedImagesChange={setUploadedImages}
+            styleReferenceImage={styleReferenceImage}
+            onStyleReferenceImageChange={setStyleReferenceImage}
+            styleReferenceSourceId={styleReferenceSourceId}
+            onStyleReferenceSourceIdChange={setStyleReferenceSourceId}
             sceneControls={sceneControls}
             onSceneControlsChange={setSceneControls}
             renderNote={renderNote}

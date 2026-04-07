@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ImageDown, Loader2, Wand2 } from 'lucide-react';
-import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType } from '../api';
+import { AlertTriangle, ImageDown, Loader2, Sparkles, Upload, Wand2, X } from 'lucide-react';
+import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType, getGenerations, type Generation } from '../api';
 import { MaterialOption, UploadedImage } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
@@ -30,6 +30,8 @@ type Project = {
   createdAt: string;
 };
 
+type ImageSourceMode = 'upload' | 'project';
+
 interface ApplyMaterialsProps {
   onNavigate?: (page: string) => void;
   board: MaterialOption[];
@@ -42,6 +44,10 @@ interface ApplyMaterialsProps {
   // Lifted state from App.tsx (persists across navigation)
   uploadedImages: UploadedImage[];
   onUploadedImagesChange: (images: UploadedImage[]) => void;
+  styleReferenceImage: UploadedImage | null;
+  onStyleReferenceImageChange: (image: UploadedImage | null) => void;
+  styleReferenceSourceId: string | null;
+  onStyleReferenceSourceIdChange: (sourceId: string | null) => void;
   sceneControls: SceneControls;
   onSceneControlsChange: (controls: SceneControls) => void;
   renderNote: string;
@@ -172,6 +178,48 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
+const PROJECT_GENERATION_LABELS: Partial<Record<Generation['type'], string>> = {
+  moodboard: 'Moodboard',
+  applyMaterials: 'Render',
+  upscale: '4K Upscale'
+};
+
+const isPdfBlobUrl = (blobUrl?: string) => {
+  if (!blobUrl) return false;
+  const urlWithoutQuery = blobUrl.split('?')[0];
+  return urlWithoutQuery.toLowerCase().endsWith('.pdf');
+};
+
+const getGenerationProjectId = (generation: Generation): string | null => {
+  if (!generation.materials || typeof generation.materials !== 'object') return null;
+  const projectId = (generation.materials as { projectId?: unknown }).projectId;
+  return typeof projectId === 'string' && projectId.trim() ? projectId : null;
+};
+
+const isSelectableProjectGeneration = (generation: Generation): boolean => {
+  if (!generation.blobUrl || isPdfBlobUrl(generation.blobUrl)) return false;
+  return generation.type === 'moodboard' || generation.type === 'applyMaterials' || generation.type === 'upscale';
+};
+
+const formatRelativeTime = (value: string): string => {
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return '';
+  const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
+  if (seconds < 45) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 5) return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`;
+  const years = Math.round(days / 365);
+  return `${years} year${years === 1 ? '' : 's'} ago`;
+};
+
 const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onNavigate,
   board,
@@ -184,6 +232,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   // Lifted state from App.tsx
   uploadedImages,
   onUploadedImagesChange,
+  styleReferenceImage,
+  onStyleReferenceImageChange,
+  styleReferenceSourceId,
+  onStyleReferenceSourceIdChange,
   sceneControls,
   onSceneControlsChange,
   renderNote,
@@ -202,11 +254,21 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [selectingProjectImageId, setSelectingProjectImageId] = useState<string | null>(null);
+  const [projectGenerations, setProjectGenerations] = useState<Generation[]>([]);
+  const [isProjectGenerationsLoading, setIsProjectGenerationsLoading] = useState(false);
+  const [projectGenerationsError, setProjectGenerationsError] = useState<string | null>(null);
+  const [baseImageSourceMode, setBaseImageSourceMode] = useState<ImageSourceMode>('upload');
+  const [styleReferenceSourceMode, setStyleReferenceSourceMode] = useState<ImageSourceMode>('upload');
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
+  const baseFileInputRef = useRef<HTMLInputElement | null>(null);
+  const styleReferenceFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Convenience setters that call parent callbacks
   const setUploadedImages = onUploadedImagesChange;
+  const setStyleReferenceImage = onStyleReferenceImageChange;
+  const setStyleReferenceSourceId = onStyleReferenceSourceIdChange;
   const setSceneControls = onSceneControlsChange;
   const setRenderNote = onRenderNoteChange;
   const setAppliedEditPrompt = onAppliedEditPromptChange;
@@ -224,7 +286,104 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     [board]
   );
   const uploadedImage = uploadedImages[0] ?? null;
+  const hasProjectImagePicker = Boolean(currentProject?.id);
+  const hasSceneControlsEnabled = useMemo(
+    () => (Object.values(sceneControls) as SceneControl[]).some((control) => control.enabled),
+    [sceneControls]
+  );
+  const projectImageGenerations = useMemo(
+    () =>
+      projectGenerations
+        .filter((generation) => getGenerationProjectId(generation) === currentProject?.id)
+        .filter(isSelectableProjectGeneration),
+    [currentProject?.id, projectGenerations]
+  );
   const excludedCount = board.length - renderMaterials.length;
+
+  useEffect(() => {
+    if (!hasProjectImagePicker) {
+      setBaseImageSourceMode('upload');
+      setStyleReferenceSourceMode('upload');
+      return;
+    }
+    if (uploadedImage?.sourceGenerationId) {
+      setBaseImageSourceMode('project');
+    }
+    if (styleReferenceSourceId) {
+      setStyleReferenceSourceMode('project');
+    }
+  }, [hasProjectImagePicker, uploadedImage?.sourceGenerationId, styleReferenceSourceId]);
+
+  useEffect(() => {
+    if (!hasProjectImagePicker) {
+      setProjectGenerations([]);
+      setProjectGenerationsError(null);
+      setIsProjectGenerationsLoading(false);
+      return;
+    }
+    if (baseImageSourceMode !== 'project' && styleReferenceSourceMode !== 'project') {
+      return;
+    }
+    if (!isAuthenticated) {
+      setProjectGenerations([]);
+      setProjectGenerationsError(null);
+      setIsProjectGenerationsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadProjectGenerations = async () => {
+      setIsProjectGenerationsLoading(true);
+      setProjectGenerationsError(null);
+      try {
+        const token = await getAccessToken();
+        if (!token) {
+          if (!isCancelled) {
+            setProjectGenerations([]);
+          }
+          return;
+        }
+
+        const allItems: Generation[] = [];
+        let offset = 0;
+        const limit = 100;
+
+        while (true) {
+          const data = await getGenerations(token, { limit, offset });
+          allItems.push(...(data.items || []));
+          if (!data.hasMore) break;
+          offset += limit;
+        }
+
+        if (!isCancelled) {
+          setProjectGenerations(allItems);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setProjectGenerations([]);
+          setProjectGenerationsError(err instanceof Error ? err.message : 'Could not load project renders.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsProjectGenerationsLoading(false);
+        }
+      }
+    };
+
+    void loadProjectGenerations();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    baseImageSourceMode,
+    currentProject?.id,
+    getAccessToken,
+    hasProjectImagePicker,
+    isAuthenticated,
+    styleReferenceSourceMode
+  ]);
 
   const handleToggleExclude = (idxToToggle: number, value: boolean) => {
     if (!onBoardChange) return;
@@ -277,6 +436,125 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     return `SUBTLE SCENE ADJUSTMENTS (preserve all architecture, geometry, camera, and landscape): ${parts.join('; ')}.`;
   };
 
+  const processImageDataUrl = async ({
+    dataUrl,
+    name,
+    originalSizeBytes,
+    sourceGenerationId
+  }: {
+    dataUrl: string;
+    name: string;
+    originalSizeBytes?: number;
+    sourceGenerationId?: string | null;
+  }): Promise<UploadedImage> => {
+    const resized = await downscaleImage(dataUrl);
+    return {
+      id: `${name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name,
+      dataUrl: resized.dataUrl,
+      mimeType: resized.mimeType,
+      sizeBytes: resized.sizeBytes,
+      originalSizeBytes,
+      width: resized.width,
+      height: resized.height,
+      sourceGenerationId: sourceGenerationId || null
+    };
+  };
+
+  const handleRemoveBaseImage = () => {
+    setUploadedImages([]);
+  };
+
+  const handleRemoveStyleReference = () => {
+    setStyleReferenceImage(null);
+    setStyleReferenceSourceId(null);
+  };
+
+  const openBaseFilePicker = () => {
+    setBaseImageSourceMode('upload');
+    window.requestAnimationFrame(() => {
+      baseFileInputRef.current?.click();
+    });
+  };
+
+  const renderProjectPickerState = (target: 'base' | 'style') => {
+    if (!isAuthenticated) {
+      return (
+        <div className="border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+          Sign in to browse renders saved to this project.
+        </div>
+      );
+    }
+    if (isProjectGenerationsLoading) {
+      return (
+        <div className="flex items-center gap-2 border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Loading project renders...
+        </div>
+      );
+    }
+    if (projectGenerationsError) {
+      return (
+        <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {projectGenerationsError}
+        </div>
+      );
+    }
+    if (!projectImageGenerations.length) {
+      return (
+        <div className="border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+          No renders saved to this project yet.
+        </div>
+      );
+    }
+
+    const selectedGenerationId = target === 'base'
+      ? uploadedImage?.sourceGenerationId || null
+      : styleReferenceSourceId;
+
+    return (
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        {projectImageGenerations.map((generation) => {
+          const isSelected = selectedGenerationId === generation.id;
+          const isSelecting = selectingProjectImageId === `${target}:${generation.id}`;
+          return (
+            <button
+              key={`${target}-${generation.id}`}
+              type="button"
+              onClick={() => void handleProjectGenerationSelect(generation, target)}
+              disabled={Boolean(selectingProjectImageId)}
+              className={`overflow-hidden border p-2 text-left transition-colors ${
+                isSelected ? 'border-black bg-gray-50' : 'border-gray-200 bg-white hover:border-black'
+              } disabled:cursor-wait disabled:opacity-70`}
+            >
+              <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                {generation.blobUrl ? (
+                  <img
+                    src={generation.blobUrl}
+                    alt={PROJECT_GENERATION_LABELS[generation.type] || 'Project render'}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-gray-600">
+                {PROJECT_GENERATION_LABELS[generation.type] || generation.type}
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                {formatRelativeTime(generation.createdAt) || new Date(generation.createdAt).toLocaleDateString()}
+              </div>
+              {isSelecting && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Selecting...
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
   const persistGeneration = async (
     imageDataUri: string,
     prompt: string,
@@ -310,9 +588,28 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             originalSizeBytes: uploadedImage.originalSizeBytes,
             width: uploadedImage.width,
             height: uploadedImage.height,
-            dataUrl: uploadedImage.dataUrl
+            dataUrl: uploadedImage.dataUrl,
+            sourceGenerationId: uploadedImage.sourceGenerationId || undefined
           }]
         : [],
+      sourceGenerationId: uploadedImage?.sourceGenerationId || undefined,
+      styleReference: generationType === 'applyMaterials' && styleReferenceImage
+        ? {
+            id: styleReferenceImage.id,
+            name: styleReferenceImage.name,
+            mimeType: styleReferenceImage.mimeType,
+            sizeBytes: styleReferenceImage.sizeBytes,
+            originalSizeBytes: styleReferenceImage.originalSizeBytes,
+            width: styleReferenceImage.width,
+            height: styleReferenceImage.height,
+            dataUrl: styleReferenceImage.dataUrl,
+            sourceGenerationId: styleReferenceSourceId || undefined
+          }
+        : undefined,
+      styleReferenceSourceId:
+        generationType === 'applyMaterials' && styleReferenceImage
+          ? styleReferenceSourceId || undefined
+          : undefined,
       // Project identification
       projectId: currentProject?.id,
       projectName: currentProject?.name
@@ -372,7 +669,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
-  const handleFileInput = async (files: FileList | null) => {
+  const handleFileInput = async (files: FileList | null, target: 'base' | 'style') => {
     if (!files || files.length === 0) return;
     const file = Array.from(files).find((candidate) => candidate.type.startsWith('image/'));
     if (!file) {
@@ -390,17 +687,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      const resized = await downscaleImage(dataUrl);
-      setUploadedImages([{
-        id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      const processedImage = await processImageDataUrl({
+        dataUrl,
         name: file.name,
-        dataUrl: resized.dataUrl,
-        mimeType: resized.mimeType,
-        sizeBytes: resized.sizeBytes,
         originalSizeBytes: file.size,
-        width: resized.width,
-        height: resized.height
-      }]);
+        sourceGenerationId: null
+      });
+      if (target === 'base') {
+        setUploadedImages([processedImage]);
+      } else {
+        setStyleReferenceImage(processedImage);
+        setStyleReferenceSourceId(null);
+      }
       setError(null);
     } catch (err) {
       console.error('Could not process upload', err);
@@ -408,8 +706,38 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
-  const onFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
-    handleFileInput(e.target.files);
+  const handleProjectGenerationSelect = async (generation: Generation, target: 'base' | 'style') => {
+    if (!generation.blobUrl) return;
+    const loadingKey = `${target}:${generation.id}`;
+    setSelectingProjectImageId(loadingKey);
+    try {
+      const dataUrl = await resolveImageSourceToDataUrl(generation.blobUrl);
+      const processedImage = await processImageDataUrl({
+        dataUrl,
+        name: `${PROJECT_GENERATION_LABELS[generation.type] || 'Project render'} ${new Date(generation.createdAt).toLocaleDateString()}`,
+        originalSizeBytes: dataUrlSizeBytes(dataUrl),
+        sourceGenerationId: generation.id
+      });
+      if (target === 'base') {
+        setUploadedImages([processedImage]);
+      } else {
+        setStyleReferenceImage(processedImage);
+        setStyleReferenceSourceId(generation.id);
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Could not process project image', err);
+      setError(err instanceof Error ? err.message : 'Could not load the selected project image.');
+    } finally {
+      setSelectingProjectImageId(null);
+    }
+  };
+
+  const onBaseFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+    void handleFileInput(e.target.files, 'base');
+
+  const onStyleReferenceFileInputChange: React.ChangeEventHandler<HTMLInputElement> = (e) =>
+    void handleFileInput(e.target.files, 'style');
 
   const runApplyRender = async (options?: {
     editPrompt?: string;
@@ -543,11 +871,17 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ? '- Use neutral, even lighting and keep edges/cut geometry crisp; avoid cinematic haze, vignette, and dramatic color grading.'
       : '- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading.';
 
-    const prompt = isUpscalingRender
+    const basePrompt = isUpscalingRender
       ? `Create a 4K upscaled version of the provided architectural render. Preserve the exact composition, camera position, geometry, materials, entourage, and lighting from the source image. Do not redesign or reinterpret the image. Increase resolution, sharpen material detail, and improve fine-grain realism only.`
       : isEditingRender
       ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
       : `Transform the provided base image into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
+    const useStyleReference = Boolean(styleReferenceImage && !isUpscalingRender);
+    const firstRenderStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE:\nA second image is provided as a STYLE REFERENCE. Use it ONLY to inform the overall rendering quality — specifically:\n- Lighting behaviour (how light falls on surfaces, shadow softness, sun angle quality)\n- Colour grading and colour temperature (warm/cool, muted/saturated)\n- Depth of field and photographic character\n- Overall atmospheric mood\n\nSTRICT STYLE REFERENCE RULES:\n- Do NOT take ANY material, colour, or surface information from the style reference. ALL materials must come strictly and exclusively from the material list above. The material palette is the only authority on what materials appear and where.\n- Do NOT copy any geometry, building form, composition, massing, or camera angle from the style reference. The base image is the only authority on geometry and composition.\n- If the style reference shows materials that differ from the material list (e.g. the reference shows brick but the palette says timber), IGNORE the reference materials entirely. The palette always wins.\n- The style reference influences HOW the render looks, not WHAT it contains.${hasSceneControlsEnabled ? '\n- Where scene controls (time of day, weather, season) conflict with the style reference, the SCENE CONTROLS take priority. For example: if the style reference shows summer but the scene control says winter, render winter.' : ''}`;
+    const editStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE:\nA style reference image is also provided. Use it ONLY to influence the rendering quality of the updated image:\n- Lighting behaviour, shadow quality, colour temperature\n- Photographic character and atmospheric mood\n- Do NOT take any material or surface information from the style reference — all materials come from the material list above\n- Do NOT alter geometry, composition, or camera based on the style reference\n- Where scene controls conflict with the style reference, scene controls take priority`;
+    const prompt = useStyleReference
+      ? `${basePrompt}${isEditingRender ? editStyleReferenceBlock : firstRenderStyleReferenceBlock}`
+      : basePrompt;
 
     console.log('=== PROMPT BEING SENT TO AI ===');
     console.log(prompt);
@@ -578,16 +912,22 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         }
       }
 
+      const imageParts =
+        ((isEditingRender || isUpscalingRender) && baseImageDataUrl
+          ? [dataUrlToInlineData(baseImageDataUrl)]
+          : uploadedImage
+          ? [dataUrlToInlineData(uploadedImage.dataUrl)]
+          : []);
+      const payloadParts = useStyleReference && styleReferenceImage
+        ? [...imageParts, dataUrlToInlineData(styleReferenceImage.dataUrl)]
+        : imageParts;
+
       const payload = {
         contents: [
           {
             parts: [
               { text: prompt },
-              ...((isEditingRender || isUpscalingRender) && baseImageDataUrl
-                ? [dataUrlToInlineData(baseImageDataUrl)]
-                : uploadedImage
-                ? [dataUrlToInlineData(uploadedImage.dataUrl)]
-                : [])
+              ...payloadParts
             ]
           }
         ],
@@ -868,32 +1208,185 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                 )}
               </div>
 
-              <div className="space-y-3 border border-gray-200 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-                    Upload Base Image (JPG/PNG)
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={onFileInputChange}
-                    className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-                  />
-                </div>
-                <p className="font-sans text-sm text-gray-600">
-                  Upload one image to use as the base for the next render. Uploading a new image replaces the current one. Line drawings and sketches will give the best results.
-                </p>
-                <div className="space-y-2">
-                  <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                    Custom render instructions (optional)
-                  </label>
-                  <textarea
-                    value={renderNote}
-                    onChange={(e) => setRenderNote(e.target.value)}
-                    placeholder="E.g., street-level exterior view at dusk with wet paving, or frontal elevation view with neutral lighting."
-                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
-                  />
-                </div>
+	              <div className="space-y-3 border border-gray-200 bg-white p-4">
+	                <div className="space-y-3 border border-gray-200 bg-white p-3">
+	                  <div className="flex items-center justify-between gap-3">
+	                    <div>
+	                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
+	                        Base Image
+	                      </div>
+	                      <p className="mt-1 text-sm text-gray-600">
+	                        Use one base image to define geometry, composition, and camera angle.
+	                      </p>
+	                    </div>
+	                  </div>
+	                  <div className="flex flex-wrap gap-2">
+	                    <button
+	                      type="button"
+	                      onClick={() => setBaseImageSourceMode('upload')}
+	                      className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
+	                        baseImageSourceMode === 'upload'
+	                          ? 'border-black bg-black text-white'
+	                          : 'border-gray-300 bg-white text-gray-700 hover:border-black'
+	                      }`}
+	                    >
+	                      <Upload className="h-3.5 w-3.5" />
+	                      Upload
+	                    </button>
+	                    {hasProjectImagePicker && (
+	                      <button
+	                        type="button"
+	                        onClick={() => setBaseImageSourceMode('project')}
+	                        className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
+	                          baseImageSourceMode === 'project'
+	                            ? 'border-black bg-black text-white'
+	                            : 'border-gray-300 bg-white text-gray-700 hover:border-black'
+	                        }`}
+	                      >
+	                        <ImageDown className="h-3.5 w-3.5" />
+	                        From Project
+	                      </button>
+	                    )}
+	                  </div>
+	                  {baseImageSourceMode === 'upload' ? (
+	                    <>
+	                      <input
+	                        ref={baseFileInputRef}
+	                        type="file"
+	                        accept="image/*"
+	                        onChange={onBaseFileInputChange}
+	                        className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
+	                      />
+	                      <p className="font-sans text-sm text-gray-600">
+	                        Upload one image to use as the base for the next render. Uploading a new image replaces the current one. Line drawings and sketches will give the best results.
+	                      </p>
+	                    </>
+	                  ) : (
+	                    renderProjectPickerState('base')
+	                  )}
+	                  {uploadedImage && (
+	                    <div className="border border-gray-200 bg-white p-2 max-w-sm">
+	                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+	                        <img src={uploadedImage.dataUrl} alt={uploadedImage.name} className="w-full h-full object-cover" />
+	                      </div>
+	                      <div className="mt-2 flex items-center justify-between gap-3">
+	                        <div className="min-w-0">
+	                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
+	                            {uploadedImage.name}
+	                          </div>
+	                          <div className="mt-1 text-xs text-gray-500">
+	                            {uploadedImage.sourceGenerationId ? 'Sourced from project render' : 'Uploaded file'}
+	                          </div>
+	                        </div>
+	                        <div className="flex gap-2">
+	                          <button
+	                            type="button"
+	                            onClick={openBaseFilePicker}
+	                            className="px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
+	                          >
+	                            Replace
+	                          </button>
+	                          <button
+	                            type="button"
+	                            onClick={handleRemoveBaseImage}
+	                            className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
+	                          >
+	                            <X className="h-3 w-3" />
+	                            Remove
+	                          </button>
+	                        </div>
+	                      </div>
+	                    </div>
+	                  )}
+	                </div>
+	                <div className="space-y-3 border border-dashed border-gray-300 bg-gray-50 p-3">
+	                  <div className="flex items-start justify-between gap-3">
+	                    <div>
+	                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
+	                        Style Reference (Optional)
+	                      </div>
+	                      <p className="mt-1 text-sm text-gray-600">
+	                        Influences lighting, atmosphere, and colour grade. Does not affect materials or geometry.
+	                      </p>
+	                    </div>
+	                    <Sparkles className="h-4 w-4 text-gray-400" />
+	                  </div>
+	                  <div className="flex flex-wrap gap-2">
+	                    <button
+	                      type="button"
+	                      onClick={() => setStyleReferenceSourceMode('upload')}
+	                      className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
+	                        styleReferenceSourceMode === 'upload'
+	                          ? 'border-black bg-black text-white'
+	                          : 'border-gray-300 bg-white text-gray-700 hover:border-black'
+	                      }`}
+	                    >
+	                      <Upload className="h-3.5 w-3.5" />
+	                      Upload
+	                    </button>
+	                    {hasProjectImagePicker && (
+	                      <button
+	                        type="button"
+	                        onClick={() => setStyleReferenceSourceMode('project')}
+	                        className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
+	                          styleReferenceSourceMode === 'project'
+	                            ? 'border-black bg-black text-white'
+	                            : 'border-gray-300 bg-white text-gray-700 hover:border-black'
+	                        }`}
+	                      >
+	                        <ImageDown className="h-3.5 w-3.5" />
+	                        From Project
+	                      </button>
+	                    )}
+	                  </div>
+	                  {styleReferenceSourceMode === 'upload' ? (
+	                    <input
+	                      ref={styleReferenceFileInputRef}
+	                      type="file"
+	                      accept="image/*"
+	                      onChange={onStyleReferenceFileInputChange}
+	                      className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
+	                    />
+	                  ) : (
+	                    renderProjectPickerState('style')
+	                  )}
+	                  {styleReferenceImage ? (
+	                    <div className="border border-dashed border-gray-300 bg-white p-2 max-w-xs">
+	                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+	                        <img src={styleReferenceImage.dataUrl} alt={styleReferenceImage.name} className="w-full h-full object-cover" />
+	                      </div>
+	                      <div className="mt-2 flex items-center justify-between gap-3">
+	                        <div className="min-w-0">
+	                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
+	                            {styleReferenceImage.name}
+	                          </div>
+	                          <div className="mt-1 text-xs text-gray-500">
+	                            {styleReferenceSourceId ? 'Sourced from project render' : 'Uploaded file'}
+	                          </div>
+	                        </div>
+	                        <button
+	                          type="button"
+	                          onClick={handleRemoveStyleReference}
+	                          className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
+	                        >
+	                          <X className="h-3 w-3" />
+	                          Remove
+	                        </button>
+	                      </div>
+	                    </div>
+	                  ) : null}
+	                </div>
+	                <div className="space-y-2">
+	                  <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
+	                    Custom render instructions (optional)
+	                  </label>
+	                  <textarea
+	                    value={renderNote}
+	                    onChange={(e) => setRenderNote(e.target.value)}
+	                    placeholder="E.g., street-level exterior view at dusk with wet paving, or frontal elevation view with neutral lighting."
+	                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+	                  />
+	                </div>
 
                 {/* Scene Controls Panel */}
                 <div className="space-y-3 border border-gray-200 bg-white p-3">
@@ -1053,7 +1546,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                     )}
                   </div>
 
-                  {/* View Character */}
+	                  {/* View Character */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <input
@@ -1089,38 +1582,31 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                         />
                       </div>
                     )}
-                  </div>
-                </div>
-                {uploadedImage && (
-                  <>
-                    <div className="border border-gray-200 bg-white p-2 max-w-sm">
-                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-                        <img src={uploadedImage.dataUrl} alt={uploadedImage.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1 truncate">
-                        {uploadedImage.name}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-                      disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                    >
-                      {status === 'render' && renderingMode === 'upload-1k' ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Rendering with Upload
-                        </>
-                      ) : (
-                        <>
-                          <ImageDown className="w-4 h-4" />
-                          Render with Upload
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
+	                  </div>
+	                </div>
+	                {styleReferenceImage && hasSceneControlsEnabled && (
+	                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+	                    Scene controls will override the style reference where they conflict.
+	                  </div>
+	                )}
+	                <button
+	                  onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
+	                  disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate || !uploadedImage}
+	                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+	                >
+	                  {status === 'render' && renderingMode === 'upload-1k' ? (
+	                    <>
+	                      <Loader2 className="w-4 h-4 animate-spin" />
+	                      Rendering with Upload
+	                    </>
+	                  ) : (
+	                    <>
+	                      <ImageDown className="w-4 h-4" />
+	                      Render with Upload
+	                    </>
+	                  )}
+	                </button>
+	              </div>
             </div>
 
             {appliedRenderUrl && (
@@ -1357,10 +1843,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                             />
                           </div>
                         )}
-                      </div>
-                    </div>
+	                      </div>
+	                    </div>
+	                    {styleReferenceImage && hasSceneControlsEnabled && (
+	                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+	                        Scene controls will override the style reference where they conflict.
+	                      </div>
+	                    )}
 
-                    <div className="flex flex-wrap gap-3">
+	                    <div className="flex flex-wrap gap-3">
                       <button
                         onClick={handleAppliedEdit}
                         disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
