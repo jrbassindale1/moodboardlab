@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { ClerkProvider, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { clerkPubKey, isClerkAuthEnabled } from './authConfig';
 import { trackEvent } from '../utils/analytics';
@@ -19,6 +19,15 @@ export interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+const AUTH_UNAVAILABLE_CONTEXT: AuthContextType = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  login: () => console.warn('Authentication unavailable in this environment'),
+  logout: async () => {},
+  getAccessToken: async () => null,
+};
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
@@ -42,23 +51,25 @@ const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children, onS
   const wasSignedInRef = useRef(false);
   const hasInitializedAuthStateRef = useRef(false);
 
-  const authUser = user ? {
-    id: user.id,
-    name: user.fullName || user.firstName || null,
-    email: user.primaryEmailAddress?.emailAddress || null,
-    imageUrl: user.imageUrl || null,
-  } : null;
+  const authUser = useMemo(() => (
+    user ? {
+      id: user.id,
+      name: user.fullName || user.firstName || null,
+      email: user.primaryEmailAddress?.emailAddress || null,
+      imageUrl: user.imageUrl || null,
+    } : null
+  ), [user]);
 
-  const login = () => {
+  const login = useCallback(() => {
     onShowSignIn();
-  };
+  }, [onShowSignIn]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     clearMoodboardCache();
     await signOut();
-  };
+  }, [signOut]);
 
-  const getAccessToken = async (): Promise<string | null> => {
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
     try {
       const token = await getToken();
       return token;
@@ -66,7 +77,7 @@ const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children, onS
       console.error('Failed to get token:', error);
       return null;
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -104,17 +115,17 @@ const AuthContextProvider: React.FC<AuthContextProviderProps> = ({ children, onS
     }
   }, [isLoaded, isSignedIn, user]);
 
+  const contextValue = useMemo<AuthContextType>(() => ({
+    user: authUser,
+    isAuthenticated: isSignedIn || false,
+    isLoading: !isLoaded,
+    login,
+    logout,
+    getAccessToken,
+  }), [authUser, getAccessToken, isLoaded, isSignedIn, login, logout]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user: authUser,
-        isAuthenticated: isSignedIn || false,
-        isLoading: !isLoaded,
-        login,
-        logout,
-        getAccessToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -133,16 +144,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, onShowSign
   if (!isClerkAuthEnabled) {
     // Return children without auth when Clerk is not configured or bypass is enabled
     return (
-      <AuthContext.Provider
-        value={{
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          login: () => console.warn('Authentication unavailable in this environment'),
-          logout: async () => {},
-          getAccessToken: async () => null,
-        }}
-      >
+      <AuthContext.Provider value={AUTH_UNAVAILABLE_CONTEXT}>
         {children}
       </AuthContext.Provider>
     );

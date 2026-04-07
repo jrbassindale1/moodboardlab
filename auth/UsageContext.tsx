@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
 import { getUsage, checkQuota, confirmCheckoutSession } from '../api';
 
@@ -280,25 +280,38 @@ export const UsageProvider: React.FC<UsageProviderProps> = ({ children }) => {
     ? 999999
     : freeRemaining + purchasedCredits;
   const canGenerate = isAdmin || remaining > 0;
+  const contextValue = useMemo<UsageContextType>(() => ({
+    usage,
+    remaining,
+    limit,
+    isLoading,
+    refreshUsage,
+    canGenerate,
+    incrementLocalUsage,
+    isAnonymous,
+    purchasedCredits,
+    freeRemaining,
+    isAdmin,
+    checkoutStatus,
+    dismissCheckoutStatus,
+  }), [
+    canGenerate,
+    checkoutStatus,
+    dismissCheckoutStatus,
+    freeRemaining,
+    incrementLocalUsage,
+    isAdmin,
+    isAnonymous,
+    isLoading,
+    limit,
+    purchasedCredits,
+    refreshUsage,
+    remaining,
+    usage,
+  ]);
 
   return (
-    <UsageContext.Provider
-      value={{
-        usage,
-        remaining,
-        limit,
-        isLoading,
-        refreshUsage,
-        canGenerate,
-        incrementLocalUsage,
-        isAnonymous,
-        purchasedCredits,
-        freeRemaining,
-        isAdmin,
-        checkoutStatus,
-        dismissCheckoutStatus,
-      }}
-    >
+    <UsageContext.Provider value={contextValue}>
       {children}
     </UsageContext.Provider>
   );
