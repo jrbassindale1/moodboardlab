@@ -198,3 +198,5 @@ export interface UploadedImage {
   height?: number;
   sourceGenerationId?: string | null;
 }
+
+export type StyleReferenceSource = 'project' | 'external';

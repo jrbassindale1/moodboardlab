@@ -13,7 +13,7 @@ import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
 import { useAuth, useUsage } from './auth';
-import { MaterialOption, UploadedImage } from './types';
+import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
 import type { PrecedentResult } from './api';
 import type {
   SustainabilityBriefingPayload,
@@ -136,6 +136,7 @@ const readProjectCache = (): Project | null => {
 type ApplyStateCache = {
   uploadedImages: UploadedImage[];
   styleReferenceImage: UploadedImage | null;
+  styleReferenceSource: StyleReferenceSource | null;
   styleReferenceSourceId: string | null;
   sceneControls: SceneControls;
   renderNote: string;
@@ -239,6 +240,7 @@ const App: React.FC = () => {
   // Lifted state from ApplyMaterials (persists across navigation)
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [styleReferenceImage, setStyleReferenceImage] = useState<UploadedImage | null>(null);
+  const [styleReferenceSource, setStyleReferenceSource] = useState<StyleReferenceSource | null>(null);
   const [styleReferenceSourceId, setStyleReferenceSourceId] = useState<string | null>(null);
   const [sceneControls, setSceneControls] = useState<SceneControls>(DEFAULT_SCENE_CONTROLS);
   const [renderNote, setRenderNote] = useState('');
@@ -274,6 +276,7 @@ const App: React.FC = () => {
     setSavedPrecedents(null);
     setUploadedImages([]);
     setStyleReferenceImage(null);
+    setStyleReferenceSource(null);
     setStyleReferenceSourceId(null);
     setSceneControls(DEFAULT_SCENE_CONTROLS);
     setRenderNote('');
@@ -346,6 +349,7 @@ const App: React.FC = () => {
     setSavedPrecedents(null);
     setUploadedImages([]);
     setStyleReferenceImage(null);
+    setStyleReferenceSource(null);
     setStyleReferenceSourceId(null);
     setSceneControls(DEFAULT_SCENE_CONTROLS);
     setRenderNote('');
@@ -486,6 +490,11 @@ const App: React.FC = () => {
     if (!cached) return;
     if (cached.uploadedImages?.length) setUploadedImages(cached.uploadedImages.slice(0, 1));
     setStyleReferenceImage(cached.styleReferenceImage ?? null);
+    setStyleReferenceSource(
+      cached.styleReferenceImage
+        ? cached.styleReferenceSource ?? (cached.styleReferenceSourceId ? 'project' : 'external')
+        : null
+    );
     setStyleReferenceSourceId(cached.styleReferenceSourceId ?? null);
     if (cached.sceneControls) setSceneControls(cached.sceneControls);
     if (cached.renderNote) setRenderNote(cached.renderNote);
@@ -498,6 +507,7 @@ const App: React.FC = () => {
     const cache: ApplyStateCache = {
       uploadedImages,
       styleReferenceImage,
+      styleReferenceSource,
       styleReferenceSourceId,
       sceneControls,
       renderNote,
@@ -509,7 +519,7 @@ const App: React.FC = () => {
     } catch {
       // Ignore storage errors
     }
-  }, [uploadedImages, styleReferenceImage, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt]);
+  }, [uploadedImages, styleReferenceImage, styleReferenceSource, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -685,6 +695,8 @@ const App: React.FC = () => {
             onUploadedImagesChange={setUploadedImages}
             styleReferenceImage={styleReferenceImage}
             onStyleReferenceImageChange={setStyleReferenceImage}
+            styleReferenceSource={styleReferenceSource}
+            onStyleReferenceSourceChange={setStyleReferenceSource}
             styleReferenceSourceId={styleReferenceSourceId}
             onStyleReferenceSourceIdChange={setStyleReferenceSourceId}
             sceneControls={sceneControls}

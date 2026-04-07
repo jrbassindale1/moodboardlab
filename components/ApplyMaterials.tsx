@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ImageDown, Loader2, Sparkles, Upload, Wand2, X } from 'lucide-react';
 import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType, getGenerations, type Generation } from '../api';
-import { MaterialOption, UploadedImage } from '../types';
+import { MaterialOption, UploadedImage, StyleReferenceSource } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { formatFinishForDisplay } from '../utils/materialDisplay';
@@ -46,6 +46,8 @@ interface ApplyMaterialsProps {
   onUploadedImagesChange: (images: UploadedImage[]) => void;
   styleReferenceImage: UploadedImage | null;
   onStyleReferenceImageChange: (image: UploadedImage | null) => void;
+  styleReferenceSource: StyleReferenceSource | null;
+  onStyleReferenceSourceChange: (source: StyleReferenceSource | null) => void;
   styleReferenceSourceId: string | null;
   onStyleReferenceSourceIdChange: (sourceId: string | null) => void;
   sceneControls: SceneControls;
@@ -178,6 +180,11 @@ const dataUrlToInlineData = (dataUrl: string) => {
   };
 };
 
+const formatCreditCostMessage = (credits: number) =>
+  credits === 1
+    ? 'Not enough credits. This action costs 1 credit.'
+    : `Not enough credits. This action costs ${credits} credits.`;
+
 const PROJECT_GENERATION_LABELS: Partial<Record<Generation['type'], string>> = {
   moodboard: 'Moodboard',
   applyMaterials: 'Render',
@@ -234,6 +241,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onUploadedImagesChange,
   styleReferenceImage,
   onStyleReferenceImageChange,
+  styleReferenceSource,
+  onStyleReferenceSourceChange,
   styleReferenceSourceId,
   onStyleReferenceSourceIdChange,
   sceneControls,
@@ -268,6 +277,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   // Convenience setters that call parent callbacks
   const setUploadedImages = onUploadedImagesChange;
   const setStyleReferenceImage = onStyleReferenceImageChange;
+  const setStyleReferenceSource = onStyleReferenceSourceChange;
   const setStyleReferenceSourceId = onStyleReferenceSourceIdChange;
   const setSceneControls = onSceneControlsChange;
   const setRenderNote = onRenderNoteChange;
@@ -298,6 +308,16 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         .filter(isSelectableProjectGeneration),
     [currentProject?.id, projectGenerations]
   );
+  const effectiveStyleReferenceSource = useMemo<StyleReferenceSource | null>(() => {
+    if (!styleReferenceImage) return null;
+    return styleReferenceSource ?? (styleReferenceSourceId ? 'project' : 'external');
+  }, [styleReferenceImage, styleReferenceSource, styleReferenceSourceId]);
+  const styleReferenceSourceLabel = effectiveStyleReferenceSource === 'project'
+    ? 'Sourced from project render'
+    : 'Uploaded file';
+  const styleReferenceHint = effectiveStyleReferenceSource === 'project'
+    ? 'Will match material expression for visual consistency across this project.'
+    : 'Will influence lighting and atmosphere only. Materials come from your palette.';
   const excludedCount = board.length - renderMaterials.length;
 
   useEffect(() => {
@@ -309,10 +329,14 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     if (uploadedImage?.sourceGenerationId) {
       setBaseImageSourceMode('project');
     }
-    if (styleReferenceSourceId) {
+    if (effectiveStyleReferenceSource === 'project') {
       setStyleReferenceSourceMode('project');
+      return;
     }
-  }, [hasProjectImagePicker, uploadedImage?.sourceGenerationId, styleReferenceSourceId]);
+    if (effectiveStyleReferenceSource === 'external') {
+      setStyleReferenceSourceMode('upload');
+    }
+  }, [effectiveStyleReferenceSource, hasProjectImagePicker, uploadedImage?.sourceGenerationId]);
 
   useEffect(() => {
     if (!hasProjectImagePicker) {
@@ -396,14 +420,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const summaryText = useMemo(() => {
     if (!renderMaterials.length) return 'No materials selected yet.';
-    const grouped = renderMaterials.reduce((acc: Record<string, MaterialOption[]>, mat) => {
+    const grouped = renderMaterials.reduce<Record<string, MaterialOption[]>>((acc, mat) => {
       acc[mat.category] = acc[mat.category] || [];
       acc[mat.category].push(mat);
       return acc;
     }, {});
-    const lines = Object.entries(grouped).map(
-      ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
-    );
+    const lines = Object.entries(grouped).map(([cat, items]) => {
+      const categoryItems = items as MaterialOption[];
+      return `${cat}: ${categoryItems.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`;
+    });
     return lines.join('\n');
   }, [renderMaterials]);
 
@@ -467,6 +492,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const handleRemoveStyleReference = () => {
     setStyleReferenceImage(null);
+    setStyleReferenceSource(null);
     setStyleReferenceSourceId(null);
   };
 
@@ -603,9 +629,14 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             width: styleReferenceImage.width,
             height: styleReferenceImage.height,
             dataUrl: styleReferenceImage.dataUrl,
-            sourceGenerationId: styleReferenceSourceId || undefined
+            sourceGenerationId: styleReferenceSourceId || undefined,
+            source: effectiveStyleReferenceSource || undefined
           }
         : undefined,
+      styleReferenceSource:
+        generationType === 'applyMaterials' && styleReferenceImage
+          ? effectiveStyleReferenceSource || undefined
+          : undefined,
       styleReferenceSourceId:
         generationType === 'applyMaterials' && styleReferenceImage
           ? styleReferenceSourceId || undefined
@@ -697,6 +728,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         setUploadedImages([processedImage]);
       } else {
         setStyleReferenceImage(processedImage);
+        setStyleReferenceSource('external');
         setStyleReferenceSourceId(null);
       }
       setError(null);
@@ -722,6 +754,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         setUploadedImages([processedImage]);
       } else {
         setStyleReferenceImage(processedImage);
+        setStyleReferenceSource('project');
         setStyleReferenceSourceId(generation.id);
       }
       setError(null);
@@ -774,11 +807,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             return false;
           }
           if (!quotaCheck.canGenerate || quotaCheck.remaining < requiredCredits) {
-            setError(
-              requiredCredits === 1
-                ? 'Not enough credits. This action costs 1 credit.'
-                : `Not enough credits. This action costs ${requiredCredits} credits.`
-            );
+            setError(formatCreditCostMessage(requiredCredits));
             return false;
           }
         }
@@ -788,11 +817,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
     } else {
       if (remaining < requiredCredits) {
-        setError(
-          requiredCredits === 1
-            ? 'Not enough credits. This action costs 1 credit.'
-            : `Not enough credits. This action costs ${requiredCredits} credits.`
-        );
+        setError(formatCreditCostMessage(requiredCredits));
         return false;
       }
     }
@@ -877,10 +902,16 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
       : `Transform the provided base image into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
     const useStyleReference = Boolean(styleReferenceImage && !isUpscalingRender);
-    const firstRenderStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE:\nA second image is provided as a STYLE REFERENCE. Use it ONLY to inform the overall rendering quality — specifically:\n- Lighting behaviour (how light falls on surfaces, shadow softness, sun angle quality)\n- Colour grading and colour temperature (warm/cool, muted/saturated)\n- Depth of field and photographic character\n- Overall atmospheric mood\n\nSTRICT STYLE REFERENCE RULES:\n- Do NOT take ANY material, colour, or surface information from the style reference. ALL materials must come strictly and exclusively from the material list above. The material palette is the only authority on what materials appear and where.\n- Do NOT copy any geometry, building form, composition, massing, or camera angle from the style reference. The base image is the only authority on geometry and composition.\n- If the style reference shows materials that differ from the material list (e.g. the reference shows brick but the palette says timber), IGNORE the reference materials entirely. The palette always wins.\n- The style reference influences HOW the render looks, not WHAT it contains.${hasSceneControlsEnabled ? '\n- Where scene controls (time of day, weather, season) conflict with the style reference, the SCENE CONTROLS take priority. For example: if the style reference shows summer but the scene control says winter, render winter.' : ''}`;
-    const editStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE:\nA style reference image is also provided. Use it ONLY to influence the rendering quality of the updated image:\n- Lighting behaviour, shadow quality, colour temperature\n- Photographic character and atmospheric mood\n- Do NOT take any material or surface information from the style reference — all materials come from the material list above\n- Do NOT alter geometry, composition, or camera based on the style reference\n- Where scene controls conflict with the style reference, scene controls take priority`;
+    const sceneControlsOverrideLine = hasSceneControlsEnabled
+      ? '\n- Where scene controls (time of day, weather, season) conflict with the style reference, the SCENE CONTROLS take priority.'
+      : '';
+    const projectStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE (FROM THIS PROJECT):\nA second image is provided as a PROJECT STYLE REFERENCE. This image was generated using the same material palette as this render.\n\nUse it to ensure VISUAL CONSISTENCY across the project:\n- Match how each material has been rendered - board direction, joint spacing, texture scale, surface reflectivity, colour tone, and weathering character\n- Maintain the same lighting quality, shadow behaviour, and colour temperature\n- Ensure the two renders look like they belong to the same architectural scheme\n- Carry forward the same level of material detail and photographic quality\n\nThe material list above still controls WHAT materials go WHERE. The project reference controls HOW those same materials should be expressed visually - their texture, scale, tone, and finish quality.\n\nGEOMETRY RULES STILL APPLY:\n- Do NOT copy any geometry, building form, composition, massing, or camera angle from the style reference\n- The base image remains the sole authority on geometry and composition${sceneControlsOverrideLine}`;
+    const externalStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE (EXTERNAL):\nA second image is provided as an EXTERNAL STYLE REFERENCE. Use it ONLY to inform the overall rendering quality - specifically:\n- Lighting behaviour (how light falls on surfaces, shadow softness, sun angle quality)\n- Colour grading and colour temperature (warm/cool, muted/saturated)\n- Depth of field and photographic character\n- Overall atmospheric mood\n\nSTRICT EXTERNAL REFERENCE RULES:\n- Do NOT take ANY material, colour, or surface information from this image. ALL materials must come strictly and exclusively from the material list above. The material palette is the only authority on what materials appear and where.\n- Do NOT copy any geometry, building form, composition, massing, or camera angle from this image. The base image is the only authority on geometry and composition.\n- If the style reference shows materials that differ from the material list (e.g. the reference shows brick but the palette says timber), IGNORE the reference materials entirely. The palette always wins.\n- This reference influences HOW the render looks, not WHAT it contains.${sceneControlsOverrideLine}`;
+    const styleReferenceBlock = effectiveStyleReferenceSource === 'project'
+      ? projectStyleReferenceBlock
+      : externalStyleReferenceBlock;
     const prompt = useStyleReference
-      ? `${basePrompt}${isEditingRender ? editStyleReferenceBlock : firstRenderStyleReferenceBlock}`
+      ? `${basePrompt}${styleReferenceBlock}`
       : basePrompt;
 
     console.log('=== PROMPT BEING SENT TO AI ===');
@@ -1357,13 +1388,16 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 	                      </div>
 	                      <div className="mt-2 flex items-center justify-between gap-3">
 	                        <div className="min-w-0">
-	                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
-	                            {styleReferenceImage.name}
-	                          </div>
-	                          <div className="mt-1 text-xs text-gray-500">
-	                            {styleReferenceSourceId ? 'Sourced from project render' : 'Uploaded file'}
-	                          </div>
-	                        </div>
+                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
+                            {styleReferenceImage.name}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {styleReferenceSourceLabel}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            {styleReferenceHint}
+                          </div>
+                        </div>
 	                        <button
 	                          type="button"
 	                          onClick={handleRemoveStyleReference}

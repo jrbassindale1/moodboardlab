@@ -28,6 +28,7 @@ type UploadArchiveCandidate = {
   height?: number;
   dataUrl?: string;
   sourceGenerationId?: string | null;
+  source?: string | null;
 };
 
 type UploadArchiveRecord = Omit<UploadArchiveCandidate, 'dataUrl'> & {
@@ -202,8 +203,12 @@ async function archiveUploadImages(
         const sourceGenerationId =
           asString(rawStyleReference.sourceGenerationId) ||
           asString(nextMaterials.styleReferenceSourceId);
+        const styleReferenceSource =
+          asString(rawStyleReference.source) ||
+          asString(nextMaterials.styleReferenceSource);
 
         nextMaterials.styleReferenceUrl = blobUrl;
+        nextMaterials.styleReferenceSource = styleReferenceSource || undefined;
         nextMaterials.styleReferenceSourceId = sourceGenerationId || undefined;
         nextMaterials.styleReference = {
           id: asString(rawStyleReference.id) || 'style-reference',
@@ -213,6 +218,7 @@ async function archiveUploadImages(
           originalSizeBytes: asFiniteNumber(rawStyleReference.originalSizeBytes),
           width: asFiniteNumber(rawStyleReference.width),
           height: asFiniteNumber(rawStyleReference.height),
+          source: styleReferenceSource || undefined,
           sourceGenerationId: sourceGenerationId || undefined,
           archivedAt: new Date().toISOString(),
         };
