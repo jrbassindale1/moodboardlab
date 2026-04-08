@@ -732,3 +732,217 @@ export async function searchPrecedents(
 
   return res.json();
 }
+
+// ============================================
+// Project Management Types and Functions
+// ============================================
+
+export type ProjectType = 'Residential' | 'Commercial' | 'Education' | 'Mixed-Use' | 'Cultural' | 'Landscape';
+export type ProjectStage = 'Concept' | 'Scheme' | 'Detailed' | 'Planning';
+export type ProjectEntryRoute = 'materials' | 'sketch' | 'place' | 'mood';
+
+export interface Project {
+  id: string;
+  userId: string;
+  name: string;
+  type?: ProjectType | null;
+  location?: string | null;
+  stage?: ProjectStage | null;
+  brief?: string | null;
+  entryRoute?: ProjectEntryRoute | null;
+  settings?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectsResponse {
+  items: Project[];
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  type?: ProjectType | null;
+  location?: string | null;
+  stage?: ProjectStage | null;
+  brief?: string | null;
+  entryRoute?: ProjectEntryRoute | null;
+  settings?: Record<string, unknown> | null;
+}
+
+export interface UpdateProjectPayload extends Partial<CreateProjectPayload> {
+  name: string;
+}
+
+/**
+ * List all projects for the authenticated user
+ */
+export async function getProjects(accessToken: string): Promise<Project[]> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to fetch projects';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  const data = await res.json() as ProjectsResponse;
+  return data.items || [];
+}
+
+/**
+ * Get a single project by ID
+ */
+export async function getProject(accessToken: string, projectId: string): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to fetch project';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Create a new project
+ */
+export async function createProject(
+  accessToken: string,
+  payload: CreateProjectPayload
+): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to create project';
+    try {
+      const data = await res.json() as { error?: string; message?: string; errors?: string[] };
+      message = data.errors?.join(', ') || data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Update an existing project
+ */
+export async function updateProject(
+  accessToken: string,
+  projectId: string,
+  payload: UpdateProjectPayload
+): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to update project';
+    try {
+      const data = await res.json() as { error?: string; message?: string; errors?: string[] };
+      message = data.errors?.join(', ') || data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Delete (soft delete) a project
+ */
+export async function deleteProject(
+  accessToken: string,
+  projectId: string
+): Promise<{ success: boolean; message: string }> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to delete project';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}

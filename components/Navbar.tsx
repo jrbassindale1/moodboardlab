@@ -25,6 +25,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const creditBalanceLabel = isUsageLoading ? '...' : remaining > 9999 ? '9999+' : `${remaining}`;
 
   const baseNavItems = [
+    { id: 'projects', label: 'Projects' },
     { id: 'materials', label: 'Materials' },
     { id: 'moodboard', label: 'Workspace' },
     { id: 'apply', label: 'Render' },

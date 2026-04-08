@@ -9,7 +9,8 @@
  * Database structure:
  * - Database: moodboardlab
  * - Containers: users, usage, generations, materials, finishes, finish_sets,
- *               material_finish_links, material_finish_set_links, lifecycle_profiles
+ *               material_finish_links, material_finish_set_links, lifecycle_profiles,
+ *               credits, credit_transactions, projects
  */
 
 import { CosmosClient, Container, Database } from '@azure/cosmos';
@@ -54,6 +55,7 @@ export function getContainer(
     | 'lifecycle_profiles'
     | 'credits'
     | 'credit_transactions'
+    | 'projects'
 ): Container {
   if (!containers[containerName]) {
     containers[containerName] = getDatabase().container(containerName);
@@ -129,6 +131,25 @@ export interface GenerationDocument {
   materials?: unknown;
   createdAt: string;
   metadata?: Record<string, unknown>;
+}
+
+export type ProjectType = 'Residential' | 'Commercial' | 'Education' | 'Mixed-Use' | 'Cultural' | 'Landscape';
+export type ProjectStage = 'Concept' | 'Scheme' | 'Detailed' | 'Planning';
+export type ProjectEntryRoute = 'materials' | 'sketch' | 'place' | 'mood';
+
+export interface ProjectDocument {
+  id: string;
+  userId: string; // Partition key
+  name: string;
+  type?: ProjectType | null;
+  location?: string | null;
+  stage?: ProjectStage | null;
+  brief?: string | null;
+  entryRoute?: ProjectEntryRoute | null;
+  settings?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null; // Soft delete
 }
 
 export interface MaterialDocument {

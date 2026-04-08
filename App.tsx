@@ -12,9 +12,23 @@ import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
+import ProjectsDashboard from './components/ProjectsDashboard';
+import ProjectCreate from './components/ProjectCreate';
+import ProjectWorkspace from './components/ProjectWorkspace';
+import ProjectEdit from './components/ProjectEdit';
 import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
 import type { PrecedentResult } from './api';
+import {
+  getProjects,
+  getProject,
+  createProject,
+  updateProject,
+  deleteProject,
+  type Project,
+  type CreateProjectPayload,
+  type UpdateProjectPayload,
+} from './api';
 import type {
   SustainabilityBriefingPayload,
   SustainabilityBriefingResponse,
@@ -54,8 +68,8 @@ const APPLIED_URL_CACHE_KEY = 'moodboard_applied_url_v1';
 const APPLY_STATE_CACHE_KEY = 'moodboard_apply_state_v1';
 const PROJECT_CACHE_KEY = 'moodboard_current_project_v1';
 
-// Project type for grouping generations
-type Project = {
+// Session project type for grouping generations (local/ephemeral)
+type SessionProject = {
   id: string;
   name: string;
   createdAt: string;
@@ -119,7 +133,7 @@ const formatProjectName = (): string => {
   return `Moodboard ${dateStr} (${projectNumber})`;
 };
 
-const readProjectCache = (): Project | null => {
+const readProjectCache = (): SessionProject | null => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(PROJECT_CACHE_KEY);
@@ -249,8 +263,14 @@ const App: React.FC = () => {
   // Lifted state from Moodboard (persists across navigation)
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
 
-  // Project state - groups all generations under a single project
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  // Session project state - groups all generations under a single project
+  const [currentProject, setCurrentProject] = useState<SessionProject | null>(null);
+
+  // Project shell state - for project workspace pages
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [isUpdatingProject, setIsUpdatingProject] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
@@ -327,9 +347,9 @@ const App: React.FC = () => {
     }
   }, [currentProject]);
 
-  // Create a new project (called when generating first moodboard)
-  const createNewProject = (): Project => {
-    const project: Project = {
+  // Create a new session project (called when generating first moodboard)
+  const createNewProject = (): SessionProject => {
+    const project: SessionProject = {
       id: generateProjectId(),
       name: formatProjectName(),
       createdAt: new Date().toISOString(),
@@ -356,6 +376,55 @@ const App: React.FC = () => {
     setAppliedEditPrompt('');
     setMoodboardEditPrompt('');
     // Keep materials - user might want to reuse them
+  };
+
+  // Project shell handlers
+  const { getAccessToken } = useAuth();
+
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
+    setCurrentPage('project-workspace');
+  };
+
+  const handleCreateProject = async (payload: CreateProjectPayload) => {
+    setIsCreatingProject(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Not authenticated');
+      const newProject = await createProject(token, payload);
+      setSelectedProject(newProject);
+      setCurrentPage('project-workspace');
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
+
+  const handleUpdateProject = async (payload: UpdateProjectPayload) => {
+    if (!selectedProject) return;
+    setIsUpdatingProject(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Not authenticated');
+      const updated = await updateProject(token, selectedProject.id, payload);
+      setSelectedProject(updated);
+      setCurrentPage('project-workspace');
+    } finally {
+      setIsUpdatingProject(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!selectedProject) return;
+    setIsDeletingProject(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Not authenticated');
+      await deleteProject(token, selectedProject.id);
+      setSelectedProject(null);
+      setCurrentPage('projects');
+    } finally {
+      setIsDeletingProject(false);
+    }
   };
 
   // Track page views in Google Analytics
@@ -722,6 +791,49 @@ const App: React.FC = () => {
         return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
       case 'material-admin':
         return <MaterialAdmin onNavigate={setCurrentPage} />;
+      case 'projects':
+        return (
+          <ProjectsDashboard
+            onNavigate={setCurrentPage}
+            onSelectProject={handleSelectProject}
+          />
+        );
+      case 'project-create':
+        return (
+          <ProjectCreate
+            onNavigate={setCurrentPage}
+            onCreateProject={handleCreateProject}
+            isCreating={isCreatingProject}
+          />
+        );
+      case 'project-workspace':
+        if (!selectedProject) {
+          setCurrentPage('projects');
+          return null;
+        }
+        return (
+          <ProjectWorkspace
+            project={selectedProject}
+            onNavigate={setCurrentPage}
+            onEditProject={() => setCurrentPage('project-edit')}
+            materials={selectedMaterials}
+          />
+        );
+      case 'project-edit':
+        if (!selectedProject) {
+          setCurrentPage('projects');
+          return null;
+        }
+        return (
+          <ProjectEdit
+            project={selectedProject}
+            onNavigate={setCurrentPage}
+            onUpdateProject={handleUpdateProject}
+            onDeleteProject={handleDeleteProject}
+            isUpdating={isUpdatingProject}
+            isDeleting={isDeletingProject}
+          />
+        );
       default:
         return <Concept onNavigate={setCurrentPage} />;
     }
