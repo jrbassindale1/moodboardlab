@@ -1651,12 +1651,20 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       Applied Render
                     </div>
                   </div>
-                  <div className="w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
+                  <div className="relative w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
                     <img
                       src={appliedRenderUrl}
                       alt="Applied render"
-                      className="max-h-[75vh] max-w-full h-auto w-auto object-contain"
+                      className={`max-h-[75vh] max-w-full h-auto w-auto object-contain transition-all duration-300 ${status === 'render' ? 'blur-sm opacity-70' : ''}`}
                     />
+                    {status === 'render' && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex flex-col items-center gap-2 bg-white/80 px-4 py-3 rounded-lg shadow-sm">
+                          <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
+                          <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Generating...</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
