@@ -32,20 +32,20 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
         <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
           Moodboard Render
         </div>
-        <div className="w-full border border-gray-200 bg-gray-50 relative flex items-center justify-center">
+        <div className="relative w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
           <img
             src={moodboardRenderUrl}
             alt="Moodboard"
-            className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition ${
-              isRenderInFlight ? 'opacity-40 grayscale' : ''
+            className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition-all duration-300 ${
+              isRenderInFlight ? 'blur-sm opacity-70' : ''
             }`}
           />
           {isRenderInFlight && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60">
-              <Loader2 className="w-12 h-12 animate-spin text-gray-700" />
-              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
-                Updating moodboard…
-              </span>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2 bg-white/80 px-4 py-3 rounded-lg shadow-sm">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
+                <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Generating...</span>
+              </div>
             </div>
           )}
         </div>
