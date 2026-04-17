@@ -498,7 +498,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     return false;
   };
 
-  const ensureQuotaForMoodboard = async (requiredCredits = CREDIT_COSTS.MOODBOARD_GENERATION) => {
+  const ensureQuotaForMoodboard = async (requiredCredits: number = CREDIT_COSTS.MOODBOARD_GENERATION) => {
     // If auth bypass is enabled, skip quota check
     if (isAuthBypassEnabled) {
       console.log('[Quota Check] Bypassed (auth bypass enabled)');
@@ -1835,6 +1835,10 @@ ${JSON.stringify(proseContext)}`;
           imageConfig: {
             aspectRatio,
             imageSize: '1K'
+          },
+          validation: {
+            rejectTextLikeArtifacts: true,
+            maxAttempts: 2
           }
         };
 

@@ -10,6 +10,14 @@ export type RenderViewIntent =
   | 'aerial'
   | 'unknown';
 
+export type DrawingType = 'perspective' | 'elevation' | 'section' | 'plan' | 'auto';
+export type ResolvedDrawingType = Exclude<DrawingType, 'auto'>;
+
+export interface DrawingTypeResolution {
+  drawingType: ResolvedDrawingType;
+  source: 'requested' | 'text' | 'filename' | 'default';
+}
+
 export interface RenderViewGuidance {
   intent: RenderViewIntent;
   isTechnicalView: boolean;
@@ -27,6 +35,13 @@ const INTERIOR_RE = /\b(interior|inside|internal)\b/i;
 const STREET_LEVEL_RE = /\b(street[\s-]?level|pedestrian|eye[\s-]?level)\b/i;
 const AERIAL_RE = /\b(aerial|bird'?s[\s-]?eye|drone)\b/i;
 const EXTERIOR_RE = /\b(exterior|outside|facade|fa[çc]ade)\b/i;
+const PERSPECTIVE_RE = /\b(perspective|spatial|3d|eye[\s-]?level|street[\s-]?view|immersive)\b/i;
+
+const EXPLICIT_PERSPECTIVE_CONVERT_RE =
+  /\b(convert|change|switch|turn|make|transform)\b[\s\S]{0,60}\b(perspective|3d|spatial|eye[\s-]?level|street[\s-]?view)\b/i;
+
+const EXPLICIT_ORTHOGRAPHIC_CONVERT_RE =
+  /\b(convert|change|switch|turn|make|transform)\b[\s\S]{0,60}\b(elevation|section|plan|orthographic|top[\s-]?down)\b/i;
 
 export function detectRenderViewIntent(input?: string | null): RenderViewIntent {
   const text = (input || '').toLowerCase();
@@ -41,6 +56,92 @@ export function detectRenderViewIntent(input?: string | null): RenderViewIntent 
   if (INTERIOR_RE.test(text)) return 'interior';
   if (EXTERIOR_RE.test(text)) return 'exterior';
   return 'unknown';
+}
+
+export function inferDrawingType(params?: {
+  requestedType?: DrawingType;
+  userText?: string | null;
+  baseImageName?: string | null;
+}): DrawingTypeResolution {
+  const requestedType = params?.requestedType ?? 'auto';
+  if (requestedType !== 'auto') {
+    return { drawingType: requestedType, source: 'requested' };
+  }
+
+  const userText = (params?.userText || '').toLowerCase();
+  const nameText = (params?.baseImageName || '').toLowerCase();
+
+  if (SECTION_RE.test(userText)) return { drawingType: 'section', source: 'text' };
+  if (ELEVATION_RE.test(userText)) return { drawingType: 'elevation', source: 'text' };
+  if (PLAN_RE.test(userText)) return { drawingType: 'plan', source: 'text' };
+  if (PERSPECTIVE_RE.test(userText)) return { drawingType: 'perspective', source: 'text' };
+
+  if (SECTION_RE.test(nameText)) return { drawingType: 'section', source: 'filename' };
+  if (ELEVATION_RE.test(nameText)) return { drawingType: 'elevation', source: 'filename' };
+  if (PLAN_RE.test(nameText)) return { drawingType: 'plan', source: 'filename' };
+  if (PERSPECTIVE_RE.test(nameText)) return { drawingType: 'perspective', source: 'filename' };
+
+  return { drawingType: 'perspective', source: 'default' };
+}
+
+export function hasExplicitPerspectiveConversionRequest(input?: string | null): boolean {
+  return EXPLICIT_PERSPECTIVE_CONVERT_RE.test(input || '');
+}
+
+export function hasExplicitOrthographicConversionRequest(input?: string | null): boolean {
+  return EXPLICIT_ORTHOGRAPHIC_CONVERT_RE.test(input || '');
+}
+
+export function getDrawingTypePromptDirectives(params: {
+  drawingType: ResolvedDrawingType;
+  userInstruction?: string | null;
+  allowUserDrivenPerspectiveConversion?: boolean;
+}): string[] {
+  const userInstruction = params.userInstruction || '';
+  const allowPerspectiveConvert = Boolean(params.allowUserDrivenPerspectiveConversion);
+  const wantsPerspective = hasExplicitPerspectiveConversionRequest(userInstruction);
+  const wantsOrthographic = hasExplicitOrthographicConversionRequest(userInstruction);
+
+  if (params.drawingType === 'elevation') {
+    return [
+      'REPRESENTATION TYPE: elevation (orthographic).',
+      'Keep a straight-on orthographic elevation view with no oblique camera angle, no lens distortion, and no perspective convergence.',
+      'Preserve facade order, opening alignment, floor levels, and vertical/horizontal datums exactly from the source.',
+      allowPerspectiveConvert && wantsPerspective
+        ? 'User explicitly requested a perspective conversion. If converting, still preserve facade proportions and element order.'
+        : 'Do not convert this elevation into a perspective or immersive scene unless the user explicitly asks for conversion.'
+    ];
+  }
+
+  if (params.drawingType === 'section') {
+    return [
+      'REPRESENTATION TYPE: section (orthographic).',
+      'Keep an orthographic section projection with a clear and legible cut condition; do not switch to an external perspective view.',
+      'Preserve cut logic, alignment, floor heights, and relationships between cut and beyond elements.',
+      allowPerspectiveConvert && wantsPerspective
+        ? 'User explicitly requested a perspective conversion. If converting, preserve the sectional organization and key levels.'
+        : 'Do not convert this section into a perspective scene unless the user explicitly asks for conversion.'
+    ];
+  }
+
+  if (params.drawingType === 'plan') {
+    return [
+      'REPRESENTATION TYPE: plan (top-down orthographic).',
+      'Keep a top-down orthographic plan view; no eye-level camera, no oblique camera tilt, and no cinematic lens effects.',
+      'Preserve room/zone adjacency, wall alignments, circulation logic, and top-down spatial relationships.',
+      allowPerspectiveConvert && wantsPerspective
+        ? 'User explicitly requested a perspective conversion. If converting, preserve plan organization and key adjacencies.'
+        : 'Do not convert this plan into a perspective scene unless the user explicitly asks for conversion.'
+    ];
+  }
+
+  return [
+    'REPRESENTATION TYPE: perspective / spatial view.',
+    'Use the source spatial viewpoint and preserve camera framing, geometry, and composition.',
+    wantsOrthographic
+      ? 'User explicitly requested orthographic output. Respect that request and preserve geometry while changing projection type.'
+      : 'Keep the output as a realistic architectural spatial visualization while preserving source geometry.'
+  ];
 }
 
 export function getRenderViewGuidance(input?: string | null): RenderViewGuidance {
