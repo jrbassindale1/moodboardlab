@@ -6,6 +6,7 @@ import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import {
   DrawingType,
   getDrawingTypePromptDirectives,
+  getRenderViewGuidanceForDrawingType,
   getRenderViewGuidance,
   inferDrawingType,
 } from '../utils/renderViewGuidance';
@@ -262,6 +263,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate, remaining, purchasedCredits, isAdmin } = useUsage();
+
+  // Check for localStorage admin bypass (for testing)
+  const isLocalAdminBypassEnabled = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  }, []);
+
+  // Effective canGenerate that includes admin bypass
+  const effectiveCanGenerate = canGenerate || isLocalAdminBypassEnabled;
 
   // Local UI state only (transient, doesn't need to persist)
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
@@ -803,7 +813,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const billedGenerationType = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
 
     // Check quota - server-side for authenticated users, shared local quota for anonymous users
-    if (isAuthenticated) {
+    if (isLocalAdminBypassEnabled) {
+      // Skip quota check if admin bypass is enabled (testing mode)
+      console.log('[Quota Check] Bypassed (localStorage admin bypass enabled)');
+    } else if (isAuthenticated) {
       // Refresh and check server-side quota
       try {
         const token = await getAccessToken();
@@ -897,8 +910,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const sceneControlsText = buildSceneControlsText(sceneControls);
     const noTextRule =
       'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
-    const viewGuidanceInput = `${options?.editPrompt || ''}\n${trimmedNote}`.trim();
-    const viewGuidance = getRenderViewGuidance(viewGuidanceInput);
 
     // Representation-aware branching stage.
     // Future prompt edits should preserve this decision point so orthographic inputs are not
@@ -910,6 +921,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       baseImageName: uploadedImage?.name || null,
     });
     const drawingType = drawingTypeResolution.drawingType;
+    const viewGuidance = getRenderViewGuidanceForDrawingType(drawingType);
     const representationDirectives = getDrawingTypePromptDirectives({
       drawingType,
       userInstruction: `${options?.editPrompt || ''}\n${trimmedNote}`,
@@ -936,17 +948,45 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const lineDrawingInstruction =
       drawingType === 'perspective'
         ? '- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to a photorealistic perspective render while preserving source framing.'
-        : `- If input is a line drawing/sketch/CAD export: preserve the ${drawingType} projection and convert it into a photorealistic ${drawingType} visualization without introducing perspective drift.`;
+        : `- If input is a line drawing/sketch/CAD export: preserve the ${drawingType} projection and convert it into a materialised orthographic ${drawingType} presentation drawing without introducing perspective drift.`;
+    const presentationConventionInstruction =
+      drawingType === 'elevation'
+        ? '- ELEVATION PRESENTATION CONVENTIONS: keep a crisp continuous ground line/datum, a flat frontal facade reading, no visible perspective depth, and only a restrained elevation-style backdrop.'
+        : drawingType === 'section'
+        ? '- SECTION PRESENTATION CONVENTIONS: keep cut geometry legible, maintain the cut datum, and avoid immersive perspective staging.'
+        : drawingType === 'plan'
+        ? '- PLAN PRESENTATION CONVENTIONS: keep a flat top-down drawing reading with no horizon, no eye-level depth, and no oblique scene effects.'
+        : '';
+    const orthographicRealismInstruction =
+      drawingType === 'elevation'
+        ? '- ELEVATION PRESENTATION QUALITY: use material realism through texture hierarchy and tonal control, with restrained reflections and minimal depth effects, while keeping the output a flat orthographic elevation plate.'
+        : drawingType === 'section'
+        ? '- SECTION PRESENTATION QUALITY: emphasise section legibility with clear cut-versus-beyond contrast, restrained material tonality, minimal depth effects, and no cutaway rendering style.'
+        : drawingType === 'plan'
+        ? '- PLAN PRESENTATION QUALITY: use realistic top-down material expression with restrained tonality and no spatial depth cues, keeping the plan flat, clear, and fully orthographic.'
+        : '';
+    const orthographicMaterialAssignmentInstruction =
+      drawingType === 'section'
+        ? '- SECTION MATERIAL MAPPING (STRICT): assign materials with explicit hierarchy: cut structure/poche first, seen-beyond structure second, then cladding, glazing, internal finishes, ground/earth, and finally objects beyond the cut plane. Keep these categories visually distinct.'
+        : drawingType === 'elevation'
+        ? '- ELEVATION MATERIAL MAPPING (STRICT): keep structure, cladding, glazing, and infill legible as separate systems with consistent tonal hierarchy and no scene-style blending.'
+        : drawingType === 'plan'
+        ? '- PLAN MATERIAL MAPPING (STRICT): distinguish structure, floor finishes, glazing lines, and external/ground zones clearly, with no perspective-style overlap or depth staging.'
+        : '';
+    const orthographicConstraint =
+      drawingType !== 'perspective'
+        ? `\n*** CRITICAL ORTHOGRAPHIC CONSTRAINT ***\nThis is an ORTHOGRAPHIC ${drawingType.toUpperCase()} - DO NOT CONVERT TO PERSPECTIVE.\n- ZERO perspective distortion allowed\n- Maintain parallel lines and equal scaling across the view\n- No eye-level rotation or angular viewpoints\n- Camera must be perpendicular to the plane of the ${drawingType} (${drawingType === 'plan' ? 'looking straight down from above' : drawingType === 'elevation' ? 'looking straight at the facade' : 'looking perpendicular at the cut plane'})\n- The output MUST read as a presentation ${drawingType}, not as a frontal render or immersive scene\n- Do not introduce environmental depth staging, foreground framing, or perspective ground planes\n- Preserve or restate the primary datum/ground line where applicable\n***`
+        : '';
     const renderTargetInstruction =
       drawingType === 'perspective'
         ? 'Transform the provided base image into a PHOTOREALISTIC architectural render while applying the materials listed below.'
-        : `Transform the provided base image into a PHOTOREALISTIC architectural ${drawingType} visualization while preserving its ${drawingType === 'plan' ? 'top-down orthographic' : 'orthographic'} projection.`;
+        : `Render this as a flat 2D orthographic ${drawingType} presentation drawing with materialised architectural finishes. Do NOT convert to 3D perspective. Apply the materials listed below while maintaining the exact orthographic projection of the input.`;
 
     const basePrompt = isUpscalingRender
       ? `Create a 4K upscaled version of the provided architectural render. Preserve the exact composition, camera position, geometry, materials, entourage, and lighting from the source image. Do not redesign or reinterpret the image. Increase resolution, sharpen material detail, and improve fine-grain realism only.`
       : isEditingRender
       ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\n${representationControlText}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
-      : `${renderTargetInstruction} Materials are organized by their architectural category to help you understand where each should be applied.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n${representationControlText}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n${lineDrawingInstruction}\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
+      : `${orthographicConstraint ? `${orthographicConstraint}\n\n` : ''}${renderTargetInstruction} Materials are organized by their architectural category to help you understand where each should be applied.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n${representationControlText}\n- OUTPUT MUST MAINTAIN ORTHOGRAPHIC PROJECTION: Material detail must be realistic and tactile, but geometry must remain flat 2D with no perspective distortion\n${orthographicMaterialAssignmentInstruction}\n${presentationConventionInstruction}\n${orthographicRealismInstruction}\n${lineDrawingInstruction}\n- If input is already photorealistic: reinterpret as a materialised orthographic presentation drawing while preserving geometry\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK PROJECTION AND FRAMING: Keep the exact orthographic orientation and framing of the base image; do not introduce perspective logic\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain relationships to datum lines and overall orthographic composition exactly as shown\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, tonal hierarchy, and restrained shading should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Use restrained, even presentation-drawing lighting with crisp edges and minimal atmospheric effects\n${atmosphereInstruction}\n- Keep output quality as a composed architectural plate: clear hierarchy, restrained tonality, and no immersive scene composition\n- For orthographic drawings, do not preserve or enhance immersive site context; prefer a restrained backdrop and clear datum reading\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
     const useStyleReference = Boolean(styleReferenceImage && !isUpscalingRender);
     const sceneControlsOverrideLine = hasSceneControlsEnabled
       ? '\n- Where scene controls (time of day, weather, season) conflict with the style reference, the SCENE CONTROLS take priority.'
@@ -1707,7 +1747,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 	                )}
 	                <button
 	                  onClick={() => runApplyRender({ renderMode: 'upload-1k', drawingType })}
-	                  disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate || !uploadedImage}
+	                  disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !effectiveCanGenerate || !uploadedImage}
 	                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
 	                >
 	                  {status === 'render' && renderingMode === 'upload-1k' ? (
@@ -1759,7 +1799,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                       value={appliedEditPrompt}
                       onChange={(e) => setAppliedEditPrompt(e.target.value)}
                       placeholder="E.g., add people walking, change to evening atmosphere, include more vegetation and street furniture."
-                      disabled={!canGenerate}
+                      disabled={!effectiveCanGenerate}
                       className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
                     />
 
@@ -1780,7 +1820,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               weather: { ...prev.weather, enabled: e.target.checked }
                             }))}
-                            disabled={!canGenerate}
+                            disabled={!effectiveCanGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="weather-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1802,7 +1842,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 weather: { ...prev.weather, value: parseInt(e.target.value) }
                               }))}
-                              disabled={!canGenerate}
+                              disabled={!effectiveCanGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1820,7 +1860,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               activity: { ...prev.activity, enabled: e.target.checked }
                             }))}
-                            disabled={!canGenerate}
+                            disabled={!effectiveCanGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="activity-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1842,7 +1882,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 activity: { ...prev.activity, value: parseInt(e.target.value) }
                               }))}
-                              disabled={!canGenerate}
+                              disabled={!effectiveCanGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1860,7 +1900,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
                             }))}
-                            disabled={!canGenerate}
+                            disabled={!effectiveCanGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="time-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1882,7 +1922,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
                               }))}
-                              disabled={!canGenerate}
+                              disabled={!effectiveCanGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1900,7 +1940,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               season: { ...prev.season, enabled: e.target.checked }
                             }))}
-                            disabled={!canGenerate}
+                            disabled={!effectiveCanGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="season-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1922,7 +1962,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 season: { ...prev.season, value: parseInt(e.target.value) }
                               }))}
-                              disabled={!canGenerate}
+                              disabled={!effectiveCanGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1940,7 +1980,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                               ...prev,
                               viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
                             }))}
-                            disabled={!canGenerate}
+                            disabled={!effectiveCanGenerate}
                             className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
                           />
                           <label htmlFor="view-enable-edit" className="font-sans text-xs text-gray-700">
@@ -1962,7 +2002,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
                                 ...prev,
                                 viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
                               }))}
-                              disabled={!canGenerate}
+                              disabled={!effectiveCanGenerate}
                               className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
                             />
                           </div>
@@ -1978,7 +2018,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 	                    <div className="flex flex-wrap gap-3">
                       <button
                         onClick={handleAppliedEdit}
-                        disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
+                        disabled={status !== 'idle' || !appliedRenderUrl || !effectiveCanGenerate}
                         className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
                       >
                         {status === 'render' && renderingMode === 'edit' ? (

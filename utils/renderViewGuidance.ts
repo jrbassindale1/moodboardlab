@@ -107,6 +107,8 @@ export function getDrawingTypePromptDirectives(params: {
       'REPRESENTATION TYPE: elevation (orthographic).',
       'Keep a straight-on orthographic elevation view with no oblique camera angle, no lens distortion, and no perspective convergence.',
       'Preserve facade order, opening alignment, floor levels, and vertical/horizontal datums exactly from the source.',
+      'Preserve elevation drawing conventions: keep a clear ground datum/ground line, a flat frontal facade reading, and no foreground or background perspective staging.',
+      'Use a restrained presentation-elevation backdrop only; avoid immersive site depth, angled terrain, dramatic entourage, or scene-like composition.',
       allowPerspectiveConvert && wantsPerspective
         ? 'User explicitly requested a perspective conversion. If converting, still preserve facade proportions and element order.'
         : 'Do not convert this elevation into a perspective or immersive scene unless the user explicitly asks for conversion.'
@@ -116,8 +118,8 @@ export function getDrawingTypePromptDirectives(params: {
   if (params.drawingType === 'section') {
     return [
       'REPRESENTATION TYPE: section (orthographic).',
-      'Keep an orthographic section projection with a clear and legible cut condition; do not switch to an external perspective view.',
-      'Preserve cut logic, alignment, floor heights, and relationships between cut and beyond elements.',
+      'Keep an orthographic section plate with explicit cut-versus-beyond hierarchy; do not switch to cutaway rendering or external perspective.',
+      'Preserve cut logic, alignment, floor heights, and the distinction between cut structure, seen-beyond structure, and background elements.',
       allowPerspectiveConvert && wantsPerspective
         ? 'User explicitly requested a perspective conversion. If converting, preserve the sectional organization and key levels.'
         : 'Do not convert this section into a perspective scene unless the user explicitly asks for conversion.'
@@ -146,6 +148,19 @@ export function getDrawingTypePromptDirectives(params: {
 
 export function getRenderViewGuidance(input?: string | null): RenderViewGuidance {
   const intent = detectRenderViewIntent(input);
+  return getRenderViewGuidanceForIntent(intent);
+}
+
+export function getRenderViewGuidanceForDrawingType(drawingType: ResolvedDrawingType): RenderViewGuidance {
+  const intent: RenderViewIntent =
+    drawingType === 'perspective'
+      ? 'exterior'
+      : drawingType;
+
+  return getRenderViewGuidanceForIntent(intent);
+}
+
+function getRenderViewGuidanceForIntent(intent: RenderViewIntent): RenderViewGuidance {
   const isTechnicalView =
     intent === 'elevation' ||
     intent === 'section' ||
@@ -166,18 +181,18 @@ export function getRenderViewGuidance(input?: string | null): RenderViewGuidance
   }
 
   const styleDirective = isTechnicalView
-    ? 'Render as a high-fidelity architectural technical view with realistic material behavior but restrained cinematic effects.'
+    ? 'Render as a high-fidelity materialised architectural presentation drawing with restrained tonal shading, clear hierarchy, and no cinematic scene effects.'
     : 'Render as a photorealistic architectural visualization with realistic textures, shadows, reflections, and depth.';
 
   let cameraDirective = 'Keep the camera position, lens perspective, and framing locked to the base image.';
   if (intent === 'elevation') {
     cameraDirective =
-      'Use a frontal elevation view with minimal perspective distortion and clean vertical alignment.';
+      'Use a true frontal orthographic elevation plate with zero perspective distortion, strict vertical/horizontal alignment, and clean datum reading.';
   } else if (intent === 'section') {
     cameraDirective =
-      'Use a sectional view with a clear cut condition and readable depth behind the cut plane.';
+      'Use a true orthographic section plate with a clear cut condition, explicit cut-versus-beyond hierarchy, and no spatial staging.';
   } else if (intent === 'plan') {
-    cameraDirective = 'Use a top-down plan-style view while preserving layout geometry and scale relationships.';
+    cameraDirective = 'Use a true top-down orthographic plan plate while preserving layout geometry and adjacency relationships.';
   } else if (intent === 'axonometric') {
     cameraDirective =
       'Use an axonometric/isometric view with stable projection and coherent depth relationships.';
