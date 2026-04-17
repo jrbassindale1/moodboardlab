@@ -274,6 +274,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [projectGenerationsError, setProjectGenerationsError] = useState<string | null>(null);
   const [baseImageSourceMode, setBaseImageSourceMode] = useState<ImageSourceMode>('upload');
   const [styleReferenceSourceMode, setStyleReferenceSourceMode] = useState<ImageSourceMode>('upload');
+  const [drawingType, setDrawingType] = useState<DrawingType>('auto');
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
   const baseFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1106,7 +1107,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const wasUpdated = await runApplyRender({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
-      renderMode: 'edit'
+      renderMode: 'edit',
+      drawingType
     });
     if (wasUpdated) {
       setAppliedEditPrompt('');
@@ -1133,7 +1135,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     await runApplyRender({
       baseImageDataUrl: appliedRenderUrl,
       imageSize: '4K',
-      renderMode: 'upscale-4k'
+      renderMode: 'upscale-4k',
+      drawingType
     });
   };
 
@@ -1371,6 +1374,40 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 	                            Remove
 	                          </button>
 	                        </div>
+	                      </div>
+	                    </div>
+	                  )}
+	                  {uploadedImage && (
+	                    <div className="border border-gray-200 bg-gray-50 p-3 space-y-3">
+	                      <div>
+	                        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-700 font-semibold mb-3">
+	                          Drawing Type
+	                        </div>
+	                        <p className="text-sm text-gray-600 mb-3">
+	                          Specify the representation type to preserve projection during rendering.
+	                        </p>
+	                      </div>
+	                      <div className="flex flex-wrap gap-2">
+	                        {(['perspective', 'elevation', 'section', 'plan'] as const).map((type) => (
+	                          <button
+	                            key={type}
+	                            type="button"
+	                            onClick={() => setDrawingType(type)}
+	                            className={`px-3 py-2 border font-mono text-[10px] uppercase tracking-widest transition-colors ${
+	                              drawingType === type
+	                                ? 'border-black bg-black text-white'
+	                                : 'border-gray-300 bg-white text-gray-700 hover:border-black'
+	                            }`}
+	                          >
+	                            {type === 'perspective' ? '3D / Perspective' : type.charAt(0).toUpperCase() + type.slice(1)}
+	                          </button>
+	                        ))}
+	                      </div>
+	                      <div className="text-xs text-gray-500">
+	                        {drawingType === 'perspective' && '3D/spatial render preserving camera angle'}
+	                        {drawingType === 'elevation' && 'Orthographic frontal view — no perspective distortion'}
+	                        {drawingType === 'section' && 'Orthographic sectional view — preserves cut logic'}
+	                        {drawingType === 'plan' && 'Top-down orthographic view — no eye-level conversion'}
 	                      </div>
 	                    </div>
 	                  )}
@@ -1669,7 +1706,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 	                  </div>
 	                )}
 	                <button
-	                  onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
+	                  onClick={() => runApplyRender({ renderMode: 'upload-1k', drawingType })}
 	                  disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate || !uploadedImage}
 	                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
 	                >
