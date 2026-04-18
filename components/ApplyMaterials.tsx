@@ -2174,7 +2174,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             {uploadedImage && (
               <div className="border border-gray-200 bg-gray-50 p-3 space-y-3">
                 <div className="space-y-1">
-                    <div className="font-mono text-[12px] uppercase tracking-widest text-gray-700 font-bold">
+                  <div className="font-mono text-[12px] uppercase tracking-widest text-gray-700 font-bold">
+                    Render Controls (Optional)
+                  </div>
+                </div>
+                <div className="space-y-1 pt-1">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-700 font-semibold">
                     Drawing Type
                   </div>
                   <p className="text-sm text-gray-600">Preserve the source view.</p>
