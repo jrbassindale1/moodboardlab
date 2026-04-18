@@ -36,6 +36,10 @@ const STREET_LEVEL_RE = /\b(street[\s-]?level|pedestrian|eye[\s-]?level)\b/i;
 const AERIAL_RE = /\b(aerial|bird'?s[\s-]?eye|drone)\b/i;
 const EXTERIOR_RE = /\b(exterior|outside|facade|fa[çc]ade)\b/i;
 const PERSPECTIVE_RE = /\b(perspective|spatial|3d|eye[\s-]?level|street[\s-]?view|immersive)\b/i;
+const LIKELY_PERSPECTIVE_CONTEXT_RE =
+  /\b(render|rendering|visuali[sz]ation|viz|hero|camera|cam|view|scene|photo|photoreal|exterior|interior|streetscape|persp)\b/i;
+const LIKELY_TECHNICAL_OR_AMBIGUOUS_RE =
+  /\b(orthographic|axonometric|isometric|elev|elevation|section|plan|cad|dwg|diagram|draft|line[\s-]?draw(?:ing)?)\b/i;
 
 const EXPLICIT_PERSPECTIVE_CONVERT_RE =
   /\b(convert|change|switch|turn|make|transform)\b[\s\S]{0,60}\b(perspective|3d|spatial|eye[\s-]?level|street[\s-]?view)\b/i;
