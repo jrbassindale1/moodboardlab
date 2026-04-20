@@ -25,6 +25,7 @@ import {
   isCosmosPreconditionFailed,
 } from '../shared/cosmosClient';
 import { incrementUsage, GenerationType, FREE_GENERATION_TYPES } from '../shared/usageHelpers';
+import { getBillingIdentityKey } from '../shared/billingIdentity';
 
 const MAX_CREDIT_CHARGE = CREDIT_COSTS.FOUR_K_GENERATION; // 5 credits max (for 4K)
 const MAX_CREDIT_MUTATION_RETRIES = 3;
@@ -48,19 +49,17 @@ type UsageSnapshot = {
   freeRemaining: number;
 };
 
-async function readUsageSnapshot(userId: string): Promise<UsageSnapshot> {
+async function readUsageTotalForIdentity(identityKey: string): Promise<{ yearMonth: string; totalUsed: number }> {
   const yearMonth = getCurrentYearMonth();
-  const documentId = getUsageDocumentId(userId, yearMonth);
+  const documentId = getUsageDocumentId(identityKey, yearMonth);
   const usageContainer = getContainer('usage');
 
   try {
-    const { resource } = await usageContainer.item(documentId, userId).read<UsageDocument>();
-    const totalUsed = resource?.totalGenerations || 0;
+    const { resource } = await usageContainer.item(documentId, identityKey).read<UsageDocument>();
 
     return {
       yearMonth,
-      totalUsed,
-      freeRemaining: Math.max(0, FREE_MONTHLY_LIMIT - totalUsed),
+      totalUsed: resource?.totalGenerations || 0,
     };
   } catch (error: unknown) {
     if (!isCosmosNotFound(error)) {
@@ -70,9 +69,25 @@ async function readUsageSnapshot(userId: string): Promise<UsageSnapshot> {
     return {
       yearMonth,
       totalUsed: 0,
-      freeRemaining: FREE_MONTHLY_LIMIT,
     };
   }
+}
+
+async function readUsageSnapshot(billingIdentityKey: string, legacyUserId: string): Promise<UsageSnapshot> {
+  const primary = await readUsageTotalForIdentity(billingIdentityKey);
+  let totalUsed = primary.totalUsed;
+
+  if (billingIdentityKey !== legacyUserId) {
+    // Rollout safety: include legacy userId-keyed usage for the current month.
+    const legacy = await readUsageTotalForIdentity(legacyUserId);
+    totalUsed += legacy.totalUsed;
+  }
+
+  return {
+    yearMonth: primary.yearMonth,
+    totalUsed,
+    freeRemaining: Math.max(0, FREE_MONTHLY_LIMIT - totalUsed),
+  };
 }
 
 async function readPurchasedCredits(userId: string): Promise<{
@@ -182,6 +197,7 @@ export async function consumeCredits(
   }
 
   const user = authResult as ValidatedUser;
+  const billingIdentityKey = getBillingIdentityKey(user);
 
   try {
     const body = await req.json() as {
@@ -203,7 +219,7 @@ export async function consumeCredits(
     const transactionsContainer = getContainer('credit_transactions');
     const userIsAdmin = isAdminUser(user.email, user.userId);
     const isFreeGeneration = FREE_GENERATION_TYPES.includes(generationType);
-    const usageSnapshot = await readUsageSnapshot(user.userId);
+    const usageSnapshot = await readUsageSnapshot(billingIdentityKey, user.userId);
 
     if (userIsAdmin) {
       return {
@@ -231,7 +247,7 @@ export async function consumeCredits(
     let concurrencyConflict = false;
 
     for (let attempt = 0; attempt < MAX_CREDIT_MUTATION_RETRIES; attempt += 1) {
-      const currentUsage = attempt === 0 ? usageSnapshot : await readUsageSnapshot(user.userId);
+      const currentUsage = attempt === 0 ? usageSnapshot : await readUsageSnapshot(billingIdentityKey, user.userId);
       const { creditsDoc, purchasedCredits } = await readPurchasedCredits(user.userId);
       const freeRemaining = currentUsage.freeRemaining;
       const totalUsed = currentUsage.totalUsed;
@@ -299,7 +315,7 @@ export async function consumeCredits(
         }
 
         // Tracks all generations, even if paid from purchased credits.
-        await incrementUsage(user.userId, generationType, credits);
+        await incrementUsage(billingIdentityKey, generationType, credits);
       } catch (error) {
         const isConcurrentMutation =
           purchasedToUse > 0 &&
@@ -352,7 +368,7 @@ export async function consumeCredits(
       };
     }
 
-    const latestUsage = await readUsageSnapshot(user.userId);
+    const latestUsage = await readUsageSnapshot(billingIdentityKey, user.userId);
     const latestCredits = await readPurchasedCredits(user.userId);
     const latestRemaining = latestUsage.freeRemaining + latestCredits.purchasedCredits;
 

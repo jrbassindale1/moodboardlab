@@ -19,6 +19,25 @@ import {
   isCosmosNotFound,
   isAdminUser,
 } from '../shared/cosmosClient';
+import { getBillingIdentityKey } from '../shared/billingIdentity';
+
+async function readTotalUsedForIdentity(
+  usageContainer: ReturnType<typeof getContainer>,
+  identityKey: string,
+  yearMonth: string
+): Promise<number> {
+  const documentId = getUsageDocumentId(identityKey, yearMonth);
+
+  try {
+    const { resource } = await usageContainer.item(documentId, identityKey).read<UsageDocument>();
+    return resource?.totalGenerations || 0;
+  } catch (error: unknown) {
+    if (!isCosmosNotFound(error)) {
+      throw error;
+    }
+    return 0;
+  }
+}
 
 export async function checkQuota(
   req: HttpRequest,
@@ -37,8 +56,8 @@ export async function checkQuota(
   }
 
   const user = authResult as ValidatedUser;
+  const billingIdentityKey = getBillingIdentityKey(user);
   const yearMonth = getCurrentYearMonth();
-  const documentId = getUsageDocumentId(user.userId, yearMonth);
 
   const userIsAdmin = isAdminUser(user.email, user.userId);
 
@@ -49,18 +68,10 @@ export async function checkQuota(
     let totalUsed = 0;
     let purchasedCredits = 0;
 
-    // Get monthly usage
-    try {
-      // Partition key is userId, document id is "userId:YYYY-MM"
-      const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
-      if (resource) {
-        totalUsed = resource.totalGenerations || 0;
-      }
-    } catch (error: unknown) {
-      // If document doesn't exist, user has 0 usage
-      if (!isCosmosNotFound(error)) {
-        throw error;
-      }
+    totalUsed = await readTotalUsedForIdentity(usageContainer, billingIdentityKey, yearMonth);
+    if (billingIdentityKey !== user.userId) {
+      // Rollout safety: include legacy userId-keyed usage for the current month.
+      totalUsed += await readTotalUsedForIdentity(usageContainer, user.userId, yearMonth);
     }
 
     // Get purchased credits (non-expiring)

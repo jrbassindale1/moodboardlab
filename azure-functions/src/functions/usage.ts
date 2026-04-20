@@ -16,6 +16,56 @@ import {
   UsageDocument,
   isCosmosNotFound,
 } from '../shared/cosmosClient';
+import { getBillingIdentityKey } from '../shared/billingIdentity';
+
+type GenerationCounts = UsageDocument['generationCounts'];
+
+function addGenerationCounts(base: GenerationCounts, next?: GenerationCounts): GenerationCounts {
+  if (!next) return base;
+  return {
+    moodboard: base.moodboard + (next.moodboard || 0),
+    applyMaterials: base.applyMaterials + (next.applyMaterials || 0),
+    upscale: base.upscale + (next.upscale || 0),
+    materialIcon: base.materialIcon + (next.materialIcon || 0),
+    materialDetection: base.materialDetection + (next.materialDetection || 0),
+    sustainabilityBriefing: base.sustainabilityBriefing + (next.sustainabilityBriefing || 0),
+    precedentSearch: base.precedentSearch + (next.precedentSearch || 0),
+  };
+}
+
+async function readUsageForIdentity(
+  usageContainer: ReturnType<typeof getContainer>,
+  identityKey: string,
+  yearMonth: string
+): Promise<{ counts: GenerationCounts; total: number }> {
+  const empty: GenerationCounts = {
+    moodboard: 0,
+    applyMaterials: 0,
+    upscale: 0,
+    materialIcon: 0,
+    materialDetection: 0,
+    sustainabilityBriefing: 0,
+    precedentSearch: 0,
+  };
+
+  const documentId = getUsageDocumentId(identityKey, yearMonth);
+
+  try {
+    const { resource } = await usageContainer.item(documentId, identityKey).read<UsageDocument>();
+    return {
+      counts: resource?.generationCounts || empty,
+      total: resource?.totalGenerations || 0,
+    };
+  } catch (error: unknown) {
+    if (!isCosmosNotFound(error)) {
+      throw error;
+    }
+    return {
+      counts: empty,
+      total: 0,
+    };
+  }
+}
 
 export async function usage(
   req: HttpRequest,
@@ -34,8 +84,8 @@ export async function usage(
   }
 
   const user = authResult as ValidatedUser;
+  const billingIdentityKey = getBillingIdentityKey(user);
   const yearMonth = getCurrentYearMonth();
-  const documentId = getUsageDocumentId(user.userId, yearMonth);
 
   try {
     const usageContainer = getContainer('usage');
@@ -51,18 +101,15 @@ export async function usage(
     };
     let total = 0;
 
-    try {
-      // Partition key is userId, document id is "userId:YYYY-MM"
-      const { resource } = await usageContainer.item(documentId, user.userId).read<UsageDocument>();
-      if (resource) {
-        usageData = resource.generationCounts || usageData;
-        total = resource.totalGenerations || 0;
-      }
-    } catch (error: unknown) {
-      // If document doesn't exist, return zeros
-      if (!isCosmosNotFound(error)) {
-        throw error;
-      }
+    const billingUsage = await readUsageForIdentity(usageContainer, billingIdentityKey, yearMonth);
+    usageData = addGenerationCounts(usageData, billingUsage.counts);
+    total += billingUsage.total;
+
+    if (billingIdentityKey !== user.userId) {
+      // Rollout safety: include legacy userId-keyed usage for the current month.
+      const legacyUsage = await readUsageForIdentity(usageContainer, user.userId, yearMonth);
+      usageData = addGenerationCounts(usageData, legacyUsage.counts);
+      total += legacyUsage.total;
     }
 
     return {
