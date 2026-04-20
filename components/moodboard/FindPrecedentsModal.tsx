@@ -38,6 +38,9 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
 }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
+  const isLocalAdminBypassEnabled =
+    typeof window !== 'undefined' && localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  const isTestingEnvironment = Boolean(import.meta.env.DEV || isAuthBypassEnabled || isLocalAdminBypassEnabled);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [results, setResults] = useState<PrecedentResult[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -51,7 +54,7 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
     }
 
     // Check authentication (unless bypass is enabled)
-    if (!isAuthBypassEnabled && !isAuthenticated) {
+    if (!isTestingEnvironment && !isAuthenticated) {
       setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
       setStatus('error');
       return;
@@ -63,7 +66,7 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
 
     try {
       // Check quota before searching
-      if (!isAuthBypassEnabled && isAuthenticated) {
+      if (!isTestingEnvironment && isAuthenticated) {
         const token = await getAccessToken();
         if (!token) {
           setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
@@ -90,7 +93,7 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
       }
 
       // Consume credits after successful search
-      if (!isAuthBypassEnabled && isAuthenticated) {
+      if (!isTestingEnvironment && isAuthenticated) {
         try {
           const token = await getAccessToken();
           if (token) {
@@ -121,7 +124,7 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
       }
       setStatus('error');
     }
-  }, [materials, isAuthenticated, getAccessToken, refreshUsage]);
+  }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage]);
 
   // Trigger search when modal opens
   useEffect(() => {

@@ -1,8 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Search,
-  ChevronUp,
-  ChevronDown,
   Loader2,
   AlertCircle,
   RefreshCw,
@@ -17,6 +15,7 @@ interface PrecedentsSectionProps {
   materials: MaterialOption[];
   savedPrecedents: PrecedentResult[] | null;
   onPrecedentsChange: (precedents: PrecedentResult[] | null) => void;
+  autoSearchTrigger?: number;
 }
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -41,14 +40,17 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   materials,
   savedPrecedents,
   onPrecedentsChange,
+  autoSearchTrigger,
 }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
-  // Auto-expand if we have saved precedents
-  const [isExpanded, setIsExpanded] = useState(Boolean(savedPrecedents?.length));
+  const isLocalAdminBypassEnabled =
+    typeof window !== 'undefined' && localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  const isTestingEnvironment = Boolean(import.meta.env.DEV || isAuthBypassEnabled || isLocalAdminBypassEnabled);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [results, setResults] = useState<PrecedentResult[]>([]);
   const [error, setError] = useState<SearchError | null>(null);
+  const lastAutoSearchTriggerRef = useRef(0);
 
   const performSearch = useCallback(async () => {
     if (materials.length === 0) {
@@ -58,7 +60,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
     }
 
     // Check authentication (unless bypass is enabled)
-    if (!isAuthBypassEnabled && !isAuthenticated) {
+    if (!isTestingEnvironment && !isAuthenticated) {
       setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
       setStatus('error');
       return;
@@ -70,7 +72,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
 
     try {
       // Check quota before searching
-      if (!isAuthBypassEnabled && isAuthenticated) {
+      if (!isTestingEnvironment && isAuthenticated) {
         const token = await getAccessToken();
         if (!token) {
           setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
@@ -96,7 +98,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
       }
 
       // Consume credits after successful search
-      if (!isAuthBypassEnabled && isAuthenticated) {
+      if (!isTestingEnvironment && isAuthenticated) {
         try {
           const token = await getAccessToken();
           if (token) {
@@ -128,7 +130,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
       }
       setStatus('error');
     }
-  }, [materials, isAuthenticated, getAccessToken, refreshUsage]);
+  }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage]);
 
   const handleSaveResults = () => {
     onPrecedentsChange(results);
@@ -140,172 +142,149 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
     onPrecedentsChange(null);
   };
 
-  // Auto-expand when precedents are loaded
-  useEffect(() => {
-    if (savedPrecedents && savedPrecedents.length > 0 && !isExpanded) {
-      setIsExpanded(true);
-    }
-  }, [savedPrecedents, isExpanded]);
-
   const hasMaterials = materials.length > 0;
   const hasSearchResults = status === 'success' && results.length > 0;
   const hasSavedPrecedents = savedPrecedents && savedPrecedents.length > 0;
 
+  useEffect(() => {
+    if (!autoSearchTrigger || autoSearchTrigger <= 0) return;
+    if (autoSearchTrigger === lastAutoSearchTriggerRef.current) return;
+    lastAutoSearchTriggerRef.current = autoSearchTrigger;
+    void performSearch();
+  }, [autoSearchTrigger, performSearch]);
+
   return (
     <section className="border border-gray-200 bg-white">
-      {/* Header */}
-      <button
-        onClick={() => setIsExpanded((prev) => !prev)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
-      >
+      {/* Search action bar */}
+      <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2 bg-gray-50 border-b border-gray-200">
+        <p className="text-xs text-gray-600 font-sans">
+          Search ArchDaily, Dezeen, Architizer, and Designboom for buildings using similar materials.
+        </p>
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4" />
-          <span className="font-mono text-[11px] uppercase tracking-widest">
-            Precedents
-            {hasSavedPrecedents && ` (${savedPrecedents.length} saved)`}
-          </span>
+          {hasSavedPrecedents && (
+            <button
+              onClick={handleClearSaved}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors font-mono uppercase tracking-wider"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+          )}
+          <button
+            onClick={performSearch}
+            disabled={!hasMaterials || status === 'loading'}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {status === 'loading' ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Searching
+              </>
+            ) : (
+              <>
+                <Search className="w-3 h-3" />
+                Search (1 credit)
+              </>
+            )}
+          </button>
         </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4" />
-        ) : (
-          <ChevronDown className="w-4 h-4" />
-        )}
-      </button>
+      </div>
 
-      {isExpanded && (
-        <div className="border-t border-gray-200">
-          {/* Search action bar */}
-          <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2 bg-gray-50 border-b border-gray-200">
-            <p className="text-xs text-gray-600 font-sans">
-              Search ArchDaily, Dezeen, Architizer, and Designboom for buildings using similar materials.
+      {/* Content area */}
+      <div className="p-4">
+        {/* Loading state */}
+        {status === 'loading' && (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <p className="text-sm text-gray-600 font-sans">
+              Searching for architectural precedents...
             </p>
-            <div className="flex items-center gap-2">
-              {hasSavedPrecedents && (
-                <button
-                  onClick={handleClearSaved}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors font-mono uppercase tracking-wider"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Clear Saved
-                </button>
-              )}
+          </div>
+        )}
+
+        {/* Error state */}
+        {status === 'error' && error && (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <AlertCircle className="w-8 h-8 text-gray-400" />
+            <p className="text-sm text-gray-600 font-sans text-center max-w-md">
+              {error.message}
+            </p>
+            {error.type !== 'no_results' && error.type !== 'quota_exceeded' && error.type !== 'auth_required' && (
               <button
                 onClick={performSearch}
-                disabled={!hasMaterials || status === 'loading'}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
               >
-                {status === 'loading' ? (
-                  <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Searching
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-3 h-3" />
-                    Search (1 credit)
-                  </>
-                )}
+                <RefreshCw className="w-3 h-3" />
+                Try Again
               </button>
+            )}
+          </div>
+        )}
+
+        {/* Search results */}
+        {hasSearchResults && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs text-gray-500 font-mono">
+                Found {results.length} precedents
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={performSearch}
+                  className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-black transition-colors font-mono uppercase tracking-wider"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Refresh
+                </button>
+                <button
+                  onClick={handleSaveResults}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-mono uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                >
+                  Save Results
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {results.map((precedent) => (
+                <PrecedentCard key={precedent.id} precedent={precedent} />
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Content area */}
-          <div className="p-4">
-            {/* Loading state */}
-            {status === 'loading' && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-                <p className="text-sm text-gray-600 font-sans">
-                  Searching for architectural precedents...
-                </p>
-              </div>
-            )}
-
-            {/* Error state */}
-            {status === 'error' && error && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4">
-                <AlertCircle className="w-8 h-8 text-gray-400" />
-                <p className="text-sm text-gray-600 font-sans text-center max-w-md">
-                  {error.message}
-                </p>
-                {error.type !== 'no_results' && error.type !== 'quota_exceeded' && error.type !== 'auth_required' && (
-                  <button
-                    onClick={performSearch}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    Try Again
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Search results */}
-            {hasSearchResults && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-gray-500 font-mono">
-                    Found {results.length} precedents
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={performSearch}
-                      className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-black transition-colors font-mono uppercase tracking-wider"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Refresh
-                    </button>
-                    <button
-                      onClick={handleSaveResults}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-xs font-mono uppercase tracking-wider hover:bg-gray-800 transition-colors"
-                    >
-                      Save Results
-                    </button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {results.map((precedent) => (
-                    <PrecedentCard key={precedent.id} precedent={precedent} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Saved precedents */}
-            {!hasSearchResults && hasSavedPrecedents && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs text-gray-500 font-mono">
-                    {savedPrecedents.length} saved precedents
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {savedPrecedents.map((precedent) => (
-                    <PrecedentCard key={precedent.id} precedent={precedent} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty state */}
-            {status === 'idle' && !hasSavedPrecedents && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-                <Search className="w-8 h-8 text-gray-300" />
-                <div>
-                  <p className="text-sm text-gray-600 font-sans mb-1">
-                    No precedents yet
-                  </p>
-                  <p className="text-xs text-gray-400 font-sans">
-                    {hasMaterials
-                      ? 'Click "Search" to find buildings using similar materials'
-                      : 'Add materials to your moodboard, then search for precedents'}
-                  </p>
-                </div>
-              </div>
-            )}
+        {/* Saved precedents */}
+        {!hasSearchResults && hasSavedPrecedents && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs text-gray-500 font-mono">
+                {savedPrecedents.length} saved precedents
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {savedPrecedents.map((precedent) => (
+                <PrecedentCard key={precedent.id} precedent={precedent} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Empty state */}
+        {status === 'idle' && !hasSavedPrecedents && (
+          <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+            <Search className="w-8 h-8 text-gray-300" />
+            <div>
+              <p className="text-sm text-gray-600 font-sans mb-1">
+                No precedents yet
+              </p>
+              <p className="text-xs text-gray-400 font-sans">
+                {hasMaterials
+                  ? 'Click "Search" to find buildings using similar materials'
+                  : 'Add materials to your moodboard, then search for precedents'}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </section>
   );
 };

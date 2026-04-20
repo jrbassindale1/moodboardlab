@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
+  RefreshCw,
+  Wand2,
 } from 'lucide-react';
 import {
   Radar,
@@ -26,26 +28,76 @@ interface SustainabilityBriefingSectionProps {
   sustainabilityBriefing: SustainabilityBriefingResponse | null;
   briefingPayload: SustainabilityBriefingPayload | null;
   isBriefingLoading: boolean;
+  isGenerating?: boolean;
   exportingBriefingPdf: boolean;
   exportingMaterialsSheetPdf: boolean;
   board: MaterialOption[];
   onDownloadBriefingPdf: () => void;
   onDownloadMaterialsSheetPdf: () => void;
+  isInvalidated?: boolean;
+  onGenerateBriefing?: () => void;
 }
 
 const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps> = ({
   sustainabilityBriefing,
   briefingPayload,
   isBriefingLoading,
+  isGenerating,
   exportingBriefingPdf,
   exportingMaterialsSheetPdf,
   board,
   onDownloadBriefingPdf,
   onDownloadMaterialsSheetPdf,
+  isInvalidated,
+  onGenerateBriefing,
 }) => {
   const [fullReportNotice, setFullReportNotice] = useState<string | null>(null);
 
-  if (!sustainabilityBriefing && !isBriefingLoading) return null;
+  // Show empty state when no briefing exists or briefing is invalidated
+  if (!sustainabilityBriefing && !isBriefingLoading) {
+    return (
+      <div className="border border-gray-200 bg-white p-8 text-center space-y-4">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+            <Leaf className="w-6 h-6 text-emerald-600" />
+          </div>
+        </div>
+        <div>
+          <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-900 mb-2">
+            Sustainability Analysis
+          </h3>
+          <p className="text-sm text-gray-600 max-w-md mx-auto">
+            Generate a UK-focused sustainability briefing for your selected materials, including lifecycle impact analysis, hero materials, and specifier recommendations.
+          </p>
+        </div>
+        {board.length > 0 && onGenerateBriefing && (
+          <button
+            onClick={onGenerateBriefing}
+            disabled={Boolean(isGenerating)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4" />
+                Generate Analysis
+              </>
+            )}
+          </button>
+        )}
+        {board.length === 0 && (
+          <p className="text-xs text-gray-400">Add materials to generate an analysis</p>
+        )}
+      </div>
+    );
+  }
+
+  // Show update available state when briefing exists but is invalidated
+  const showUpdateButton = sustainabilityBriefing && isInvalidated && onGenerateBriefing;
 
   return (
     <div
@@ -61,9 +113,23 @@ const SustainabilityBriefingSection: React.FC<SustainabilityBriefingSectionProps
           <span className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
             Sustainability Briefing
           </span>
+          {showUpdateButton && (
+            <span className="px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200">
+              Update Available
+            </span>
+          )}
         </div>
         {sustainabilityBriefing && (
           <div className="flex items-center gap-2">
+            {showUpdateButton && (
+              <button
+                onClick={onGenerateBriefing}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-100 rounded hover:bg-amber-200 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Regenerate
+              </button>
+            )}
             <button
               onClick={onDownloadBriefingPdf}
               disabled={exportingBriefingPdf}

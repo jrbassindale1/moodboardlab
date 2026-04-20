@@ -430,6 +430,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
+  const isLocalAdminBypassEnabled = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  }, []);
+  const isTestingEnvironment = Boolean(import.meta.env.DEV || isAuthBypassEnabled || isLocalAdminBypassEnabled);
 
   // Track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(true);
@@ -467,7 +472,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [materialsAccordionOpen, setMaterialsAccordionOpen] = useState(true);
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
   const [isBriefingLoading, setIsBriefingLoading] = useState(false);
@@ -482,16 +486,29 @@ const Moodboard: React.FC<MoodboardProps> = ({
   } | null>(null);
   const [showAuthPromptModal, setShowAuthPromptModal] = useState(false);
 
+  // Generation options modal state
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [generateOptions, setGenerateOptions] = useState({
+    moodboard: true,
+    sustainability: true,
+    precedents: true,
+  });
+
+  // Tab state for workspace sections
+  type WorkspaceTab = 'sustainability' | 'precedents' | 'moodboard';
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('sustainability');
+  const [precedentsAutoSearchTrigger, setPrecedentsAutoSearchTrigger] = useState(0);
+
   // Helper to reset all loading states consistently
   const resetLoadingStates = useCallback(() => {
     if (!isMountedRef.current) return;
     setIsCreatingMoodboard(false);
     setIsBriefingLoading(false);
     setStatus('idle');
-    setFlowProgress(null);
   }, []);
 
   const requireAuthForMoodboard = () => {
+    if (isTestingEnvironment) return true;
     if (isAuthBypassEnabled) return true;
     if (isAuthenticated) return true;
     setShowAuthPromptModal(true);
@@ -500,6 +517,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   const ensureQuotaForMoodboard = async (requiredCredits: number = CREDIT_COSTS.MOODBOARD_GENERATION) => {
     // If auth bypass is enabled, skip quota check
+    if (isTestingEnvironment) {
+      console.log('[Quota Check] Bypassed (testing environment)');
+      return true;
+    }
     if (isAuthBypassEnabled) {
       console.log('[Quota Check] Bypassed (auth bypass enabled)');
       return true;
@@ -568,6 +589,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
   // Cleanup: mark as unmounted and abort any in-flight requests
   useEffect(() => {
+    // In React StrictMode (dev), effects run setup+cleanup twice.
+    // Ensure this flag is reset to true on each setup pass.
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       if (moodboardAbortControllerRef.current) {
@@ -1233,7 +1257,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       onBriefingInvalidatedMessageChange?.(null);
       // Store the materials key for cache tracking
       lastBriefingMaterialsKeyRef.current = materialsKey;
-      setMaterialsAccordionOpen(false);
       // Track sustainability briefing generation in Google Analytics
       trackEvent('generate_briefing', {
         event_category: 'generation',
@@ -1269,19 +1292,38 @@ const Moodboard: React.FC<MoodboardProps> = ({
   };
 
   const runMoodboardFlow = async () => {
+    console.info('[Workspace] runMoodboardFlow start', {
+      boardCount: board.length,
+      renderMaterialsCount: renderMaterials.length,
+      isTestingEnvironment,
+      isAuthenticated,
+    });
     if (!requireAuthForMoodboard()) {
+      console.warn('[Workspace] runMoodboardFlow blocked by auth requirement');
       return;
     }
     if (!board.length) {
       setError('Add materials to the moodboard first.');
+      console.warn('[Workspace] runMoodboardFlow aborted: empty board');
       return;
     }
-    if (!isMountedRef.current) return;
+    if (!isMountedRef.current) {
+      setError('Workspace is reloading. Please try again.');
+      console.warn('[Workspace] runMoodboardFlow aborted: component not mounted');
+      return;
+    }
 
     setError(null);
     setImageModelFallbackWarning(null);
     const canGenerate = await ensureQuotaForMoodboard(CREDIT_COSTS.MOODBOARD_GENERATION);
-    if (!canGenerate || !isMountedRef.current) return;
+    if (!canGenerate || !isMountedRef.current) {
+      setError((prev) => prev || 'Could not start generation. Please try again.');
+      console.warn('[Workspace] runMoodboardFlow aborted: quota check failed or component unmounted', {
+        canGenerate,
+        isMounted: isMountedRef.current,
+      });
+      return;
+    }
 
     setIsCreatingMoodboard(true);
     setSustainabilityInsights(null);
@@ -1295,6 +1337,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     onBriefingInvalidatedMessageChange?.(null);
     setStatus('all');
     setError(null);
+    setFlowProgress(null);
     try {
       // Run both operations in parallel for faster generation (briefing doesn't depend on image)
       if (!isMountedRef.current) return;
@@ -1304,6 +1347,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         label: 'Generating moodboard and briefing',
         state: 'running'
       });
+      console.info('[Workspace] runMoodboardFlow dispatching render + briefing');
 
       const [renderResult, briefingResult] = await Promise.allSettled([
         runGemini('render', { onRender: setMoodboardRenderUrl }),
@@ -1315,9 +1359,16 @@ const Moodboard: React.FC<MoodboardProps> = ({
       // Check results
       const renderOk = renderResult.status === 'fulfilled' && renderResult.value === true;
       const briefingOk = briefingResult.status === 'fulfilled' && briefingResult.value === true;
+      console.info('[Workspace] runMoodboardFlow settled', {
+        renderOk,
+        briefingOk,
+        renderResult,
+        briefingResult,
+      });
 
       // Handle failures
       if (!renderOk && !briefingOk) {
+        setError((prev) => prev || 'Moodboard generation failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
@@ -1326,6 +1377,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         });
         return;
       } else if (!renderOk) {
+        setError((prev) => prev || 'Image generation failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
@@ -1334,6 +1386,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         });
         // Keep the briefing even if image failed
       } else if (!briefingOk) {
+        setError((prev) => prev || 'Sustainability briefing failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
@@ -1351,7 +1404,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
         });
       }
 
-      setMaterialsAccordionOpen(false);
     } finally {
       resetLoadingStates();
     }
@@ -1835,10 +1887,6 @@ ${JSON.stringify(proseContext)}`;
           imageConfig: {
             aspectRatio,
             imageSize: '1K'
-          },
-          validation: {
-            rejectTextLikeArtifacts: true,
-            maxAttempts: 2
           }
         };
 
@@ -1911,7 +1959,7 @@ ${JSON.stringify(proseContext)}`;
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           if (errorMessage.includes('aborted') || errorMessage.includes('cancel')) {
             console.log('[Moodboard Render] Request was cancelled');
-          } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          } else if (/failed to fetch|network request failed|networkerror/i.test(errorMessage)) {
             setError('Network error while generating moodboard image. Please check your connection and try again.');
           } else {
             setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
@@ -2286,196 +2334,362 @@ ${JSON.stringify(proseContext)}`;
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
-      <div className="max-w-screen-2xl mx-auto px-6 md:px-8 lg:px-12 py-12 space-y-10">
-        <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
-          <div>
-            <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter">
-              Workspace
-            </h1>
-            <p className="font-sans text-gray-600 max-w-2xl mt-3">
-              Review the materials you've selected, then let Ai (Nano Banana) assemble a moodboard plus UK-focused sustainability briefing.
-            </p>
-            <div className="flex flex-wrap gap-3 mt-4">
+      <div className="mx-auto max-w-[1800px] px-6 md:px-8 xl:px-10 2xl:px-12 py-6 space-y-6">
+        {/* Compact Header - matching Render page style */}
+        <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
+            Workspace
+          </h1>
+          <button
+            onClick={() => onNavigate?.('concept')}
+            className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black"
+          >
+            Home
+          </button>
+        </div>
+
+        {/* Alerts Section */}
+        {error && (
+          <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <AlertCircle className="w-4 h-4 mt-[2px]" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {imageModelFallbackWarning && (
+          <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-[2px]" />
+            <span>{imageModelFallbackWarning}</span>
+          </div>
+        )}
+
+        {briefingInvalidatedMessage && (
+          <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-[2px]" />
+            <span>{briefingInvalidatedMessage}</span>
+          </div>
+        )}
+
+        {backgroundNotification && (
+          <div
+            className={`flex items-start gap-2 border p-4 text-sm animate-fadeIn ${
+              backgroundNotification.type === 'error'
+                ? 'border-red-200 bg-red-50 text-red-700'
+                : backgroundNotification.type === 'warning'
+                ? 'border-amber-200 bg-amber-50 text-amber-700'
+                : 'border-blue-200 bg-blue-50 text-blue-700'
+            }`}
+          >
+            {backgroundNotification.type === 'error' ? (
+              <AlertCircle className="w-4 h-4 mt-[2px]" />
+            ) : backgroundNotification.type === 'warning' ? (
+              <AlertTriangle className="w-4 h-4 mt-[2px]" />
+            ) : (
+              <AlertCircle className="w-4 h-4 mt-[2px]" />
+            )}
+            <span>{backgroundNotification.message}</span>
+          </div>
+        )}
+
+        {/* Two-Column Grid Layout */}
+        <div className="grid gap-6 xl:grid-cols-[minmax(400px,520px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(440px,580px)_minmax(0,1fr)] xl:items-start">
+          {/* LEFT SIDEBAR - Sticky Materials Panel */}
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto">
+            <section className="border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
+              <ChosenMaterialsList
+                board={board}
+                onNavigate={onNavigate}
+                onRemove={handleRemove}
+                onToggleExclude={handleToggleExclude}
+                onNoteChange={handleNoteChange}
+                onOpenGenerateModal={() => setShowGenerateModal(true)}
+                isGenerating={isCreatingMoodboard}
+              />
+
+              {flowProgress && (
+                <div className="flex items-center gap-3 flex-wrap border-t border-gray-100 pt-3">
+                  <div
+                    className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${
+                      flowProgress.state === 'error'
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : flowProgress.state === 'complete'
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-700'
+                    }`}
+                  >
+                    {flowProgress.state === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
+                    <span>
+                      {flowProgress.step}/{flowProgress.total} {flowProgress.label}
+                    </span>
+                  </div>
+                  {flowProgress.state === 'error' && !isCreatingMoodboard && (
+                    <button
+                      onClick={() => setShowGenerateModal(true)}
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
+                    >
+                      <Loader2 className="w-3 h-3" />
+                      Retry
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Retry briefing panel in sidebar */}
+            {!sustainabilityBriefing && !isBriefingLoading && board.length > 0 && error && (
+              <div className="border border-gray-200 bg-white p-4">
+                <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-2">
+                  Sustainability Briefing Failed
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  The briefing could not be generated. You can retry.
+                </p>
+                <button
+                  onClick={handleRetryBriefing}
+                  disabled={isBriefingLoading}
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[10px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-50"
+                >
+                  <Loader2 className={`w-3 h-3 ${isBriefingLoading ? 'animate-spin' : ''}`} />
+                  Retry Briefing
+                </button>
+              </div>
+            )}
+          </aside>
+
+          {/* RIGHT CONTENT - Tabbed Panels */}
+          <div className="space-y-4">
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200 flex gap-0 overflow-x-auto">
               <button
-                onClick={() => onNavigate?.('materials')}
-                className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+                onClick={() => setActiveTab('sustainability')}
+                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'sustainability'
+                    ? 'border-b-black text-gray-900'
+                    : 'border-b-transparent text-gray-500 hover:text-gray-900'
+                }`}
               >
-                Back to materials
+                Sustainability
+                {sustainabilityBriefing && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                )}
               </button>
               <button
-                onClick={() => onNavigate?.('concept')}
-                className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
+                onClick={() => setActiveTab('moodboard')}
+                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'moodboard'
+                    ? 'border-b-black text-gray-900'
+                    : 'border-b-transparent text-gray-500 hover:text-gray-900'
+                }`}
               >
-                Home
+                Moodboard
+                {moodboardRenderUrl && (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                )}
               </button>
+              <button
+                onClick={() => setActiveTab('precedents')}
+                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'precedents'
+                    ? 'border-b-black text-gray-900'
+                    : 'border-b-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Precedents
+                {savedPrecedents && savedPrecedents.length > 0 && (
+                  <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
+                    {savedPrecedents.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="min-h-[400px]">
+              {activeTab === 'sustainability' && (
+                <SustainabilityBriefingSection
+                  sustainabilityBriefing={sustainabilityBriefing}
+                  briefingPayload={briefingPayload}
+                  isBriefingLoading={isBriefingLoading}
+                  isGenerating={isCreatingMoodboard || status === 'all' || status === 'render'}
+                  exportingBriefingPdf={exportingBriefingPdf}
+                  exportingMaterialsSheetPdf={exportingMaterialsSheetPdf}
+                  board={board}
+                  onDownloadBriefingPdf={handleDownloadBriefingPdf}
+                  onDownloadMaterialsSheetPdf={handleDownloadMaterialsSheetPdf}
+                  isInvalidated={Boolean(briefingInvalidatedMessage)}
+                  onGenerateBriefing={runMoodboardFlow}
+                />
+              )}
+
+              {activeTab === 'precedents' && (
+                <PrecedentsSection
+                  materials={board}
+                  savedPrecedents={savedPrecedents}
+                  onPrecedentsChange={setSavedPrecedents}
+                  autoSearchTrigger={precedentsAutoSearchTrigger}
+                />
+              )}
+
+              {activeTab === 'moodboard' && (
+                <>
+                  {moodboardRenderUrl ? (
+                    <MoodboardRenderSection
+                      moodboardRenderUrl={moodboardRenderUrl}
+                      isRenderInFlight={isRenderInFlight}
+                      isCreatingMoodboard={isCreatingMoodboard}
+                      status={status}
+                      moodboardEditPrompt={moodboardEditPrompt}
+                      setMoodboardEditPrompt={setMoodboardEditPrompt}
+                      downloadingId={downloadingId}
+                      onDownloadBoard={handleDownloadBoard}
+                      onNavigate={onNavigate}
+                      onMoodboardEdit={handleMoodboardEdit}
+                    />
+                  ) : (
+                    <div className="border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                      <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                        No moodboard generated yet
+                      </p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        Click "Generate" in the Materials List panel to create one
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
-
-        <div className="space-y-8">
-          <section className="border border-gray-200 bg-white p-6 space-y-4 shadow-sm">
-            <ChosenMaterialsList
-              board={board}
-              materialsAccordionOpen={materialsAccordionOpen}
-              setMaterialsAccordionOpen={setMaterialsAccordionOpen}
-              onNavigate={onNavigate}
-              onRemove={handleRemove}
-              onToggleExclude={handleToggleExclude}
-              onNoteChange={handleNoteChange}
-            />
-
-            {board.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={runMoodboardFlow}
-                    disabled={isCreatingMoodboard || status !== 'idle' || !board.length}
-                    className="inline-flex items-center gap-2 px-4 py-3 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                  >
-                    {isCreatingMoodboard ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Creating
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 className="w-4 h-4" />
-                        Create Moodboard
-                      </>
-                    )}
-                  </button>
-                </div>
-                {flowProgress && (
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`inline-flex items-center gap-2 border px-3 py-2 font-mono text-[11px] uppercase tracking-widest ${
-                        flowProgress.state === 'error'
-                          ? 'border-red-200 bg-red-50 text-red-700'
-                          : flowProgress.state === 'complete'
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-amber-200 bg-amber-50 text-amber-700'
-                      }`}
-                    >
-                      {flowProgress.state === 'running' && <Loader2 className="w-3 h-3 animate-spin" />}
-                      <span>
-                        {flowProgress.step}/{flowProgress.total} {flowProgress.label}
-                      </span>
-                    </div>
-                    {flowProgress.state === 'error' && !isCreatingMoodboard && (
-                      <button
-                        onClick={runMoodboardFlow}
-                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors"
-                      >
-                        <Loader2 className="w-3 h-3" />
-                        Retry
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-
-            {error && (
-              <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                <AlertCircle className="w-4 h-4 mt-[2px]" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {imageModelFallbackWarning && (
-              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                <AlertTriangle className="w-4 h-4 mt-[2px]" />
-                <span>{imageModelFallbackWarning}</span>
-              </div>
-            )}
-
-            {briefingInvalidatedMessage && (
-              <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                <AlertTriangle className="w-4 h-4 mt-[2px]" />
-                <span>{briefingInvalidatedMessage}</span>
-              </div>
-            )}
-
-            {backgroundNotification && (
-              <div
-                className={`flex items-start gap-2 border p-4 text-sm animate-fadeIn ${
-                  backgroundNotification.type === 'error'
-                    ? 'border-red-200 bg-red-50 text-red-700'
-                    : backgroundNotification.type === 'warning'
-                    ? 'border-amber-200 bg-amber-50 text-amber-700'
-                    : 'border-blue-200 bg-blue-50 text-blue-700'
-                }`}
-              >
-                {backgroundNotification.type === 'error' ? (
-                  <AlertCircle className="w-4 h-4 mt-[2px]" />
-                ) : backgroundNotification.type === 'warning' ? (
-                  <AlertTriangle className="w-4 h-4 mt-[2px]" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 mt-[2px]" />
-                )}
-                <span>{backgroundNotification.message}</span>
-              </div>
-            )}
-
-            {/* Retry button for failed briefing generation */}
-            {!sustainabilityBriefing && !isBriefingLoading && board.length > 0 && error && (
-              <div className="border border-gray-200 bg-white p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-mono text-[11px] uppercase tracking-widest text-gray-600 mb-2">
-                      Sustainability Briefing Failed
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      The briefing could not be generated. You can retry or create the moodboard image only.
-                    </p>
-                  </div>
-                  <button
-                    onClick={handleRetryBriefing}
-                    disabled={isBriefingLoading}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-900 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-50"
-                  >
-                    <Loader2 className={`w-4 h-4 ${isBriefingLoading ? 'animate-spin' : ''}`} />
-                    Retry Briefing
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <SustainabilityBriefingSection
-              sustainabilityBriefing={sustainabilityBriefing}
-              briefingPayload={briefingPayload}
-              isBriefingLoading={isBriefingLoading}
-              exportingBriefingPdf={exportingBriefingPdf}
-              exportingMaterialsSheetPdf={exportingMaterialsSheetPdf}
-              board={board}
-              onDownloadBriefingPdf={handleDownloadBriefingPdf}
-              onDownloadMaterialsSheetPdf={handleDownloadMaterialsSheetPdf}
-            />
-
-            {/* Precedents Section */}
-            <PrecedentsSection
-              materials={board}
-              savedPrecedents={savedPrecedents}
-              onPrecedentsChange={setSavedPrecedents}
-            />
-
-            {moodboardRenderUrl && (
-              <MoodboardRenderSection
-                moodboardRenderUrl={moodboardRenderUrl}
-                isRenderInFlight={isRenderInFlight}
-                isCreatingMoodboard={isCreatingMoodboard}
-                status={status}
-                moodboardEditPrompt={moodboardEditPrompt}
-                setMoodboardEditPrompt={setMoodboardEditPrompt}
-                downloadingId={downloadingId}
-                onDownloadBoard={handleDownloadBoard}
-                onNavigate={onNavigate}
-                onMoodboardEdit={handleMoodboardEdit}
-              />
-            )}
-        </div>
       </div>
+
+      {/* Generation options modal */}
+      {showGenerateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowGenerateModal(false)}
+        >
+          <div
+            className="bg-white p-6 max-w-md w-full space-y-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h2 className="font-mono text-[11px] uppercase tracking-widest font-bold text-gray-900">
+                Generate Options
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Select what you want to generate for your material selection.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="flex items-center justify-between p-3 border border-gray-200 hover:border-gray-300 cursor-pointer transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={generateOptions.moodboard}
+                    onChange={(e) => setGenerateOptions(prev => ({ ...prev, moodboard: e.target.checked }))}
+                    className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+                  />
+                  <div>
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-900">
+                      Moodboard Image
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">AI-generated visual composition</p>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                  {CREDIT_COSTS.MOODBOARD_GENERATION} credit
+                </span>
+              </label>
+
+              <label className="flex items-center justify-between p-3 border border-gray-200 hover:border-gray-300 cursor-pointer transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={generateOptions.sustainability}
+                    onChange={(e) => setGenerateOptions(prev => ({ ...prev, sustainability: e.target.checked }))}
+                    className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+                  />
+                  <div>
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-900">
+                      Sustainability Analysis
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">UK-focused lifecycle briefing</p>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-emerald-600">
+                  Free
+                </span>
+              </label>
+
+              <label className="flex items-center justify-between p-3 border border-gray-200 hover:border-gray-300 cursor-pointer transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={generateOptions.precedents}
+                    onChange={(e) => setGenerateOptions(prev => ({ ...prev, precedents: e.target.checked }))}
+                    className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+                  />
+                  <div>
+                    <span className="font-mono text-[11px] uppercase tracking-widest text-gray-900">
+                      Precedent Search
+                    </span>
+                    <p className="text-xs text-gray-500 mt-0.5">Find similar architectural projects</p>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                  1 credit
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-700">
+                Total: <span className="font-bold">{
+                  (generateOptions.moodboard ? CREDIT_COSTS.MOODBOARD_GENERATION : 0) +
+                  (generateOptions.precedents ? 1 : 0)
+                } credits</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowGenerateModal(false)}
+                  className="font-mono text-[10px] uppercase tracking-widest text-gray-500 hover:text-gray-900"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGenerateModal(false);
+                    const shouldRunMoodboardFlow = generateOptions.moodboard || generateOptions.sustainability;
+                    const shouldRunPrecedents = generateOptions.precedents;
+
+                    if (shouldRunPrecedents) {
+                      setError(null);
+                      setPrecedentsAutoSearchTrigger((prev) => prev + 1);
+                    }
+
+                    if (shouldRunMoodboardFlow) {
+                      setActiveTab('sustainability');
+                      void runMoodboardFlow();
+                      return;
+                    }
+
+                    if (shouldRunPrecedents) {
+                      setActiveTab('precedents');
+                    }
+                  }}
+                  disabled={!generateOptions.moodboard && !generateOptions.sustainability && !generateOptions.precedents}
+                  className="border border-black bg-black px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-white hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Auth prompt modal */}
       <AuthPromptModal

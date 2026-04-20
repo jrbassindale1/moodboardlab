@@ -22,11 +22,13 @@ const GEMINI_TEXT_URL =
   process.env.GEMINI_TEXT_ENDPOINT ||
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const RESULTS_PER_QUERY = 10;
-const MAX_QUERIES = 6;
-const MAX_CANDIDATES_FOR_LLM = 15;
+const RESULTS_PER_QUERY = 8;
+const MAX_QUERIES = 4;
+const SHORTLIST_SIZE = 6;            // candidates passed to LLM selector
 const FINAL_RESULTS_COUNT = 3;
-const METADATA_FETCH_TIMEOUT_MS = 8000;
+const METADATA_FETCH_TIMEOUT_MS = 5000;
+const SNIPPET_MAX_CHARS = 200;       // max snippet chars sent to LLM
+const MAX_PER_DOMAIN = 2;            // max candidates per domain in shortlist
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -88,9 +90,16 @@ interface MaterialsBrief {
   searchTerms: string[];
 }
 
+interface LLMSelectedItem {
+  url: string;
+  confidence: number;
+  matchType: 'direct' | 'close' | 'conceptual';
+  matchedMaterials: string[];
+  shortReason: string;
+}
+
 interface LLMSelectionResult {
-  selectedUrls: string[];
-  reasoning?: string;
+  selected: LLMSelectedItem[];
 }
 
 interface LLMSummaryResult {
@@ -171,7 +180,25 @@ const EXCLUDED_URL_PATTERNS = [
   /\/supplier\//i,
   /\/company\//i,
   /\/brand\//i,
-  /co\.,?\s*ltd/i,
+  /co\.\,?\s*ltd/i,
+  // Exclude generic blogs and news sub-paths
+  /\/blog\b/i,
+  /\/blog\//i,
+  /\/news\//i,
+  /\/trend\//i,
+  // Exclude shop / purchase / comparison pages
+  /\/shop\b/i,
+  /\/shop\//i,
+  /\/store\b/i,
+  /\/buy\b/i,
+  /\/review\b/i,
+  /\/compare\b/i,
+  /\/price\b/i,
+  /\/pricing\b/i,
+  // Exclude social/platform aggregator noise
+  /\/pin\//i,
+  /\/saved\//i,
+  /\/collections\//i,
 ];
 
 function isProjectUrl(url: string): boolean {
@@ -181,12 +208,12 @@ function isProjectUrl(url: string): boolean {
     }
   }
 
-  // ArchDaily: requires numeric ID
+  // ArchDaily: requires numeric ID in path
   if (url.includes('archdaily.com')) {
     return /archdaily\.com\/(?:[a-z]{2}\/)?(\d{4,})\//i.test(url);
   }
 
-  // Dezeen: requires date pattern
+  // Dezeen: requires date-stamped path
   if (url.includes('dezeen.com')) {
     return /dezeen\.com\/\d{4}\/\d{2}\/\d{2}\//i.test(url);
   }
@@ -196,7 +223,7 @@ function isProjectUrl(url: string): boolean {
     return /architizer\.com\/projects\//i.test(url);
   }
 
-  // Designboom: requires date in URL
+  // Designboom: requires date in URL slug
   if (url.includes('designboom.com')) {
     return /designboom\.com\/architecture\/[^/]+\/[^/]+-\d{2}-\d{2}-\d{4}/i.test(url);
   }
@@ -204,6 +231,17 @@ function isProjectUrl(url: string): boolean {
   // Divisare: requires /projects/ path
   if (url.includes('divisare.com')) {
     return /divisare\.com\/projects\//i.test(url);
+  }
+
+  // For all other domains: require at least one path segment (filter bare homepages)
+  // and fast-accept known architect portfolio path patterns
+  try {
+    const pathname = new URL(url).pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length < 1) return false;
+    if (/\/(projects?|work|portfolio|architecture)\//i.test(pathname)) return true;
+  } catch {
+    // malformed URL — let through and rely on pre-ranking
   }
 
   return true;
@@ -309,45 +347,48 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
 
 function generateSearchQueries(brief: MaterialsBrief): string[] {
   const queries: string[] = [];
-  const publicationSites =
-    'site:archdaily.com OR site:dezeen.com OR site:architizer.com OR site:designboom.com OR site:divisare.com';
-  // Exclude editorial content from searches
-  const excludeTerms = '-guide -"best of" -roundup -trends -event -exhibition -week';
 
-  // Query 1: Primary material types + house/residence (publication sites)
-  if (brief.materialTypes.length > 0) {
-    const types = brief.materialTypes.slice(0, 2).join(' ');
-    queries.push(`${types} house OR residence ${publicationSites} ${excludeTerms}`);
+  // Top publishers for project pages — Divisare included explicitly
+  const topPublishers =
+    'site:archdaily.com OR site:dezeen.com OR site:divisare.com OR site:architizer.com OR site:designboom.com';
+  // Strong editorial/product exclusions baked into every query
+  const excludeTerms =
+    '-guide -"best of" -roundup -trends -event -exhibition -week -product -supplier -shop';
+
+  const primaryTypes = brief.materialTypes.slice(0, 2).join(' ');
+  const primaryKeyword = brief.keywords[0] ?? primaryTypes;
+
+  // Query 1: Material + residential programme on top publishers (highest hit rate for project pages)
+  if (primaryTypes) {
+    queries.push(
+      `${primaryTypes} house OR residence OR dwelling ${topPublishers} ${excludeTerms}`
+    );
   }
 
-  // Query 2: Special keywords + building (publication sites)
-  if (brief.keywords.length > 0) {
-    const keyword = brief.keywords[0];
-    queries.push(`${keyword} building completed ${publicationSites} ${excludeTerms}`);
+  // Query 2: Specific material term + completed architecture project on top publishers
+  if (primaryKeyword) {
+    queries.push(
+      `${primaryKeyword} completed architecture project ${topPublishers} ${excludeTerms}`
+    );
   }
 
-  // Query 3: Material types + office/commercial (publication sites)
-  if (brief.materialTypes.length > 0) {
-    const types = brief.materialTypes.slice(0, 2).join(' ');
-    queries.push(`${types} office OR museum OR school ${publicationSites} ${excludeTerms}`);
+  // Query 3: Material + civic/cultural/workplace programme on top publishers
+  if (primaryTypes) {
+    queries.push(
+      `${primaryTypes} office OR museum OR school OR library OR community ${topPublishers} ${excludeTerms}`
+    );
   }
 
-  // Query 4: Material + finish combination (open search for architect sites)
-  if (brief.materialTypes.length > 0 && brief.finishes.length > 0) {
-    const type = brief.materialTypes[0];
-    const finish = brief.finishes[0];
-    queries.push(`${finish} ${type} house OR building architect completed ${excludeTerms}`);
-  }
-
-  // Query 5: Material combination (publication sites)
-  if (brief.materialTypes.length >= 2) {
-    const combo = brief.materialTypes.slice(0, 2).join(' and ');
-    queries.push(`${combo} architecture building ${publicationSites} ${excludeTerms}`);
+  // Query 4: Divisare-targeted search — very high precision, only real project pages
+  const divisareTerms =
+    brief.keywords.slice(0, 2).join(' ') || primaryTypes;
+  if (divisareTerms) {
+    queries.push(`${divisareTerms} site:divisare.com`);
   }
 
   // Ensure at least 3 queries
-  if (queries.length < 3 && brief.materialTypes.length > 0) {
-    queries.push(`${brief.materialTypes[0]} facade house residence ${publicationSites} ${excludeTerms}`);
+  if (queries.length < 3 && primaryTypes) {
+    queries.push(`${primaryTypes} architecture project ${topPublishers} ${excludeTerms}`);
   }
 
   return queries.slice(0, MAX_QUERIES);
@@ -387,41 +428,91 @@ async function searchSerperWeb(
 }
 
 // =============================================================================
-// Step 4: Merge and Dedupe Results
+// Step 4: Merge, URL-Normalise, and Dedupe Results
 // =============================================================================
+
+// Shared site-suffix list used for title normalisation
+const SITE_TITLE_SUFFIXES = [
+  '| archdaily', '- archdaily', '- dezeen', '| dezeen',
+  '| architizer', '- designboom', '| designboom', '| divisare',
+];
+
+function normalizeUrlForDedup(url: string): string {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    ['utm_source', 'utm_medium', 'utm_campaign', 'ref', 'fbclid', 'gclid'].forEach((p) =>
+      u.searchParams.delete(p)
+    );
+    return u.toString().replace(/\/$/, '');
+  } catch {
+    return url.replace(/\/$/, '').split('#')[0];
+  }
+}
+
+function normalizeTitleForDedup(title: string): string {
+  let t = title.toLowerCase();
+  for (const suffix of SITE_TITLE_SUFFIXES) {
+    t = t.replace(suffix, '');
+  }
+  return t.replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+}
 
 function mergeAndDedupeResults(
   allResults: SerperWebResult[][]
 ): CandidatePrecedent[] {
-  const urlScores = new Map<string, { result: SerperWebResult; score: number }>();
+  const urlScores = new Map<
+    string,
+    { result: SerperWebResult; score: number; normalizedUrl: string }
+  >();
 
   for (const results of allResults) {
     for (const result of results) {
-      const existing = urlScores.get(result.link);
-      if (existing) {
-        existing.score += 11 - result.position;
+      const normalizedUrl = normalizeUrlForDedup(result.link);
+      // Match by normalised URL to collapse trivial variants (trailing slash, tracking params)
+      let existingKey: string | undefined;
+      for (const [key, val] of urlScores.entries()) {
+        if (val.normalizedUrl === normalizedUrl) {
+          existingKey = key;
+          break;
+        }
+      }
+      if (existingKey) {
+        urlScores.get(existingKey)!.score += 11 - result.position;
       } else {
         urlScores.set(result.link, {
           result,
           score: 11 - result.position,
+          normalizedUrl,
         });
       }
     }
   }
 
+  // Sort by raw search score descending
   const sorted = Array.from(urlScores.entries()).sort((a, b) => b[1].score - a[1].score);
 
-  return sorted.map(([url, { result, score }]) => {
+  // Dedupe near-identical titles (same project on different URLs)
+  const seenTitles = new Set<string>();
+  const candidates: CandidatePrecedent[] = [];
+
+  for (const [url, { result, score }] of sorted) {
+    const normalizedTitle = normalizeTitleForDedup(result.title);
+    if (normalizedTitle && seenTitles.has(normalizedTitle)) continue;
+    if (normalizedTitle) seenTitles.add(normalizedTitle);
+
     const { source, sourceName } = getSourceFromUrl(url);
-    return {
+    candidates.push({
       url,
       title: result.title,
       snippet: result.snippet,
       source,
       sourceName,
       score,
-    };
-  });
+    });
+  }
+
+  return candidates;
 }
 
 // =============================================================================
@@ -443,52 +534,149 @@ function filterProjectUrls(
 }
 
 // =============================================================================
+// Step 5b: Pre-rank by Source Quality and Material Signals
+// =============================================================================
+
+function getSourceQualityScore(url: string): number {
+  const u = url.toLowerCase();
+  // Tiered source trust — Divisare and ArchDaily/Dezeen are highest trust
+  if (u.includes('divisare.com')) return 18;
+  if (u.includes('archdaily.com')) return 12;
+  if (u.includes('dezeen.com')) return 12;
+  if (u.includes('architizer.com')) return 10;
+  if (u.includes('designboom.com')) return 8;
+  // Architect/institutional portfolio path patterns (non-listed sources)
+  if (/\/(projects?|work|portfolio)\//i.test(u)) return 15;
+  return 0;
+}
+
+const PROJECT_SIGNAL_WORDS = [
+  'house', 'studio', 'extension', 'school', 'office', 'dwelling', 'gallery',
+  'centre', 'center', 'library', 'apartment', 'residence', 'housing', 'museum',
+  'church', 'chapel', 'tower', 'villa', 'cabin', 'barn', 'lodge', 'clinic',
+  'hall', 'pavilion', 'project', 'building',
+];
+
+const NEGATIVE_SIGNAL_WORDS = [
+  'product', 'shop', 'guide', 'trend', 'best', 'ideas', 'roundup',
+  'listicle', 'buy', 'price', 'review', 'compare', 'manufacturer',
+  'supplier', 'inspiration', 'lookbook', 'news', 'blog',
+];
+
+function getSignalScore(candidate: CandidatePrecedent): number {
+  const combined = `${candidate.url} ${candidate.title} ${candidate.snippet}`.toLowerCase();
+  let score = 0;
+  for (const w of PROJECT_SIGNAL_WORDS) {
+    if (combined.includes(w)) { score += 6; break; }
+  }
+  for (const w of NEGATIVE_SIGNAL_WORDS) {
+    if (combined.includes(w)) { score -= 20; break; }
+  }
+  return score;
+}
+
+function preRankCandidates(candidates: CandidatePrecedent[]): CandidatePrecedent[] {
+  return candidates
+    .map((c) => ({
+      ...c,
+      score: c.score + getSourceQualityScore(c.url) + getSignalScore(c),
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// =============================================================================
+// Step 5c: Diversify Shortlist (max MAX_PER_DOMAIN per domain)
+// =============================================================================
+
+function diversifyShortlist(
+  candidates: CandidatePrecedent[],
+  size: number
+): CandidatePrecedent[] {
+  const domainCounts = new Map<string, number>();
+  const shortlist: CandidatePrecedent[] = [];
+
+  for (const c of candidates) {
+    let domain: string;
+    try {
+      domain = new URL(c.url).hostname.replace('www.', '');
+    } catch {
+      domain = 'unknown';
+    }
+    const count = domainCounts.get(domain) ?? 0;
+    if (count < MAX_PER_DOMAIN) {
+      shortlist.push(c);
+      domainCounts.set(domain, count + 1);
+    }
+    if (shortlist.length >= size) break;
+  }
+
+  // Fill remaining slots ignoring the domain cap if we're still short
+  if (shortlist.length < size) {
+    for (const c of candidates) {
+      if (!shortlist.find((s) => s.url === c.url)) {
+        shortlist.push(c);
+        if (shortlist.length >= size) break;
+      }
+    }
+  }
+
+  return shortlist;
+}
+
+// =============================================================================
 // Step 6: LLM Selection with Gemini
 // =============================================================================
 
-const SELECTION_PROMPT = `You are an expert architectural curator helping designers find REAL BUILDING project precedents that match their material palette.
+const SELECTION_PROMPT = `You are an expert architectural curator. Select exactly 3 real, completed building projects from the shortlist below that best match the designer's material palette.
 
 ## Material Brief
-The designer is working with these materials:
-- Material Types: {materialTypes}
+- Material types: {materialTypes}
 - Finishes: {finishes}
-- Key Terms: {keywords}
+- Key material terms: {keywords}
+
+## Match Hierarchy (apply strictly)
+- direct match: the listed materials or systems are explicitly evidenced in the title, snippet, or source
+- close match: materially equivalent finishes or construction systems are clearly evidenced
+- conceptual match: only atmospheric, tonal, or sustainability similarity
+
+Prefer: direct match > close match > conceptual match.
 
 ## Candidate Projects
 {candidatesList}
 
-## Your Task
-Select exactly 3 COMPLETED BUILDING PROJECTS that:
-1. Are REAL, BUILT architectural projects (houses, offices, museums, schools, etc.)
-2. BEST exemplify creative or innovative use of the specified materials
-3. Show diverse applications (avoid selecting 3 very similar buildings)
-4. Prioritize projects where materials are a key design feature
-
-## STRICT EXCLUSIONS - Never select:
-- Editorial articles, guides, roundups, or "best of" lists
-- Design week exhibitions, pavilions, or temporary installations
-- Product pages or manufacturer showcases
-- Company/firm profile pages
-- Material guides or how-to articles
-- News articles about trends or events
-
-If fewer than 3 REAL BUILDING projects exist in the candidates, select only the valid ones. Return an empty array rather than selecting non-building content.
+## Selection Rules
+1. Select only REAL BUILT BUILDINGS — not concepts, pavilions, exhibitions, or speculative schemes.
+2. Prefer architect-owned project pages and Divisare entries — they are high-trust sources.
+3. Prefer material relevance over visual or atmospheric similarity.
+4. Ensure the 3 results span different building types or scales where relevance remains high.
+5. Reject any candidate that is a product page, guide, listicle, news article, trend feature, or manufacturer page — even if it passed pre-filtering.
+6. If fewer than 3 valid building projects exist, return only the valid ones.
 
 ## Output Format
-Respond with ONLY valid JSON:
-{"selectedUrls": ["url1", "url2", "url3"], "reasoning": "Brief explanation"}`;
+Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON.
+{
+  "selected": [
+    {
+      "url": "...",
+      "confidence": 0.0,
+      "matchType": "direct",
+      "matchedMaterials": ["material a"],
+      "shortReason": "One sentence explaining the match."
+    }
+  ]
+}`;
 
 async function selectBestPrecedentsWithLLM(
   candidates: CandidatePrecedent[],
   brief: MaterialsBrief,
   context: InvocationContext
 ): Promise<LLMSelectionResult> {
-  const topCandidates = candidates.slice(0, MAX_CANDIDATES_FOR_LLM);
+  const shortlist = candidates.slice(0, SHORTLIST_SIZE);
 
-  const candidatesList = topCandidates
+  const candidatesList = shortlist
     .map(
       (c, i) =>
-        `${i + 1}. URL: ${c.url}\n   Title: ${c.title}\n   Snippet: ${c.snippet}\n   Source: ${c.sourceName}`
+        `${i + 1}. URL: ${c.url}\n   Title: ${c.title}\n   Snippet: ${c.snippet.slice(0, SNIPPET_MAX_CHARS)}\n   Source: ${c.sourceName}`
     )
     .join('\n\n');
 
@@ -508,7 +696,7 @@ async function selectBestPrecedentsWithLLM(
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: 0.15,
         topP: 0.9,
       },
     }),
@@ -667,46 +855,45 @@ async function fetchAllMetadata(
 // Step 8: Generate Summaries with Gemini
 // =============================================================================
 
-const SUMMARY_PROMPT = `You are an architectural writer creating concise project descriptions.
+const SUMMARY_PROMPT = `You are an architectural writer producing project descriptions for a design research tool.
 
 ## Material Context
-The designer's palette includes: {materialTypes} with finishes like {finishes}.
+Designer's material palette: {materialTypes}{finishContext}.
 
-## Projects to Summarize
+## Projects
 {projectsList}
 
-## Your Task
-For each project, write exactly 2 sentences:
-- Sentence 1: Describe the building type, location (if known), and architect (if known)
-- Sentence 2: Highlight how the materials are used in a distinctive or innovative way
+## Instructions
+For each project, write exactly 2 factual sentences.
+- Sentence 1: Describe the building type and location only if confirmed by the title or snippet. Do not invent the architect name if it is not stated in the title or snippet.
+- Sentence 2: Describe how the materials are applied. Only state what is directly evidenced in the title or snippet. Omit any detail that is not confirmed — do not invent material specifics, finishes, awards, or programme details.
 
-Keep each summary factual and under 50 words total.
+Do not hallucinate. If a fact is absent, omit it rather than guessing.
+Keep each description under 50 words total.
 
 ## Output Format
-Respond with ONLY valid JSON:
-{"summaries": {"url1": "Two sentence summary.", "url2": "Two sentence summary.", "url3": "Two sentence summary."}}`;
+Respond with ONLY valid JSON. No markdown, no code blocks.
+{"summaries": {"url1": "Two sentences.", "url2": "Two sentences.", "url3": "Two sentences."}}`;
 
 async function generateSummariesWithLLM(
   selectedCandidates: CandidatePrecedent[],
-  metadata: Record<string, PageMetadata>,
   brief: MaterialsBrief,
   context: InvocationContext
 ): Promise<LLMSummaryResult> {
   const projectsList = selectedCandidates
-    .map((c) => {
-      const meta: PageMetadata = metadata[c.url] || { ogImage: null, ogTitle: null, metaDescription: null };
-      return `URL: ${c.url}
-Title: ${meta.ogTitle || c.title}
-Description: ${meta.metaDescription || c.snippet}
-Source: ${c.sourceName}`;
-    })
+    .map((c) =>
+      `URL: ${c.url}\nTitle: ${c.title}\nSnippet: ${c.snippet.slice(0, SNIPPET_MAX_CHARS)}\nSource: ${c.sourceName}`
+    )
     .join('\n\n---\n\n');
+
+  const finishContext =
+    brief.finishes.length > 0 ? ` with finishes including ${brief.finishes.join(', ')}` : '';
 
   const prompt = SUMMARY_PROMPT.replace(
     '{materialTypes}',
     brief.materialTypes.join(', ') || 'various materials'
   )
-    .replace('{finishes}', brief.finishes.join(', ') || 'various finishes')
+    .replace('{finishContext}', finishContext)
     .replace('{projectsList}', projectsList);
 
   context.log('Calling Gemini for summaries...');
@@ -717,8 +904,8 @@ Source: ${c.sourceName}`;
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.4,
-        topP: 0.95,
+        temperature: 0.25,
+        topP: 0.9,
       },
     }),
   });
@@ -800,11 +987,11 @@ async function handleSearchWithFallbacks(
   const brief = normalizeMaterialsBrief(materials);
   context.log(`Materials brief: ${JSON.stringify(brief)}`);
 
-  // Step 2: Generate queries
+  // Step 2: Generate queries (4 focused queries)
   const queries = generateSearchQueries(brief);
   context.log(`Generated ${queries.length} search queries`);
 
-  // Step 3: Execute searches
+  // Step 3: Execute all searches in parallel
   const searchPromises = queries.map((q) =>
     searchSerperWeb(q, RESULTS_PER_QUERY, context).catch((err) => {
       context.warn(`Search query failed: ${err.message}`);
@@ -822,41 +1009,55 @@ async function handleSearchWithFallbacks(
     throw new Error('no_results');
   }
 
-  // Step 4: Merge and dedupe
+  // Step 4: Merge, URL-normalise, title-dedupe
   let candidates = mergeAndDedupeResults(allResults);
-  context.log(`Unique candidates after merge: ${candidates.length}`);
+  context.log(`Unique candidates after merge/dedupe: ${candidates.length}`);
 
-  // Step 5: Filter non-project URLs
+  // Step 5a: Filter non-project URLs
   candidates = filterProjectUrls(candidates, context);
-  context.log(`Candidates after filtering: ${candidates.length}`);
+  context.log(`Candidates after URL filter: ${candidates.length}`);
 
   if (candidates.length === 0) {
     throw new Error('no_results');
   }
 
-  // Step 6: LLM Selection
-  let selectedUrls: string[];
+  // Step 5b: Pre-rank by source quality + material signals
+  candidates = preRankCandidates(candidates);
+  context.log(`Candidates pre-ranked, top score: ${candidates[0]?.score ?? 0}`);
+
+  // Step 5c: Diversify → SHORTLIST_SIZE candidates (max MAX_PER_DOMAIN per domain)
+  const shortlist = diversifyShortlist(candidates, SHORTLIST_SIZE);
+  context.log(`Shortlist size: ${shortlist.length}`);
+
+  // Step 6: LLM Selection (receives a small, high-quality, varied shortlist)
+  let selectedItems: LLMSelectedItem[];
   try {
-    const selection = await selectBestPrecedentsWithLLM(candidates, brief, context);
-    selectedUrls = selection.selectedUrls || [];
-    context.log(`LLM selected ${selectedUrls.length} URLs`);
+    const selection = await selectBestPrecedentsWithLLM(shortlist, brief, context);
+    selectedItems = selection.selected || [];
+    context.log(`LLM selected ${selectedItems.length} projects`);
   } catch (err) {
     context.warn(`LLM selection failed: ${err instanceof Error ? err.message : err}`);
-    selectedUrls = candidates.slice(0, FINAL_RESULTS_COUNT).map((c) => c.url);
+    // Fallback: top FINAL_RESULTS_COUNT from shortlist
+    selectedItems = shortlist.slice(0, FINAL_RESULTS_COUNT).map((c) => ({
+      url: c.url,
+      confidence: 0.5,
+      matchType: 'conceptual' as const,
+      matchedMaterials: [],
+      shortReason: 'Fallback selection.',
+    }));
   }
 
-  // Get selected candidates in order
+  // Resolve selected candidates in LLM order; also accept URLs from full candidate pool
   const selectedCandidates: CandidatePrecedent[] = [];
-  for (const url of selectedUrls) {
-    const candidate = candidates.find((c) => c.url === url);
-    if (candidate) {
-      selectedCandidates.push(candidate);
-    }
+  for (const item of selectedItems) {
+    const candidate =
+      shortlist.find((c) => c.url === item.url) ?? candidates.find((c) => c.url === item.url);
+    if (candidate) selectedCandidates.push(candidate);
   }
 
-  // Fill with top candidates if needed
+  // Fill to FINAL_RESULTS_COUNT from shortlist if LLM returned fewer
   if (selectedCandidates.length < FINAL_RESULTS_COUNT) {
-    for (const c of candidates) {
+    for (const c of shortlist) {
       if (!selectedCandidates.find((s) => s.url === c.url)) {
         selectedCandidates.push(c);
         if (selectedCandidates.length >= FINAL_RESULTS_COUNT) break;
@@ -866,27 +1067,27 @@ async function handleSearchWithFallbacks(
 
   const finalCandidates = selectedCandidates.slice(0, FINAL_RESULTS_COUNT);
 
-  // Step 7: Fetch metadata
+  // Steps 7 & 8: Fetch og:image metadata and generate summaries in parallel
+  // Summaries are built from title+snippet only (no metaDescription needed)
   let metadata: Record<string, PageMetadata> = {};
-  try {
-    metadata = await fetchAllMetadata(
-      finalCandidates.map((c) => c.url),
-      context
-    );
-  } catch (err) {
-    context.warn(`Metadata fetch failed: ${err instanceof Error ? err.message : err}`);
-  }
-
-  // Step 8: Generate summaries
   let summaries: LLMSummaryResult = { summaries: {} };
+
   try {
-    summaries = await generateSummariesWithLLM(finalCandidates, metadata, brief, context);
+    [metadata, summaries] = await Promise.all([
+      fetchAllMetadata(finalCandidates.map((c) => c.url), context).catch((err) => {
+        context.warn(`Metadata fetch failed: ${err instanceof Error ? err.message : err}`);
+        return {} as Record<string, PageMetadata>;
+      }),
+      generateSummariesWithLLM(finalCandidates, brief, context).catch((err) => {
+        context.warn(`Summary generation failed: ${err instanceof Error ? err.message : err}`);
+        const fallback: LLMSummaryResult = { summaries: {} };
+        finalCandidates.forEach((c) => { fallback.summaries[c.url] = c.snippet; });
+        return fallback;
+      }),
+    ]);
   } catch (err) {
-    context.warn(`Summary generation failed: ${err instanceof Error ? err.message : err}`);
-    // Fallback: use snippets
-    finalCandidates.forEach((c) => {
-      summaries.summaries[c.url] = c.snippet;
-    });
+    context.warn(`Parallel enrichment failed: ${err instanceof Error ? err.message : err}`);
+    finalCandidates.forEach((c) => { summaries.summaries[c.url] = c.snippet; });
   }
 
   // Step 9: Assemble results

@@ -444,7 +444,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const migratedMaterials = useMemo(() => migrateAllMaterials(materialPalette), [materialPalette]);
 
   // Organize materials by category path
-  const materialsByPath = useMemo(() => {
+  const materialsByPath = useMemo<Record<string, MaterialOption[]>>(() => {
     const map: Record<string, MaterialOption[]> = {};
     migratedMaterials.forEach((mat) => {
       const paths = mat.treePaths || [];
@@ -498,7 +498,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!searchTokens.length) return materialsByPath;
 
     const next: Record<string, MaterialOption[]> = {};
-    Object.entries(materialsByPath).forEach(([path, list]) => {
+    (Object.entries(materialsByPath) as Array<[string, MaterialOption[]]>).forEach(([path, list]) => {
       const filtered = list.filter((item) => materialMatchesSearch(item));
       if (filtered.length > 0) {
         next[path] = filtered;
@@ -1124,7 +1124,11 @@ IMPORTANT:
                       return acc;
                     }, {} as Record<string, Array<{ material: MaterialOption; boardIndex: number }>>);
 
-                    return Object.entries(grouped).map(([categoryName, items]) => (
+                    const groupedEntries = Object.entries(grouped) as Array<
+                      [string, Array<{ material: MaterialOption; boardIndex: number }>]
+                    >;
+
+                    return groupedEntries.map(([categoryName, items]) => (
                     <div key={categoryName} className="space-y-2">
                       <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 px-2">
                         {categoryName}

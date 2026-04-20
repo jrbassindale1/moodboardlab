@@ -1,4 +1,4 @@
-import { MaterialOption, ProjectImage } from './types';
+import { MaterialOption, ProjectImage, SpecSection } from './types';
 import { RAL_COLOR_OPTIONS as RAL_COLORS } from './data/ralColors';
 import moodboardMain from './images/moodboard-2.webp';
 
@@ -41,6 +41,33 @@ export const PROJECT_IMAGES: ProjectImage[] = recentImages.map((img, index) => (
   description: `Recent moodboard image ${index + 1}`,
   category: 'Render' as const
 }));
+
+export const DEFAULT_MATERIAL_PROMPT =
+  'Keep the existing architecture and camera composition unchanged while applying the selected materials. Preserve all glazing, structure, and proportions from the source image. Use photorealistic lighting and physically plausible textures, with clean detailing and realistic material joins.';
+
+export const BUILDING_SPECS: SpecSection[] = [
+  {
+    title: 'Structural System',
+    content:
+      'Primary structure coordinated for long-span efficiency with a clear load path, robust connection strategy, and practical sequencing for fabrication and site assembly.',
+    image: moodboardMain,
+    imageAlt: 'Structural system reference'
+  },
+  {
+    title: 'Envelope Performance',
+    content:
+      'Envelope layers are developed to support airtightness, moisture control, and thermal continuity, with careful junction detailing around openings and interfaces.',
+    image: moodboardAlt1,
+    imageAlt: 'Envelope detail reference'
+  },
+  {
+    title: 'Interior Build-Up',
+    content:
+      'Internal assemblies balance durability, acoustic comfort, and maintainability, with finish selections aligned to lifecycle performance and straightforward replacement cycles.',
+    image: moodboardAlt2,
+    imageAlt: 'Interior build-up reference'
+  }
+];
 
 export const RAL_COLOR_OPTIONS = RAL_COLORS;
 
