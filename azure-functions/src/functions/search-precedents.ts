@@ -22,13 +22,64 @@ const GEMINI_TEXT_URL =
   process.env.GEMINI_TEXT_ENDPOINT ||
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-const RESULTS_PER_QUERY = 8;
+const RESULTS_PER_QUERY = 10;
 const MAX_QUERIES = 4;
-const SHORTLIST_SIZE = 6;            // candidates passed to LLM selector
-const FINAL_RESULTS_COUNT = 3;
+const SHORTLIST_SIZE = 10;           // candidates passed to LLM selector
+const FINAL_RESULTS_COUNT = 6;
 const METADATA_FETCH_TIMEOUT_MS = 5000;
 const SNIPPET_MAX_CHARS = 200;       // max snippet chars sent to LLM
 const MAX_PER_DOMAIN = 2;            // max candidates per domain in shortlist
+
+// =============================================================================
+// Category Weights - Architectural Role Importance
+// =============================================================================
+
+const CATEGORY_WEIGHTS: Record<string, number> = {
+  // Highest - Structure & Primary Envelope
+  'structure': 100,
+  'exposed-structure': 95,
+  'external': 100,
+  'roof': 90,
+
+  // High - Secondary Envelope
+  'window': 75,
+  'insulation': 70,
+  'balustrade': 50,
+
+  // High - Landscape (infrastructural)
+  'landscape': 70,
+  'external-ground': 65,
+
+  // Medium - Primary Interiors
+  'floor': 60,
+  'wall-internal': 55,
+  'ceiling': 50,
+  'soffit': 50,
+  'door': 45,
+
+  // Medium-Low - Joinery/Details
+  'joinery': 40,
+  'fixture': 35,
+  'furniture': 30,
+
+  // Low - Decorative Finishes
+  'tile': 35,
+  'timber-panel': 35,
+  'timber-slat': 35,
+  'acoustic-panel': 30,
+  'plaster': 25,
+  'microcement': 25,
+  'wallpaper': 20,
+  'paint-wall': 15,
+  'paint-ceiling': 15,
+  'finish': 15,
+};
+
+const STRUCTURAL_CATEGORIES = ['structure', 'exposed-structure', 'external', 'roof'];
+
+function getCategoryWeight(category: string): number {
+  return CATEGORY_WEIGHTS[category] ?? 20; // default low weight for unknown
+}
 
 const CORS_HEADERS = {
   'Content-Type': 'application/json',
@@ -82,12 +133,21 @@ interface CandidatePrecedent {
   score: number;
 }
 
+interface WeightedCategory {
+  category: string;
+  weight: number;
+  materials: string[];  // material names in this category
+}
+
 interface MaterialsBrief {
   materialTypes: string[];
   finishes: string[];
   keywords: string[];
   categories: string[];
   searchTerms: string[];
+  weightedCategories: WeightedCategory[];
+  dominantCategories: string[];  // top categories by weight
+  isInteriorOnly: boolean;       // no structure/external/roof
 }
 
 interface LLMSelectedItem {
@@ -282,6 +342,9 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
   const keywords = new Set<string>();
   const categories = new Set<string>();
 
+  // Track materials by category for weighted scoring
+  const categoryMaterials = new Map<string, string[]>();
+
   for (const m of materials) {
     if (m.materialType) {
       materialTypes.add(m.materialType.toLowerCase());
@@ -290,7 +353,13 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
       finishes.add(m.finish.toLowerCase());
     }
     if (m.category) {
-      categories.add(m.category.toLowerCase());
+      const cat = m.category.toLowerCase();
+      categories.add(cat);
+      // Track which materials belong to each category
+      if (!categoryMaterials.has(cat)) {
+        categoryMaterials.set(cat, []);
+      }
+      categoryMaterials.get(cat)!.push(m.name);
     }
     if (m.keywords) {
       m.keywords.forEach((k) => keywords.add(k.toLowerCase()));
@@ -327,6 +396,37 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
     }
   }
 
+  // Build weighted categories list
+  const categoriesArray = Array.from(categories);
+  const isInteriorOnly = !categoriesArray.some(c => STRUCTURAL_CATEGORIES.includes(c));
+
+  // Calculate weights - if interior-only, rebalance so interior categories become primary
+  let weightedCategories: WeightedCategory[] = categoriesArray.map(cat => {
+    let weight = getCategoryWeight(cat);
+
+    // If interior-only palette, boost interior weights proportionally
+    if (isInteriorOnly && !STRUCTURAL_CATEGORIES.includes(cat)) {
+      // Boost interior categories: floor becomes ~100, wall-internal ~92, etc.
+      const maxInteriorWeight = Math.max(...categoriesArray.map(c => getCategoryWeight(c)));
+      if (maxInteriorWeight > 0) {
+        weight = Math.round((weight / maxInteriorWeight) * 100);
+      }
+    }
+
+    return {
+      category: cat,
+      weight,
+      materials: categoryMaterials.get(cat) || [],
+    };
+  });
+
+  // Sort by weight descending
+  weightedCategories = weightedCategories.sort((a, b) => b.weight - a.weight);
+
+  // Top 3 dominant categories
+  const dominantCategories = weightedCategories.slice(0, 3).map(wc => wc.category);
+
+  // Prioritize search terms from highest-weight categories
   const searchTerms = [
     ...Array.from(materialTypes),
     ...Array.from(keywords).slice(0, 3),
@@ -336,8 +436,11 @@ function normalizeMaterialsBrief(materials: MaterialInput[]): MaterialsBrief {
     materialTypes: Array.from(materialTypes),
     finishes: Array.from(finishes),
     keywords: Array.from(keywords),
-    categories: Array.from(categories),
+    categories: categoriesArray,
     searchTerms,
+    weightedCategories,
+    dominantCategories,
+    isInteriorOnly,
   };
 }
 
@@ -575,11 +678,59 @@ function getSignalScore(candidate: CandidatePrecedent): number {
   return score;
 }
 
-function preRankCandidates(candidates: CandidatePrecedent[]): CandidatePrecedent[] {
+// Category-weighted material match scoring
+function getCategoryMatchScore(
+  candidate: CandidatePrecedent,
+  brief: MaterialsBrief
+): number {
+  const combined = `${candidate.title} ${candidate.snippet}`.toLowerCase();
+  let score = 0;
+  let matchedCategories = 0;
+
+  for (const wc of brief.weightedCategories) {
+    // Check if any materials from this category are mentioned
+    let categoryMatched = false;
+    for (const material of wc.materials) {
+      const materialWords = material.toLowerCase().split(/\s+/);
+      // Match if any significant word from material name appears
+      for (const word of materialWords) {
+        if (word.length > 3 && combined.includes(word)) {
+          categoryMatched = true;
+          break;
+        }
+      }
+      if (categoryMatched) break;
+    }
+
+    if (categoryMatched) {
+      // Weight the score by category importance
+      score += wc.weight * 0.5; // Scale down to reasonable range
+      matchedCategories++;
+    }
+  }
+
+  // Bonus for matching multiple categories
+  if (matchedCategories >= 2) {
+    score += 15;
+  }
+  if (matchedCategories >= 3) {
+    score += 10;
+  }
+
+  return score;
+}
+
+function preRankCandidates(
+  candidates: CandidatePrecedent[],
+  brief: MaterialsBrief
+): CandidatePrecedent[] {
   return candidates
     .map((c) => ({
       ...c,
-      score: c.score + getSourceQualityScore(c.url) + getSignalScore(c),
+      score: c.score +
+        getSourceQualityScore(c.url) +
+        getSignalScore(c) +
+        getCategoryMatchScore(c, brief),
     }))
     .sort((a, b) => b.score - a.score);
 }
@@ -627,12 +778,14 @@ function diversifyShortlist(
 // Step 6: LLM Selection with Gemini
 // =============================================================================
 
-const SELECTION_PROMPT = `You are an expert architectural curator. Select exactly 3 real, completed building projects from the shortlist below that best match the designer's material palette.
+const SELECTION_PROMPT = `You are an expert architectural curator. Select exactly 6 real, completed building projects from the shortlist below that best match the designer's material palette.
 
 ## Material Brief
-- Material types: {materialTypes}
+- Dominant architectural elements: {dominantCategories}
+- Material types (by importance): {weightedMaterialTypes}
 - Finishes: {finishes}
 - Key material terms: {keywords}
+- Category priority: {categoryPriority}
 
 ## Match Hierarchy (apply strictly)
 - direct match: the listed materials or systems are explicitly evidenced in the title, snippet, or source
@@ -644,13 +797,22 @@ Prefer: direct match > close match > conceptual match.
 ## Candidate Projects
 {candidatesList}
 
+## Scoring Priority
+1. Match with dominant architectural elements (structure, envelope, roof) — these MUST rank highest
+2. Number of distinct category matches
+3. Match quality (direct > close > conceptual)
+4. Source quality (Divisare, ArchDaily, architect portfolios preferred)
+5. Diversity of building types
+
 ## Selection Rules
-1. Select only REAL BUILT BUILDINGS — not concepts, pavilions, exhibitions, or speculative schemes.
-2. Prefer architect-owned project pages and Divisare entries — they are high-trust sources.
-3. Prefer material relevance over visual or atmospheric similarity.
-4. Ensure the 3 results span different building types or scales where relevance remains high.
-5. Reject any candidate that is a product page, guide, listicle, news article, trend feature, or manufacturer page — even if it passed pre-filtering.
-6. If fewer than 3 valid building projects exist, return only the valid ones.
+1. Select exactly 6 REAL BUILT BUILDINGS — not concepts, pavilions, exhibitions, or speculative schemes.
+2. Prioritise strongest material and category matches first.
+3. Do NOT let multiple low-importance finish matches outrank a project that matches the main structural/envelope logic.
+4. Avoid near-duplicate projects (same architect, similar programme).
+5. Avoid filling slots with weak generic sustainability precedents.
+6. If the pool is thin, prefer close material/system matches over purely conceptual.
+7. Reject any candidate that is a product page, guide, listicle, news article, trend feature, or manufacturer page.
+8. If fewer than 6 valid building projects exist, return only the valid ones.
 
 ## Output Format
 Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outside the JSON.
@@ -680,12 +842,24 @@ async function selectBestPrecedentsWithLLM(
     )
     .join('\n\n');
 
+  // Build weighted material types string (sorted by category weight)
+  const weightedMaterialTypes = brief.weightedCategories
+    .flatMap(wc => wc.materials.map(m => `${m} (${wc.category})`))
+    .join(', ') || 'various';
+
+  // Category priority string
+  const categoryPriority = brief.isInteriorOnly
+    ? 'interior-focused palette — prioritise floor/wall/ceiling matches'
+    : 'structure/envelope > landscape > interiors > finishes';
+
   const prompt = SELECTION_PROMPT.replace(
-    '{materialTypes}',
-    brief.materialTypes.join(', ') || 'various'
+    '{dominantCategories}',
+    brief.dominantCategories.join(', ') || 'various'
   )
+    .replace('{weightedMaterialTypes}', weightedMaterialTypes)
     .replace('{finishes}', brief.finishes.join(', ') || 'various')
     .replace('{keywords}', brief.keywords.join(', ') || 'none specified')
+    .replace('{categoryPriority}', categoryPriority)
     .replace('{candidatesList}', candidatesList);
 
   context.log('Calling Gemini for selection...');
@@ -873,7 +1047,7 @@ Keep each description under 50 words total.
 
 ## Output Format
 Respond with ONLY valid JSON. No markdown, no code blocks.
-{"summaries": {"url1": "Two sentences.", "url2": "Two sentences.", "url3": "Two sentences."}}`;
+{"summaries": {"url1": "Two sentences.", "url2": "Two sentences.", "url3": "Two sentences.", "url4": "Two sentences.", "url5": "Two sentences.", "url6": "Two sentences."}}`;
 
 async function generateSummariesWithLLM(
   selectedCandidates: CandidatePrecedent[],
@@ -1021,8 +1195,8 @@ async function handleSearchWithFallbacks(
     throw new Error('no_results');
   }
 
-  // Step 5b: Pre-rank by source quality + material signals
-  candidates = preRankCandidates(candidates);
+  // Step 5b: Pre-rank by source quality + material signals + category matches
+  candidates = preRankCandidates(candidates, brief);
   context.log(`Candidates pre-ranked, top score: ${candidates[0]?.score ?? 0}`);
 
   // Step 5c: Diversify → SHORTLIST_SIZE candidates (max MAX_PER_DOMAIN per domain)

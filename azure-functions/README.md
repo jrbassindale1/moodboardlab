@@ -97,6 +97,15 @@ BLOB_UPLOAD_CONTAINER=generation-uploads
 ```
 If `BLOB_UPLOAD_CONTAINER` is omitted, uploads are still archived under an `uploads/...` path inside `BLOB_CONTAINER`.
 
+Required for Material Translation endpoint:
+```
+OPENAI_API_KEY=sk-...
+```
+Optional model override:
+```
+OPENAI_MATERIAL_TRANSLATION_MODEL=gpt-4.1-mini
+```
+
 Optional for staging admin bypass (for endpoints that support it, e.g. `PUT /api/materials`):
 ```
 ADMIN_BYPASS_ENABLED=true

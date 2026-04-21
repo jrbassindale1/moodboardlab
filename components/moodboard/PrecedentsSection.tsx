@@ -158,7 +158,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
       {/* Search action bar */}
       <div className="px-4 py-3 flex items-center justify-between flex-wrap gap-2 bg-gray-50 border-b border-gray-200">
         <p className="text-xs text-gray-600 font-sans">
-          Search ArchDaily, Dezeen, Architizer, and Designboom for buildings using similar materials.
+          Search for buildings using similar materials.
         </p>
         <div className="flex items-center gap-2">
           {hasSavedPrecedents && (

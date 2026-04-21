@@ -1,4 +1,8 @@
 import type { MaterialOption } from './types';
+import type {
+  MaterialTranslationContext,
+  MaterialTranslationResult,
+} from './types/materialTranslation';
 
 // ============================================
 // Precedent Search Types
@@ -53,6 +57,7 @@ export interface Generation {
   createdAt: string;
   prompt: string;
   materials?: unknown;
+  metadata?: Record<string, unknown>;
 }
 
 export interface GenerationsResponse {
@@ -538,7 +543,12 @@ export async function saveGenerationAuth(
     generationType: GenerationType;
   },
   accessToken: string
-) {
+): Promise<{
+  success: boolean;
+  blobUrl: string;
+  generationId?: string | null;
+  userId: string;
+}> {
   const SAVE_URL = getSaveUrl();
   const res = await fetchWithTimeout(
     SAVE_URL,
@@ -560,7 +570,12 @@ export async function saveGenerationAuth(
   );
 
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  return res.json() as Promise<{
+    success: boolean;
+    blobUrl: string;
+    generationId?: string | null;
+    userId: string;
+  }>;
 }
 
 /**
@@ -569,7 +584,7 @@ export async function saveGenerationAuth(
 export async function savePdfAuth(
   payload: {
     pdfDataUri: string;
-    pdfType: 'sustainabilityBriefing' | 'materialsSheet';
+    pdfType: 'sustainabilityBriefing' | 'materialsSheet' | 'specificationPathways';
     materials?: unknown;
   },
   accessToken: string
@@ -728,6 +743,93 @@ export async function searchPrecedents(
       throw new Error('rate_limit');
     }
     throw new Error(errorData.message || `Search failed (status ${res.status})`);
+  }
+
+  return res.json();
+}
+
+export async function translateRenderToProducts(
+  payload: {
+    imageUrl: string;
+    projectId?: string;
+    renderId?: string;
+    context?: MaterialTranslationContext;
+  },
+  options?: {
+    accessToken?: string | null;
+    timeoutMs?: number;
+  }
+): Promise<{
+  result: MaterialTranslationResult;
+  status: 'completed' | string;
+  createdAt?: string;
+  persisted?: boolean;
+  renderId?: string | null;
+}> {
+  const API_BASE = getApiBase();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (options?.accessToken) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+  }
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/material-translation`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    },
+    options?.timeoutMs ?? 120000
+  );
+
+  if (!res.ok) {
+    let message = `Material translation failed (status ${res.status})`;
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+export async function getSavedMaterialTranslation(
+  renderId: string,
+  accessToken: string
+): Promise<{
+  result: MaterialTranslationResult;
+  status: string;
+  createdAt?: string | null;
+  renderId: string;
+  persisted: boolean;
+}> {
+  const API_BASE = getApiBase();
+  const params = new URLSearchParams({ renderId });
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/material-translation?${params.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    30000
+  );
+
+  if (!res.ok) {
+    let message = `Could not load material translation (status ${res.status})`;
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
   }
 
   return res.json();

@@ -9,7 +9,7 @@
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { requireAuth, ValidatedUser } from '../shared/validateToken';
 import { saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
 import { getSasUrlForBlob } from '../shared/blobSas';
@@ -93,7 +93,7 @@ async function uploadToBlob(
 
   // Generate unique blob name
   const extension = getExtensionFromMime(mimeType);
-  const blobName = options?.blobName || `${uuidv4()}.${extension}`;
+  const blobName = options?.blobName || `${randomUUID()}.${extension}`;
 
   // Convert base64 to buffer
   const base64Data = extractBase64Data(imageBase64);
@@ -126,7 +126,7 @@ async function archiveUploadImages(
 
   const generationLabel = generationType || 'generation';
   const safeUserId = sanitizePathSegment(userId) || 'user';
-  const batchId = uuidv4();
+  const batchId = randomUUID();
   const archivedUploads: UploadArchiveRecord[] = [];
 
   if (Array.isArray(rawUploads)) {
@@ -295,9 +295,11 @@ export async function saveGeneration(
       context
     );
 
+    let generationId: string | null = null;
+
     // Save generation history when a generation type is provided.
     if (generationType) {
-      await saveGenerationRecord(
+      generationId = await saveGenerationRecord(
         userId,
         generationType,
         prompt || '',
@@ -313,6 +315,7 @@ export async function saveGeneration(
       body: JSON.stringify({
         success: true,
         blobUrl: blobUrlWithSas,
+        generationId,
         userId,
       }),
     };

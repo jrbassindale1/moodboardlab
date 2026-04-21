@@ -4,7 +4,7 @@
  * Helper functions for tracking and updating user generation usage.
  */
 
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import type { PatchOperation } from '@azure/cosmos';
 import {
   getContainer,
@@ -193,7 +193,7 @@ export async function saveGenerationRecord(
   metadata?: Record<string, unknown>
 ): Promise<string> {
   const generationsContainer = getContainer('generations');
-  const id = uuidv4();
+  const id = randomUUID();
   const now = new Date().toISOString();
   const sanitizedMaterials = materials ? stripDataUrls(materials) : materials;
 

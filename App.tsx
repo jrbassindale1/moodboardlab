@@ -141,6 +141,7 @@ type ApplyStateCache = {
   sceneControls: SceneControls;
   renderNote: string;
   appliedEditPrompt: string;
+  appliedRenderGenerationId: string | null;
   savedAt: string;
 };
 
@@ -228,6 +229,7 @@ const App: React.FC = () => {
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
   const [restoredWithoutMoodboard, setRestoredWithoutMoodboard] = useState(false);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
+  const [appliedRenderGenerationId, setAppliedRenderGenerationId] = useState<string | null>(null);
   const [sustainabilityBriefing, setSustainabilityBriefing] =
     useState<SustainabilityBriefingResponse | null>(null);
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
@@ -269,6 +271,7 @@ const App: React.FC = () => {
     setMoodboardRenderUrl(null);
     setRestoredWithoutMoodboard(false);
     setAppliedRenderUrl(null);
+    setAppliedRenderGenerationId(null);
     setSustainabilityBriefing(null);
     setBriefingPayload(null);
     setBriefingMaterialsKey(null);
@@ -343,6 +346,7 @@ const App: React.FC = () => {
     setCurrentProject(null);
     setMoodboardRenderUrl(null);
     setAppliedRenderUrl(null);
+    setAppliedRenderGenerationId(null);
     setSustainabilityBriefing(null);
     setBriefingPayload(null);
     setBriefingMaterialsKey(null);
@@ -499,6 +503,7 @@ const App: React.FC = () => {
     if (cached.sceneControls) setSceneControls(cached.sceneControls);
     if (cached.renderNote) setRenderNote(cached.renderNote);
     if (cached.appliedEditPrompt) setAppliedEditPrompt(cached.appliedEditPrompt);
+    setAppliedRenderGenerationId(cached.appliedRenderGenerationId ?? null);
   }, []);
 
   // Persist Apply page state to localStorage
@@ -512,6 +517,7 @@ const App: React.FC = () => {
       sceneControls,
       renderNote,
       appliedEditPrompt,
+      appliedRenderGenerationId,
       savedAt: new Date().toISOString(),
     };
     try {
@@ -519,7 +525,7 @@ const App: React.FC = () => {
     } catch {
       // Ignore storage errors
     }
-  }, [uploadedImages, styleReferenceImage, styleReferenceSource, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt]);
+  }, [uploadedImages, styleReferenceImage, styleReferenceSource, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt, appliedRenderGenerationId]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -566,6 +572,7 @@ const App: React.FC = () => {
     savedPrecedents: restoredPrecedents,
     projectId: restoredProjectId,
     projectName: restoredProjectName,
+    generationId: restoredGenerationId,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
@@ -577,6 +584,7 @@ const App: React.FC = () => {
     savedPrecedents?: PrecedentResult[] | null;
     projectId?: string | null;
     projectName?: string | null;
+    generationId?: string | null;
   }) => {
     setSelectedMaterials(board);
 
@@ -590,6 +598,7 @@ const App: React.FC = () => {
     }
 
     if (targetPage === 'moodboard') {
+      setAppliedRenderGenerationId(null);
       // Convert to data URI to prevent "Load failed" errors when the URL expires
       if (generationImageUrl) {
         try {
@@ -635,6 +644,7 @@ const App: React.FC = () => {
         setAppliedRenderUrl(generationImageUrl);
       }
     }
+    setAppliedRenderGenerationId(restoredGenerationId || null);
     // Always set moodboard URL when restoring (clears any existing if none saved)
     console.log('=== RESTORE FROM DASHBOARD ===');
     console.log('restoredMoodboardUrl:', restoredMoodboardUrl ? `${restoredMoodboardUrl.substring(0, 100)}...` : 'null');
@@ -705,6 +715,8 @@ const App: React.FC = () => {
             onRenderNoteChange={setRenderNote}
             appliedEditPrompt={appliedEditPrompt}
             onAppliedEditPromptChange={setAppliedEditPrompt}
+            appliedRenderGenerationId={appliedRenderGenerationId}
+            onAppliedRenderGenerationIdChange={setAppliedRenderGenerationId}
             currentProject={currentProject}
           />
         );

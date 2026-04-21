@@ -29,6 +29,7 @@ interface DashboardProps {
     savedPrecedents?: PrecedentResult[] | null;
     projectId?: string | null;
     projectName?: string | null;
+    generationId?: string | null;
   }) => void;
 }
 
@@ -427,6 +428,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       savedPrecedents: savedPrecedents || null,
       projectId: projectId || null,
       projectName: projectName || null,
+      generationId: gen.id,
     });
   };
 

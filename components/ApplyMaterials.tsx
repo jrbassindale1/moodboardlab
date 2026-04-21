@@ -1,12 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType, getGenerations, type Generation } from '../api';
+import {
+  callGeminiImage,
+  saveGenerationAuth,
+  savePdfAuth,
+  checkQuota,
+  consumeCredits,
+  CREDIT_COSTS,
+  GenerationType,
+  getGenerations,
+  getSavedMaterialTranslation,
+  translateRenderToProducts,
+  type Generation,
+} from '../api';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { DrawingType } from '../utils/renderViewGuidance';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
 import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
+import type {
+  MaterialTranslationContext,
+  MaterialTranslationResult,
+  MaterialTranslationStatus,
+} from '../types/materialTranslation';
 import {
   buildPreservedFilename,
   buildTimestampedFilename,
@@ -19,6 +36,7 @@ import {
   loadImage,
 } from '../utils/imageProcessing';
 import { DEFAULT_SCENE_CONTROLS } from './apply-materials/constants';
+import MaterialTranslationPanel from './apply-materials/MaterialTranslationPanel';
 import PostProcessingModal from './apply-materials/PostProcessingModal';
 import ProjectContextPanel from './apply-materials/ProjectContextPanel';
 import RenderSetupPanel from './apply-materials/RenderSetupPanel';
@@ -51,6 +69,8 @@ interface ApplyMaterialsProps {
   onRenderNoteChange: (note: string) => void;
   appliedEditPrompt: string;
   onAppliedEditPromptChange: (prompt: string) => void;
+  appliedRenderGenerationId: string | null;
+  onAppliedRenderGenerationIdChange: (generationId: string | null) => void;
   // Project state
   currentProject?: Project | null;
 }
@@ -132,6 +152,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onRenderNoteChange,
   appliedEditPrompt,
   onAppliedEditPromptChange,
+  appliedRenderGenerationId,
+  onAppliedRenderGenerationIdChange,
   // Project state
   currentProject
 }) => {
@@ -168,6 +190,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [isWorkspaceImageModalOpen, setIsWorkspaceImageModalOpen] = useState(false);
   const [isSetupSceneControlsOpen, setIsSetupSceneControlsOpen] = useState(false);
   const [isRefineSceneControlsOpen, setIsRefineSceneControlsOpen] = useState(false);
+  const [materialTranslationStatus, setMaterialTranslationStatus] = useState<MaterialTranslationStatus>('idle');
+  const [materialTranslationResult, setMaterialTranslationResult] = useState<MaterialTranslationResult | null>(null);
+  const [materialTranslationError, setMaterialTranslationError] = useState<string | null>(null);
+  const [materialTranslationCreatedAt, setMaterialTranslationCreatedAt] = useState<string | null>(null);
+  const [materialTranslationRenderId, setMaterialTranslationRenderId] = useState<string | null>(null);
+  const [isExportingSpecificationPdf, setIsExportingSpecificationPdf] = useState(false);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'render' | 'translation'>('render');
+  const [isPersistingRenderRecord, setIsPersistingRenderRecord] = useState(false);
+  const loadedMaterialTranslationRenderRef = useRef<string | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
   const workspaceObjectUrlRef = useRef<string | null>(null);
   const baseFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -181,6 +212,19 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const setSceneControls = onSceneControlsChange;
   const setRenderNote = onRenderNoteChange;
   const setAppliedEditPrompt = onAppliedEditPromptChange;
+  const setAppliedRenderGenerationId = onAppliedRenderGenerationIdChange;
+
+  const resetMaterialTranslationState = (options?: { closePanel?: boolean }) => {
+    setMaterialTranslationStatus('idle');
+    setMaterialTranslationResult(null);
+    setMaterialTranslationError(null);
+    setMaterialTranslationCreatedAt(null);
+    setMaterialTranslationRenderId(null);
+    loadedMaterialTranslationRenderRef.current = null;
+    if (options?.closePanel) {
+      setActiveWorkspaceTab('render');
+    }
+  };
 
   const resetBaseImageDependentState = () => {
     setDrawingType('auto');
@@ -192,8 +236,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     setRenderNote('');
     setAppliedEditPrompt('');
     onAppliedRenderUrlChange(null);
+    setAppliedRenderGenerationId(null);
+    setIsPersistingRenderRecord(false);
     setPreviousRenderUrl(null);
     setImageModelFallbackWarning(null);
+    resetMaterialTranslationState({ closePanel: true });
     setError(null);
   };
 
@@ -346,6 +393,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   }, [workspaceDisplayUrl]);
 
   useEffect(() => {
+    if (appliedRenderUrl) return;
+    setActiveWorkspaceTab('render');
+  }, [appliedRenderUrl]);
+
+  useEffect(() => {
     if (!isWorkspaceImageModalOpen || typeof window === 'undefined') return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -451,6 +503,64 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     isAuthenticated,
     styleReferenceSourceMode
   ]);
+
+  useEffect(() => {
+    if (!appliedRenderGenerationId || !isAuthenticated) return;
+    if (loadedMaterialTranslationRenderRef.current === appliedRenderGenerationId) return;
+
+    let isCancelled = false;
+
+    const loadSavedTranslation = async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const saved = await getSavedMaterialTranslation(appliedRenderGenerationId, token);
+        if (isCancelled || !saved?.result) return;
+
+        setMaterialTranslationResult(saved.result);
+        setMaterialTranslationStatus('ready');
+        setMaterialTranslationError(null);
+        setMaterialTranslationCreatedAt(saved.createdAt || null);
+        setMaterialTranslationRenderId(appliedRenderGenerationId);
+        loadedMaterialTranslationRenderRef.current = appliedRenderGenerationId;
+      } catch (err) {
+        const message = err instanceof Error ? err.message.toLowerCase() : '';
+        if (message.includes('no saved material translation') || message.includes('status 404')) {
+          if (!isCancelled && materialTranslationRenderId !== appliedRenderGenerationId) {
+            setMaterialTranslationResult(null);
+            setMaterialTranslationStatus('idle');
+            setMaterialTranslationError(null);
+            setMaterialTranslationCreatedAt(null);
+            setMaterialTranslationRenderId(null);
+          }
+          loadedMaterialTranslationRenderRef.current = appliedRenderGenerationId;
+          return;
+        }
+        if (!isCancelled) {
+          console.warn('Could not load saved material translation', err);
+        }
+      }
+    };
+
+    void loadSavedTranslation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [appliedRenderGenerationId, getAccessToken, isAuthenticated, materialTranslationRenderId]);
+
+  useEffect(() => {
+    if (!appliedRenderGenerationId) return;
+    if (!materialTranslationRenderId) return;
+    if (materialTranslationRenderId === appliedRenderGenerationId) return;
+
+    setMaterialTranslationResult(null);
+    setMaterialTranslationStatus('idle');
+    setMaterialTranslationError(null);
+    setMaterialTranslationCreatedAt(null);
+    setMaterialTranslationRenderId(null);
+    setActiveWorkspaceTab('render');
+  }, [appliedRenderGenerationId, materialTranslationRenderId]);
 
   const handleToggleExclude = (idxToToggle: number, value: boolean) => {
     if (!onBoardChange) return;
@@ -631,7 +741,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       imageModelUsed?: string;
       imageFallbackUsed?: boolean;
     }
-  ) => {
+  ): Promise<string | null> => {
     const trimmedNote = renderNote.trim();
     console.log('=== SAVING RENDER ===');
     console.log('moodboardRenderUrl prop:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
@@ -690,23 +800,27 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
     if (!isAuthenticated) {
       console.warn('Skipping save-generation: user not authenticated.');
-      return;
+      return null;
     }
 
     try {
       const token = await getAccessToken();
       if (!token) {
         console.warn('Skipping save-generation: missing access token.');
-        return;
+        return null;
       }
-      await saveGenerationAuth({
+      const saved = await saveGenerationAuth({
         prompt,
         imageDataUri,
         materials: metadata,
         generationType
       }, token);
+      return typeof saved.generationId === 'string' && saved.generationId.trim()
+        ? saved.generationId
+        : null;
     } catch (err) {
       console.error('Authenticated save failed:', err);
+      return null;
     }
   };
 
@@ -717,6 +831,576 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       return calculateAspectRatio(image.width, image.height);
     } catch {
       return null;
+    }
+  };
+
+  const buildMaterialTranslationContext = (): MaterialTranslationContext => {
+    const selectedMaterialPalette = renderMaterials
+      .slice(0, 20)
+      .map((material) => `${material.name} (${material.category})`);
+
+    return {
+      projectType: currentProject?.name || undefined,
+      region: undefined,
+      userMaterials: renderMaterials
+        .slice(0, 20)
+        .map((material) => ({
+          id: material.id,
+          name: material.name,
+          category: material.category,
+          finish: material.finish,
+        })),
+      selectedMaterialPalette,
+      sustainabilityPreference: undefined,
+      budgetTier: undefined,
+    };
+  };
+
+  const runMaterialTranslation = async (options?: { force?: boolean }) => {
+    if (!appliedRenderUrl) return;
+    if (materialTranslationStatus === 'loading') return;
+    if (materialTranslationResult && !options?.force) {
+      setActiveWorkspaceTab('translation');
+      return;
+    }
+
+    setActiveWorkspaceTab('translation');
+    setMaterialTranslationStatus('loading');
+    setMaterialTranslationError(null);
+
+    try {
+      const token = isAuthenticated ? await getAccessToken() : null;
+      const response = await translateRenderToProducts(
+        {
+          imageUrl: appliedRenderUrl,
+          projectId: currentProject?.id,
+          renderId: appliedRenderGenerationId || undefined,
+          context: buildMaterialTranslationContext(),
+        },
+        {
+          accessToken: token,
+          timeoutMs: 120000,
+        }
+      );
+
+      setMaterialTranslationResult(response.result);
+      setMaterialTranslationStatus('ready');
+      setMaterialTranslationError(null);
+      setMaterialTranslationCreatedAt(response.createdAt || new Date().toISOString());
+      const resolvedRenderId =
+        (typeof response.renderId === 'string' && response.renderId.trim()) ||
+        appliedRenderGenerationId ||
+        null;
+      setMaterialTranslationRenderId(resolvedRenderId);
+
+      if (resolvedRenderId) {
+        loadedMaterialTranslationRenderRef.current = resolvedRenderId;
+        setAppliedRenderGenerationId(resolvedRenderId);
+      }
+    } catch (err) {
+      setMaterialTranslationStatus('error');
+      setMaterialTranslationError(
+        err instanceof Error
+          ? err.message
+          : 'Could not translate this render right now.'
+      );
+    }
+  };
+
+  const handleTranslateToProducts = () => {
+    if (!appliedRenderUrl) return;
+    if (materialTranslationResult) {
+      setActiveWorkspaceTab('translation');
+      return;
+    }
+    void runMaterialTranslation();
+  };
+
+  const handleReanalyseMaterialTranslation = () => {
+    setActiveWorkspaceTab('translation');
+    void runMaterialTranslation({ force: true });
+  };
+
+  const loadImageAsDataUri = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Could not load render image for PDF.');
+    }
+
+    const blob = await response.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Could not read render image data.'));
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleDownloadSpecificationPdf = async () => {
+    if (!materialTranslationResult) {
+      setMaterialTranslationError('No specification pathways available to export yet.');
+      return;
+    }
+
+    setIsExportingSpecificationPdf(true);
+    try {
+      const translation = materialTranslationResult;
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+      type RGB = [number, number, number];
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginX = 24;
+      const topMargin = 24;
+      const bottomLimit = pageHeight - 28;
+      const contentWidth = pageWidth - marginX * 2;
+      let cursorY = topMargin;
+
+      const splitLines = (text: string, maxWidth: number): string[] =>
+        (doc.splitTextToSize(
+          (text || '-')
+            .replace(/\s+/g, ' ')
+            .trim(),
+          maxWidth
+        ) as string[]) || ['-'];
+
+      const ensureSpace = (neededHeight: number) => {
+        if (cursorY + neededHeight <= bottomLimit) return;
+        doc.addPage();
+        cursorY = topMargin;
+      };
+
+      const drawBadge = (
+        text: string,
+        x: number,
+        y: number,
+        background: RGB,
+        foreground: RGB
+      ): number => {
+        const badgeHeight = 12;
+        const badgeWidth = doc.getTextWidth(text) + 12;
+        doc.setFillColor(background[0], background[1], background[2]);
+        doc.roundedRect(x, y, badgeWidth, badgeHeight, 6, 6, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(foreground[0], foreground[1], foreground[2]);
+        doc.text(text, x + 6, y + 8.2);
+        return badgeWidth;
+      };
+
+      const pickFirst = (...values: Array<string | undefined | null>): string => {
+        for (const value of values) {
+          const normalized = String(value || '').trim();
+          if (normalized) return normalized;
+        }
+        return '';
+      };
+
+      const collectLegacySuppliers = (
+        system: (typeof translation.systems)[number]
+      ): Array<{ name: string; url: string }> => {
+        const pool: Array<{ name: string; url: string }> = [];
+
+        if (Array.isArray(system.recommendedPathway?.manufacturers)) {
+          pool.push(...system.recommendedPathway.manufacturers);
+        }
+        if (Array.isArray(system.alternativePathway?.manufacturers)) {
+          pool.push(...system.alternativePathway.manufacturers);
+        }
+        if (Array.isArray(system.buildableOptions)) {
+          for (const option of system.buildableOptions.slice(0, 2)) {
+            if (Array.isArray(option.manufacturers)) {
+              pool.push(...option.manufacturers);
+            }
+          }
+        }
+
+        const deduped = new Map<string, { name: string; url: string }>();
+        for (const supplier of pool) {
+          const name = String(supplier?.name || '').trim();
+          const url = String(supplier?.url || '').trim();
+          if (!name || !url) continue;
+
+          const key = `${name.toLowerCase()}|${url.toLowerCase()}`;
+          if (!deduped.has(key)) {
+            deduped.set(key, { name, url });
+          }
+        }
+
+        return Array.from(deduped.values()).slice(0, 3);
+      };
+
+      const resolveSuppliers = (
+        system: (typeof translation.systems)[number]
+      ): Array<{ name: string; url: string }> => {
+        const current = Array.isArray(system.possibleSuppliers)
+          ? system.possibleSuppliers
+              .map((supplier) => ({
+                name: String(supplier?.name || '').trim(),
+                url: String(supplier?.url || '').trim(),
+              }))
+              .filter((supplier) => supplier.name && supplier.url)
+              .slice(0, 3)
+          : [];
+
+        if (current.length > 0) return current;
+        return collectLegacySuppliers(system);
+      };
+
+      const resolveCostBand = (system: (typeof translation.systems)[number]): string | null => {
+        const value = String(system.costBand || '').trim();
+        if (value && value !== 'unknown') return value;
+        const recommended = String(system.recommendedPathway?.costBand || '').trim();
+        if (recommended) return recommended;
+        const legacy = String(system.buildableOptions?.[0]?.costBand || '').trim();
+        return legacy || null;
+      };
+
+      const resolveCarbonSignal = (system: (typeof translation.systems)[number]): string | null => {
+        const value = String(system.carbonSignal || '').trim();
+        if (value && value !== 'unknown') return value;
+        const recommended = String(system.recommendedPathway?.carbonSignal || '').trim();
+        if (recommended && recommended !== 'unknown') return recommended;
+        const legacy = String(system.buildableOptions?.[0]?.carbonSignal || '').trim();
+        if (legacy && legacy !== 'unknown') return legacy;
+        return null;
+      };
+
+      const generatedLabel = new Date().toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const confidence = translation.summary.confidence;
+      const confidenceBadgeStyle: Record<typeof confidence, { bg: RGB; text: RGB }> = {
+        high: { bg: [220, 252, 231], text: [22, 101, 52] },
+        medium: { bg: [219, 234, 254], text: [30, 64, 175] },
+        low: { bg: [254, 243, 199], text: [146, 64, 14] },
+      };
+
+      const headerHeight = 68;
+      ensureSpace(headerHeight + 12);
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(marginX, cursorY, contentWidth, headerHeight, 8, 8, 'F');
+      doc.setFillColor(236, 253, 245);
+      doc.roundedRect(marginX + contentWidth * 0.48, cursorY, contentWidth * 0.52, headerHeight, 8, 8, 'F');
+      doc.setDrawColor(209, 250, 229);
+      doc.roundedRect(marginX, cursorY, contentWidth, headerHeight, 8, 8, 'S');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(31, 41, 55);
+      doc.text('SPECIFICATION PATHWAYS', marginX + 12, cursorY + 20);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(75, 85, 99);
+      doc.text('Render-led architectural routes for early-stage decision support.', marginX + 12, cursorY + 36);
+      doc.text(`Generated ${generatedLabel}`, marginX + 12, cursorY + 50);
+
+      drawBadge(
+        `CONFIDENCE: ${confidence.toUpperCase()}`,
+        marginX + contentWidth - 118,
+        cursorY + 10,
+        confidenceBadgeStyle[confidence].bg,
+        confidenceBadgeStyle[confidence].text
+      );
+
+      cursorY += headerHeight + 12;
+
+      if (appliedRenderUrl) {
+        try {
+          const imageDataUri = await loadImageAsDataUri(appliedRenderUrl);
+          const image = await loadImage(imageDataUri);
+          const imagePadding = 12;
+          const maxWidth = contentWidth - imagePadding * 2;
+          const maxHeight = 212;
+          const imageRatio = image.width / image.height;
+          let drawWidth = maxWidth;
+          let drawHeight = drawWidth / imageRatio;
+          if (drawHeight > maxHeight) {
+            drawHeight = maxHeight;
+            drawWidth = drawHeight * imageRatio;
+          }
+
+          const imageCardHeight = drawHeight + 26;
+          ensureSpace(imageCardHeight + 12);
+
+          doc.setFillColor(255, 255, 255);
+          doc.setDrawColor(229, 231, 235);
+          doc.roundedRect(marginX, cursorY, contentWidth, imageCardHeight, 8, 8, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(107, 114, 128);
+          doc.text('REFERENCE RENDER', marginX + imagePadding, cursorY + 14);
+
+          const imageFormat = imageDataUri.includes('image/png') ? 'PNG' : 'JPEG';
+          const imageX = marginX + (contentWidth - drawWidth) / 2;
+          doc.addImage(
+            imageDataUri,
+            imageFormat,
+            imageX,
+            cursorY + 18,
+            drawWidth,
+            drawHeight,
+            undefined,
+            'FAST'
+          );
+
+          cursorY += imageCardHeight + 14;
+        } catch (imageError) {
+          console.warn('Specification PDF image embedding failed', imageError);
+        }
+      }
+
+      ensureSpace(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(75, 85, 99);
+      doc.text('KEY SYSTEM PATHWAYS', marginX, cursorY);
+      cursorY += 12;
+
+      for (const system of translation.systems.slice(0, 4)) {
+        const evidenceStrength = String(system.evidenceStrength || 'medium').toLowerCase();
+        const readsAs = pickFirst(
+          system.readsAs,
+          system.whyThisReadsThisWay,
+          system.visualIntent,
+          system.likelySystem,
+          'Likely system intent inferred from render evidence.'
+        );
+        const likelyRoute = pickFirst(
+          system.likelyRoute,
+          system.recommendedPathway?.name,
+          system.likelySystem,
+          system.buildableOptions?.[0]?.name,
+          'Likely route requires project-specific validation.'
+        );
+        const alternative = pickFirst(
+          system.alternative,
+          system.alternativePathway?.name,
+          system.buildableOptions?.[1]?.name,
+          system.buildableOptions?.[0]?.name,
+          'Alternative route to test against programme and buildability priorities.'
+        );
+        const watchOut = pickFirst(
+          system.watchOut,
+          system.risks?.[0],
+          system.designNote,
+          system.tradeOff,
+          'Check interfaces, movement, fire, and drainage strategy before route lock-in.'
+        );
+        const suppliers = resolveSuppliers(system);
+        const costBand = resolveCostBand(system);
+        const carbonSignal = resolveCarbonSignal(system);
+
+        const maxTextWidth = contentWidth - 24;
+        const readsLines = splitLines(readsAs, maxTextWidth);
+        const likelyLines = splitLines(likelyRoute, maxTextWidth);
+        const alternativeLines = splitLines(alternative, maxTextWidth);
+        const watchOutLines = splitLines(watchOut, maxTextWidth);
+
+        const fieldHeight = (lineCount: number) => 12 + lineCount * 9.2 + 4;
+        const suppliersHeight = suppliers.length > 0 ? 12 + suppliers.length * 20 : 0;
+        const cardHeight =
+          26 +
+          fieldHeight(readsLines.length) +
+          fieldHeight(likelyLines.length) +
+          fieldHeight(alternativeLines.length) +
+          fieldHeight(watchOutLines.length) +
+          suppliersHeight +
+          8;
+
+        ensureSpace(cardHeight + 10);
+        const cardTop = cursorY;
+
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(marginX, cardTop, contentWidth, cardHeight, 8, 8, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text(String(system.category || 'System').toUpperCase(), marginX + 12, cardTop + 16);
+
+        const evidenceBadge = evidenceStrength === 'high'
+          ? { bg: [220, 252, 231] as RGB, text: [22, 101, 52] as RGB, label: 'EVIDENCE: HIGH' }
+          : evidenceStrength === 'low'
+          ? { bg: [254, 243, 199] as RGB, text: [146, 64, 14] as RGB, label: 'EVIDENCE: LOW' }
+          : { bg: [219, 234, 254] as RGB, text: [30, 64, 175] as RGB, label: 'EVIDENCE: MEDIUM' };
+
+        const badgeQueue: Array<{ label: string; bg: RGB; text: RGB }> = [evidenceBadge];
+        if (costBand) {
+          badgeQueue.push({
+            label: `COST ${String(costBand).toUpperCase()}`,
+            bg: [243, 244, 246],
+            text: [55, 65, 81],
+          });
+        }
+        if (carbonSignal) {
+          badgeQueue.push({
+            label: `CARBON ${String(carbonSignal).toUpperCase()}`,
+            bg: [241, 245, 249],
+            text: [71, 85, 105],
+          });
+        }
+
+        let badgeX = marginX + contentWidth - 12;
+        for (let index = badgeQueue.length - 1; index >= 0; index -= 1) {
+          const badge = badgeQueue[index];
+          const badgeWidth = doc.getTextWidth(badge.label) + 12;
+          badgeX -= badgeWidth;
+          drawBadge(badge.label, badgeX, cardTop + 8, badge.bg, badge.text);
+          badgeX -= 6;
+        }
+
+        let bodyY = cardTop + 30;
+
+        const drawField = (label: string, lines: string[]) => {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.8);
+          doc.setTextColor(107, 114, 128);
+          doc.text(label.toUpperCase(), marginX + 12, bodyY);
+          bodyY += 10;
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(31, 41, 55);
+          doc.text(lines, marginX + 12, bodyY);
+          bodyY += lines.length * 9.2 + 4;
+        };
+
+        drawField('Reads as', readsLines);
+        drawField('Likely route', likelyLines);
+        drawField('Alternative', alternativeLines);
+        drawField('Watch-out', watchOutLines);
+
+        if (suppliers.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.8);
+          doc.setTextColor(107, 114, 128);
+          doc.text('POSSIBLE SUPPLIERS', marginX + 12, bodyY);
+          bodyY += 10;
+
+          const linkApi = doc as unknown as {
+            textWithLink?: (
+              text: string,
+              x: number,
+              y: number,
+              options: { url: string }
+            ) => void;
+          };
+
+          for (const supplier of suppliers.slice(0, 3)) {
+            const linkLabel = supplier.name;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.7);
+            doc.setTextColor(37, 99, 235);
+            if (typeof linkApi.textWithLink === 'function') {
+              linkApi.textWithLink(linkLabel, marginX + 12, bodyY, { url: supplier.url });
+            } else {
+              doc.text(linkLabel, marginX + 12, bodyY);
+            }
+            const underlineWidth = Math.min(doc.getTextWidth(linkLabel), maxTextWidth - 4);
+            doc.setDrawColor(59, 130, 246);
+            doc.line(marginX + 12, bodyY + 1.5, marginX + 12 + underlineWidth, bodyY + 1.5);
+            bodyY += 9;
+
+            const supplierUrlLine = splitLines(supplier.url, maxTextWidth - 8)[0];
+            doc.setFontSize(7.3);
+            doc.setTextColor(100, 116, 139);
+            doc.text(supplierUrlLine, marginX + 16, bodyY);
+            bodyY += 11;
+          }
+        }
+
+        cursorY = cardTop + cardHeight + 10;
+      }
+
+      const realityCheck = (translation.realityCheck || []).slice(0, 3);
+      if (realityCheck.length > 0) {
+        const realityLines = realityCheck.flatMap((item) =>
+          splitLines(`- ${item}`, contentWidth - 24)
+        );
+        const realityHeight = Math.max(68, 24 + realityLines.length * 9.2 + 8);
+        ensureSpace(realityHeight + 8);
+
+        doc.setFillColor(249, 250, 251);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(marginX, cursorY, contentWidth, realityHeight, 8, 8, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(75, 85, 99);
+        doc.text('REALITY CHECK', marginX + 12, cursorY + 16);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.8);
+        doc.setTextColor(55, 65, 81);
+        doc.text(realityLines, marginX + 12, cursorY + 30);
+        cursorY += realityHeight + 12;
+      }
+
+      ensureSpace(30);
+      doc.setDrawColor(229, 231, 235);
+      doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
+      cursorY += 11;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(107, 114, 128);
+      doc.text(`Generated by MoodboardLab | ${generatedLabel}`, pageWidth / 2, cursorY, {
+        align: 'center',
+      });
+      cursorY += 9;
+
+      const disclaimerLines = splitLines(
+        translation.summary.disclaimer ||
+          'Early-stage guidance only. Validate routes through project-specific design development.',
+        contentWidth - 44
+      ).slice(0, 2);
+      doc.setFontSize(6.75);
+      doc.setTextColor(148, 163, 184);
+      doc.text(disclaimerLines, pageWidth / 2, cursorY, { align: 'center' });
+
+      doc.save('specification-pathways.pdf');
+      trackEvent('download_pdf', {
+        pdf_type: 'specification_pathways',
+        source: 'render',
+      });
+
+      if (isAuthenticated) {
+        try {
+          const token = await getAccessToken();
+          if (token) {
+            const pdfDataUri = doc.output('datauristring');
+            await savePdfAuth(
+              {
+                pdfDataUri,
+                pdfType: 'specificationPathways',
+                materials: {
+                  board,
+                  materialTranslation: materialTranslationResult,
+                  renderId: appliedRenderGenerationId,
+                },
+              },
+              token
+            );
+          }
+        } catch (saveErr) {
+          console.warn('Specification pathways PDF downloaded but could not save to backend', saveErr);
+        }
+      }
+    } catch (err) {
+      console.error('Specification pathways PDF export failed', err);
+      setMaterialTranslationError(
+        err instanceof Error ? err.message : 'Could not create the specification pathways PDF.'
+      );
+    } finally {
+      setIsExportingSpecificationPdf(false);
     }
   };
 
@@ -892,6 +1576,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     setRenderingMode(options?.renderMode ?? null);
     setError(null);
     setImageModelFallbackWarning(null);
+    setIsPersistingRenderRecord(false);
+    setAppliedRenderGenerationId(null);
+    resetMaterialTranslationState({ closePanel: true });
     const prompt = buildApplyRenderPrompt({
       renderMaterials,
       sceneControls,
@@ -1020,6 +1707,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       setPreviousRenderUrl(appliedRenderUrl);
       onAppliedRenderUrlChange(newUrl);
+      setActiveWorkspaceTab('render');
 
       // Reset scene controls after successful render
       setSceneControls(DEFAULT_SCENE_CONTROLS);
@@ -1035,10 +1723,19 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         event_label: eventLabel,
       });
 
-      void persistGeneration(newUrl, prompt, billedGenerationType, {
-        imageModelUsed: modelUsed,
-        imageFallbackUsed: fallbackUsed
-      });
+      if (isAuthenticated) {
+        setIsPersistingRenderRecord(true);
+        void persistGeneration(newUrl, prompt, billedGenerationType, {
+          imageModelUsed: modelUsed,
+          imageFallbackUsed: fallbackUsed
+        }).then((savedGenerationId) => {
+          if (savedGenerationId) {
+            setAppliedRenderGenerationId(savedGenerationId);
+          }
+        }).finally(() => {
+          setIsPersistingRenderRecord(false);
+        });
+      }
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
@@ -1106,6 +1803,17 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     : canUse4K
     ? 'Create high-resolution 4K final output from your sketch'
     : 'Requires at least 5 purchased credits';
+  const hasMaterialTranslation = Boolean(materialTranslationResult);
+  const isTranslatingToProducts = materialTranslationStatus === 'loading';
+  const canTranslateToProducts = Boolean(
+    appliedRenderUrl &&
+      (!isAuthenticated || hasMaterialTranslation || Boolean(appliedRenderGenerationId)) &&
+      !isPersistingRenderRecord
+  );
+  const translateToProductsHint =
+    isAuthenticated && !hasMaterialTranslation && !appliedRenderGenerationId
+      ? 'Saving render record before specification pathways...'
+      : null;
   const canStartRender = status === 'idle' && board.length > 0 && renderMaterials.length > 0 && effectiveCanGenerate && Boolean(uploadedImage);
   const unmetRenderRequirements = useMemo(() => {
     const hints: string[] = [];
@@ -1247,6 +1955,26 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             fourKTooltip={fourKTooltip}
             onDownloadRender={() => void handleDownloadImage(appliedRenderUrl || '', 'applied')}
             isDownloadingApplied={downloadingId === 'applied'}
+            activeWorkspaceTab={activeWorkspaceTab}
+            onWorkspaceTabChange={setActiveWorkspaceTab}
+            onTranslateToProducts={handleTranslateToProducts}
+            isTranslatingToProducts={isTranslatingToProducts}
+            hasMaterialTranslation={hasMaterialTranslation}
+            canTranslateToProducts={canTranslateToProducts}
+            translateToProductsHint={translateToProductsHint}
+            materialTranslationPanel={
+              <MaterialTranslationPanel
+                isOpen={activeWorkspaceTab === 'translation'}
+                status={materialTranslationStatus}
+                result={materialTranslationResult}
+                error={materialTranslationError}
+                createdAt={materialTranslationCreatedAt}
+                isDownloadingPdf={isExportingSpecificationPdf}
+                onClose={() => setActiveWorkspaceTab('render')}
+                onReanalyse={handleReanalyseMaterialTranslation}
+                onDownloadPdf={() => void handleDownloadSpecificationPdf()}
+              />
+            }
           />
         </div>
       </div>

@@ -3,6 +3,7 @@ import './functions/consume-credits';
 import './functions/create-checkout-session';
 import './functions/generateMoodboard';
 import './functions/generations';
+import './functions/material-translation';
 import './functions/materials';
 import './functions/save-generation';
 import './functions/save-material-icon';

@@ -9,8 +9,7 @@
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { BlobServiceClient } from '@azure/storage-blob';
-import { createHash } from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
+import { createHash, randomUUID } from 'crypto';
 import { validateToken } from '../shared/validateToken';
 import { saveGenerationRecord, GenerationType } from '../shared/usageHelpers';
 import { getContainer, GenerationDocument } from '../shared/cosmosClient';
@@ -62,11 +61,11 @@ const getBoardKey = (materials?: unknown): string | null => {
 
 const getPdfBlobName = (
   userId: string,
-  pdfType: 'sustainabilityBriefing' | 'materialsSheet',
+  pdfType: 'sustainabilityBriefing' | 'materialsSheet' | 'specificationPathways',
   boardKey?: string | null
 ): string => {
   if (!boardKey) {
-    return `${uuidv4()}.pdf`;
+    return `${randomUUID()}.pdf`;
   }
   const safeUserId = userId.replace(/[^a-zA-Z0-9_-]/g, '') || 'user';
   const hash = createHash('sha256').update(boardKey).digest('hex').slice(0, 24);
@@ -154,7 +153,7 @@ export async function savePdf(
 
     const body = await request.json() as {
       pdfBase64?: string;
-      pdfType?: 'sustainabilityBriefing' | 'materialsSheet';
+      pdfType?: 'sustainabilityBriefing' | 'materialsSheet' | 'specificationPathways';
       materials?: unknown;
     };
 
@@ -168,7 +167,7 @@ export async function savePdf(
       };
     }
 
-    if (!pdfType || !['sustainabilityBriefing', 'materialsSheet'].includes(pdfType)) {
+    if (!pdfType || !['sustainabilityBriefing', 'materialsSheet', 'specificationPathways'].includes(pdfType)) {
       return {
         status: 400,
         headers,
@@ -192,6 +191,8 @@ export async function savePdf(
     // Save to user's generation history (but don't increment usage - PDFs are free)
     const promptDescription = pdfType === 'sustainabilityBriefing'
       ? 'Sustainability Briefing PDF'
+      : pdfType === 'specificationPathways'
+      ? 'Specification Pathways PDF'
       : 'Materials Sheet PDF';
 
     const generationsContainer = getContainer('generations');
