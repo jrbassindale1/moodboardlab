@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, AlertTriangle, Loader2, Wand2, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Wand2, CheckCircle2, RefreshCw } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import PrecedentsSection from './moodboard/PrecedentsSection';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
@@ -445,6 +445,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const briefingAbortControllerRef = useRef<AbortController | null>(null);
   // Track the materials key used for the last briefing (for cache invalidation)
   const lastBriefingMaterialsKeyRef = useRef<string | null>(null);
+  // Track the materials key used for the last moodboard (for invalidation detection)
+  const lastMoodboardMaterialsKeyRef = useRef<string | null>(null);
 
   const [board, setBoard] = useState<BoardItem[]>(() => normalizeBoardItems(initialBoard || []));
   const [sustainabilityInsights, setSustainabilityInsights] = useState<SustainabilityInsight[] | null>(null);
@@ -499,6 +501,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Tab state for workspace sections
   type WorkspaceTab = 'sustainability' | 'precedents' | 'moodboard';
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('sustainability');
+  const [viewedTabs, setViewedTabs] = useState<Set<WorkspaceTab>>(new Set(['sustainability'])); // Track which tabs user has viewed
+  const [moodboardInvalidated, setMoodboardInvalidated] = useState(false);
+  const [precedentsInvalidated, setPrecedentsInvalidated] = useState(false);
   const [precedentsAutoSearchTrigger, setPrecedentsAutoSearchTrigger] = useState(0);
   const [precedentsSearchInProgress, setPrecedentsSearchInProgress] = useState(false);
   const [precedentsSearchCompleted, setPrecedentsSearchCompleted] = useState(false);
@@ -656,6 +661,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const setMoodboardRenderUrl = (url: string | null) => {
     setMoodboardRenderUrlState(url);
     onMoodboardRenderUrlChange?.(url);
+    // Clear invalidation flag when new moodboard is generated
+    if (url) {
+      setMoodboardInvalidated(false);
+      lastMoodboardMaterialsKeyRef.current = buildMaterialKey();
+    }
   };
 
   const setSustainabilityBriefing = (value: SustainabilityBriefingResponse | null) => {
@@ -733,6 +743,34 @@ const Moodboard: React.FC<MoodboardProps> = ({
       onBriefingInvalidatedMessageChange?.(null);
     }
   }, [board, currentMaterialsKey, sustainabilityBriefing, briefingPayload, onBriefingInvalidatedMessageChange]);
+
+  // Track moodboard invalidation when materials change
+  useEffect(() => {
+    if (!moodboardRenderUrl) {
+      setMoodboardInvalidated(false);
+      return;
+    }
+
+    // If board materials have changed, mark moodboard as invalidated
+    const moodboardMaterialsKey = buildMaterialKey();
+    if (lastMoodboardMaterialsKeyRef.current && moodboardMaterialsKey !== lastMoodboardMaterialsKeyRef.current) {
+      setMoodboardInvalidated(true);
+    }
+  }, [board, buildMaterialKey, moodboardRenderUrl]);
+
+  // Track precedents invalidation when materials change
+  useEffect(() => {
+    if (!savedPrecedents || savedPrecedents.length === 0) {
+      setPrecedentsInvalidated(false);
+      return;
+    }
+
+    // If board materials have changed, mark precedents as invalidated
+    const moodboardMaterialsKey = buildMaterialKey();
+    if (lastMoodboardMaterialsKeyRef.current && moodboardMaterialsKey !== lastMoodboardMaterialsKeyRef.current) {
+      setPrecedentsInvalidated(true);
+    }
+  }, [board, buildMaterialKey, savedPrecedents]);
 
   const buildMaterialKey = () => {
     if (!renderMaterials.length) return 'No materials selected yet.';
@@ -1490,6 +1528,44 @@ const Moodboard: React.FC<MoodboardProps> = ({
     if (!success) {
       console.log('[Retry Briefing] Retry failed');
     }
+  };
+
+  // Handler for generating only the sustainability briefing (without moodboard)
+  const handleGenerateBriefingOnly = async () => {
+    if (!board.length) {
+      setError('Add materials to the moodboard first.');
+      return;
+    }
+    if (!requireAuthForMoodboard()) {
+      return;
+    }
+    setError(null);
+    setIsBriefingLoading(true);
+    const success = await generateBriefing(true);
+    if (!success) {
+      console.log('[Generate Briefing Only] Generation failed');
+    }
+  };
+
+  // Handler for generating only the moodboard (without sustainability briefing)
+  const handleRegenerateMoodboardOnly = async () => {
+    await runMoodboardFlow({ moodboard: true, sustainability: false });
+  };
+
+  // Handler for switching tabs and marking as viewed
+  const handlePrecedentsChange = (precedents: PrecedentResult[] | null) => {
+    setSavedPrecedents(precedents);
+    // Clear invalidation flag when new precedents are found
+    if (precedents && precedents.length > 0) {
+      setPrecedentsInvalidated(false);
+      lastMoodboardMaterialsKeyRef.current = buildMaterialKey();
+    }
+  };
+
+  // Handler for switching tabs and marking as viewed
+  const handleTabChange = (tab: WorkspaceTab) => {
+    setActiveTab(tab);
+    setViewedTabs((prev) => new Set(prev).add(tab));
   };
 
   const runGemini = async (
@@ -2523,7 +2599,7 @@ ${JSON.stringify(proseContext)}`;
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 flex gap-0 overflow-x-auto">
               <button
-                onClick={() => setActiveTab('sustainability')}
+                onClick={() => handleTabChange('sustainability')}
                 className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
                   activeTab === 'sustainability'
                     ? 'border-b-black text-gray-900'
@@ -2533,12 +2609,12 @@ ${JSON.stringify(proseContext)}`;
                 Sustainability
                 {briefingInvalidatedMessage ? (
                   <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
-                ) : sustainabilityBriefing ? (
+                ) : sustainabilityBriefing && !viewedTabs.has('sustainability') ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 ) : null}
               </button>
               <button
-                onClick={() => setActiveTab('moodboard')}
+                onClick={() => handleTabChange('moodboard')}
                 className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
                   activeTab === 'moodboard'
                     ? 'border-b-black text-gray-900'
@@ -2546,12 +2622,14 @@ ${JSON.stringify(proseContext)}`;
                 }`}
               >
                 Moodboard
-                {moodboardRenderUrl && (
+                {moodboardInvalidated ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
+                ) : moodboardRenderUrl && !viewedTabs.has('moodboard') ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                )}
+                ) : null}
               </button>
               <button
-                onClick={() => setActiveTab('precedents')}
+                onClick={() => handleTabChange('precedents')}
                 className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
                   activeTab === 'precedents'
                     ? 'border-b-black text-gray-900'
@@ -2559,11 +2637,11 @@ ${JSON.stringify(proseContext)}`;
                 }`}
               >
                 Precedents
-                {savedPrecedents && savedPrecedents.length > 0 && (
-                  <span className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-600 rounded">
-                    {savedPrecedents.length}
-                  </span>
-                )}
+                {precedentsInvalidated ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
+                ) : savedPrecedents && savedPrecedents.length > 0 && !viewedTabs.has('precedents') ? (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                ) : null}
               </button>
             </div>
 
@@ -2581,7 +2659,7 @@ ${JSON.stringify(proseContext)}`;
                   onDownloadBriefingPdf={handleDownloadBriefingPdf}
                   onDownloadMaterialsSheetPdf={handleDownloadMaterialsSheetPdf}
                   isInvalidated={Boolean(briefingInvalidatedMessage)}
-                  onGenerateBriefing={runMoodboardFlow}
+                  onGenerateBriefing={handleGenerateBriefingOnly}
                 />
               )}
 
@@ -2589,7 +2667,7 @@ ${JSON.stringify(proseContext)}`;
                 <PrecedentsSection
                   materials={board}
                   savedPrecedents={savedPrecedents}
-                  onPrecedentsChange={setSavedPrecedents}
+                  onPrecedentsChange={handlePrecedentsChange}
                   autoSearchTrigger={precedentsAutoSearchTrigger}
                   onSearchComplete={() => {
                     setPrecedentsSearchInProgress(false);
@@ -2612,6 +2690,7 @@ ${JSON.stringify(proseContext)}`;
                       onDownloadBoard={handleDownloadBoard}
                       onNavigate={onNavigate}
                       onMoodboardEdit={handleMoodboardEdit}
+                      onRegenerateMoodboard={handleRegenerateMoodboardOnly}
                     />
                   ) : (
                     <div className="border border-dashed border-gray-300 bg-gray-50 p-8 text-center">

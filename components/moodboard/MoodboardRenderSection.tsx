@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, ImageDown, Wand2 } from 'lucide-react';
+import { Loader2, ImageDown, Wand2, RefreshCw } from 'lucide-react';
 
 interface MoodboardRenderSectionProps {
   moodboardRenderUrl: string;
@@ -12,6 +12,7 @@ interface MoodboardRenderSectionProps {
   onDownloadBoard: (url: string, renderId?: string) => void;
   onNavigate?: (page: string) => void;
   onMoodboardEdit: () => void;
+  onRegenerateMoodboard?: () => void;
 }
 
 const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
@@ -25,12 +26,34 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   onDownloadBoard,
   onNavigate,
   onMoodboardEdit,
+  onRegenerateMoodboard,
 }) => {
   return (
     <div className="space-y-4 animate-fadeIn">
       <div className="border border-gray-200 p-4 bg-white space-y-3">
-        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-          Moodboard Render
+        <div className="flex items-center justify-between">
+          <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+            Moodboard Render
+          </div>
+          {onRegenerateMoodboard && (
+            <button
+              onClick={onRegenerateMoodboard}
+              disabled={isCreatingMoodboard || status === 'all' || status === 'render'}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreatingMoodboard && (status === 'all' || status === 'render') ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Regenerate
+                </>
+              )}
+            </button>
+          )}
         </div>
         <div className="relative w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
           <img
