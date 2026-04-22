@@ -7,15 +7,19 @@ import {
   Trash2,
 } from 'lucide-react';
 import { MaterialOption } from '../../types';
-import { searchPrecedents, consumeCredits, checkQuota, PrecedentResult } from '../../api';
+import { searchPrecedents, enrichPrecedentImages, consumeCredits, checkQuota, PrecedentResult, savePrecedents } from '../../api';
 import { useAuth, useUsage, isAuthBypassEnabled } from '../../auth';
 import PrecedentCard from './PrecedentCard';
+
+// Track which URLs are currently loading images
+type ImageLoadingState = Set<string>;
 
 interface PrecedentsSectionProps {
   materials: MaterialOption[];
   savedPrecedents: PrecedentResult[] | null;
   onPrecedentsChange: (precedents: PrecedentResult[] | null) => void;
   autoSearchTrigger?: number;
+  onSearchComplete?: () => void;
 }
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -41,6 +45,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   savedPrecedents,
   onPrecedentsChange,
   autoSearchTrigger,
+  onSearchComplete,
 }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
@@ -50,7 +55,40 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [results, setResults] = useState<PrecedentResult[]>([]);
   const [error, setError] = useState<SearchError | null>(null);
+  const [loadingImages, setLoadingImages] = useState<ImageLoadingState>(new Set());
   const lastAutoSearchTriggerRef = useRef(0);
+
+  // Enrich precedents with images (Phase 2 of two-phase loading)
+  const enrichWithImages = useCallback(async (precedents: PrecedentResult[]) => {
+    const urlsNeedingImages = precedents
+      .filter(p => p.imageUrl === null)
+      .map(p => p.url);
+
+    if (urlsNeedingImages.length === 0) return;
+
+    // Mark all as loading
+    setLoadingImages(new Set(urlsNeedingImages));
+
+    try {
+      const response = await enrichPrecedentImages(urlsNeedingImages, { timeoutMs: 30000 });
+
+      // Update results with fetched images
+      setResults((prevResults: PrecedentResult[]) => {
+        const imageMap = new Map(response.images.map(img => [img.url, img.imageUrl]));
+        return prevResults.map((p: PrecedentResult) => {
+          if (imageMap.has(p.url)) {
+            return { ...p, imageUrl: imageMap.get(p.url) ?? null };
+          }
+          return p;
+        });
+      });
+    } catch (err) {
+      console.error('Failed to enrich images:', err);
+      // Silently fail - cards will show placeholder
+    } finally {
+      setLoadingImages(new Set());
+    }
+  }, []);
 
   const performSearch = useCallback(async () => {
     if (materials.length === 0) {
@@ -117,6 +155,10 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
 
       setResults(response.results);
       setStatus('success');
+      onSearchComplete?.();
+
+      // Phase 2: Lazy-load images in background
+      void enrichWithImages(response.results);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       console.error('Precedent search error:', errorMessage, err);
@@ -130,12 +172,29 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
       }
       setStatus('error');
     }
-  }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage]);
+  }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage, enrichWithImages]);
 
-  const handleSaveResults = () => {
+  const handleSaveResults = async () => {
+    // Save to parent state (local)
     onPrecedentsChange(results);
     setResults([]);
     setStatus('idle');
+
+    // Save to database if authenticated
+    if (isAuthenticated && !isTestingEnvironment) {
+      try {
+        const token = await getAccessToken();
+        if (token) {
+          await savePrecedents(token, {
+            precedents: results,
+            materials: materials,
+          });
+        }
+      } catch (err) {
+        console.error('Failed to save precedents to database:', err);
+        // Don't fail the UI operation if database save fails
+      }
+    }
   };
 
   const handleClearSaved = () => {
@@ -151,7 +210,7 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
     if (autoSearchTrigger === lastAutoSearchTriggerRef.current) return;
     lastAutoSearchTriggerRef.current = autoSearchTrigger;
     void performSearch();
-  }, [autoSearchTrigger, performSearch]);
+  }, [autoSearchTrigger]);
 
   return (
     <section className="border border-gray-200 bg-white">
@@ -246,7 +305,11 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {results.map((precedent) => (
-                <PrecedentCard key={precedent.id} precedent={precedent} />
+                <PrecedentCard
+                  key={precedent.id}
+                  precedent={precedent}
+                  isLoadingImage={loadingImages.has(precedent.url)}
+                />
               ))}
             </div>
           </div>
@@ -262,7 +325,11 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedPrecedents.map((precedent) => (
-                <PrecedentCard key={precedent.id} precedent={precedent} />
+                <PrecedentCard
+                  key={precedent.id}
+                  precedent={precedent}
+                  isLoadingImage={false}
+                />
               ))}
             </div>
           </div>

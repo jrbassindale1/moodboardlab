@@ -14,8 +14,27 @@ export interface PrecedentResult {
   description: string;
   url: string;
   imageUrl: string | null;
-  source: 'archdaily' | 'dezeen' | 'architizer' | 'designboom' | 'other';
+  source: 'archdaily' | 'dezeen' | 'architizer' | 'designboom' | 'divisare' | 'other';
   sourceName: string;
+  status?: 'pending' | 'viewed' | 'completed';
+}
+
+export interface SavedPrecedentCollection {
+  id: string;
+  userId: string;
+  title?: string;
+  description?: string;
+  precedents: PrecedentResult[];
+  materials: Array<{
+    id: string;
+    name: string;
+    category?: string;
+    keywords?: string[];
+    finish?: string;
+    materialType?: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SearchPrecedentsResponse {
@@ -28,6 +47,7 @@ export interface SearchPrecedentsResponse {
 // Support both Vite (import.meta.env) and Node.js (process.env) environments
 type RequestOptions = {
   timeoutMs?: number;
+  signal?: AbortSignal;
 };
 
 export type GenerationType =
@@ -137,24 +157,42 @@ function getSaveUrl() {
   return `${getApiBase()}/api/save-generation`;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number, signal?: AbortSignal) {
   const timeout = Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 0;
-  if (!timeout || typeof AbortController === 'undefined') {
+  if (!timeout && !signal && typeof AbortController === 'undefined') {
     return fetch(url, init);
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  // Set up timeout abort
+  if (timeout) {
+    timer = setTimeout(() => controller.abort(), timeout);
+  }
+
+  // Listen for external signal abort
+  if (signal) {
+    if (signal.aborted) {
+      controller.abort();
+    } else {
+      signal.addEventListener('abort', () => controller.abort());
+    }
+  }
+
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
+      if (signal?.aborted) {
+        throw new Error('Request cancelled');
+      }
       const seconds = Math.max(1, Math.round(timeout / 1000));
       throw new Error(`Request timed out after ${seconds}s`);
     }
     throw err;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -169,7 +207,7 @@ async function callGeminiBackend(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode, payload })
-  }, timeoutMs);
+  }, timeoutMs, options?.signal);
 
   if (!res.ok) {
     let message: string;
@@ -375,7 +413,7 @@ Respond with ONLY valid JSON matching the required structure.`;
     },
   };
 
-  return callGeminiText(geminiPayload, { timeoutMs: options?.timeoutMs ?? 60000 });
+  return callGeminiText(geminiPayload, { timeoutMs: options?.timeoutMs ?? 60000, signal: options?.signal });
 }
 
 // ============================================
@@ -748,6 +786,51 @@ export async function searchPrecedents(
   return res.json();
 }
 
+/**
+ * Enrich precedent results with images (lazy-loaded after initial search)
+ */
+export interface EnrichPrecedentImagesResponse {
+  images: Array<{
+    url: string;
+    imageUrl: string | null;
+    cached: boolean;
+  }>;
+  cacheStats: {
+    hits: number;
+    misses: number;
+  };
+}
+
+export async function enrichPrecedentImages(
+  urls: string[],
+  options?: { timeoutMs?: number }
+): Promise<EnrichPrecedentImagesResponse> {
+  const API_BASE = getApiBase();
+  const timeoutMs = options?.timeoutMs ?? 30000; // 30s for image enrichment
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/enrich-precedent-images`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    },
+    timeoutMs
+  );
+
+  if (!res.ok) {
+    let errorData: { error?: string; message?: string } = {};
+    try {
+      errorData = await res.json();
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(errorData.message || `Image enrichment failed (status ${res.status})`);
+  }
+
+  return res.json();
+}
+
 export async function translateRenderToProducts(
   payload: {
     imageUrl: string;
@@ -823,6 +906,93 @@ export async function getSavedMaterialTranslation(
 
   if (!res.ok) {
     let message = `Could not load material translation (status ${res.status})`;
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Save selected precedents to the user's account
+ */
+export async function savePrecedents(
+  accessToken: string,
+  payload: {
+    precedents: PrecedentResult[];
+    materials: Array<{
+      id: string;
+      name: string;
+      category?: string;
+      keywords?: string[];
+      finish?: string;
+      materialType?: string;
+    }>;
+    title?: string;
+    description?: string;
+  }
+): Promise<{
+  success: boolean;
+  precedentId: string;
+  createdAt: string;
+}> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/save-precedents`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    30000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to save precedents';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Retrieve all saved precedent collections for the current user
+ */
+export async function getPrecedents(
+  accessToken: string
+): Promise<{
+  success: boolean;
+  collections: SavedPrecedentCollection[];
+  count: number;
+}> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/get-precedents`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    30000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to retrieve precedents';
     try {
       const data = await res.json() as { error?: string; message?: string };
       message = data.message || data.error || message;

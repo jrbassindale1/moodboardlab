@@ -22,6 +22,16 @@ import type {
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 import { trackPageView } from './utils/analytics';
 import { clearMoodboardCache } from './utils/clearCache';
+import {
+  setSessionData,
+  getSessionData,
+  removeSessionData,
+  setUserPreference,
+  getUserPreference,
+  setCurrentUserId,
+  clearAllStorage,
+  migrateOldStorageKeys,
+} from './utils/storageManager';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
 
@@ -91,18 +101,15 @@ const getNextProjectNumber = (): number => {
   const todayKey = getTodayDateKey();
 
   try {
-    const raw = window.localStorage.getItem(PROJECT_COUNTER_KEY);
-    if (raw) {
-      const counter = JSON.parse(raw) as ProjectCounter;
-      if (counter.date === todayKey) {
-        // Same day, increment counter
-        const newCount = counter.count + 1;
-        window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: newCount }));
-        return newCount;
-      }
+    const counter = getSessionData<ProjectCounter>(PROJECT_COUNTER_KEY);
+    if (counter && counter.date === todayKey) {
+      // Same day, increment counter
+      const newCount = counter.count + 1;
+      setSessionData(PROJECT_COUNTER_KEY, { date: todayKey, count: newCount });
+      return newCount;
     }
     // New day or no counter, start at 1
-    window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: 1 }));
+    setSessionData(PROJECT_COUNTER_KEY, { date: todayKey, count: 1 });
     return 1;
   } catch {
     return 1;
@@ -122,12 +129,7 @@ const formatProjectName = (): string => {
 const readProjectCache = (): Project | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(PROJECT_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<Project>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!parsed.id || !parsed.name) return null;
-    return parsed as Project;
+    return getUserPreference<Project>(PROJECT_CACHE_KEY);
   } catch {
     return null;
   }
@@ -148,11 +150,7 @@ type ApplyStateCache = {
 const readApplyStateCache = (): ApplyStateCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(APPLY_STATE_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<ApplyStateCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    return parsed as ApplyStateCache;
+    return getSessionData<ApplyStateCache>(APPLY_STATE_CACHE_KEY);
   } catch {
     return null;
   }
@@ -161,7 +159,7 @@ const readApplyStateCache = (): ApplyStateCache | null => {
 const readRenderUrlCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return window.localStorage.getItem(RENDER_URL_CACHE_KEY);
+    return getSessionData<string>(RENDER_URL_CACHE_KEY);
   } catch {
     return null;
   }
@@ -170,7 +168,7 @@ const readRenderUrlCache = (): string | null => {
 const readAppliedUrlCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return window.localStorage.getItem(APPLIED_URL_CACHE_KEY);
+    return getSessionData<string>(APPLIED_URL_CACHE_KEY);
   } catch {
     return null;
   }
@@ -191,12 +189,7 @@ type BoardCache = {
 const readBriefingCache = (): BriefingCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BriefingCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!parsed.materialsKey || !parsed.briefing || !parsed.payload) return null;
-    return parsed as BriefingCache;
+    return getSessionData<BriefingCache>(BRIEFING_CACHE_KEY);
   } catch {
     return null;
   }
@@ -205,12 +198,7 @@ const readBriefingCache = (): BriefingCache | null => {
 const readBoardCache = (): BoardCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(BOARD_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BoardCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!Array.isArray(parsed.board)) return null;
-    return { board: parsed.board as MaterialOption[], savedAt: parsed.savedAt || '' };
+    return getSessionData<BoardCache>(BOARD_CACHE_KEY);
   } catch {
     return null;
   }
@@ -222,7 +210,7 @@ const getInitialPage = (): string => {
 };
 
 const App: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { checkoutStatus, dismissCheckoutStatus } = useUsage();
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
@@ -264,7 +252,11 @@ const App: React.FC = () => {
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
 
   const clearWorkspaceAfterSignOut = useCallback(() => {
-    clearMoodboardCache();
+    // Clear all storage (sessionStorage + user-scoped localStorage)
+    if (user?.id) {
+      clearAllStorage();
+    }
+    setCurrentUserId(null);
     briefingCacheRef.current = null;
     setCurrentPage('concept');
     setSelectedMaterials([]);
@@ -286,7 +278,16 @@ const App: React.FC = () => {
     setAppliedEditPrompt('');
     setMoodboardEditPrompt('');
     setCurrentProject(null);
-  }, []);
+  }, [user?.id]);
+
+  // Set current user ID for storage scoping
+  useEffect(() => {
+    if (user?.id) {
+      setCurrentUserId(user.id);
+    } else {
+      setCurrentUserId(null);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     briefingCacheRef.current = readBriefingCache();
@@ -316,14 +317,15 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Persist project to localStorage
+  // Persist project to user-scoped localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       if (currentProject) {
-        window.localStorage.setItem(PROJECT_CACHE_KEY, JSON.stringify(currentProject));
+        setUserPreference(PROJECT_CACHE_KEY, currentProject);
       } else {
-        window.localStorage.removeItem(PROJECT_CACHE_KEY);
+        // Note: Can't easily remove user-scoped keys, but setting null is ok
+        setUserPreference(PROJECT_CACHE_KEY, null);
       }
     } catch {
       // Ignore storage errors
@@ -424,7 +426,7 @@ const App: React.FC = () => {
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(BRIEFING_CACHE_KEY, cache);
       briefingCacheRef.current = cache;
     } catch {
       // Ignore storage errors (quota, private mode, etc.)
@@ -442,7 +444,7 @@ const App: React.FC = () => {
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(BOARD_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(BOARD_CACHE_KEY, cache);
     } catch {
       // Ignore storage errors (quota, private mode, etc.)
     }
@@ -465,9 +467,9 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return;
     try {
       if (moodboardRenderUrl) {
-        window.localStorage.setItem(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
+        setSessionData(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
       } else {
-        window.localStorage.removeItem(RENDER_URL_CACHE_KEY);
+        removeSessionData(RENDER_URL_CACHE_KEY);
       }
     } catch {
       // Ignore storage errors
@@ -479,9 +481,9 @@ const App: React.FC = () => {
     if (typeof window === 'undefined') return;
     try {
       if (appliedRenderUrl) {
-        window.localStorage.setItem(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
+        setSessionData(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
       } else {
-        window.localStorage.removeItem(APPLIED_URL_CACHE_KEY);
+        removeSessionData(APPLIED_URL_CACHE_KEY);
       }
     } catch {
       // Ignore storage errors
@@ -521,7 +523,7 @@ const App: React.FC = () => {
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(APPLY_STATE_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(APPLY_STATE_CACHE_KEY, cache);
     } catch {
       // Ignore storage errors
     }
@@ -586,6 +588,11 @@ const App: React.FC = () => {
     projectName?: string | null;
     generationId?: string | null;
   }) => {
+    // Save the last generation ID for auto-restore on next login
+    if (restoredGenerationId) {
+      setUserPreference('last_generation_id', restoredGenerationId);
+    }
+
     setSelectedMaterials(board);
 
     // Restore project context if available

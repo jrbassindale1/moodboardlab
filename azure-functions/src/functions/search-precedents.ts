@@ -15,9 +15,14 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 
 const SERPER_API_KEY = process.env.SERPER_API_KEY || '';
 const SERPER_WEB_URL = 'https://google.serper.dev/search';
+
+// OpenAI configuration for precedent selector
+const OPENAI_API_KEY = process.env.OPENAI_KEY || process.env.OPENAI_API_KEY || '';
+const OPENAI_SELECTOR_MODEL = process.env.OPENAI_SELECTOR_MODEL || 'gpt-5.4-nano';
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
+// Gemini configuration (kept for summary generation if needed)
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-// NOTE: gemini-2.0-flash deprecated, shuts down 1 June 2026
-// Migrated to gemini-2.5-flash for precedent curation
 const GEMINI_TEXT_URL =
   process.env.GEMINI_TEXT_ENDPOINT ||
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -87,6 +92,100 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+// =============================================================================
+// Title & Snippet Cleanup Utilities
+// =============================================================================
+
+const SITE_SUFFIXES_TITLE = [
+  '| ArchDaily', ' - ArchDaily', '| archdaily', ' - archdaily',
+  '- Dezeen', ' | Dezeen', '- dezeen', ' | dezeen',
+  '| Architizer', '| architizer',
+  '- designboom', '| designboom', '- Designboom', '| Designboom',
+  '| Divisare', '| divisare',
+  '- Architecture', '| Architecture',
+];
+
+/**
+ * Cleans up project titles by removing site suffixes and decoding HTML entities.
+ */
+function cleanProjectTitle(rawTitle: string): string {
+  let title = rawTitle;
+
+  // Remove site suffixes
+  for (const suffix of SITE_SUFFIXES_TITLE) {
+    if (title.endsWith(suffix)) {
+      title = title.slice(0, -suffix.length).trim();
+    }
+    // Also handle case-insensitive matching in the middle
+    const suffixLower = suffix.toLowerCase();
+    const titleLower = title.toLowerCase();
+    const idx = titleLower.lastIndexOf(suffixLower);
+    if (idx > 0 && idx === title.length - suffix.length) {
+      title = title.slice(0, idx).trim();
+    }
+  }
+
+  // Decode HTML entities
+  title = title
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&nbsp;/g, ' ');
+
+  // Remove leading/trailing quotes if present
+  if ((title.startsWith('"') && title.endsWith('"')) ||
+      (title.startsWith("'") && title.endsWith("'"))) {
+    title = title.slice(1, -1);
+  }
+
+  return title.trim();
+}
+
+/**
+ * Cleans up snippets by removing ellipses, truncation artifacts, and normalizing whitespace.
+ */
+function cleanSnippet(rawSnippet: string, maxLength: number = 180): string {
+  let snippet = rawSnippet;
+
+  // Remove leading/trailing ellipses and artifacts
+  snippet = snippet
+    .replace(/^\.{2,}\s*/g, '')
+    .replace(/\s*\.{2,}$/g, '')
+    .replace(/\s*…$/g, '')
+    .replace(/^…\s*/g, '');
+
+  // Decode HTML entities
+  snippet = snippet
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&nbsp;/g, ' ');
+
+  // Normalize whitespace
+  snippet = snippet.replace(/\s+/g, ' ').trim();
+
+  // Truncate to maxLength at word boundary
+  if (snippet.length > maxLength) {
+    const truncated = snippet.slice(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    if (lastSpace > maxLength * 0.7) {
+      snippet = truncated.slice(0, lastSpace) + '…';
+    } else {
+      snippet = truncated + '…';
+    }
+  }
+
+  return snippet;
+}
 
 // =============================================================================
 // TypeScript Interfaces
@@ -828,11 +927,30 @@ Respond with ONLY valid JSON. No markdown, no code blocks, no explanation outsid
   ]
 }`;
 
+// OpenAI Chat Completions response type
+interface OpenAIChatResponse {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+    finish_reason?: string;
+  }>;
+  error?: {
+    message?: string;
+    type?: string;
+  };
+}
+
 async function selectBestPrecedentsWithLLM(
   candidates: CandidatePrecedent[],
   brief: MaterialsBrief,
   context: InvocationContext
 ): Promise<LLMSelectionResult> {
+  // Validate OpenAI API key
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
   const shortlist = candidates.slice(0, SHORTLIST_SIZE);
 
   const candidatesList = shortlist
@@ -862,34 +980,72 @@ async function selectBestPrecedentsWithLLM(
     .replace('{categoryPriority}', categoryPriority)
     .replace('{candidatesList}', candidatesList);
 
-  context.log('Calling Gemini for selection...');
+  context.log(`Calling OpenAI (${OPENAI_SELECTOR_MODEL}) for selection...`);
 
-  const response = await fetch(`${GEMINI_TEXT_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(OPENAI_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.15,
-        topP: 0.9,
-      },
+      model: OPENAI_SELECTOR_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert architectural curator. Respond with ONLY valid JSON, no markdown code blocks or explanations.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.15,
+      response_format: { type: 'json_object' },
     }),
   });
 
   if (!response.ok) {
-    context.error(`Gemini API error: ${response.status}`);
-    throw new Error(`Gemini API error: ${response.status}`);
+    const errorBody = await response.text();
+    context.error(`OpenAI API error: ${response.status} - ${errorBody}`);
+    throw new Error(`OpenAI API error: ${response.status}`);
   }
 
-  const data = (await response.json()) as GeminiResponse;
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const data = (await response.json()) as OpenAIChatResponse;
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
+  // Check for API error in response
+  if (data.error) {
+    context.error(`OpenAI API returned error: ${data.error.message}`);
+    throw new Error(`OpenAI API error: ${data.error.message}`);
+  }
+
+  const text = data.choices?.[0]?.message?.content || '';
+
+  if (!text) {
+    throw new Error('OpenAI returned empty response');
+  }
+
+  // Parse JSON - OpenAI with response_format: json_object should return clean JSON
+  try {
+    const parsed = JSON.parse(text) as LLMSelectionResult;
+
+    // Validate the response has the expected structure
+    if (!parsed.selected || !Array.isArray(parsed.selected)) {
+      throw new Error('Invalid response structure: missing selected array');
+    }
+
+    return parsed;
+  } catch (parseError) {
+    // Fallback: try to extract JSON from response if it contains extra text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      context.warn('OpenAI response needed JSON extraction fallback');
+      return JSON.parse(jsonMatch[0]) as LLMSelectionResult;
+    }
+
+    context.error(`Failed to parse OpenAI response: ${text.slice(0, 500)}`);
     throw new Error('Failed to parse LLM selection response');
   }
-
-  return JSON.parse(jsonMatch[0]) as LLMSelectionResult;
 }
 
 // =============================================================================
@@ -1101,48 +1257,36 @@ async function generateSummariesWithLLM(
 }
 
 // =============================================================================
-// Step 9: Assemble Final Results
+// Step 9: Assemble Final Results (Text-First, No Images)
 // =============================================================================
 
+interface SelectedCandidateWithReason extends CandidatePrecedent {
+  shortReason?: string;
+}
+
 function assembleFinalResults(
-  selectedCandidates: CandidatePrecedent[],
-  metadata: Record<string, PageMetadata>,
-  summaries: LLMSummaryResult
+  selectedCandidates: SelectedCandidateWithReason[]
 ): PrecedentResult[] {
   return selectedCandidates.map((c, index) => {
-    const meta: PageMetadata = metadata[c.url] || { ogImage: null, ogTitle: null, metaDescription: null };
-    const summary = summaries.summaries[c.url] || c.snippet;
+    // Clean title using helper
+    const title = cleanProjectTitle(c.title);
 
-    // Clean up title
-    let cleanTitle = meta.ogTitle || c.title;
-    const siteSuffixes = [
-      '| ArchDaily',
-      ' - ArchDaily',
-      '- Dezeen',
-      ' | Dezeen',
-      '| Architizer',
-      '- designboom',
-      '| designboom',
-      '| Divisare',
-    ];
-    for (const suffix of siteSuffixes) {
-      cleanTitle = cleanTitle.replace(suffix, '').trim();
+    // Build description: prefer LLM shortReason, fall back to cleaned snippet
+    let description: string;
+    if (c.shortReason && c.shortReason.length > 20) {
+      // Use shortReason from LLM selection as primary description
+      description = c.shortReason;
+    } else {
+      // Fall back to cleaned snippet
+      description = cleanSnippet(c.snippet);
     }
-
-    // Decode HTML entities
-    cleanTitle = cleanTitle
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>');
 
     return {
       id: `precedent-${index}`,
-      title: cleanTitle,
-      description: summary,
+      title,
+      description,
       url: c.url,
-      imageUrl: meta.ogImage,
+      imageUrl: null, // Images loaded via separate enrichment endpoint
       source: c.source,
       sourceName: c.sourceName,
     };
@@ -1241,31 +1385,20 @@ async function handleSearchWithFallbacks(
 
   const finalCandidates = selectedCandidates.slice(0, FINAL_RESULTS_COUNT);
 
-  // Steps 7 & 8: Fetch og:image metadata and generate summaries in parallel
-  // Summaries are built from title+snippet only (no metaDescription needed)
-  let metadata: Record<string, PageMetadata> = {};
-  let summaries: LLMSummaryResult = { summaries: {} };
+  // Attach shortReason from LLM selection to candidates for description building
+  const candidatesWithReasons: SelectedCandidateWithReason[] = finalCandidates.map((c) => {
+    const llmItem = selectedItems.find((item) => item.url === c.url);
+    return {
+      ...c,
+      shortReason: llmItem?.shortReason,
+    };
+  });
 
-  try {
-    [metadata, summaries] = await Promise.all([
-      fetchAllMetadata(finalCandidates.map((c) => c.url), context).catch((err) => {
-        context.warn(`Metadata fetch failed: ${err instanceof Error ? err.message : err}`);
-        return {} as Record<string, PageMetadata>;
-      }),
-      generateSummariesWithLLM(finalCandidates, brief, context).catch((err) => {
-        context.warn(`Summary generation failed: ${err instanceof Error ? err.message : err}`);
-        const fallback: LLMSummaryResult = { summaries: {} };
-        finalCandidates.forEach((c) => { fallback.summaries[c.url] = c.snippet; });
-        return fallback;
-      }),
-    ]);
-  } catch (err) {
-    context.warn(`Parallel enrichment failed: ${err instanceof Error ? err.message : err}`);
-    finalCandidates.forEach((c) => { summaries.summaries[c.url] = c.snippet; });
-  }
+  // Step 9: Assemble text-first results (no image fetching, no summary LLM)
+  // Images are loaded via separate /api/enrich-precedent-images endpoint
+  const results = assembleFinalResults(candidatesWithReasons);
 
-  // Step 9: Assemble results
-  const results = assembleFinalResults(finalCandidates, metadata, summaries);
+  context.log(`Returning ${results.length} text-first precedents`);
 
   return {
     results,
@@ -1297,13 +1430,13 @@ export async function searchPrecedents(
     };
   }
 
-  if (!GEMINI_API_KEY) {
-    context.error('GEMINI_API_KEY is not configured');
+  if (!OPENAI_API_KEY) {
+    context.error('OPENAI_API_KEY is not configured');
     return {
       status: 500,
       body: JSON.stringify({
         error: 'configuration_error',
-        message: 'AI service is not configured',
+        message: 'OpenAI API key is not configured for precedent selection',
       }),
       headers: CORS_HEADERS,
     };

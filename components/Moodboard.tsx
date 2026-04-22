@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, AlertTriangle, Loader2, Wand2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Wand2, CheckCircle2 } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import PrecedentsSection from './moodboard/PrecedentsSection';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
@@ -92,6 +92,8 @@ type MoodboardFlowProgress = {
   total: number;
   label: string;
   state: 'running' | 'complete' | 'error';
+  taskCount?: number;
+  selectedTasks?: string[];
 };
 
 const MOODBOARD_FLOW_TOTAL_STEPS = 2;
@@ -498,6 +500,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   type WorkspaceTab = 'sustainability' | 'precedents' | 'moodboard';
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('sustainability');
   const [precedentsAutoSearchTrigger, setPrecedentsAutoSearchTrigger] = useState(0);
+  const [precedentsSearchInProgress, setPrecedentsSearchInProgress] = useState(false);
+  const [precedentsSearchCompleted, setPrecedentsSearchCompleted] = useState(false);
 
   // Helper to reset all loading states consistently
   const resetLoadingStates = useCallback(() => {
@@ -1194,7 +1198,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
         materials: payload.materials,
         averageScores: payload.averageScores,
         projectName: 'Material Palette',
-      });
+      }, { signal: abortController.signal });
 
       // Check if request was aborted or component unmounted
       if (abortController.signal.aborted || !isMountedRef.current) {
@@ -1291,10 +1295,17 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   };
 
-  const runMoodboardFlow = async () => {
+  const runMoodboardFlow = async (options?: { moodboard?: boolean; sustainability?: boolean; includePrecedentsInProgress?: boolean }) => {
+    const generateMoodboard = options?.moodboard ?? true;
+    const generateSustainability = options?.sustainability ?? true;
+    const showPrecedentsInProgress = options?.includePrecedentsInProgress ?? false;
+
     console.info('[Workspace] runMoodboardFlow start', {
       boardCount: board.length,
       renderMaterialsCount: renderMaterials.length,
+      generateMoodboard,
+      generateSustainability,
+      showPrecedentsInProgress,
       isTestingEnvironment,
       isAuthenticated,
     });
@@ -1339,36 +1350,63 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setError(null);
     setFlowProgress(null);
     try {
-      // Run both operations in parallel for faster generation (briefing doesn't depend on image)
+      // Run selected operations
       if (!isMountedRef.current) return;
+
+      // Determine what to generate
+      const tasksToRun: Promise<boolean>[] = [];
+      if (generateMoodboard) {
+        tasksToRun.push(runGemini('render', { onRender: setMoodboardRenderUrl }));
+      }
+      if (generateSustainability) {
+        tasksToRun.push(generateBriefing(true)); // Force regenerate when creating new moodboard
+      }
+
+      // Update UI based on what's being generated
+      const taskCount = tasksToRun.length + (showPrecedentsInProgress ? 1 : 0);
+      const taskLabels = [];
+      if (generateMoodboard) taskLabels.push('moodboard');
+      if (generateSustainability) taskLabels.push('briefing');
+      if (showPrecedentsInProgress) taskLabels.push('precedents');
+
       setFlowProgress({
         step: 1,
         total: MOODBOARD_FLOW_TOTAL_STEPS,
-        label: 'Generating moodboard and briefing',
-        state: 'running'
+        label: `Generating ${taskLabels.join(', ')}`,
+        state: 'running',
+        taskCount,
+        selectedTasks: taskLabels,
       });
-      console.info('[Workspace] runMoodboardFlow dispatching render + briefing');
+      console.info('[Workspace] runMoodboardFlow dispatching tasks:', taskLabels);
 
-      const [renderResult, briefingResult] = await Promise.allSettled([
-        runGemini('render', { onRender: setMoodboardRenderUrl }),
-        generateBriefing(true) // Force regenerate when creating new moodboard
-      ]);
+      const results = await Promise.allSettled(tasksToRun);
 
       if (!isMountedRef.current) return;
 
-      // Check results
-      const renderOk = renderResult.status === 'fulfilled' && renderResult.value === true;
-      const briefingOk = briefingResult.status === 'fulfilled' && briefingResult.value === true;
+      // Map results back to specific operations
+      let renderOk = false;
+      let briefingOk = false;
+      let resultIndex = 0;
+
+      if (generateMoodboard) {
+        const result = results[resultIndex++];
+        renderOk = result.status === 'fulfilled' && result.value === true;
+      }
+      if (generateSustainability) {
+        const result = results[resultIndex++];
+        briefingOk = result.status === 'fulfilled' && result.value === true;
+      }
+
       console.info('[Workspace] runMoodboardFlow settled', {
         renderOk,
         briefingOk,
-        renderResult,
-        briefingResult,
+        generateMoodboard,
+        generateSustainability,
       });
 
       // Handle failures
-      if (!renderOk && !briefingOk) {
-        setError((prev) => prev || 'Moodboard generation failed. Please try again.');
+      if (generateMoodboard && !renderOk && generateSustainability && !briefingOk) {
+        setError((prev) => prev || 'Generation failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
@@ -1376,26 +1414,26 @@ const Moodboard: React.FC<MoodboardProps> = ({
           state: 'error'
         });
         return;
-      } else if (!renderOk) {
+      } else if (generateMoodboard && !renderOk) {
         setError((prev) => prev || 'Image generation failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Image generation failed (briefing succeeded)',
+          label: generateSustainability ? 'Image generation failed (briefing succeeded)' : 'Image generation failed',
           state: 'error'
         });
         // Keep the briefing even if image failed
-      } else if (!briefingOk) {
+      } else if (generateSustainability && !briefingOk) {
         setError((prev) => prev || 'Sustainability briefing failed. Please try again.');
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
-          label: 'Briefing generation failed (image succeeded)',
+          label: generateMoodboard ? 'Briefing generation failed (image succeeded)' : 'Briefing generation failed',
           state: 'error'
         });
         // Keep the image even if briefing failed
       } else {
-        // Both succeeded
+        // Requested operations succeeded
         setFlowProgress({
           step: 2,
           total: MOODBOARD_FLOW_TOTAL_STEPS,
@@ -1890,7 +1928,7 @@ ${JSON.stringify(proseContext)}`;
           }
         };
 
-        const data = await callGeminiImage(payload);
+        const data = await callGeminiImage(payload, { signal: abortController.signal });
 
         // Check if request was aborted or component unmounted
         if (abortController.signal.aborted || !isMountedRef.current) {
@@ -1917,6 +1955,12 @@ ${JSON.stringify(proseContext)}`;
         }
         if (!img) throw new Error('Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
+
+        // Check if request was aborted BEFORE consuming credits
+        if (abortController.signal.aborted || !isMountedRef.current) {
+          console.log('[Moodboard Render] Request aborted before credit consumption');
+          return false;
+        }
 
         if (isAuthenticated) {
           const token = await getAccessToken();
@@ -2348,6 +2392,31 @@ ${JSON.stringify(proseContext)}`;
           </button>
         </div>
 
+        {/* Generation Progress Indicator */}
+        {flowProgress?.state === 'running' && (
+          <div className="flex items-center gap-3 border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <div className="flex-1">
+              <div className="font-mono text-[11px] uppercase tracking-widest">
+                Generating: {flowProgress.selectedTasks?.join(', ')} ({flowProgress.taskCount} of {flowProgress.taskCount})
+              </div>
+              <p className="text-xs mt-1">{flowProgress.label}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Precedents Completion Indicator */}
+        {precedentsSearchInProgress && precedentsSearchCompleted && (
+          <div className="flex items-center gap-3 border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            <CheckCircle2 className="w-4 h-4" />
+            <div className="flex-1">
+              <div className="font-mono text-[11px] uppercase tracking-widest">
+                Precedent Search Complete
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Alerts Section */}
         {error && (
           <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -2360,13 +2429,6 @@ ${JSON.stringify(proseContext)}`;
           <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             <AlertTriangle className="w-4 h-4 mt-[2px]" />
             <span>{imageModelFallbackWarning}</span>
-          </div>
-        )}
-
-        {briefingInvalidatedMessage && (
-          <div className="flex items-start gap-2 border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <AlertTriangle className="w-4 h-4 mt-[2px]" />
-            <span>{briefingInvalidatedMessage}</span>
           </div>
         )}
 
@@ -2469,9 +2531,11 @@ ${JSON.stringify(proseContext)}`;
                 }`}
               >
                 Sustainability
-                {sustainabilityBriefing && (
+                {briefingInvalidatedMessage ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
+                ) : sustainabilityBriefing ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                )}
+                ) : null}
               </button>
               <button
                 onClick={() => setActiveTab('moodboard')}
@@ -2527,6 +2591,10 @@ ${JSON.stringify(proseContext)}`;
                   savedPrecedents={savedPrecedents}
                   onPrecedentsChange={setSavedPrecedents}
                   autoSearchTrigger={precedentsAutoSearchTrigger}
+                  onSearchComplete={() => {
+                    setPrecedentsSearchInProgress(false);
+                    setPrecedentsSearchCompleted(true);
+                  }}
                 />
               )}
 
@@ -2667,12 +2735,18 @@ ${JSON.stringify(proseContext)}`;
 
                     if (shouldRunPrecedents) {
                       setError(null);
+                      setPrecedentsSearchInProgress(true);
+                      setPrecedentsSearchCompleted(false);
                       setPrecedentsAutoSearchTrigger((prev) => prev + 1);
                     }
 
                     if (shouldRunMoodboardFlow) {
                       setActiveTab('sustainability');
-                      void runMoodboardFlow();
+                      void runMoodboardFlow({
+                        moodboard: generateOptions.moodboard,
+                        sustainability: generateOptions.sustainability,
+                        includePrecedentsInProgress: shouldRunPrecedents
+                      });
                       return;
                     }
 
