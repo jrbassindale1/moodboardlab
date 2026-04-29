@@ -34,6 +34,7 @@ import {
 } from './utils/storageManager';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
+import { isDataUri } from './utils/imageProcessing';
 
 // Scene control types (shared with ApplyMaterials)
 type SceneControl = {
@@ -63,6 +64,13 @@ const RENDER_URL_CACHE_KEY = 'moodboard_render_url_v1';
 const APPLIED_URL_CACHE_KEY = 'moodboard_applied_url_v1';
 const APPLY_STATE_CACHE_KEY = 'moodboard_apply_state_v1';
 const PROJECT_CACHE_KEY = 'moodboard_current_project_v1';
+
+/**
+ * Data URLs for generated images can be multi-megabyte strings and quickly exceed
+ * browser sessionStorage limits. Cache only non-data URLs (e.g. backend blob URLs).
+ */
+const canPersistRenderUrl = (value: string | null): value is string =>
+  Boolean(value && !isDataUri(value));
 
 // Project type for grouping generations
 type Project = {
@@ -453,20 +461,26 @@ const App: React.FC = () => {
   // Restore render URLs from localStorage on mount
   useEffect(() => {
     const cachedRenderUrl = readRenderUrlCache();
-    if (cachedRenderUrl && !moodboardRenderUrl) {
+    if (cachedRenderUrl && isDataUri(cachedRenderUrl)) {
+      // Clean up legacy oversized cache entries.
+      removeSessionData(RENDER_URL_CACHE_KEY);
+    } else if (cachedRenderUrl && !moodboardRenderUrl) {
       setMoodboardRenderUrl(cachedRenderUrl);
     }
     const cachedAppliedUrl = readAppliedUrlCache();
-    if (cachedAppliedUrl && !appliedRenderUrl) {
+    if (cachedAppliedUrl && isDataUri(cachedAppliedUrl)) {
+      // Clean up legacy oversized cache entries.
+      removeSessionData(APPLIED_URL_CACHE_KEY);
+    } else if (cachedAppliedUrl && !appliedRenderUrl) {
       setAppliedRenderUrl(cachedAppliedUrl);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist moodboardRenderUrl to localStorage
+  // Persist moodboardRenderUrl to sessionStorage (non-data URLs only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (moodboardRenderUrl) {
+      if (canPersistRenderUrl(moodboardRenderUrl)) {
         setSessionData(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
       } else {
         removeSessionData(RENDER_URL_CACHE_KEY);
@@ -476,11 +490,11 @@ const App: React.FC = () => {
     }
   }, [moodboardRenderUrl]);
 
-  // Persist appliedRenderUrl to localStorage
+  // Persist appliedRenderUrl to sessionStorage (non-data URLs only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (appliedRenderUrl) {
+      if (canPersistRenderUrl(appliedRenderUrl)) {
         setSessionData(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
       } else {
         removeSessionData(APPLIED_URL_CACHE_KEY);

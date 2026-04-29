@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import {
   callGeminiImage,
+  callOpenAIImage,
   saveGenerationAuth,
   savePdfAuth,
   checkQuota,
@@ -175,6 +176,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
+  const [imageProvider, setImageProvider] = useState<'gemini' | 'openai'>('gemini');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectingProjectImageId, setSelectingProjectImageId] = useState<string | null>(null);
   const [projectGenerations, setProjectGenerations] = useState<Generation[]>([]);
@@ -1624,6 +1626,79 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         }
       }
 
+      const calculateOpenAISize = (ratio: string, requestedSize: '1K' | '4K'): string => {
+        const [widthPart, heightPart] = ratio.split(':').map(Number);
+        const safeWidthPart = widthPart || 1;
+        const safeHeightPart = heightPart || 1;
+        const targetRatio = safeWidthPart / safeHeightPart;
+
+        const to16 = (value: number, mode: 'up' | 'down' = 'up'): number =>
+          mode === 'down'
+            ? Math.max(16, Math.floor(value / 16) * 16)
+            : Math.max(16, Math.ceil(value / 16) * 16);
+
+        const MAX_EDGE = 3840; // <= 3840 and divisible by 16
+        const MIN_PIXELS = 655360;
+        const MAX_PIXELS = 8294400;
+        const MAX_RATIO = 3;
+
+        // 4K mode pushes to max supported edge; standard mode stays around HD.
+        const targetLongEdge = requestedSize === '4K' ? 3840 : 1024;
+        let width = targetRatio >= 1 ? targetLongEdge : targetLongEdge * targetRatio;
+        let height = targetRatio >= 1 ? targetLongEdge / targetRatio : targetLongEdge;
+
+        let w = to16(width, 'up');
+        let h = to16(height, 'up');
+
+        const applyMaxEdge = () => {
+          const maxEdge = Math.max(w, h);
+          if (maxEdge <= MAX_EDGE) return;
+          const scale = MAX_EDGE / maxEdge;
+          w = to16(w * scale, 'down');
+          h = to16(h * scale, 'down');
+        };
+
+        const applyMaxPixels = () => {
+          const pixels = w * h;
+          if (pixels <= MAX_PIXELS) return;
+          const scale = Math.sqrt(MAX_PIXELS / pixels);
+          w = to16(w * scale, 'down');
+          h = to16(h * scale, 'down');
+        };
+
+        const applyMinPixels = () => {
+          const pixels = w * h;
+          if (pixels >= MIN_PIXELS) return;
+          const scale = Math.sqrt(MIN_PIXELS / Math.max(1, pixels));
+          w = to16(w * scale, 'up');
+          h = to16(h * scale, 'up');
+        };
+
+        const applyRatioLimit = () => {
+          const longEdge = Math.max(w, h);
+          const shortEdge = Math.max(1, Math.min(w, h));
+          if (longEdge / shortEdge <= MAX_RATIO) return;
+          const limitedShort = to16(longEdge / MAX_RATIO, 'up');
+          if (w >= h) {
+            h = limitedShort;
+          } else {
+            w = limitedShort;
+          }
+        };
+
+        applyRatioLimit();
+        applyMaxEdge();
+        applyMaxPixels();
+        applyMinPixels();
+        applyMaxEdge();
+        applyMaxPixels();
+        applyRatioLimit();
+
+        return `${w}x${h}`;
+      };
+
+      const openaiImageSize = calculateOpenAISize(aspectRatio, imageSize);
+
       const imageParts =
         ((isEditingRender || isUpscalingRender) && baseImageDataUrl
           ? [dataUrlToInlineData(baseImageDataUrl)]
@@ -1672,9 +1747,24 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         return null;
       };
 
-      const data = await callGeminiImage(singlePayload, { timeoutMs: 120000 });
-      const fallbackUsed = isImageModelFallbackUsed(data);
-      const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
+      const openAIBaseImageDataUrl =
+        isEditingRender || isUpscalingRender
+          ? baseImageDataUrl
+          : uploadedImage?.dataUrl || null;
+
+      const openaiImageQuality = imageSize === '4K' ? 'high' : 'medium';
+
+      const data = await (
+        imageProvider === 'openai'
+          ? callOpenAIImage(prompt, openAIBaseImageDataUrl ?? undefined, {
+              timeoutMs: 240000,
+              size: openaiImageSize,
+              quality: openaiImageQuality,
+            })
+          : callGeminiImage(singlePayload, { timeoutMs: 120000 })
+      );
+      const fallbackUsed = imageProvider !== 'openai' && isImageModelFallbackUsed(data);
+      const modelUsed = imageProvider === 'openai' ? 'gpt-image-2' : (typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined);
 
       const newUrl = extractImageFromResponse(data);
       if (!newUrl) {
@@ -1833,8 +1923,20 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
             Render
           </h1>
-          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
-            Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} sketch+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+              Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} sketch+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)
+            </div>
+            {/* Image Provider Selector (Test Environment) */}
+            <select
+              value={imageProvider}
+              onChange={(e) => setImageProvider(e.target.value as 'gemini' | 'openai')}
+              className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black cursor-pointer bg-white"
+              title="Switch between image generation models"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI (GPT Image 2)</option>
+            </select>
           </div>
         </div>
 

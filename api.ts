@@ -229,6 +229,64 @@ export const callGeminiText = (payload: unknown, options?: RequestOptions) =>
 export const callGeminiImage = (payload: unknown, options?: RequestOptions) =>
   callGeminiBackend(payload, "image", options);
 
+/**
+ * Call OpenAI's image generation API via backend proxy
+ * Generates images using GPT Image 2 model
+ * API key is stored securely on the backend
+ */
+export async function callOpenAIImage(
+  prompt: string,
+  baseImageDataUrl?: string,
+  options?: RequestOptions & { size?: string; quality?: 'auto' | 'low' | 'medium' | 'high' }
+): Promise<{ candidates: Array<{ content: { parts: Array<{ inlineData: { data: string; mimeType: string } }> } }>; imageModelUsed?: string }> {
+  const API_BASE = getApiBase();
+  const timeoutMs = options?.timeoutMs ?? 120000;
+  const imageSize = options?.size ?? '1024x1024';
+  const imageQuality = options?.quality ?? 'medium';
+
+  console.log(`[OpenAI Image Generation] Calling backend proxy (${imageSize}, ${imageQuality} quality)${baseImageDataUrl ? ' with base image' : ''}`);
+
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/generate-openai-image`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        baseImageDataUrl,
+        size: imageSize,
+        quality: imageQuality
+      })
+    },
+    timeoutMs,
+    options?.signal
+  );
+
+  if (!res.ok) {
+    let message: string;
+    try {
+      const body = await res.json();
+      message = body?.error?.message || body?.message || JSON.stringify(body);
+    } catch {
+      message = `OpenAI backend error (status ${res.status})`;
+    }
+    console.error('[OpenAI Image Generation] Error:', message);
+    throw new Error(message);
+  }
+
+  const data = await res.json();
+
+  // Validate response format
+  const candidates = data?.candidates || [];
+  if (!candidates.length || !candidates[0]?.content?.parts?.[0]?.inlineData?.data) {
+    console.error('[OpenAI Image Generation] Unexpected response format:', data);
+    throw new Error('OpenAI did not return an image payload');
+  }
+
+  console.log('[OpenAI Image Generation] Successfully generated image via backend proxy');
+  return data;
+}
+
 export async function getMaterials(): Promise<MaterialOption[]> {
   const API_BASE = getApiBase();
   const res = await fetchWithTimeout(`${API_BASE}/api/materials`, { method: 'GET' }, 15000);

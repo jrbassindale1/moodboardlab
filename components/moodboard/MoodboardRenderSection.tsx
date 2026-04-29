@@ -55,7 +55,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             </button>
           )}
         </div>
-        <div className="relative w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
+        <div className="relative mx-auto max-w-2xl border border-gray-200 bg-white flex items-center justify-center p-6 shadow-sm">
           <img
             src={moodboardRenderUrl}
             alt="Moodboard"

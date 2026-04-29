@@ -31,17 +31,8 @@ export async function getPrecedents(
 
   try {
     // Validate authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return {
-        status: 401,
-        body: JSON.stringify({ error: 'unauthorized', message: 'Missing authorization header' }),
-        headers: CORS_HEADERS,
-      };
-    }
-
-    const tokenResult = await validateToken(authHeader);
-    if (!tokenResult.valid || !tokenResult.userId) {
+    const user = await validateToken(req);
+    if (!user) {
       return {
         status: 401,
         body: JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired token' }),
@@ -51,10 +42,13 @@ export async function getPrecedents(
 
     // Query Cosmos DB for user's precedent collections
     const container = getContainer('precedents');
-    const query = 'SELECT * FROM c WHERE c.userId = @userId ORDER BY c.createdAt DESC';
+    const querySpec = {
+      query: 'SELECT * FROM c WHERE c.userId = @userId ORDER BY c.createdAt DESC',
+      parameters: [{ name: '@userId', value: user.userId }]
+    };
 
     const { resources } = await container.items
-      .query<SavedPrecedentDocument>(query, { parameters: [{ name: '@userId', value: tokenResult.userId }] })
+      .query<SavedPrecedentDocument>(querySpec)
       .fetchAll();
 
     return {

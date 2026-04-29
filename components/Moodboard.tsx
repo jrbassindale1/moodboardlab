@@ -15,6 +15,7 @@ import {
 } from '../lifecycleProfiles';
 import {
   callGeminiImage,
+  callOpenAIImage,
   callGeminiText,
   checkQuota,
   consumeCredits,
@@ -475,6 +476,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
   >('idle');
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
+  const [imageProvider, setImageProvider] = useState<'gemini' | 'openai'>('gemini');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [isCreatingMoodboard, setIsCreatingMoodboard] = useState(false);
   const [flowProgress, setFlowProgress] = useState<MoodboardFlowProgress | null>(null);
@@ -744,6 +746,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   }, [board, currentMaterialsKey, sustainabilityBriefing, briefingPayload, onBriefingInvalidatedMessageChange]);
 
+  const buildMaterialKey = () => {
+    if (!renderMaterials.length) return 'No materials selected yet.';
+    return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
+  };
+
   // Track moodboard invalidation when materials change
   useEffect(() => {
     if (!moodboardRenderUrl) {
@@ -771,11 +778,6 @@ const Moodboard: React.FC<MoodboardProps> = ({
       setPrecedentsInvalidated(true);
     }
   }, [board, buildMaterialKey, savedPrecedents]);
-
-  const buildMaterialKey = () => {
-    if (!renderMaterials.length) return 'No materials selected yet.';
-    return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
-  };
 
   const persistGeneration = async (
     imageDataUri: string,
@@ -2004,15 +2006,25 @@ ${JSON.stringify(proseContext)}`;
           }
         };
 
-        const data = await callGeminiImage(payload, { signal: abortController.signal });
+        const data = await (
+          imageProvider === 'openai'
+            ? callOpenAIImage(prompt, isEditingRender ? options?.baseImageDataUrl : undefined, {
+                signal: abortController.signal,
+                timeoutMs: 240000,
+                size: '1024x1024',
+                quality: 'medium'
+              })
+            : callGeminiImage(payload, { signal: abortController.signal })
+        );
 
         // Check if request was aborted or component unmounted
         if (abortController.signal.aborted || !isMountedRef.current) {
           console.log('[Moodboard Render] Request aborted or component unmounted');
           return false;
         }
-        const fallbackUsed = isImageModelFallbackUsed(data);
-        const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
+        const useOpenAI = imageProvider === 'openai';
+        const fallbackUsed = !useOpenAI && isImageModelFallbackUsed(data);
+        const modelUsed = useOpenAI ? 'gpt-image-2' : (typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined);
         setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
         let img: string | null = null;
         let mime: string | null = null;
@@ -2029,7 +2041,7 @@ ${JSON.stringify(proseContext)}`;
           }
           if (img) break;
         }
-        if (!img) throw new Error('Gemini did not return an image payload.');
+        if (!img) throw new Error(useOpenAI ? 'OpenAI (gpt-image-2) did not return an image payload.' : 'Gemini did not return an image payload.');
         const newUrl = `data:${mime || 'image/png'};base64,${img}`;
 
         // Check if request was aborted BEFORE consuming credits
@@ -2460,12 +2472,24 @@ ${JSON.stringify(proseContext)}`;
           <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
             Workspace
           </h1>
-          <button
-            onClick={() => onNavigate?.('concept')}
-            className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black"
-          >
-            Home
-          </button>
+          <div className="flex gap-2 items-center">
+            {/* Image Provider Selector (Test Environment) */}
+            <select
+              value={imageProvider}
+              onChange={(e) => setImageProvider(e.target.value as 'gemini' | 'openai')}
+              className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black cursor-pointer bg-white"
+              title="Switch between image generation models"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI (GPT Image 2)</option>
+            </select>
+            <button
+              onClick={() => onNavigate?.('concept')}
+              className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black"
+            >
+              Home
+            </button>
+          </div>
         </div>
 
         {/* Generation Progress Indicator */}

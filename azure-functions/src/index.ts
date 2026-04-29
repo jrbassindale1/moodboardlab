@@ -1,6 +1,7 @@
 import './functions/check-quota';
 import './functions/consume-credits';
 import './functions/create-checkout-session';
+import './functions/generate-openai-image';
 import './functions/generateMoodboard';
 import './functions/generations';
 import './functions/material-translation';

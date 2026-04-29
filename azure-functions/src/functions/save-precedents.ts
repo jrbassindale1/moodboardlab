@@ -57,17 +57,8 @@ export async function savePrecedents(
 
   try {
     // Validate authentication
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return {
-        status: 401,
-        body: JSON.stringify({ error: 'unauthorized', message: 'Missing authorization header' }),
-        headers: CORS_HEADERS,
-      };
-    }
-
-    const tokenResult = await validateToken(authHeader);
-    if (!tokenResult.valid || !tokenResult.userId) {
+    const user = await validateToken(req);
+    if (!user) {
       return {
         status: 401,
         body: JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired token' }),
@@ -113,7 +104,7 @@ export async function savePrecedents(
     // Create document
     const precedentDoc: SavedPrecedentDocument = {
       id: `precedent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      userId: tokenResult.userId,
+      userId: user.userId,
       title: body.title || `Precedent Collection - ${new Date().toLocaleDateString()}`,
       description: body.description,
       precedents: body.precedents,
