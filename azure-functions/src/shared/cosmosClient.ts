@@ -54,6 +54,7 @@ export function getContainer(
     | 'lifecycle_profiles'
     | 'credits'
     | 'credit_transactions'
+    | 'precedents'
 ): Container {
   if (!containers[containerName]) {
     containers[containerName] = getDatabase().container(containerName);
@@ -129,6 +130,32 @@ export interface GenerationDocument {
   materials?: unknown;
   createdAt: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface SavedPrecedentDocument {
+  id: string;
+  userId: string; // Partition key
+  title: string;
+  description?: string;
+  precedents: Array<{
+    id: string;
+    title: string;
+    description: string;
+    url: string;
+    imageUrl: string | null;
+    source: 'archdaily' | 'dezeen' | 'architizer' | 'designboom' | 'divisare' | 'other';
+    sourceName: string;
+  }>;
+  materials: Array<{
+    id: string;
+    name: string;
+    category?: string;
+    keywords?: string[];
+    finish?: string;
+    materialType?: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MaterialDocument {
