@@ -12,9 +12,18 @@ import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
+import InactivityWarningModal from './components/InactivityWarningModal';
+import ProjectCreateModal from './components/ProjectCreateModal';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
-import type { PrecedentResult } from './api';
+import {
+  createProjectApi,
+  getProjects,
+  type CreateProjectPayload,
+  type PrecedentResult,
+  type Project,
+} from './api';
 import type {
   SustainabilityBriefingPayload,
   SustainabilityBriefingResponse,
@@ -72,17 +81,6 @@ const PROJECT_CACHE_KEY = 'moodboard_current_project_v1';
 const canPersistRenderUrl = (value: string | null): value is string =>
   Boolean(value && !isDataUri(value));
 
-// Project type for grouping generations
-type Project = {
-  id: string;
-  name: string;
-  createdAt: string;
-};
-
-const generateProjectId = (): string => {
-  return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-};
-
 const formatProjectDate = (): string => {
   const now = new Date();
   const day = now.getDate();
@@ -134,10 +132,10 @@ const formatProjectName = (): string => {
   return `Moodboard ${dateStr} (${projectNumber})`;
 };
 
-const readProjectCache = (): Project | null => {
+const readProjectCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return getUserPreference<Project>(PROJECT_CACHE_KEY);
+    return getUserPreference<string>(PROJECT_CACHE_KEY);
   } catch {
     return null;
   }
@@ -218,7 +216,7 @@ const getInitialPage = (): string => {
 };
 
 const App: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout, getAccessToken } = useAuth();
   const { checkoutStatus, dismissCheckoutStatus } = useUsage();
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
@@ -247,15 +245,36 @@ const App: React.FC = () => {
   // Lifted state from Moodboard (persists across navigation)
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
 
-  // Project state - groups all generations under a single project
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(() => readProjectCache());
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
+  const [isProjectCreateModalOpen, setIsProjectCreateModalOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
   const hasSyncedLocationRef = useRef(false);
-  const projectCacheRestoredRef = useRef(false);
   const hasInitializedAuthStateRef = useRef(false);
   const wasAuthenticatedRef = useRef(false);
+
+  const currentProject = useMemo(
+    () => projects.find((project) => project.id === currentProjectId) || null,
+    [projects, currentProjectId]
+  );
+
+  // Inactivity timeout - warn after 4 hours, auto-logout after 5 more minutes
+  const {
+    showWarning: showInactivityWarning,
+    secondsRemaining: inactivitySecondsRemaining,
+    dismissWarning: dismissInactivityWarning,
+    logoutNow: inactivityLogoutNow,
+  } = useInactivityTimeout({
+    enabled: isAuthenticated,
+    onLogout: logout,
+    // For testing, you can use shorter timeouts:
+    // warningTimeoutMs: 30 * 1000, // 30 seconds
+    // logoutDelayMs: 10 * 1000,    // 10 seconds
+  });
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
 
@@ -285,7 +304,8 @@ const App: React.FC = () => {
     setRenderNote('');
     setAppliedEditPrompt('');
     setMoodboardEditPrompt('');
-    setCurrentProject(null);
+    setProjects([]);
+    setCurrentProjectId(null);
   }, [user?.id]);
 
   // Set current user ID for storage scoping
@@ -315,45 +335,104 @@ const App: React.FC = () => {
     wasAuthenticatedRef.current = isAuthenticated;
   }, [clearWorkspaceAfterSignOut, isAuthenticated]);
 
-  // Restore project from localStorage on mount
-  useEffect(() => {
-    if (projectCacheRestoredRef.current) return;
-    projectCacheRestoredRef.current = true;
-    const cached = readProjectCache();
-    if (cached) {
-      setCurrentProject(cached);
-    }
-  }, []);
-
-  // Persist project to user-scoped localStorage
+  // Persist selected project ID to user-scoped localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (currentProject) {
-        setUserPreference(PROJECT_CACHE_KEY, currentProject);
-      } else {
-        // Note: Can't easily remove user-scoped keys, but setting null is ok
-        setUserPreference(PROJECT_CACHE_KEY, null);
-      }
+      setUserPreference(PROJECT_CACHE_KEY, currentProjectId);
     } catch {
       // Ignore storage errors
     }
-  }, [currentProject]);
+  }, [currentProjectId]);
+
+  const loadProjects = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    setIsProjectsLoading(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setProjects([]);
+        setCurrentProjectId(null);
+        return;
+      }
+
+      const items = await getProjects(token);
+      setProjects(items);
+      setCurrentProjectId((prev) => {
+        if (prev && items.some((project) => project.id === prev)) {
+          return prev;
+        }
+
+        const cachedProjectId = readProjectCache();
+        if (cachedProjectId && items.some((project) => project.id === cachedProjectId)) {
+          return cachedProjectId;
+        }
+
+        return items[0]?.id || null;
+      });
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    } finally {
+      setIsProjectsLoading(false);
+    }
+  }, [getAccessToken, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProjects([]);
+      setCurrentProjectId(null);
+      return;
+    }
+    void loadProjects();
+  }, [isAuthenticated, loadProjects]);
+
+  const handleCreateProject = useCallback(async (payload: CreateProjectPayload) => {
+    if (!isAuthenticated) {
+      throw new Error('Please sign in to continue.');
+    }
+
+    setIsCreatingProject(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Please sign in to continue.');
+      }
+
+      const created = await createProjectApi(token, payload);
+      setProjects((prev) => [created, ...prev.filter((project) => project.id !== created.id)]);
+      setCurrentProjectId(created.id);
+    } finally {
+      setIsCreatingProject(false);
+    }
+  }, [getAccessToken, isAuthenticated]);
+
+  const ensureCurrentProject = useCallback(async (): Promise<Project | null> => {
+    if (currentProject) return currentProject;
+    if (!isAuthenticated) return null;
+
+    try {
+      const token = await getAccessToken();
+      if (!token) return null;
+
+      const created = await createProjectApi(token, {
+        name: formatProjectName(),
+        entryRoute: 'mood',
+      });
+
+      setProjects((prev) => [created, ...prev.filter((project) => project.id !== created.id)]);
+      setCurrentProjectId(created.id);
+      return created;
+    } catch (error) {
+      console.error('Failed to ensure current project:', error);
+      return null;
+    }
+  }, [currentProject, getAccessToken, isAuthenticated]);
 
   // Create a new project (called when generating first moodboard)
-  const createNewProject = (): Project => {
-    const project: Project = {
-      id: generateProjectId(),
-      name: formatProjectName(),
-      createdAt: new Date().toISOString(),
-    };
-    setCurrentProject(project);
-    return project;
-  };
-
-  // Start a fresh project (clears current project and related state)
+  // Start a fresh project context (clears selected project and related render state)
   const startNewProject = () => {
-    setCurrentProject(null);
+    setCurrentProjectId(null);
     setMoodboardRenderUrl(null);
     setAppliedRenderUrl(null);
     setAppliedRenderGenerationId(null);
@@ -611,10 +690,22 @@ const App: React.FC = () => {
 
     // Restore project context if available
     if (restoredProjectId && restoredProjectName) {
-      setCurrentProject({
-        id: restoredProjectId,
-        name: restoredProjectName,
-        createdAt: new Date().toISOString() // We don't have the original, use now
+      setCurrentProjectId(restoredProjectId);
+      setProjects((prev) => {
+        if (prev.some((project) => project.id === restoredProjectId)) {
+          return prev;
+        }
+        const now = new Date().toISOString();
+        return [
+          {
+            id: restoredProjectId,
+            name: restoredProjectName,
+            createdAt: now,
+            updatedAt: now,
+            userId: user?.id,
+          },
+          ...prev,
+        ];
       });
     }
 
@@ -708,7 +799,7 @@ const App: React.FC = () => {
             moodboardEditPrompt={moodboardEditPrompt}
             onMoodboardEditPromptChange={setMoodboardEditPrompt}
             currentProject={currentProject}
-            onCreateProject={createNewProject}
+            onCreateProject={ensureCurrentProject}
           />
         );
       case 'apply':
@@ -752,7 +843,13 @@ const App: React.FC = () => {
       case 'pricing':
         return <Pricing />;
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
+        return (
+          <Dashboard
+            onNavigate={setCurrentPage}
+            onRestoreGeneration={handleRestoreGeneration}
+            onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
+          />
+        );
       case 'material-admin':
         return <MaterialAdmin onNavigate={setCurrentPage} />;
       default:
@@ -806,6 +903,11 @@ const App: React.FC = () => {
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         boardCount={selectedMaterials.length}
+        currentProject={currentProject}
+        projects={projects}
+        onSelectProject={(project) => setCurrentProjectId(project.id)}
+        onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
+        isProjectsLoading={isProjectsLoading}
       />
 
       {checkoutStatus && checkoutBannerClasses && (
@@ -962,6 +1064,21 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Inactivity Warning Modal */}
+      <InactivityWarningModal
+        isOpen={showInactivityWarning}
+        secondsRemaining={inactivitySecondsRemaining}
+        onStayLoggedIn={dismissInactivityWarning}
+        onLogout={inactivityLogoutNow}
+      />
+
+      <ProjectCreateModal
+        isOpen={isProjectCreateModalOpen}
+        onClose={() => setIsProjectCreateModalOpen(false)}
+        onCreateProject={handleCreateProject}
+        isLoading={isCreatingProject}
+      />
     </div>
   );
 };

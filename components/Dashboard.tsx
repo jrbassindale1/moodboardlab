@@ -4,7 +4,7 @@ import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../a
 import { getGenerations, PrecedentResult } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
-import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock, Plus } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 interface Generation {
@@ -31,6 +31,7 @@ interface DashboardProps {
     projectName?: string | null;
     generationId?: string | null;
   }) => void;
+  onOpenProjectModal?: () => void;
 }
 
 type BoardItemLike = {
@@ -170,7 +171,25 @@ type ProjectGroup = {
   createdAt: string; // Earliest generation timestamp
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
+async function downloadUrl(url: string, filename: string) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, onOpenProjectModal }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit, purchasedCredits } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
@@ -470,13 +489,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
         )}
 
         {/* Header */}
-        <div className="border-b border-gray-200 pb-6">
-          <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back, {user?.name || 'User'}
-          </p>
+        <div className="flex items-start justify-between border-b border-gray-200 pb-6">
+          <div>
+            <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Welcome back, {user?.name || 'User'}
+            </p>
+          </div>
+          {onOpenProjectModal && (
+            <button
+              onClick={onOpenProjectModal}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Project
+            </button>
+          )}
         </div>
 
         {/* Usage Stats */}
@@ -637,14 +667,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                           loading="lazy"
                                         />
-                                        <a
-                                          href={gen.blobUrl}
-                                          download
+                                        <button
+                                          onClick={(e) => { e.preventDefault(); downloadUrl(gen.blobUrl!, `image-${gen.id}.png`); }}
                                           className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
                                           aria-label="Download image"
                                         >
                                           <Download className="w-3.5 h-3.5" />
-                                        </a>
+                                        </button>
                                       </div>
                                     ) : (
                                       <div className="aspect-square bg-gray-100 flex items-center justify-center">
@@ -666,10 +695,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                             const rawUrl = pdf.blobUrl || '';
                                             const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
                                             return rawUrl ? (
-                                              <a
+                                              <button
                                                 key={pdf.id}
-                                                href={rawUrl}
-                                                download
+                                                onClick={() => downloadUrl(rawUrl, `${isMaterialsSheet ? 'materials-sheet' : 'briefing'}-${pdf.id}.pdf`)}
                                                 className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
                                                   isMaterialsSheet
                                                     ? 'text-emerald-700 bg-emerald-100'
@@ -678,7 +706,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                               >
                                                 <Download className="w-3 h-3" />
                                                 {isMaterialsSheet ? 'Sheet' : 'Briefing'}
-                                              </a>
+                                              </button>
                                             ) : null;
                                           })}
                                         </div>
@@ -755,14 +783,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     loading="lazy"
                                   />
-                                  <a
-                                    href={gen.blobUrl}
-                                    download
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); downloadUrl(gen.blobUrl!, `image-${gen.id}.png`); }}
                                     className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
                                     aria-label="Download image"
                                   >
                                     <Download className="w-3.5 h-3.5" />
-                                  </a>
+                                  </button>
                                 </div>
                               ) : (
                                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
@@ -784,10 +811,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                       const rawUrl = pdf.blobUrl || '';
                                       const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
                                       return rawUrl ? (
-                                        <a
+                                        <button
                                           key={pdf.id}
-                                          href={rawUrl}
-                                          download
+                                          onClick={() => downloadUrl(rawUrl, `${isMaterialsSheet ? 'materials-sheet' : 'briefing'}-${pdf.id}.pdf`)}
                                           className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
                                             isMaterialsSheet
                                               ? 'text-emerald-700 bg-emerald-100'
@@ -796,7 +822,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                         >
                                           <Download className="w-3 h-3" />
                                           {isMaterialsSheet ? 'Sheet' : 'Briefing'}
-                                        </a>
+                                        </button>
                                       ) : null;
                                     })}
                                   </div>

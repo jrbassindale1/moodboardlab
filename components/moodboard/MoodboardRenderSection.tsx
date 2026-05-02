@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, ImageDown, Wand2, RefreshCw } from 'lucide-react';
+import { Loader2, ImageDown, Wand2, RefreshCw, Maximize2 } from 'lucide-react';
 
 interface MoodboardRenderSectionProps {
   moodboardRenderUrl: string;
@@ -13,6 +13,10 @@ interface MoodboardRenderSectionProps {
   onNavigate?: (page: string) => void;
   onMoodboardEdit: () => void;
   onRegenerateMoodboard?: () => void;
+  onRender4K?: () => void;
+  canUse4K?: boolean;
+  fourKTooltip?: string;
+  renderingMode?: string | null;
 }
 
 const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
@@ -27,6 +31,10 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   onNavigate,
   onMoodboardEdit,
   onRegenerateMoodboard,
+  onRender4K,
+  canUse4K,
+  fourKTooltip,
+  renderingMode,
 }) => {
   return (
     <div className="space-y-4 animate-fadeIn">
@@ -104,6 +112,29 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
               </>
             )}
           </button>
+          <div className="relative group">
+            <button
+              onClick={onRender4K}
+              disabled={status !== 'idle' || !moodboardRenderUrl || !canUse4K}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300"
+            >
+              {status === 'render' && renderingMode === 'upscale-4k' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Finalising...
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4" />
+                  Final Quality (4K)
+                </>
+              )}
+            </button>
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {canUse4K ? 'Create 4K final output. Costs 5 credits.' : fourKTooltip}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+            </div>
+          </div>
           <button
             onClick={() => onDownloadBoard(moodboardRenderUrl, 'moodboard')}
             disabled={downloadingId === 'moodboard'}

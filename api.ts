@@ -43,6 +43,46 @@ export interface SearchPrecedentsResponse {
   totalFound: number;
 }
 
+// ============================================
+// Project Management Types
+// ============================================
+
+export type ProjectType = 'Residential' | 'Commercial' | 'Education' | 'Mixed-Use' | 'Cultural' | 'Landscape';
+export type ProjectStage = 'Concept' | 'Scheme' | 'Detailed' | 'Planning';
+export type ProjectEntryRoute = 'materials' | 'sketch' | 'place' | 'mood';
+
+export interface Project {
+  id: string;
+  userId?: string;
+  name: string;
+  type?: ProjectType | null;
+  location?: string | null;
+  stage?: ProjectStage | null;
+  brief?: string | null;
+  entryRoute?: ProjectEntryRoute | null;
+  settings?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectsResponse {
+  items: Project[];
+}
+
+export interface CreateProjectPayload {
+  name: string;
+  type?: ProjectType | null;
+  location?: string | null;
+  stage?: ProjectStage | null;
+  brief?: string | null;
+  entryRoute?: ProjectEntryRoute | null;
+  settings?: Record<string, unknown> | null;
+}
+
+export interface UpdateProjectPayload extends Partial<CreateProjectPayload> {
+  name: string;
+}
+
 // Prod host is the deployed Function App; adjust if you rename the app.
 // Support both Vite (import.meta.env) and Node.js (process.env) environments
 type RequestOptions = {
@@ -237,7 +277,13 @@ export const callGeminiImage = (payload: unknown, options?: RequestOptions) =>
 export async function callOpenAIImage(
   prompt: string,
   baseImageDataUrl?: string,
-  options?: RequestOptions & { size?: string; quality?: 'auto' | 'low' | 'medium' | 'high' }
+  options?: RequestOptions & {
+    size?: string;
+    quality?: 'auto' | 'low' | 'medium' | 'high';
+    accessToken?: string | null;
+    generationType?: GenerationType;
+    generationMode?: GenerationMode;
+  }
 ): Promise<{ candidates: Array<{ content: { parts: Array<{ inlineData: { data: string; mimeType: string } }> } }>; imageModelUsed?: string }> {
   const API_BASE = getApiBase();
   const timeoutMs = options?.timeoutMs ?? 120000;
@@ -250,12 +296,17 @@ export async function callOpenAIImage(
     `${API_BASE}/api/generate-openai-image`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+      },
       body: JSON.stringify({
         prompt,
         baseImageDataUrl,
         size: imageSize,
-        quality: imageQuality
+        quality: imageQuality,
+        generationType: options?.generationType,
+        generationMode: options?.generationMode,
       })
     },
     timeoutMs,
@@ -263,6 +314,9 @@ export async function callOpenAIImage(
   );
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error('auth_required');
+    }
     let message: string;
     try {
       const body = await res.json();
@@ -802,7 +856,7 @@ export async function confirmCheckoutSession(
  */
 export async function searchPrecedents(
   materials: MaterialOption[],
-  options?: { maxResults?: number; timeoutMs?: number }
+  options?: { maxResults?: number; timeoutMs?: number; accessToken?: string | null }
 ): Promise<SearchPrecedentsResponse> {
   const API_BASE = getApiBase();
   const timeoutMs = options?.timeoutMs ?? 90000; // 90s - precedent search is complex (multiple searches + LLM calls)
@@ -811,7 +865,10 @@ export async function searchPrecedents(
     `${API_BASE}/api/search-precedents`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+      },
       body: JSON.stringify({
         materials: materials.map((m) => ({
           id: m.id,
@@ -835,6 +892,9 @@ export async function searchPrecedents(
       // ignore parse errors
     }
 
+    if (res.status === 401) {
+      throw new Error('auth_required');
+    }
     if (res.status === 429) {
       throw new Error('rate_limit');
     }
@@ -861,7 +921,7 @@ export interface EnrichPrecedentImagesResponse {
 
 export async function enrichPrecedentImages(
   urls: string[],
-  options?: { timeoutMs?: number }
+  options?: { timeoutMs?: number; accessToken?: string | null }
 ): Promise<EnrichPrecedentImagesResponse> {
   const API_BASE = getApiBase();
   const timeoutMs = options?.timeoutMs ?? 30000; // 30s for image enrichment
@@ -870,13 +930,19 @@ export async function enrichPrecedentImages(
     `${API_BASE}/api/enrich-precedent-images`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+      },
       body: JSON.stringify({ urls }),
     },
     timeoutMs
   );
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error('auth_required');
+    }
     let errorData: { error?: string; message?: string } = {};
     try {
       errorData = await res.json();
@@ -926,6 +992,9 @@ export async function translateRenderToProducts(
   );
 
   if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error('auth_required');
+    }
     let message = `Material translation failed (status ${res.status})`;
     try {
       const data = await res.json() as { error?: string; message?: string };
@@ -1051,6 +1120,184 @@ export async function getPrecedents(
 
   if (!res.ok) {
     let message = 'Failed to retrieve precedents';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+// ============================================
+// Project Management API Functions
+// ============================================
+
+/**
+ * List all projects for the authenticated user
+ */
+export async function getProjects(accessToken: string): Promise<Project[]> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to fetch projects';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  const data = await res.json() as ProjectsResponse;
+  return data.items || [];
+}
+
+/**
+ * Get a single project by ID
+ */
+export async function getProject(accessToken: string, projectId: string): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to fetch project';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Create a new project
+ */
+export async function createProjectApi(
+  accessToken: string,
+  payload: CreateProjectPayload
+): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to create project';
+    try {
+      const data = await res.json() as { error?: string; message?: string; errors?: string[] };
+      message = data.errors?.join(', ') || data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Update an existing project
+ */
+export async function updateProjectApi(
+  accessToken: string,
+  projectId: string,
+  payload: UpdateProjectPayload
+): Promise<Project> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to update project';
+    try {
+      const data = await res.json() as { error?: string; message?: string; errors?: string[] };
+      message = data.errors?.join(', ') || data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * Delete (soft delete) a project
+ */
+export async function deleteProjectApi(
+  accessToken: string,
+  projectId: string
+): Promise<{ success: boolean; message: string }> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/projects/${projectId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      throw new Error('Project not found');
+    }
+    let message = 'Failed to delete project';
     try {
       const data = await res.json() as { error?: string; message?: string };
       message = data.message || data.error || message;

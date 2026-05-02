@@ -11,6 +11,29 @@
 let currentUserId: string | null = null;
 
 /**
+ * Global localStorage keys that should be cleared on logout for security/privacy.
+ * These are NOT user-scoped but contain sensitive or user-specific data.
+ */
+const GLOBAL_KEYS_TO_CLEAR_ON_LOGOUT: string[] = [
+  // Admin/security keys - MUST be cleared
+  'moodboard_admin_bypass_key_v1',
+  'moodboard_admin_bypass_enabled',
+
+  // User-specific cached data that shouldn't persist
+  'coloredMaterialIcons',
+  'coloredIconServerDisabledUntil',
+  'coloredIconServerDisabledReason',
+  'materialIcons',
+  'materialIconsTimestamp',
+  'materialitySelection',
+
+  // Note: These are intentionally NOT cleared (shared/anonymous data):
+  // - 'moodboard_anon_quota_monthly_v1' (anonymous usage tracking)
+  // - 'moodboard_materials_cache_v1' (shared materials list)
+  // - 'cookieConsent' (browser preference, not user-specific)
+];
+
+/**
  * Set the current user ID for localStorage scoping
  */
 export function setCurrentUserId(userId: string | null): void {
@@ -156,6 +179,27 @@ export function clearUserData(userId: string): void {
 }
 
 /**
+ * Clear sensitive global localStorage keys on logout
+ * These keys are not user-scoped but should still be cleared for security
+ */
+export function clearGlobalSensitiveKeys(): void {
+  try {
+    let clearedCount = 0;
+    GLOBAL_KEYS_TO_CLEAR_ON_LOGOUT.forEach(key => {
+      if (localStorage.getItem(key) !== null) {
+        localStorage.removeItem(key);
+        clearedCount++;
+      }
+    });
+    if (clearedCount > 0) {
+      console.log(`Cleared ${clearedCount} global sensitive localStorage keys on logout`);
+    }
+  } catch (err) {
+    console.error('Failed to clear global sensitive keys:', err);
+  }
+}
+
+/**
  * Clear all temporary storage on logout
  * sessionStorage will auto-clear on browser close anyway, but clear it explicitly
  */
@@ -168,6 +212,9 @@ export function clearAllStorage(): void {
     if (currentUserId) {
       clearUserData(currentUserId);
     }
+
+    // Clear sensitive global keys (admin bypass, cached user data, etc.)
+    clearGlobalSensitiveKeys();
   } catch (err) {
     console.error('Failed to clear all storage:', err);
   }

@@ -7,7 +7,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { MaterialOption } from '../../types';
-import { searchPrecedents, enrichPrecedentImages, consumeCredits, checkQuota, PrecedentResult, savePrecedents } from '../../api';
+import { searchPrecedents, enrichPrecedentImages, checkQuota, PrecedentResult, savePrecedents } from '../../api';
 import { useAuth, useUsage, isAuthBypassEnabled } from '../../auth';
 import PrecedentCard from './PrecedentCard';
 
@@ -38,8 +38,6 @@ const ERROR_MESSAGES: Record<SearchError['type'], string> = {
   auth_required: 'Please sign in to search for precedents.',
 };
 
-const SEARCH_CREDIT_COST = 1;
-
 const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   materials,
   savedPrecedents,
@@ -57,9 +55,13 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   const [error, setError] = useState<SearchError | null>(null);
   const [loadingImages, setLoadingImages] = useState<ImageLoadingState>(new Set());
   const lastAutoSearchTriggerRef = useRef(0);
+  const searchInFlightRef = useRef(false);
 
   // Enrich precedents with images (Phase 2 of two-phase loading)
-  const enrichWithImages = useCallback(async (precedents: PrecedentResult[]) => {
+  const enrichWithImages = useCallback(async (
+    precedents: PrecedentResult[],
+    accessToken?: string | null
+  ) => {
     const urlsNeedingImages = precedents
       .filter(p => p.imageUrl === null)
       .map(p => p.url);
@@ -70,7 +72,10 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
     setLoadingImages(new Set(urlsNeedingImages));
 
     try {
-      const response = await enrichPrecedentImages(urlsNeedingImages, { timeoutMs: 30000 });
+      const response = await enrichPrecedentImages(urlsNeedingImages, {
+        timeoutMs: 30000,
+        accessToken,
+      });
 
       // Update results with fetched images
       setResults((prevResults: PrecedentResult[]) => {
@@ -91,86 +96,91 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
   }, []);
 
   const performSearch = useCallback(async () => {
-    if (materials.length === 0) {
-      setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
-      setStatus('error');
-      return;
-    }
-
-    // Check authentication (unless bypass is enabled)
-    if (!isTestingEnvironment && !isAuthenticated) {
-      setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
-      setStatus('error');
-      return;
-    }
-
-    setStatus('loading');
-    setError(null);
-    setResults([]);
-
     try {
-      // Check quota before searching
-      if (!isTestingEnvironment && isAuthenticated) {
-        const token = await getAccessToken();
-        if (!token) {
-          setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
-          setStatus('error');
-          return;
-        }
-
-        const quota = await checkQuota(token);
-        if (!quota.canGenerate) {
-          setError({ type: 'quota_exceeded', message: ERROR_MESSAGES.quota_exceeded });
-          setStatus('error');
-          return;
-        }
+      if (searchInFlightRef.current) {
+        return;
       }
+      searchInFlightRef.current = true;
 
-      // Perform the search
-      const response = await searchPrecedents(materials, { maxResults: 12 });
-
-      if (response.results.length === 0) {
+      if (materials.length === 0) {
         setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
         setStatus('error');
         return;
       }
 
-      // Consume credits after successful search
-      if (!isTestingEnvironment && isAuthenticated) {
-        try {
-          const token = await getAccessToken();
-          if (token) {
-            await consumeCredits(token, {
-              generationType: 'precedentSearch',
-              credits: SEARCH_CREDIT_COST,
-              reason: 'precedent-search',
-            });
-            await refreshUsage();
-          }
-        } catch (err) {
-          console.error('Failed to consume credits:', err);
-          // Don't fail the search if credit consumption fails
+      // Check authentication (unless bypass is enabled)
+      if (!isTestingEnvironment && !isAuthenticated) {
+        setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+        setStatus('error');
+        return;
+      }
+
+      setStatus('loading');
+      setError(null);
+      setResults([]);
+
+      try {
+        let accessToken: string | null = null;
+        if (isAuthenticated) {
+          accessToken = await getAccessToken();
         }
+
+        // Check quota before searching
+        if (!isTestingEnvironment && isAuthenticated) {
+          if (!accessToken) {
+            setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+            setStatus('error');
+            return;
+          }
+
+          const quota = await checkQuota(accessToken);
+          if (!quota.canGenerate) {
+            setError({ type: 'quota_exceeded', message: ERROR_MESSAGES.quota_exceeded });
+            setStatus('error');
+            return;
+          }
+        }
+
+        // Perform the search
+        const response = await searchPrecedents(materials, {
+          maxResults: 12,
+          accessToken,
+        });
+
+        if (response.results.length === 0) {
+          setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
+          setStatus('error');
+          return;
+        }
+
+        // Credits are consumed server-side by the search endpoint.
+        if (!isTestingEnvironment && isAuthenticated) {
+          void refreshUsage();
+        }
+
+        setResults(response.results);
+        setStatus('success');
+        onSearchComplete?.();
+
+        // Phase 2: Lazy-load images in background
+        void enrichWithImages(response.results, accessToken);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        console.error('Precedent search error:', errorMessage, err);
+
+        if (errorMessage === 'auth_required') {
+          setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+        } else if (errorMessage === 'rate_limit') {
+          setError({ type: 'rate_limit', message: ERROR_MESSAGES.rate_limit });
+        } else if (errorMessage.includes('timed out') || errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          setError({ type: 'network', message: ERROR_MESSAGES.network });
+        } else {
+          setError({ type: 'api_error', message: ERROR_MESSAGES.api_error });
+        }
+        setStatus('error');
       }
-
-      setResults(response.results);
-      setStatus('success');
-      onSearchComplete?.();
-
-      // Phase 2: Lazy-load images in background
-      void enrichWithImages(response.results);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Precedent search error:', errorMessage, err);
-
-      if (errorMessage === 'rate_limit') {
-        setError({ type: 'rate_limit', message: ERROR_MESSAGES.rate_limit });
-      } else if (errorMessage.includes('timed out') || errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        setError({ type: 'network', message: ERROR_MESSAGES.network });
-      } else {
-        setError({ type: 'api_error', message: ERROR_MESSAGES.api_error });
-      }
-      setStatus('error');
+    } finally {
+      searchInFlightRef.current = false;
     }
   }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage, enrichWithImages]);
 

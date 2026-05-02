@@ -1,6 +1,7 @@
 import {
   clearSessionData,
   clearUserData,
+  clearGlobalSensitiveKeys,
   getCurrentUserId,
 } from './storageManager';
 
@@ -22,6 +23,9 @@ export const clearMoodboardCache = (): void => {
     if (userId) {
       clearUserData(userId);
     }
+
+    // Clear sensitive global keys (admin bypass, cached user data, etc.)
+    clearGlobalSensitiveKeys();
   } catch {
     // Ignore storage errors
   }

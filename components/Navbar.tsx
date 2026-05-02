@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
-import { Menu, X, Zap } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Menu, X, Zap, ChevronDown, FolderOpen } from 'lucide-react';
 import AuthButton from './AuthButton';
 import BuyCreditsModal from './BuyCreditsModal';
+import ProjectSwitcherDropdown from './ProjectSwitcherDropdown';
 import { useAuth, useUsage } from '../auth';
 import { getPathForPage } from '../utils/siteSeo';
+import type { Project } from '../api';
 
 interface NavbarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   boardCount?: number;
+  currentProject?: Project | null;
+  projects?: Project[];
+  onSelectProject?: (project: Project) => void;
+  onOpenProjectModal?: () => void;
+  isProjectsLoading?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   currentPage,
   onNavigate,
-  boardCount = 0
+  boardCount = 0,
+  currentProject = null,
+  projects = [],
+  onSelectProject,
+  onOpenProjectModal,
+  isProjectsLoading = false,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
+  const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
+  const projectButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated } = useAuth();
   const { remaining, isLoading: isUsageLoading } = useUsage();
   const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
@@ -80,6 +94,33 @@ const Navbar: React.FC<NavbarProps> = ({
         </a>
 
         <div className="flex items-center gap-4 md:gap-8">
+          {isAuthenticated && (
+            <div className="relative hidden lg:block">
+              <button
+                ref={projectButtonRef}
+                onClick={() => setIsProjectSwitcherOpen((open) => !open)}
+                className="inline-flex items-center gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors"
+                aria-label="Switch project"
+              >
+                <FolderOpen className="w-4 h-4 text-gray-500" />
+                <span className="max-w-[180px] truncate font-mono text-[10px] uppercase tracking-widest text-gray-700">
+                  {currentProject?.name || 'Select Project'}
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+              <ProjectSwitcherDropdown
+                isOpen={isProjectSwitcherOpen}
+                onClose={() => setIsProjectSwitcherOpen(false)}
+                projects={projects}
+                currentProject={currentProject}
+                onSelectProject={(project) => onSelectProject?.(project)}
+                onCreateNew={() => onOpenProjectModal?.()}
+                isLoading={isProjectsLoading}
+                anchorRef={projectButtonRef}
+              />
+            </div>
+          )}
+
           <div className="hidden md:flex items-center gap-3 font-mono text-xs uppercase tracking-widest text-gray-600">
             {navItemsDesktop.map((item, index) => (
               <React.Fragment key={item.id}>
@@ -145,6 +186,59 @@ const Navbar: React.FC<NavbarProps> = ({
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-sm">
           <div className="max-w-screen-2xl mx-auto px-6 py-4 flex flex-col gap-4 font-mono text-sm uppercase tracking-widest text-gray-700">
+            {isAuthenticated && (
+              <div className="border border-gray-200 bg-white">
+                <div className="px-3 py-2 border-b border-gray-100 text-[10px] uppercase tracking-widest text-gray-500">
+                  Active Project
+                </div>
+                <div className="px-3 py-2 text-[11px] uppercase tracking-widest text-gray-800">
+                  {currentProject?.name || 'Select Project'}
+                </div>
+                <div className="max-h-52 overflow-y-auto border-t border-gray-100">
+                  {isProjectsLoading ? (
+                    <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400">
+                      Loading projects...
+                    </div>
+                  ) : projects.length === 0 ? (
+                    <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400">
+                      No projects yet
+                    </div>
+                  ) : (
+                    projects.map((project) => {
+                      const isSelected = currentProject?.id === project.id;
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => {
+                            onSelectProject?.(project);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 border-b border-gray-50 last:border-b-0 text-[11px] uppercase tracking-widest transition-colors ${
+                            isSelected
+                              ? 'bg-gray-100 text-black font-bold'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {project.name}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenProjectModal?.();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                >
+                  + New Project
+                </button>
+              </div>
+            )}
+
             {navItemsMobile.map((item) => (
               <a
                 key={item.id}

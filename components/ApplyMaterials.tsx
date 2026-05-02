@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import {
   callGeminiImage,
@@ -40,6 +40,7 @@ import { DEFAULT_SCENE_CONTROLS } from './apply-materials/constants';
 import MaterialTranslationPanel from './apply-materials/MaterialTranslationPanel';
 import PostProcessingModal from './apply-materials/PostProcessingModal';
 import ProjectContextPanel from './apply-materials/ProjectContextPanel';
+import ProjectContextHeader from './ProjectContextHeader';
 import RenderSetupPanel from './apply-materials/RenderSetupPanel';
 import RenderWorkspacePanel from './apply-materials/RenderWorkspacePanel';
 import SceneControlsSection from './apply-materials/SceneControlsSection';
@@ -202,6 +203,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [isPersistingRenderRecord, setIsPersistingRenderRecord] = useState(false);
   const loadedMaterialTranslationRenderRef = useRef<string | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
+  const applyRenderInFlightRef = useRef(false);
   const workspaceObjectUrlRef = useRef<string | null>(null);
   const baseFileInputRef = useRef<HTMLInputElement | null>(null);
   const styleReferenceFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -836,6 +838,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   };
 
+  const getAccessTokenWithRetry = useCallback(async (): Promise<string | null> => {
+    if (!isAuthenticated) return null;
+
+    let token = await getAccessToken();
+    if (token) return token;
+
+    // Clerk can briefly report authenticated while token hydration is still in flight.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    token = await getAccessToken();
+    return token;
+  }, [getAccessToken, isAuthenticated]);
+
   const buildMaterialTranslationContext = (): MaterialTranslationContext => {
     const selectedMaterialPalette = renderMaterials
       .slice(0, 20)
@@ -901,10 +915,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
     } catch (err) {
       setMaterialTranslationStatus('error');
+      const message = err instanceof Error ? err.message : 'Could not translate this render right now.';
       setMaterialTranslationError(
-        err instanceof Error
-          ? err.message
-          : 'Could not translate this render right now.'
+        message === 'auth_required' ? 'Please sign in to continue.' : message
       );
     }
   };
@@ -1509,6 +1522,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
     drawingType?: DrawingType;
   }): Promise<boolean> => {
+    if (applyRenderInFlightRef.current) {
+      return false;
+    }
+    applyRenderInFlightRef.current = true;
+
+    try {
     const currentBaseImageDataUrl =
       options?.baseImageDataUrl ??
       (options?.renderMode === 'upscale-4k' ? appliedRenderUrl : null);
@@ -1534,7 +1553,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     } else if (isAuthenticated) {
       // Refresh and check server-side quota
       try {
-        const token = await getAccessToken();
+        const token = await getAccessTokenWithRetry();
         if (token) {
           const quotaCheck = await checkQuota(token);
           if (generationMode === '4k' && !quotaCheck.isAdmin && (quotaCheck.purchasedCredits || 0) < CREDIT_COSTS.FOUR_K_GENERATION) {
@@ -1754,12 +1773,22 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       const openaiImageQuality = imageSize === '4K' ? 'high' : 'medium';
 
+      const authToken = isAuthenticated ? await getAccessTokenWithRetry() : null;
+      const hasUsableAuthToken = Boolean(authToken);
+      const canUseOpenAiWithoutToken = isTestingEnvironment || isAuthBypassEnabled;
+      if (imageProvider === 'openai' && !hasUsableAuthToken && !canUseOpenAiWithoutToken) {
+        throw new Error('OpenAI rendering requires a signed-in session token. Please sign in again or switch provider to Gemini.');
+      }
+
       const data = await (
         imageProvider === 'openai'
           ? callOpenAIImage(prompt, openAIBaseImageDataUrl ?? undefined, {
               timeoutMs: 240000,
               size: openaiImageSize,
               quality: openaiImageQuality,
+              accessToken: authToken,
+              generationType: billedGenerationType,
+              generationMode,
             })
           : callGeminiImage(singlePayload, { timeoutMs: 120000 })
       );
@@ -1773,23 +1802,20 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
 
-      if (isAuthenticated) {
-        const token = await getAccessToken();
-        if (!token) {
-          throw new Error('Please sign in to continue.');
+      if (hasUsableAuthToken) {
+        if (imageProvider !== 'openai') {
+          await consumeCredits(authToken!, {
+            generationType: billedGenerationType,
+            generationMode,
+            credits: requiredCredits,
+            reason:
+              generationMode === '4k'
+                ? 'apply-render-4k'
+                : generationMode === 'iterative'
+                ? 'apply-render-edit'
+                : 'apply-render-standard',
+          });
         }
-
-        await consumeCredits(token, {
-          generationType: billedGenerationType,
-          generationMode,
-          credits: requiredCredits,
-          reason:
-            generationMode === '4k'
-              ? 'apply-render-4k'
-              : generationMode === 'iterative'
-              ? 'apply-render-edit'
-              : 'apply-render-standard',
-        });
         await refreshUsage();
       } else {
         incrementLocalUsage(requiredCredits, billedGenerationType);
@@ -1813,7 +1839,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         event_label: eventLabel,
       });
 
-      if (isAuthenticated) {
+      if (hasUsableAuthToken) {
         setIsPersistingRenderRecord(true);
         void persistGeneration(newUrl, prompt, billedGenerationType, {
           imageModelUsed: modelUsed,
@@ -1828,11 +1854,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       }
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+      const message = err instanceof Error ? err.message : 'Could not reach the Gemini image backend.';
+      setError(message === 'auth_required' ? 'Please sign in to continue.' : message);
       return false;
     } finally {
       setStatus('idle');
       setRenderingMode(null);
+    }
+    } finally {
+      applyRenderInFlightRef.current = false;
     }
   };
 
@@ -1920,9 +1950,12 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     <div className="w-full min-h-screen pt-20 bg-white">
       <div className="mx-auto max-w-[1800px] px-6 md:px-8 xl:px-10 2xl:px-12 py-6 space-y-6">
         <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
-            Render
-          </h1>
+          <div className="space-y-2">
+            <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
+              Render
+            </h1>
+            <ProjectContextHeader project={currentProject || null} className="text-xs" />
+          </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
               Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} sketch+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)

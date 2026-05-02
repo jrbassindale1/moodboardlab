@@ -4,6 +4,7 @@ import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import PrecedentsSection from './moodboard/PrecedentsSection';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
 import MoodboardRenderSection from './moodboard/MoodboardRenderSection';
+import ProjectContextHeader from './ProjectContextHeader';
 import {
   generateBriefingPdf as buildBriefingPdf,
   generateMaterialsSheetPdf as buildMaterialsSheetPdf,
@@ -23,7 +24,8 @@ import {
   saveGenerationAuth,
   savePdfAuth,
   generateSustainabilityBriefing,
-  PrecedentResult
+  PrecedentResult,
+  type Project,
 } from '../api';
 import { MaterialOption } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
@@ -58,13 +60,6 @@ type BoardItem = MaterialOption;
 // Use enhanced sustainability insight type from types/sustainability.ts
 type SustainabilityInsight = EnhancedSustainabilityInsight;
 
-// Project type for grouping generations
-type Project = {
-  id: string;
-  name: string;
-  createdAt: string;
-};
-
 interface MoodboardProps {
   onNavigate?: (page: string) => void;
   initialBoard?: BoardItem[];
@@ -85,7 +80,7 @@ interface MoodboardProps {
   onMoodboardEditPromptChange?: (prompt: string) => void;
   // Project state
   currentProject?: Project | null;
-  onCreateProject?: () => Project;
+  onCreateProject?: () => Promise<Project | null>;
 }
 
 type MoodboardFlowProgress = {
@@ -432,7 +427,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
-  const { refreshUsage } = useUsage();
+  const { refreshUsage, purchasedCredits, isAdmin } = useUsage();
   const isLocalAdminBypassEnabled = useMemo(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
@@ -444,6 +439,8 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Abort controllers for canceling in-flight requests
   const moodboardAbortControllerRef = useRef<AbortController | null>(null);
   const briefingAbortControllerRef = useRef<AbortController | null>(null);
+  const moodboardRenderInFlightRef = useRef(false);
+  const moodboardFlowInFlightRef = useRef(false);
   // Track the materials key used for the last briefing (for cache invalidation)
   const lastBriefingMaterialsKeyRef = useRef<string | null>(null);
   // Track the materials key used for the last moodboard (for invalidation detection)
@@ -471,6 +468,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     setMoodboardEditPromptLocal(value);
     onMoodboardEditPromptChange?.(value);
   };
+  const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
   const [status, setStatus] = useState<
     'idle' | 'sustainability' | 'summary' | 'summary-review' | 'report-prose' | 'render' | 'all' | 'detecting'
   >('idle');
@@ -501,9 +499,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
   });
 
   // Tab state for workspace sections
-  type WorkspaceTab = 'sustainability' | 'precedents' | 'moodboard';
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('sustainability');
-  const [viewedTabs, setViewedTabs] = useState<Set<WorkspaceTab>>(new Set(['sustainability'])); // Track which tabs user has viewed
+  type WorkspaceTab = 'moodboard' | 'sustainability' | 'precedents';
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('moodboard');
+  const [viewedTabs, setViewedTabs] = useState<Set<WorkspaceTab>>(new Set(['moodboard'])); // Track which tabs user has viewed
   const [moodboardInvalidated, setMoodboardInvalidated] = useState(false);
   const [precedentsInvalidated, setPrecedentsInvalidated] = useState(false);
   const [precedentsAutoSearchTrigger, setPrecedentsAutoSearchTrigger] = useState(0);
@@ -788,7 +786,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     }
   ) => {
     // Get or create project for this moodboard
-    const project = currentProject || onCreateProject?.();
+    const project = currentProject || (onCreateProject ? await onCreateProject() : null);
 
     const metadata = {
       renderMode: 'moodboard',
@@ -809,6 +807,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
     if (!isAuthenticated) {
       console.warn('[Persist Generation] Skipping save: user not authenticated.');
+      return;
+    }
+
+    if (isAuthBypassEnabled) {
+      console.log('[Persist Generation] Skipping save: auth bypass enabled.');
       return;
     }
 
@@ -1336,6 +1339,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
   };
 
   const runMoodboardFlow = async (options?: { moodboard?: boolean; sustainability?: boolean; includePrecedentsInProgress?: boolean }) => {
+    if (moodboardFlowInFlightRef.current) {
+      console.info('[Workspace] runMoodboardFlow ignored: request already in flight');
+      return;
+    }
+    moodboardFlowInFlightRef.current = true;
+
+    try {
     const generateMoodboard = options?.moodboard ?? true;
     const generateSustainability = options?.sustainability ?? true;
     const showPrecedentsInProgress = options?.includePrecedentsInProgress ?? false;
@@ -1485,6 +1495,9 @@ const Moodboard: React.FC<MoodboardProps> = ({
     } finally {
       resetLoadingStates();
     }
+    } finally {
+      moodboardFlowInFlightRef.current = false;
+    }
   };
 
   const handleMoodboardEdit = async () => {
@@ -1553,6 +1566,41 @@ const Moodboard: React.FC<MoodboardProps> = ({
   const handleRegenerateMoodboardOnly = async () => {
     await runMoodboardFlow({ moodboard: true, sustainability: false });
   };
+
+  // 4K render handler - upscale current moodboard to 4K (paid users only)
+  const handleRender4K = async () => {
+    if (!moodboardRenderUrlState) {
+      setError('Create a moodboard first before finalising to 4K.');
+      return;
+    }
+    if (!canUse4K) {
+      setError('Finalise (4K) requires at least 5 purchased credits.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      isTestingEnvironment
+        ? 'Finalise will create a high-resolution 4K version of your moodboard. Continue?'
+        : 'Finalise will create a high-resolution 4K version and cost 5 credits. This is your final output. Continue?'
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setRenderingMode('upscale-4k');
+    await runGemini('render', {
+      baseImageDataUrl: moodboardRenderUrlState,
+      requestTimeoutMs: 240000,
+    });
+  };
+
+  // Compute 4K eligibility
+  const canUse4K = isTestingEnvironment || Boolean(isAuthenticated && (isAdmin || purchasedCredits >= CREDIT_COSTS.FOUR_K_GENERATION));
+  const fourKTooltip = isTestingEnvironment || isAdmin
+    ? 'Create high-resolution 4K final output from your moodboard'
+    : canUse4K
+    ? 'Create high-resolution 4K final output from your moodboard'
+    : 'Requires at least 5 purchased credits';
 
   // Handler for switching tabs and marking as viewed
   const handlePrecedentsChange = (precedents: PrecedentResult[] | null) => {
@@ -1956,7 +2004,8 @@ CONTEXT:
 ${JSON.stringify(proseContext)}`;
     };
 
-    const prompt =
+    const isUpscalingTo4K = Boolean(options?.baseImageDataUrl && renderingMode === 'upscale-4k');
+    let prompt =
       mode === 'sustainability'
         ? buildSustainabilityPrompt()
       : mode === 'summary'
@@ -1965,11 +2014,24 @@ ${JSON.stringify(proseContext)}`;
         ? buildPaletteSummaryReviewPrompt(options?.summaryDraft || paletteSummaryRef.current || '')
       : mode === 'report-prose'
       ? buildReportProsePrompt()
+      : isUpscalingTo4K
+        ? 'Upscale this image to 4K high-resolution quality. Preserve all details and composition while significantly increasing clarity and resolution.'
       : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${moodboardEditViewGuidance.styleDirective}\n- ${moodboardEditViewGuidance.cameraDirective}\n- ${moodboardEditViewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
         : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
+    // For OpenAI moodboard generation, add stricter constraint to prevent material creep
+    if (mode === 'render' && imageProvider === 'openai' && !isEditingRender && !isUpscalingTo4K) {
+      prompt += '\n\n⚠️ STRICT CONSTRAINT: Your image MUST ONLY feature the materials explicitly listed above. It is ABSOLUTELY FORBIDDEN to include any furniture, objects, decorative items, fixtures, or any other materials not mentioned in the materials list. If a material is not listed, it cannot appear in the image. No furniture, no additional context objects, no decorative elements beyond the listed materials and basic walls/floors.';
+    }
+
     if (mode === 'render') {
+      if (moodboardRenderInFlightRef.current) {
+        console.info('[Moodboard Render] Ignoring duplicate render trigger while request is already in flight');
+        return false;
+      }
+      moodboardRenderInFlightRef.current = true;
+
       // Cancel any existing moodboard render
       if (moodboardAbortControllerRef.current) {
         moodboardAbortControllerRef.current.abort();
@@ -1983,6 +2045,7 @@ ${JSON.stringify(proseContext)}`;
       try {
         // Determine aspect ratio based on context
         const aspectRatio = '1:1';
+        const imageSize = isUpscalingTo4K ? '4K' : '1K';
         const payload = {
           contents: [
             {
@@ -2002,9 +2065,15 @@ ${JSON.stringify(proseContext)}`;
           },
           imageConfig: {
             aspectRatio,
-            imageSize: '1K'
+            imageSize
           }
         };
+
+        const requiresAccountToken = isAuthenticated && !isAuthBypassEnabled;
+        const authToken = requiresAccountToken ? await getAccessToken() : null;
+        if (imageProvider === 'openai' && requiresAccountToken && !authToken) {
+          throw new Error('Please sign in to continue.');
+        }
 
         const data = await (
           imageProvider === 'openai'
@@ -2012,7 +2081,10 @@ ${JSON.stringify(proseContext)}`;
                 signal: abortController.signal,
                 timeoutMs: 240000,
                 size: '1024x1024',
-                quality: 'medium'
+                quality: 'auto',
+                accessToken: authToken,
+                generationType: 'moodboard',
+                generationMode: isEditingRender ? 'iterative' : 'standard',
               })
             : callGeminiImage(payload, { signal: abortController.signal })
         );
@@ -2025,6 +2097,7 @@ ${JSON.stringify(proseContext)}`;
         const useOpenAI = imageProvider === 'openai';
         const fallbackUsed = !useOpenAI && isImageModelFallbackUsed(data);
         const modelUsed = useOpenAI ? 'gpt-image-2' : (typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined);
+        console.log(`[Moodboard Render] Model used: ${modelUsed}${fallbackUsed ? ' (fallback)' : ''}`);
         setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
         let img: string | null = null;
         let mime: string | null = null;
@@ -2050,17 +2123,18 @@ ${JSON.stringify(proseContext)}`;
           return false;
         }
 
-        if (isAuthenticated) {
-          const token = await getAccessToken();
-          if (!token) {
+        if (requiresAccountToken) {
+          if (!authToken) {
             throw new Error('Please sign in to continue.');
           }
 
-          await consumeCredits(token, {
-            generationType: 'moodboard',
-            generationMode: isEditingRender ? 'iterative' : 'standard',
-            reason: isEditingRender ? 'moodboard-edit' : 'moodboard-render',
-          });
+          if (imageProvider !== 'openai') {
+            await consumeCredits(authToken, {
+              generationType: isUpscalingTo4K ? 'upscale' : 'moodboard',
+              generationMode: isUpscalingTo4K ? '4k' : (isEditingRender ? 'iterative' : 'standard'),
+              reason: isUpscalingTo4K ? 'moodboard-upscale-4k' : (isEditingRender ? 'moodboard-edit' : 'moodboard-render'),
+            });
+          }
           await refreshUsage();
         }
 
@@ -2091,6 +2165,8 @@ ${JSON.stringify(proseContext)}`;
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
           if (errorMessage.includes('aborted') || errorMessage.includes('cancel')) {
             console.log('[Moodboard Render] Request was cancelled');
+          } else if (errorMessage === 'auth_required') {
+            setError('Please sign in to continue.');
           } else if (/failed to fetch|network request failed|networkerror/i.test(errorMessage)) {
             setError('Network error while generating moodboard image. Please check your connection and try again.');
           } else {
@@ -2099,8 +2175,10 @@ ${JSON.stringify(proseContext)}`;
         }
         return false;
       } finally {
+        moodboardRenderInFlightRef.current = false;
         if (isMountedRef.current && !abortController.signal.aborted) {
           setStatus('idle');
+          setRenderingMode(null);
         }
         // Clear the abort controller ref if this is still the current one
         if (moodboardAbortControllerRef.current === abortController) {
@@ -2469,9 +2547,12 @@ ${JSON.stringify(proseContext)}`;
       <div className="mx-auto max-w-[1800px] px-6 md:px-8 xl:px-10 2xl:px-12 py-6 space-y-6">
         {/* Compact Header - matching Render page style */}
         <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
-            Workspace
-          </h1>
+          <div className="space-y-2">
+            <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
+              Workspace
+            </h1>
+            <ProjectContextHeader project={currentProject || null} className="text-xs" />
+          </div>
           <div className="flex gap-2 items-center">
             {/* Image Provider Selector (Test Environment) */}
             <select
@@ -2623,21 +2704,6 @@ ${JSON.stringify(proseContext)}`;
             {/* Tab Navigation */}
             <div className="border-b border-gray-200 flex gap-0 overflow-x-auto">
               <button
-                onClick={() => handleTabChange('sustainability')}
-                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
-                  activeTab === 'sustainability'
-                    ? 'border-b-black text-gray-900'
-                    : 'border-b-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Sustainability
-                {briefingInvalidatedMessage ? (
-                  <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
-                ) : sustainabilityBriefing && !viewedTabs.has('sustainability') ? (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                ) : null}
-              </button>
-              <button
                 onClick={() => handleTabChange('moodboard')}
                 className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
                   activeTab === 'moodboard'
@@ -2649,6 +2715,21 @@ ${JSON.stringify(proseContext)}`;
                 {moodboardInvalidated ? (
                   <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
                 ) : moodboardRenderUrl && !viewedTabs.has('moodboard') ? (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                ) : null}
+              </button>
+              <button
+                onClick={() => handleTabChange('sustainability')}
+                className={`px-4 py-3 font-mono text-[11px] uppercase tracking-widest border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                  activeTab === 'sustainability'
+                    ? 'border-b-black text-gray-900'
+                    : 'border-b-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Sustainability
+                {briefingInvalidatedMessage ? (
+                  <span className="w-2 h-2 rounded-full bg-amber-500" title="Out of date" />
+                ) : sustainabilityBriefing && !viewedTabs.has('sustainability') ? (
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 ) : null}
               </button>
@@ -2671,6 +2752,43 @@ ${JSON.stringify(proseContext)}`;
 
             {/* Tab Content */}
             <div className="min-h-[400px]">
+              {activeTab === 'moodboard' && (
+                <>
+                  {moodboardRenderUrl ? (
+                    <MoodboardRenderSection
+                      moodboardRenderUrl={moodboardRenderUrl}
+                      isRenderInFlight={isRenderInFlight}
+                      isCreatingMoodboard={isCreatingMoodboard}
+                      status={status}
+                      moodboardEditPrompt={moodboardEditPrompt}
+                      setMoodboardEditPrompt={setMoodboardEditPrompt}
+                      downloadingId={downloadingId}
+                      onDownloadBoard={handleDownloadBoard}
+                      onNavigate={onNavigate}
+                      onMoodboardEdit={handleMoodboardEdit}
+                      onRegenerateMoodboard={handleRegenerateMoodboardOnly}
+                      onRender4K={handleRender4K}
+                      canUse4K={canUse4K}
+                      fourKTooltip={fourKTooltip}
+                      renderingMode={renderingMode}
+                    />
+                  ) : (
+                    <div className="border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                      <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-4">
+                        No moodboard generated yet
+                      </p>
+                      <button
+                        onClick={() => runMoodboardFlow({ moodboard: true, sustainability: false })}
+                        disabled={!board.length || isCreatingMoodboard || !requireAuthForMoodboard()}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span>Generate</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+
               {activeTab === 'sustainability' && (
                 <SustainabilityBriefingSection
                   sustainabilityBriefing={sustainabilityBriefing}
@@ -2700,34 +2818,7 @@ ${JSON.stringify(proseContext)}`;
                 />
               )}
 
-              {activeTab === 'moodboard' && (
-                <>
-                  {moodboardRenderUrl ? (
-                    <MoodboardRenderSection
-                      moodboardRenderUrl={moodboardRenderUrl}
-                      isRenderInFlight={isRenderInFlight}
-                      isCreatingMoodboard={isCreatingMoodboard}
-                      status={status}
-                      moodboardEditPrompt={moodboardEditPrompt}
-                      setMoodboardEditPrompt={setMoodboardEditPrompt}
-                      downloadingId={downloadingId}
-                      onDownloadBoard={handleDownloadBoard}
-                      onNavigate={onNavigate}
-                      onMoodboardEdit={handleMoodboardEdit}
-                      onRegenerateMoodboard={handleRegenerateMoodboardOnly}
-                    />
-                  ) : (
-                    <div className="border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                      <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                        No moodboard generated yet
-                      </p>
-                      <p className="text-sm text-gray-400 mt-2">
-                        Click "Generate" in the Materials List panel to create one
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
+
             </div>
           </div>
         </div>
