@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
-import { getGenerations, PrecedentResult } from '../api';
+import { getGenerations, moveGenerationsToProject, PrecedentResult, type Project } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
 import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock, Plus } from 'lucide-react';
@@ -32,6 +32,7 @@ interface DashboardProps {
     generationId?: string | null;
   }) => void;
   onOpenProjectModal?: () => void;
+  projects?: Project[];
 }
 
 type BoardItemLike = {
@@ -189,13 +190,20 @@ async function downloadUrl(url: string, filename: string) {
   }
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, onOpenProjectModal }) => {
+const Dashboard: React.FC<DashboardProps> = ({
+  onNavigate,
+  onRestoreGeneration,
+  onOpenProjectModal,
+  projects = [],
+}) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit, purchasedCredits } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [movingGenerationIds, setMovingGenerationIds] = useState<Set<string>>(new Set());
+  const [moveError, setMoveError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
   const limit_per_page = 12;
   const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
@@ -451,6 +459,32 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
     });
   };
 
+  const handleMoveGenerations = async (
+    generationIds: string[],
+    targetProjectId: string
+  ) => {
+    if (!isAuthenticated || isPreviewMode || !targetProjectId || !generationIds.length) return;
+
+    setMoveError(null);
+    setMovingGenerationIds((prev) => new Set([...prev, ...generationIds]));
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Missing access token');
+      const result = await moveGenerationsToProject(token, generationIds, targetProjectId);
+      const updatedById = new Map(result.items.map((item) => [item.id, item]));
+      setGenerations((prev) => prev.map((item) => updatedById.get(item.id) || item));
+    } catch (error) {
+      console.error('Failed to move generation:', error);
+      setMoveError(error instanceof Error ? error.message : 'Failed to move generation');
+    } finally {
+      setMovingGenerationIds((prev) => {
+        const next = new Set(prev);
+        generationIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }
+  };
+
   if (!canAccessDashboard) {
     return (
       <div className="w-full min-h-screen pt-20 bg-white">
@@ -586,6 +620,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
                   Preview sample data shown so you can test the restore buttons without live generation history.
                 </div>
               )}
+              {moveError && (
+                <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {moveError}
+                </div>
+              )}
 
               {/* Project Cards */}
               {projectGroups.projects.length > 0 && (
@@ -653,6 +692,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
                                   gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                                 const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                                 const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+                                const generationIdsToMove = [gen.id, ...attachments.map((item) => item.id)];
+                                const isMoving = generationIdsToMove.some((id) => movingGenerationIds.has(id));
+                                const currentProjectId = extractProjectFromMaterials(gen.materials)?.id || '';
+                                const canMove = !isPreviewMode && projects.length > 0;
 
                                 return (
                                   <div
@@ -714,10 +757,30 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
                                       {restoreLabel && canRestore && (
                                         <button
                                           onClick={() => handleRestoreGeneration(gen)}
-                                          className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                          className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors mb-2"
                                         >
                                           {restoreLabel}
                                         </button>
+                                      )}
+                                      {canMove && (
+                                        <select
+                                          value={currentProjectId}
+                                          disabled={isMoving}
+                                          onChange={(event) => {
+                                            const nextProjectId = event.target.value;
+                                            if (!nextProjectId || nextProjectId === currentProjectId) return;
+                                            void handleMoveGenerations(generationIdsToMove, nextProjectId);
+                                          }}
+                                          className="w-full border border-gray-200 bg-white px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-600 disabled:bg-gray-100 disabled:text-gray-400"
+                                          aria-label="Move to project"
+                                        >
+                                          <option value="">Move to project</option>
+                                          {projects.map((targetProject) => (
+                                            <option key={targetProject.id} value={targetProject.id}>
+                                              {targetProject.name}
+                                            </option>
+                                          ))}
+                                        </select>
                                       )}
                                     </div>
                                   </div>
@@ -769,6 +832,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
                             gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                           const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                           const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+                          const generationIdsToMove = [gen.id, ...attachments.map((item) => item.id)];
+                          const isMoving = generationIdsToMove.some((id) => movingGenerationIds.has(id));
+                          const currentProjectId = extractProjectFromMaterials(gen.materials)?.id || '';
+                          const canMove = !isPreviewMode && projects.length > 0;
 
                           return (
                             <div
@@ -830,10 +897,30 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration, 
                                 {restoreLabel && canRestore && (
                                   <button
                                     onClick={() => handleRestoreGeneration(gen)}
-                                    className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                    className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors mb-2"
                                   >
                                     {restoreLabel}
                                   </button>
+                                )}
+                                {canMove && (
+                                  <select
+                                    value={currentProjectId}
+                                    disabled={isMoving}
+                                    onChange={(event) => {
+                                      const nextProjectId = event.target.value;
+                                      if (!nextProjectId || nextProjectId === currentProjectId) return;
+                                      void handleMoveGenerations(generationIdsToMove, nextProjectId);
+                                    }}
+                                    className="w-full border border-gray-200 bg-white px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-600 disabled:bg-gray-100 disabled:text-gray-400"
+                                    aria-label="Move to project"
+                                  >
+                                    <option value="">Move to project</option>
+                                    {projects.map((targetProject) => (
+                                      <option key={targetProject.id} value={targetProject.id}>
+                                        {targetProject.name}
+                                      </option>
+                                    ))}
+                                  </select>
                                 )}
                               </div>
                             </div>

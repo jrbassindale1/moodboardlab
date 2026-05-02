@@ -135,7 +135,15 @@ const formatProjectName = (): string => {
 const readProjectCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return getUserPreference<string>(PROJECT_CACHE_KEY);
+    const cached = getUserPreference<unknown>(PROJECT_CACHE_KEY);
+    if (typeof cached === 'string') return cached;
+    if (cached && typeof cached === 'object') {
+      const legacyProjectId = (cached as { id?: unknown }).id;
+      return typeof legacyProjectId === 'string' && legacyProjectId.trim()
+        ? legacyProjectId
+        : null;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -830,6 +838,7 @@ const App: React.FC = () => {
             appliedRenderGenerationId={appliedRenderGenerationId}
             onAppliedRenderGenerationIdChange={setAppliedRenderGenerationId}
             currentProject={currentProject}
+            onCreateProject={ensureCurrentProject}
           />
         );
       case 'product':
@@ -848,6 +857,7 @@ const App: React.FC = () => {
             onNavigate={setCurrentPage}
             onRestoreGeneration={handleRestoreGeneration}
             onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
+            projects={projects}
           />
         );
       case 'material-admin':

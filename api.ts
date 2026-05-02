@@ -635,6 +635,39 @@ export async function getGenerations(
   return res.json();
 }
 
+export async function moveGenerationsToProject(
+  accessToken: string,
+  generationIds: string[],
+  projectId: string
+): Promise<{ items: Generation[]; moved: number }> {
+  const API_BASE = getApiBase();
+  const res = await fetchWithTimeout(
+    `${API_BASE}/api/generations/project`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ generationIds, projectId }),
+    },
+    15000
+  );
+
+  if (!res.ok) {
+    let message = 'Failed to move generation';
+    try {
+      const data = await res.json() as { error?: string; message?: string };
+      message = data.message || data.error || message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return res.json() as Promise<{ items: Generation[]; moved: number }>;
+}
+
 /**
  * Call Gemini backend with authentication
  */

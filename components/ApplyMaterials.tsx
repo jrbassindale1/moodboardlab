@@ -75,6 +75,7 @@ interface ApplyMaterialsProps {
   onAppliedRenderGenerationIdChange: (generationId: string | null) => void;
   // Project state
   currentProject?: Project | null;
+  onCreateProject?: () => Promise<Project | null>;
 }
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
@@ -157,7 +158,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   appliedRenderGenerationId,
   onAppliedRenderGenerationIdChange,
   // Project state
-  currentProject
+  currentProject,
+  onCreateProject
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -747,6 +749,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }
   ): Promise<string | null> => {
     const trimmedNote = renderNote.trim();
+    const project = currentProject || (onCreateProject ? await onCreateProject() : null);
+
     console.log('=== SAVING RENDER ===');
     console.log('moodboardRenderUrl prop:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
 
@@ -798,8 +802,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           ? styleReferenceSourceId || undefined
           : undefined,
       // Project identification
-      projectId: currentProject?.id,
-      projectName: currentProject?.name
+      projectId: project?.id,
+      projectName: project?.name
     };
 
     if (!isAuthenticated) {
