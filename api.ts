@@ -1,4 +1,13 @@
 import type { MaterialOption } from './types';
+import {
+  FREE_CREDITS_BLOCKED_FOR_NETWORK_CODE,
+  FREE_CREDITS_BLOCKED_FOR_DEVICE_CODE,
+  FREE_CREDITS_THROTTLED_NETWORK_RISK_CODE,
+  getFreeCreditsBlockedMessage,
+  getFreeCreditsNetworkRiskMessage,
+  isFreeCreditsBlockedForNetwork,
+  SUPPORT_EMAIL,
+} from './utils/freeCreditSupport';
 
 // ============================================
 // Precedent Search Types
@@ -25,6 +34,39 @@ export interface SearchPrecedentsResponse {
 type RequestOptions = {
   timeoutMs?: number;
 };
+
+const DEVICE_ID_STORAGE_KEY = 'moodboard_device_id_v1';
+const DEVICE_ID_HEADER = 'X-Moodboard-Device-Id';
+
+function getOrCreateDeviceId(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  try {
+    const existing = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+    if (existing) {
+      return existing;
+    }
+
+    const randomSuffix = Math.random().toString(36).slice(2);
+    const generated = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? `mbd_${crypto.randomUUID()}`
+      : `mbd_${Date.now()}_${randomSuffix}`;
+    window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, generated);
+    return generated;
+  } catch {
+    return '';
+  }
+}
+
+function getDeviceIdHeader(): Record<string, string> {
+  const deviceId = getOrCreateDeviceId();
+  if (!deviceId) {
+    return {};
+  }
+  return { [DEVICE_ID_HEADER]: deviceId };
+}
 
 export type GenerationType =
   | 'moodboard'
@@ -68,6 +110,8 @@ export interface QuotaResponse {
   freeRemaining?: number;
   purchasedCredits?: number;
   isAdmin?: boolean;
+  freeCreditsBlocked?: boolean;
+  freeCreditsBlockReason?: string;
 }
 
 /**
@@ -402,6 +446,7 @@ export async function checkQuota(accessToken: string): Promise<QuotaResponse> {
   const res = await fetch(`${API_BASE}/api/check-quota`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      ...getDeviceIdHeader(),
     },
   });
 
@@ -437,6 +482,7 @@ export async function consumeCredits(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
+        ...getDeviceIdHeader(),
       },
       body: JSON.stringify(payload),
     },
@@ -445,13 +491,38 @@ export async function consumeCredits(
 
   if (!res.ok) {
     let message = 'Failed to consume credits';
+    let errorCode = '';
     try {
-      const data = await res.json() as { error?: string; message?: string };
+      const data = await res.json() as {
+        error?: string;
+        message?: string;
+        code?: string;
+        freeCreditsBlocked?: boolean;
+      };
+      errorCode = data.code || '';
       message = data.message || data.error || message;
+
+      if (isFreeCreditsBlockedForNetwork({
+        code: data.code,
+        message,
+        freeCreditsBlocked: data.freeCreditsBlocked,
+      })) {
+        const riskCode = data.code === FREE_CREDITS_THROTTLED_NETWORK_RISK_CODE;
+        message = `${riskCode ? getFreeCreditsNetworkRiskMessage() : getFreeCreditsBlockedMessage()} Contact support at ${SUPPORT_EMAIL}.`;
+        errorCode = riskCode
+          ? FREE_CREDITS_THROTTLED_NETWORK_RISK_CODE
+          : (data.code === FREE_CREDITS_BLOCKED_FOR_DEVICE_CODE
+            ? FREE_CREDITS_BLOCKED_FOR_DEVICE_CODE
+            : FREE_CREDITS_BLOCKED_FOR_NETWORK_CODE);
+      }
     } catch {
       // ignore parse errors
     }
-    throw new Error(message);
+    const error = new Error(message) as Error & { code?: string };
+    if (errorCode) {
+      error.code = errorCode;
+    }
+    throw error;
   }
   return res.json();
 }

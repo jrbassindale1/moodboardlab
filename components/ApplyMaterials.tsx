@@ -8,6 +8,11 @@ import { formatFinishForDisplay } from '../utils/materialDisplay';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
 import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
+import {
+  getFreeCreditsBlockedMessage,
+  isFreeCreditsBlockedForNetwork,
+} from '../utils/freeCreditSupport';
+import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
 import UsageDisplay from './UsageDisplay';
 
 type SceneControl = {
@@ -806,6 +811,15 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             setError('Render 4K requires at least 5 purchased credits.');
             return false;
           }
+          if (
+            isFreeCreditsBlockedForNetwork({
+              freeCreditsBlocked: quotaCheck.freeCreditsBlocked,
+            }) &&
+            (quotaCheck.purchasedCredits || 0) < requiredCredits
+          ) {
+            setError(getFreeCreditsBlockedMessage());
+            return false;
+          }
           if (!quotaCheck.canGenerate || quotaCheck.remaining < requiredCredits) {
             setError(formatCreditCostMessage(requiredCredits));
             return false;
@@ -1123,9 +1137,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <span>{error}</span>
-          </div>
+          isFreeCreditsBlockedForNetwork({ message: error }) ? (
+            <FreeCreditsBlockedNotice
+              isAuthenticated={isAuthenticated}
+              className="border border-amber-300 bg-amber-50 p-4"
+            />
+          ) : (
+            <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div>
+                <span>{error}</span>
+              </div>
+            </div>
+          )
         )}
 
         {imageModelFallbackWarning && (

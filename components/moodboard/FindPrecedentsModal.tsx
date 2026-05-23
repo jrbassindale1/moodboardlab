@@ -4,6 +4,11 @@ import { MaterialOption } from '../../types';
 import { searchPrecedents, consumeCredits, checkQuota, PrecedentResult } from '../../api';
 import { useAuth, useUsage, isAuthBypassEnabled } from '../../auth';
 import PrecedentCard from './PrecedentCard';
+import {
+  getFreeCreditsBlockedMessage,
+  isFreeCreditsBlockedForNetwork,
+} from '../../utils/freeCreditSupport';
+import FreeCreditsBlockedNotice from '../FreeCreditsBlockedNotice';
 
 interface FindPrecedentsModalProps {
   isOpen: boolean;
@@ -72,6 +77,16 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
         }
 
         const quota = await checkQuota(token);
+        if (
+          isFreeCreditsBlockedForNetwork({
+            freeCreditsBlocked: quota.freeCreditsBlocked,
+          }) &&
+          (quota.purchasedCredits || 0) < SEARCH_CREDIT_COST
+        ) {
+          setError({ type: 'quota_exceeded', message: getFreeCreditsBlockedMessage() });
+          setStatus('error');
+          return;
+        }
         if (!quota.canGenerate) {
           setError({ type: 'quota_exceeded', message: ERROR_MESSAGES.quota_exceeded });
           setStatus('error');
@@ -208,21 +223,27 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
 
           {/* Error state */}
           {status === 'error' && error && (
-            <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <AlertCircle className="w-8 h-8 text-gray-400" />
-              <p className="text-sm text-gray-600 font-sans text-center max-w-md">
-                {error.message}
-              </p>
-              {error.type !== 'no_results' && error.type !== 'quota_exceeded' && error.type !== 'auth_required' && (
-                <button
-                  onClick={performSearch}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  Try Again
-                </button>
-              )}
-            </div>
+            isFreeCreditsBlockedForNetwork({ message: error.message }) ? (
+              <div className="py-8">
+                <FreeCreditsBlockedNotice isAuthenticated={isAuthenticated} />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 gap-4">
+                <AlertCircle className="w-8 h-8 text-gray-400" />
+                <p className="text-sm text-gray-600 font-sans text-center max-w-md">
+                  {error.message}
+                </p>
+                {error.type !== 'no_results' && error.type !== 'quota_exceeded' && error.type !== 'auth_required' && (
+                  <button
+                    onClick={performSearch}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Try Again
+                  </button>
+                )}
+              </div>
+            )
           )}
 
           {/* Results grid */}

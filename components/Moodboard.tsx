@@ -29,7 +29,12 @@ import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
 import { getRenderViewGuidance } from '../utils/renderViewGuidance';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
+import {
+  getFreeCreditsBlockedMessage,
+  isFreeCreditsBlockedForNetwork,
+} from '../utils/freeCreditSupport';
 import AuthPromptModal from './AuthPromptModal';
+import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
 
 // Sustainability report utilities
 import type {
@@ -523,6 +528,16 @@ const Moodboard: React.FC<MoodboardProps> = ({
         limit: quota.limit,
         used: quota.used
       });
+      if (
+        isFreeCreditsBlockedForNetwork({
+          freeCreditsBlocked: quota.freeCreditsBlocked,
+        }) &&
+        (quota.purchasedCredits || 0) < requiredCredits
+      ) {
+        setError(getFreeCreditsBlockedMessage());
+        return false;
+      }
+
       if (!quota.canGenerate || quota.remaining < requiredCredits) {
         console.warn('[Quota Check] Failed: quota exceeded', quota);
         setError(
@@ -2373,10 +2388,19 @@ ${JSON.stringify(proseContext)}`;
           </section>
 
             {error && (
-              <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                <AlertCircle className="w-4 h-4 mt-[2px]" />
-                <span>{error}</span>
-              </div>
+              isFreeCreditsBlockedForNetwork({ message: error }) ? (
+                <FreeCreditsBlockedNotice
+                  isAuthenticated={isAuthenticated}
+                  className="border border-amber-300 bg-amber-50 p-4"
+                />
+              ) : (
+                <div className="flex items-start gap-2 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4 mt-[2px]" />
+                  <div>
+                    <span>{error}</span>
+                  </div>
+                </div>
+              )
             )}
 
             {imageModelFallbackWarning && (

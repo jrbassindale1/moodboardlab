@@ -12,6 +12,11 @@ import MaterialSustainabilityModal from './MaterialSustainabilityModal';
 import { useAuth, useUsage } from '../auth';
 import { trackEvent } from '../utils/analytics';
 import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../utils/materialCarbon';
+import {
+  getFreeCreditsBlockedMessage,
+  isFreeCreditsBlockedForNetwork,
+} from '../utils/freeCreditSupport';
+import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -755,6 +760,15 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           return;
         }
         const quota = await checkQuota(token);
+        if (
+          isFreeCreditsBlockedForNetwork({
+            freeCreditsBlocked: quota.freeCreditsBlocked,
+          }) &&
+          (quota.purchasedCredits || 0) < DETECTION_CREDIT_COST
+        ) {
+          setDetectionError(getFreeCreditsBlockedMessage());
+          return;
+        }
         if (quota.remaining < DETECTION_CREDIT_COST) {
           setDetectionError('Not enough credits. This action costs 2 credits.');
           return;
@@ -1241,9 +1255,16 @@ IMPORTANT:
 
                     {/* Error Message */}
                     {detectionError && (
-                      <div className="bg-red-50 border border-red-200 p-4">
-                        <p className="text-sm font-sans text-red-800">{detectionError}</p>
-                      </div>
+                      isFreeCreditsBlockedForNetwork({ message: detectionError }) ? (
+                        <FreeCreditsBlockedNotice
+                          isAuthenticated={isAuthenticated}
+                          className="border border-amber-300 bg-amber-50 p-4"
+                        />
+                      ) : (
+                        <div className="bg-red-50 border border-red-200 p-4">
+                          <p className="text-sm font-sans text-red-800">{detectionError}</p>
+                        </div>
+                      )
                     )}
 
                     {/* Detected Materials - Ask user to add */}
