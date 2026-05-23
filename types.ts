@@ -185,6 +185,55 @@ export interface MaterialOption {
   actionDocumentation?: string; // Request for EPD, certification, or sourcing evidence
   actionVerification?: string; // Specification to verify (recycled content, VOC levels, etc.)
   actionCircularity?: string; // End-of-life action (take-back, disassembly, reuse)
+
+  // --- Source / data quality ---
+  // Drives visual stratification: generic cards are simplified, branded cards show full detail
+  source?: 'generic' | 'verified-brand' | 'partner-brand';
+
+  // --- Brand attribution (populated for verified-brand / partner-brand) ---
+  brandId?: string;
+  brandName?: string;
+  brandLogoUrl?: string;
+  brandWebsite?: string;
+  brandTier?: 'partner' | 'verified' | 'standard';
+
+  // --- Product identity ---
+  productCode?: string;        // Manufacturer SKU / reference
+  productRange?: string;       // Collection or range name
+  productPageUrl?: string;     // Link to product on brand's website
+
+  // --- Brand-supplied assets ---
+  specSheetUrl?: string;       // PDF product datasheet
+  installGuideUrl?: string;    // PDF installation guide
+  bimObjectUrl?: string;       // Revit / ArchiCAD object download
+  productImages?: string[];    // Azure Blob URLs — multiple finishes / angles
+
+  // --- Technical specification ---
+  dimensions?: {
+    thickness?: string;
+    width?: string;
+    length?: string;
+    weightPerM2?: string;
+  };
+  fireRating?: string;         // e.g. "Euroclass A1"
+  acousticRating?: string;     // e.g. "Rw 52 dB"
+  thermalValue?: string;       // e.g. "λ = 0.034 W/mK"
+  slipResistance?: string;     // e.g. "R10"
+  warranty?: string;           // e.g. "25 years"
+
+  // --- Verified sustainability & compliance ---
+  epdUrl?: string;
+  embodiedCarbonA1A3?: number; // kgCO2e/kg — cradle to gate
+  recycledContentPct?: number; // 0–100
+  recycledAtEol?: boolean;
+  vocClass?: string;           // e.g. "A+"
+  certifications?: string[];   // e.g. ["FSC", "BRE A+", "UKCA"]
+  nbsClause?: string;
+
+  // --- Commercial ---
+  priceRange?: string;         // e.g. "£45–£65/m²"
+  leadTime?: string;           // e.g. "4–6 weeks"
+  minOrderQty?: string;        // e.g. "10 m²"
 }
 
 export interface UploadedImage {
@@ -200,3 +249,88 @@ export interface UploadedImage {
 }
 
 export type StyleReferenceSource = 'project' | 'external';
+
+export type BrandTier = 'partner' | 'verified' | 'standard';
+
+// Lightweight brand profile used in material cards, homepage showcase, and brand pages
+export interface BrandProfile {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  website: string | null;
+  tagline: string | null;
+  tier: BrandTier;
+  isFeatured: boolean;
+  featuredOrder: number | null;
+}
+
+// Form data shape for the brand product submission flow
+export interface BrandSubmissionForm {
+  // Step 1: Company profile
+  companyName: string;
+  website: string;
+  logoFile?: File;
+  tagline: string;
+  countryOfOrigin: string;
+  contactName: string;
+  contactEmail: string;
+
+  // Step 2+: One or more products (added incrementally in the form)
+  products: BrandProductSubmission[];
+}
+
+export interface BrandProductSubmission {
+  // Basics
+  name: string;
+  category: string;
+  productCode: string;
+  productRange: string;
+  productPageUrl: string;
+  finish: string;
+  description: string;
+  keywords: string;
+  tone: string; // hex swatch
+
+  // Assets
+  specSheetFile?: File;
+  installGuideFile?: File;
+  bimObjectUrl: string;
+  productImageFiles?: File[];
+
+  // Technical
+  dimensionThickness: string;
+  dimensionWidth: string;
+  dimensionLength: string;
+  weightPerM2: string;
+  fireRating: string;
+  acousticRating: string;
+  thermalValue: string;
+  slipResistance: string;
+  warranty: string;
+
+  // Sustainability
+  epdFile?: File;
+  epdUrl: string;
+  embodiedCarbonA1A3: string; // string in form, parsed to number on submit
+  recycledContentPct: string;
+  recycledAtEol: boolean | null;
+  vocClass: string;
+  certifications: string;     // pipe-separated in form
+  nbsClause: string;
+
+  // Commercial (optional)
+  priceRange: string;
+  leadTime: string;
+  minOrderQty: string;
+
+  // Health & risks
+  carbonIntensity: 'low' | 'medium' | 'high' | '';
+  healthRiskLevel: 'low' | 'medium' | 'high' | '';
+  healthConcerns: string;
+  healthNote: string;
+  risks: string; // "Risk=>Mitigation|..." format, same as CSV
+  serviceLife: string;
+  finishOptions: string;
+  colorOptions: string;
+}

@@ -173,6 +173,14 @@ function parseNullableInteger(value) {
   return Math.round(parsed);
 }
 
+function parseNullableFloat(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  const parsed = Number(text);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
 function parseBoolean(value, fallback = false) {
   const text = String(value || '').trim().toLowerCase();
   if (!text) return fallback;
@@ -304,6 +312,72 @@ function buildMaterial(row, rowNumber, index, sortBase) {
   const actions = splitList(row.actions);
   const healthConcerns = splitList(row.healthConcerns);
 
+  // Brand / supplier fields
+  const brandId = parseNullableString(row.brandId);
+  const brandName = parseNullableString(row.brandName);
+  const brandWebsite = parseNullableString(row.brandWebsite);
+  const brandLogoUrl = parseNullableString(row.brandLogoUrl);
+  const brandTierRaw = String(row.brandTier || '').trim().toLowerCase();
+  const ALLOWED_BRAND_TIERS = new Set(['partner', 'verified', 'standard']);
+  const brandTier = ALLOWED_BRAND_TIERS.has(brandTierRaw) ? brandTierRaw : (brandId ? 'standard' : null);
+
+  // Derive source from presence of brandId
+  const sourceRaw = String(row.source || '').trim().toLowerCase();
+  const ALLOWED_SOURCES = new Set(['generic', 'verified-brand', 'partner-brand']);
+  let source = ALLOWED_SOURCES.has(sourceRaw) ? sourceRaw : null;
+  if (!source) {
+    source = brandId ? (brandTier === 'partner' ? 'partner-brand' : 'verified-brand') : 'generic';
+  }
+
+  // Product identity
+  const productCode = parseNullableString(row.productCode);
+  const productRange = parseNullableString(row.productRange);
+  const productPageUrl = parseNullableString(row.productPageUrl);
+
+  // Assets (URLs — actual files uploaded separately)
+  const specSheetUrl = parseNullableString(row.specSheetUrl);
+  const installGuideUrl = parseNullableString(row.installGuideUrl);
+  const bimObjectUrl = parseNullableString(row.bimObjectUrl);
+  const productImages = splitList(row.productImages);
+
+  // Technical spec
+  const dimensionThickness = parseNullableString(row.dimensionThickness);
+  const dimensionWidth = parseNullableString(row.dimensionWidth);
+  const dimensionLength = parseNullableString(row.dimensionLength);
+  const weightPerM2 = parseNullableString(row.weightPerM2);
+  const hasDimensions = dimensionThickness || dimensionWidth || dimensionLength || weightPerM2;
+  const dimensions = hasDimensions ? {
+    ...(dimensionThickness ? { thickness: dimensionThickness } : {}),
+    ...(dimensionWidth ? { width: dimensionWidth } : {}),
+    ...(dimensionLength ? { length: dimensionLength } : {}),
+    ...(weightPerM2 ? { weightPerM2 } : {}),
+  } : null;
+
+  const fireRating = parseNullableString(row.fireRating);
+  const acousticRating = parseNullableString(row.acousticRating);
+  const thermalValue = parseNullableString(row.thermalValue);
+  const slipResistance = parseNullableString(row.slipResistance);
+  const warranty = parseNullableString(row.warranty);
+
+  // Sustainability / compliance
+  const epdUrl = parseNullableString(row.epdUrl);
+  const embodiedCarbonA1A3 = parseNullableFloat(row.embodiedCarbonA1A3);
+  const recycledContentPctRaw = parseNullableFloat(row.recycledContentPct);
+  if (recycledContentPctRaw !== null && (recycledContentPctRaw < 0 || recycledContentPctRaw > 100)) {
+    errors.push(`recycledContentPct "${row.recycledContentPct}" must be 0–100.`);
+  }
+  const recycledContentPct = recycledContentPctRaw;
+  const recycledAtEolRaw = String(row.recycledAtEol || '').trim().toLowerCase();
+  const recycledAtEol = recycledAtEolRaw ? parseBoolean(row.recycledAtEol, false) : null;
+  const vocClass = parseNullableString(row.vocClass);
+  const certifications = splitList(row.certifications);
+  const nbsClause = parseNullableString(row.nbsClause);
+
+  // Commercial
+  const priceRange = parseNullableString(row.priceRange);
+  const leadTime = parseNullableString(row.leadTime);
+  const minOrderQty = parseNullableString(row.minOrderQty);
+
   const carbonIntensityRaw = String(row.carbonIntensity || '').trim().toLowerCase();
   const carbonIntensity = carbonIntensityRaw
     ? (ALLOWED_CARBON_INTENSITY.has(carbonIntensityRaw) ? carbonIntensityRaw : null)
@@ -351,6 +425,7 @@ function buildMaterial(row, rowNumber, index, sortBase) {
     pk: category,
     docType: 'material',
     sortOrder,
+    source,
     name,
     tone: finalTone,
     finish,
@@ -383,6 +458,40 @@ function buildMaterial(row, rowNumber, index, sortBase) {
     healthNote: parseNullableString(row.healthNote),
     risks,
     serviceLife: parseNullableInteger(row.serviceLife),
+    // Brand attribution
+    brandId: brandId || null,
+    brandName: brandName || null,
+    brandLogoUrl: brandLogoUrl || null,
+    brandWebsite: brandWebsite || null,
+    brandTier: brandTier || null,
+    // Product identity
+    productCode: productCode || null,
+    productRange: productRange || null,
+    productPageUrl: productPageUrl || null,
+    // Assets
+    specSheetUrl: specSheetUrl || null,
+    installGuideUrl: installGuideUrl || null,
+    bimObjectUrl: bimObjectUrl || null,
+    productImages: productImages.length ? productImages : [],
+    // Technical spec
+    dimensions: dimensions || null,
+    fireRating: fireRating || null,
+    acousticRating: acousticRating || null,
+    thermalValue: thermalValue || null,
+    slipResistance: slipResistance || null,
+    warranty: warranty || null,
+    // Verified sustainability
+    epdUrl: epdUrl || null,
+    embodiedCarbonA1A3: embodiedCarbonA1A3,
+    recycledContentPct: recycledContentPct,
+    recycledAtEol: recycledAtEol,
+    vocClass: vocClass || null,
+    certifications: certifications.length ? certifications : [],
+    nbsClause: nbsClause || null,
+    // Commercial
+    priceRange: priceRange || null,
+    leadTime: leadTime || null,
+    minOrderQty: minOrderQty || null,
   });
 
   const review = {
