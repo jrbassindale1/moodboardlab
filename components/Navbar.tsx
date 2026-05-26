@@ -33,10 +33,12 @@ const Navbar: React.FC<NavbarProps> = ({
   const navItemsDesktop = [
     ...baseNavItems,
     ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
+    ...(isAdmin ? [{ id: 'brand-admin', label: 'Brand Admin' }] : []),
   ];
   const navItemsMobile = [
     ...baseNavItems,
     ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
+    ...(isAdmin ? [{ id: 'brand-admin', label: 'Brand Admin' }] : []),
   ];
 
   const handleNavigate = (page: string) => {

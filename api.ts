@@ -169,6 +169,10 @@ function getApiBase() {
   if (isViteDev) {
     return "/__api_proxy__";
   }
+  const apiUrl = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL;
+  if (apiUrl) {
+    return apiUrl;
+  }
   return "https://moodboardlab-api-bhc6a4b0dgbdb2gf.westeurope-01.azurewebsites.net";
 }
 

@@ -3,6 +3,7 @@ import { ArrowRight, Wand2 } from 'lucide-react';
 import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
 import { getPathForPage } from '../utils/siteSeo';
+import { FEATURED_BRANDS } from '../data/featuredBrands';
 
 // Dynamically import all images from the recents folder for the carousel
 // Any image added to images/recents/ will automatically be included
@@ -22,6 +23,7 @@ const recentImages = Object.entries(recentImageModules)
 
 interface ConceptProps {
   onNavigate: (page: string) => void;
+  onViewBrand: (slug: string) => void;
 }
 
 const sustainabilityHighlights = [
@@ -65,7 +67,7 @@ const outcomes = [
   'Test material palettes on your actual designs before committing.',
 ];
 
-const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
+const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
   // Use all images from the recents folder for the carousel
   const carouselImages = useMemo(() => recentImages.map(img => img.url), []);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -159,6 +161,87 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate }) => {
 
       {/* Workflow Strip */}
       <WorkflowStrip />
+
+      {/* Partner Brands */}
+      <section className="bg-white py-16 border-b border-gray-100">
+        <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
+          <div className="flex items-center gap-3">
+            <span className="h-[1px] w-12 bg-black" />
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Partner brands</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-4 space-y-4">
+              <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95]">
+                Real product data from leading manufacturers.
+              </h2>
+              <p className="font-sans text-gray-600 leading-relaxed">
+                Partner brands supply verified specifications, EPDs, and product imagery so architects see accurate data at concept stage.
+              </p>
+            </div>
+            <div className="lg:col-span-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {FEATURED_BRANDS.map((brand) => {
+                  const tierClasses =
+                    brand.tier === 'partner'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                  return (
+                    <article
+                      key={brand.id}
+                      className="border border-gray-200 p-6 flex flex-col gap-4 hover:border-black transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="w-10 h-10 border border-gray-200 flex items-center justify-center bg-gray-50 flex-shrink-0">
+                          {brand.logoUrl ? (
+                            <img src={brand.logoUrl} alt={brand.name} className="w-full h-full object-contain p-1" />
+                          ) : (
+                            <span className="font-display text-lg font-bold uppercase">{brand.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <span className={`inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${tierClasses}`}>
+                          {brand.tier === 'partner' ? 'Partner' : 'Verified'}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-display text-xl uppercase tracking-wide">{brand.name}</h3>
+                        <p className="font-sans text-sm text-gray-600 leading-relaxed line-clamp-2">{brand.tagline}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {brand.sampleTones.map((tone) => (
+                          <span
+                            key={tone}
+                            className="w-4 h-4 rounded-full border border-white shadow-sm ring-1 ring-gray-200"
+                            style={{ backgroundColor: tone }}
+                          />
+                        ))}
+                        <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-gray-400">
+                          {brand.materialCount} materials
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => onViewBrand(brand.slug)}
+                        className="mt-auto w-full py-2.5 text-xs font-mono uppercase tracking-widest border border-gray-800 hover:bg-black hover:text-white transition-colors"
+                      >
+                        View products →
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+              <p className="font-sans text-sm text-gray-500">
+                Are you a manufacturer?{' '}
+                <a
+                  href={getPathForPage('brand-register')}
+                  onClick={(e) => handleNavigateClick(e, 'brand-register')}
+                  className="underline hover:text-black transition-colors"
+                >
+                  Get your products featured →
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Recent Generations */}
       <section className="bg-white py-12 border-b border-gray-100">

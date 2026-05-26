@@ -1,22 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Search, ShoppingCart, X, Camera, Leaf } from 'lucide-react';
+import { ChevronRight, Search, X } from 'lucide-react';
 import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
 import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api';
-import { getMaterialIconUrls } from '../utils/materialIconUrls';
-import { formatDescriptionForDisplay, formatFinishForDisplay } from '../utils/materialDisplay';
-import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
+import { type MaterialFact } from '../data/materialFacts';
 import MaterialSustainabilityModal from './MaterialSustainabilityModal';
 import { useAuth, useUsage } from '../auth';
 import { trackEvent } from '../utils/analytics';
-import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../utils/materialCarbon';
 import {
   getFreeCreditsBlockedMessage,
   isFreeCreditsBlockedForNetwork,
 } from '../utils/freeCreditSupport';
-import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
+import { formatFinishForDisplay } from '../utils/materialDisplay';
+import MaterialCard from './materialSelection/MaterialCard';
+import MaterialOptionsModal from './materialSelection/MaterialOptionsModal';
+import PhotoDetectionFlow from './materialSelection/PhotoDetectionFlow';
 
 interface MaterialSelectionProps {
   onNavigate: (page: string) => void;
@@ -1184,177 +1184,36 @@ IMPORTANT:
             {isCustomCategory ? (
               <div className="space-y-6">
                 {customMaterialMode === 'analyse' ? (
-                  /* AI Photo Analysis */
-                  <div className="max-w-2xl space-y-6 border border-arch-line p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-display uppercase tracking-widest text-lg">Analyze Photo</h3>
-                        <p className="text-xs text-gray-500 font-sans mt-1">Uses 2 credits</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setCustomMaterialMode('analyse');
-                          setDetectionImage(null);
-                          setDetectedMaterials([]);
-                          setDetectionError(null);
-                        }}
-                        className="text-sm text-gray-600 hover:text-black"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-
-                    {/* Photo Upload */}
-                    <label
-                      className="border-2 border-dashed border-gray-300 p-12 hover:border-black transition-colors cursor-pointer flex flex-col items-center"
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                    >
-                      <Camera className="w-16 h-16 mb-4 text-gray-400" />
-                      <span className="text-base font-display uppercase tracking-wide mb-2">Upload Photo</span>
-                      <span className="text-sm text-gray-600 font-sans">Click to select or drag and drop an image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handlePhotoUpload(e.target.files)}
-                      />
-                    </label>
-
-                    {/* Uploaded Image Preview */}
-                    {detectionImage && (
-                      <div className="relative border border-arch-line">
-                        <img
-                          src={detectionImage.dataUrl}
-                          alt="Uploaded"
-                          className="w-full h-64 object-cover"
-                        />
-                        <button
-                          onClick={() => {
-                            setDetectionImage(null);
-                            setDetectedMaterials([]);
-                            setDetectionError(null);
-                          }}
-                          className="absolute top-2 right-2 bg-white p-2 border border-gray-200 hover:bg-gray-100"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Analyse Button */}
-                    {detectionImage && (
-                      <button
-                        onClick={startMaterialDetection}
-                        disabled={isDetecting}
-                        className="w-full bg-arch-black text-white py-3 text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isDetecting ? 'Analysing...' : 'Analyse Photo'}
-                      </button>
-                    )}
-
-                    {/* Error Message */}
-                    {detectionError && (
-                      isFreeCreditsBlockedForNetwork({ message: detectionError }) ? (
-                        <FreeCreditsBlockedNotice
-                          isAuthenticated={isAuthenticated}
-                          className="border border-amber-300 bg-amber-50 p-4"
-                        />
-                      ) : (
-                        <div className="bg-red-50 border border-red-200 p-4">
-                          <p className="text-sm font-sans text-red-800">{detectionError}</p>
-                        </div>
-                      )
-                    )}
-
-                    {/* Detected Materials - Ask user to add */}
-                    {detectedMaterials.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-display uppercase tracking-widest text-sm">
-                              Found {detectedMaterials.length} Material{detectedMaterials.length !== 1 ? 's' : ''}
-                            </h4>
-                            <button
-                              onClick={toggleSelectAll}
-                              className="text-xs font-sans text-blue-700 hover:underline"
-                            >
-                              {selectedMaterialIds.size === detectedMaterials.length ? 'Deselect All' : 'Select All'}
-                            </button>
-                          </div>
-                          <p className="text-sm font-sans text-gray-700">
-                            Select materials to add to your board ({selectedMaterialIds.size} selected)
-                          </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4">
-                          {detectedMaterials.map((mat) => (
-                            <div
-                              key={mat.id}
-                              className={`border p-4 cursor-pointer transition-colors ${
-                                selectedMaterialIds.has(mat.id)
-                                  ? 'border-black bg-gray-50'
-                                  : 'border-arch-line hover:border-gray-400'
-                              }`}
-                              onClick={() => toggleMaterialSelection(mat.id)}
-                            >
-                              <div className="flex items-start gap-3">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedMaterialIds.has(mat.id)}
-                                  onChange={() => toggleMaterialSelection(mat.id)}
-                                  className="mt-1 w-4 h-4 cursor-pointer"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                                <div
-                                  className="w-12 h-12 border border-arch-line flex-shrink-0"
-                                  style={{ backgroundColor: mat.tone }}
-                                />
-                                <div className="flex-1">
-                                  <h5 className="font-display uppercase tracking-wide text-sm">{mat.name}</h5>
-                                  <p className="text-xs text-gray-600 font-sans">{formatFinishForDisplay(mat.finish)}</p>
-                                  {mat.description && (
-                                    <p className="text-xs text-gray-500 font-sans mt-1">
-                                      {formatDescriptionForDisplay(mat.description)}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => {
-                              setDetectionImage(null);
-                              setDetectedMaterials([]);
-                              setSelectedMaterialIds(new Set());
-                              setDetectionError(null);
-                            }}
-                            className="flex-1 border border-gray-200 py-3 text-xs font-mono uppercase tracking-widest hover:border-black transition-colors"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => {
-                              const selectedMaterials = detectedMaterials.filter(mat => selectedMaterialIds.has(mat.id));
-                              selectedMaterials.forEach((mat) => handleAdd(mat, undefined, true));
-
-                              setCustomMaterialMode('analyse');
-                              setDetectionImage(null);
-                              setDetectedMaterials([]);
-                              setSelectedMaterialIds(new Set());
-                            }}
-                            disabled={selectedMaterialIds.size === 0}
-                            className="flex-1 py-3 text-xs font-mono uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-arch-black text-white hover:bg-gray-900"
-                          >
-                            Add Selected to Board
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <PhotoDetectionFlow
+                    isAuthenticated={isAuthenticated}
+                    detectionImage={detectionImage}
+                    detectedMaterials={detectedMaterials}
+                    selectedMaterialIds={selectedMaterialIds}
+                    isDetecting={isDetecting}
+                    detectionError={detectionError}
+                    onUpload={handlePhotoUpload}
+                    onClearImage={() => {
+                      setDetectionImage(null);
+                      setDetectedMaterials([]);
+                      setDetectionError(null);
+                    }}
+                    onStartDetection={startMaterialDetection}
+                    onToggleMaterial={toggleMaterialSelection}
+                    onToggleSelectAll={toggleSelectAll}
+                    onCancel={() => {
+                      setCustomMaterialMode('analyse');
+                      setDetectionImage(null);
+                      setDetectedMaterials([]);
+                      setSelectedMaterialIds(new Set());
+                    }}
+                    onAddSelected={(selected) => {
+                      selected.forEach((mat) => handleAdd(mat, undefined, true));
+                      setCustomMaterialMode('analyse');
+                      setDetectionImage(null);
+                      setDetectedMaterials([]);
+                      setSelectedMaterialIds(new Set());
+                    }}
+                  />
                 ) : (
                   /* Custom Material Form */
                   <div className="max-w-2xl space-y-6 border border-arch-line p-6">
@@ -1430,89 +1289,16 @@ IMPORTANT:
                   </div>
                 ) : (
                 <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
-                  {sortedMaterials.map((mat) => {
-                    const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
-                    return (
-                    <article key={mat.id} className="group space-y-3">
-                      {/* Product image/swatch */}
-                      <div className="aspect-square bg-arch-gray relative overflow-hidden border border-arch-line">
-                        {mat.customImage ? (
-                          <img src={mat.customImage} alt={mat.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <picture>
-                            <source srcSet={webpUrl} type="image/webp" />
-                            <img
-                              src={pngUrl}
-                              alt={mat.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              onError={(e) => {
-                                // Fallback to color swatch if icon fails to load
-                                const target = e.currentTarget;
-                                target.style.display = 'none';
-                                const fallback = target.parentElement?.nextElementSibling as HTMLElement | null;
-                                if (fallback) {
-                                  fallback.style.display = 'block';
-                                }
-                              }}
-                            />
-                          </picture>
-                        )}
-                        <div
-                          className="w-full h-full hidden"
-                          style={{ backgroundColor: mat.tone }}
-                        />
-                      </div>
-
-                      {/* Product info */}
-                      <div className="space-y-2">
-                        {(isLibrarySearchMode || isDefaultLibraryView) && (
-                          <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">
-                            {getCategoryDisplayName(mat.category)}
-                          </p>
-                        )}
-                        <h3 className="font-display uppercase tracking-wide text-sm">{mat.name}</h3>
-                        <p className="text-xs text-gray-600 font-sans line-clamp-2">
-                          {formatFinishForDisplay(mat.finish)}
-                        </p>
-                        {mat.description && (
-                          <p className="text-xs text-gray-500 font-sans line-clamp-2">
-                            {formatDescriptionForDisplay(mat.description)}
-                          </p>
-                        )}
-                      </div>
-
-                      {mat.carbonIntensity && (
-                        <div className="flex items-center justify-between">
-                          <span
-                            className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[mat.carbonIntensity]}`}
-                          >
-                            {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const fact = buildMaterialFact(mat);
-                              setSustainabilityMaterial({ material: mat, fact });
-                            }}
-                            className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
-                            title="Click to view material sustainability credentials"
-                          >
-                            <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Add to board button */}
-                      <button
-                        onClick={(e) => handleAdd(mat, undefined, undefined, e.currentTarget)}
-                        className="w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
-                      >
-                        Add to board
-                      </button>
-                    </article>
-                    );
-                  })}
+                  {sortedMaterials.map((mat) => (
+                    <MaterialCard
+                      key={mat.id}
+                      mat={mat}
+                      showCategory={isLibrarySearchMode || isDefaultLibraryView}
+                      getCategoryDisplayName={getCategoryDisplayName}
+                      onAdd={(m, _c, _s, el) => handleAdd(m, undefined, undefined, el)}
+                      onShowSustainability={(material, fact) => setSustainabilityMaterial({ material, fact })}
+                    />
+                  ))}
                 </div>
                 )}
 
@@ -1553,255 +1339,34 @@ IMPORTANT:
 
       {/* Added to board modal */}
       {recentlyAdded && (
-        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 px-4 py-4 sm:py-6 overflow-y-auto">
-          <div className="relative w-full max-w-lg bg-white shadow-2xl my-auto">
-            <div className="max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5">
-            <button
-              onClick={() => {
-                setRecentlyAdded(null);
-                setSelectedVariety(null);
-                setSelectedFinishOption(null);
-                setSelectedColorOption(null);
-              }}
-              className="absolute top-3 right-3 p-1 hover:bg-gray-100 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 border-b border-arch-line pb-4">
-              <ShoppingCart className="w-5 h-5" />
-              <div className="font-display uppercase tracking-widest text-base">
-                Select Options
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                {/* Material Icon */}
-                {(() => {
-                  const { webpUrl, pngUrl } = getMaterialIconUrls(recentlyAdded);
-                  return (
-                    <div className="w-20 h-20 border border-arch-line overflow-hidden bg-arch-gray flex-shrink-0">
-                      {recentlyAdded.customImage ? (
-                        <img src={recentlyAdded.customImage} alt={recentlyAdded.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <picture>
-                          <source srcSet={webpUrl} type="image/webp" />
-                          <img
-                            src={pngUrl}
-                            alt={recentlyAdded.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.style.display = 'none';
-                              const fallback = target.parentElement?.nextElementSibling as HTMLElement | null;
-                              if (fallback) fallback.style.display = 'block';
-                            }}
-                          />
-                        </picture>
-                      )}
-                      <div
-                        className="w-full h-full hidden"
-                        style={{ backgroundColor: recentlyAdded.tone }}
-                      />
-                    </div>
-                  );
-                })()}
-                <div className="flex-1">
-                  <div className="font-display uppercase tracking-wide text-sm">{recentlyAdded.name}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 mt-1">
-                    {formatFinishForDisplay(recentlyAdded.finish)}
-                  </div>
-                  {recentlyAdded.description && (
-                    <p className="font-sans text-xs text-gray-600 mt-2">
-                      {formatDescriptionForDisplay(recentlyAdded.description)}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Show instruction */}
-              <div className="bg-gray-50 border border-gray-200 p-3">
-                <p className="font-sans text-xs text-gray-700">
-                  {needsVarietySelection
-                    ? 'Select a material variety.'
-                    : needsFinishSelection
-                    ? 'Select a finish option.'
-                    : needsColourSelection
-                    ? 'Select a colour option.'
-                    : 'This material is added automatically.'}
-                </p>
-              </div>
-
-              {/* Variety options - show first if available */}
-              {hasVarietyOptions && (
-                <div className="border-t border-arch-line pt-4">
-                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Material Variety
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {recentlyAdded.varietyOptions?.map((variety, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedVariety(variety);
-                          setSelectedFinishOption(null);
-                          setSelectedColorOption(null);
-                          maybeAutoAddFromModal({
-                            variety,
-                            finishOption: null,
-                            colorOption: null,
-                          });
-                        }}
-                        className={`border px-3 py-2 transition-colors ${
-                          selectedVariety === variety
-                            ? 'border-black bg-black text-white'
-                            : 'border-gray-200 hover:border-black'
-                        }`}
-                      >
-                        <span className="font-sans text-xs">{variety}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {selectedVariety && (
-                    <p className="font-sans text-xs text-emerald-600 mt-2">
-                      Selected: {selectedVariety}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Finish options - step 2 */}
-              {hasFinishOptions && (
-                <div className="border-t border-arch-line pt-4">
-                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Finish Options
-                  </label>
-                  <div className={`flex flex-wrap gap-2 ${canSelectFinish ? '' : 'opacity-50 pointer-events-none'}`}>
-                    {recentlyAdded.finishOptions?.map((finish, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedFinishOption(finish);
-                          setSelectedColorOption(null);
-                          maybeAutoAddFromModal({
-                            finishOption: finish,
-                            colorOption: null,
-                          });
-                        }}
-                        className={`border px-3 py-2 transition-colors ${
-                          selectedFinishOption === finish
-                            ? 'border-black bg-black text-white'
-                            : 'border-gray-200 hover:border-black'
-                        }`}
-                      >
-                        <span className="font-sans text-xs">{finish}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {!canSelectFinish && (
-                    <p className="font-sans text-xs text-gray-500 mt-2">
-                      Select a material variety first.
-                    </p>
-                  )}
-                  {canSelectFinish && selectedFinishOption && (
-                    <p className="font-sans text-xs text-emerald-600 mt-2">
-                      Selected: {selectedFinishOption}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Curated color options - step 3 */}
-              {hasCuratedColourStep && (
-                <div className="border-t border-arch-line pt-4">
-                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    Colour Options
-                  </label>
-                  <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${canSelectColour ? '' : 'opacity-50 pointer-events-none'}`}>
-                    {recentlyAdded.colorOptions?.map((colorOption, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedColorOption(colorOption);
-                          maybeAutoAddFromModal({
-                            colorOption,
-                          });
-                        }}
-                        className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
-                        title={`Select ${colorOption.label}`}
-                      >
-                        <span
-                          className="h-8 w-full border border-gray-200"
-                          style={{ backgroundColor: colorOption.tone }}
-                          aria-hidden
-                        />
-                        <span className="font-sans text-xs">{colorOption.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {!canSelectColour && (
-                    <p className="font-sans text-xs text-gray-500 mt-2">
-                      {needsVarietySelection ? 'Select a material variety first.' : 'Select the finish option first.'}
-                    </p>
-                  )}
-                  {canSelectColour && selectedColorOption && (
-                    <p className="font-sans text-xs text-emerald-600 mt-2">
-                      Selected: {selectedColorOption.label}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* RAL palette for free color selection - step 3 */}
-              {hasFreeColor && (
-                <div className="border-t border-arch-line pt-4">
-                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-600 mb-2">
-                    RAL Colour Options
-                  </label>
-                  <div className={`grid max-h-80 grid-cols-2 gap-3 overflow-y-auto pr-2 sm:grid-cols-3 ${canSelectColour ? '' : 'opacity-50 pointer-events-none'}`}>
-                    {RAL_COLOR_OPTIONS.map((colorOption, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setSelectedColorOption(colorOption);
-                          maybeAutoAddFromModal({
-                            colorOption,
-                          });
-                        }}
-                        className="flex flex-col items-start gap-2 border border-gray-200 px-3 py-2 hover:border-black transition-colors text-left"
-                        title={`Select ${colorOption.label}`}
-                      >
-                        <span
-                          className="h-8 w-full border border-gray-200"
-                          style={{ backgroundColor: colorOption.tone }}
-                          aria-hidden
-                        />
-                        <span className="font-sans text-xs">{colorOption.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {!canSelectColour && (
-                    <p className="font-sans text-xs text-gray-500 mt-2">
-                      {needsVarietySelection ? 'Select a material variety first.' : 'Select the finish option first.'}
-                    </p>
-                  )}
-                  {canSelectColour && selectedColorOption && (
-                    <p className="font-sans text-xs text-emerald-600 mt-2">
-                      Selected: {selectedColorOption.label}
-                    </p>
-                  )}
-                  <p className="font-sans text-xs text-gray-500 mt-2">
-                    Select a colour to add this material.
-                  </p>
-                </div>
-              )}
-
-            </div>
-            </div>
-          </div>
-        </div>
+        <MaterialOptionsModal
+          material={recentlyAdded}
+          selectedVariety={selectedVariety}
+          selectedFinishOption={selectedFinishOption}
+          selectedColorOption={selectedColorOption}
+          colorSelectionMode={colorSelectionMode}
+          onClose={() => {
+            setRecentlyAdded(null);
+            setSelectedVariety(null);
+            setSelectedFinishOption(null);
+            setSelectedColorOption(null);
+          }}
+          onSelectVariety={(variety) => {
+            setSelectedVariety(variety);
+            setSelectedFinishOption(null);
+            setSelectedColorOption(null);
+            maybeAutoAddFromModal({ variety, finishOption: null, colorOption: null });
+          }}
+          onSelectFinish={(finish) => {
+            setSelectedFinishOption(finish);
+            setSelectedColorOption(null);
+            maybeAutoAddFromModal({ finishOption: finish, colorOption: null });
+          }}
+          onSelectColor={(colorOption) => {
+            setSelectedColorOption(colorOption);
+            maybeAutoAddFromModal({ colorOption });
+          }}
+        />
       )}
 
       {sustainabilityMaterial && (

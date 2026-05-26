@@ -12,6 +12,9 @@ import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
 import Dashboard from './components/Dashboard';
 import MaterialAdmin from './components/MaterialAdmin';
+import BrandPage from './components/BrandPage';
+import BrandSubmissionForm from './components/BrandSubmissionForm';
+import BrandAdmin from './components/BrandAdmin';
 import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
 import type { PrecedentResult } from './api';
@@ -361,10 +364,10 @@ const App: React.FC = () => {
   // Track page views in Google Analytics
   useEffect(() => {
     const pagePath = getPathForPage(currentPage);
-    trackPageView(
-      pagePath,
-      currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
-    );
+    const pageLabel = currentPage.startsWith('brand:')
+      ? `Brand: ${currentPage.slice(6)}`
+      : currentPage.charAt(0).toUpperCase() + currentPage.slice(1);
+    trackPageView(pagePath, pageLabel);
   }, [currentPage]);
 
   useEffect(() => {
@@ -645,9 +648,22 @@ const App: React.FC = () => {
   };
 
   const renderPage = () => {
+    if (currentPage.startsWith('brand:')) {
+      return (
+        <BrandPage
+          brandSlug={currentPage.slice(6)}
+          onNavigate={setCurrentPage}
+        />
+      );
+    }
     switch(currentPage) {
       case 'concept':
-        return <Concept onNavigate={setCurrentPage} />;
+        return (
+          <Concept
+            onNavigate={setCurrentPage}
+            onViewBrand={(slug) => setCurrentPage(`brand:${slug}`)}
+          />
+        );
       case 'materials':
         return (
           <MaterialSelection
@@ -722,8 +738,12 @@ const App: React.FC = () => {
         return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
       case 'material-admin':
         return <MaterialAdmin onNavigate={setCurrentPage} />;
+      case 'brand-register':
+        return <BrandSubmissionForm onNavigate={setCurrentPage} />;
+      case 'brand-admin':
+        return <BrandAdmin onNavigate={setCurrentPage} />;
       default:
-        return <Concept onNavigate={setCurrentPage} />;
+        return <Concept onNavigate={setCurrentPage} onViewBrand={(slug) => setCurrentPage(`brand:${slug}`)} />;
     }
   };
 

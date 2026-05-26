@@ -71,6 +71,23 @@ const PAGE_SEO: Record<string, PageSeo> = {
     description: 'Administrative tools for managing materials in Moodboard Lab.',
     indexable: false,
   },
+  brand: {
+    path: '/brand',
+    title: 'Partner Brand | Moodboard Lab',
+    description: 'Explore verified product data from partner manufacturers in Moodboard Lab.',
+    indexable: false,
+  },
+  'brand-register': {
+    path: '/brand-register',
+    title: 'Get Your Products Featured | Moodboard Lab',
+    description: 'Submit your material product data to feature in Moodboard Lab for architects and designers.',
+  },
+  'brand-admin': {
+    path: '/brand-admin',
+    title: 'Brand Admin | Moodboard Lab',
+    description: 'Admin panel for reviewing brand submissions in Moodboard Lab.',
+    indexable: false,
+  },
 };
 
 const PAGE_TYPES: Record<string, string> = {
@@ -93,10 +110,17 @@ const normalizePath = (pathname: string): string => {
   return normalized.startsWith('/') ? normalized : `/${normalized}`;
 };
 
-export const getPathForPage = (page: string): string => PAGE_SEO[page]?.path ?? PAGE_SEO.concept.path;
+export const getPathForPage = (page: string): string => {
+  if (page.startsWith('brand:')) return `/brand/${page.slice(6)}`;
+  return PAGE_SEO[page]?.path ?? PAGE_SEO.concept.path;
+};
 
 export const getPageFromPath = (pathname: string): string => {
   const normalizedPath = normalizePath(pathname);
+  if (normalizedPath.startsWith('/brand/')) {
+    const slug = normalizedPath.slice(7);
+    return slug ? `brand:${slug}` : 'concept';
+  }
   const match = Object.entries(PAGE_SEO).find(([, config]) => config.path === normalizedPath);
   return match?.[0] ?? 'concept';
 };
@@ -254,7 +278,8 @@ const buildStructuredData = (page: string, seo: PageSeo) => {
 export const applyPageSeo = (page: string) => {
   if (typeof document === 'undefined') return;
 
-  const seo = PAGE_SEO[page] ?? PAGE_SEO.concept;
+  const seoKey = page.startsWith('brand:') ? 'brand' : page;
+  const seo = PAGE_SEO[seoKey] ?? PAGE_SEO.concept;
   const absoluteUrl = `${SITE_URL}${seo.path}`;
 
   document.title = seo.title;
