@@ -60,7 +60,6 @@ jobs:
         if: github.ref == 'refs/heads/staging'
         id: builddeploy_staging
         env:
-          VITE_DISABLE_AUTH: "true"
           VITE_API_URL: "https://moodboardlab-api-staging.azurewebsites.net"
         uses: Azure/static-web-apps-deploy@v1
         with:
