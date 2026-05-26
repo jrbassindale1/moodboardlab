@@ -48,6 +48,47 @@ const CARBON_SORT_ORDER: Record<NonNullable<MaterialOption['carbonIntensity']>, 
 };
 
 const DEFAULT_LOW_CARBON_PICK_COUNT = 16;
+const MATERIALS_CACHE_KEY = 'moodboard_materials_cache_v1';
+const MATERIALS_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+
+type CachedMaterialsPayload = {
+  items: MaterialOption[];
+  updatedAt: number;
+};
+
+const readCachedMaterials = (): MaterialOption[] | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(MATERIALS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CachedMaterialsPayload;
+    if (!Array.isArray(parsed?.items) || typeof parsed?.updatedAt !== 'number') {
+      window.localStorage.removeItem(MATERIALS_CACHE_KEY);
+      return null;
+    }
+    if (Date.now() - parsed.updatedAt > MATERIALS_CACHE_TTL_MS) {
+      window.localStorage.removeItem(MATERIALS_CACHE_KEY);
+      return null;
+    }
+    return parsed.items;
+  } catch {
+    window.localStorage.removeItem(MATERIALS_CACHE_KEY);
+    return null;
+  }
+};
+
+const writeCachedMaterials = (items: MaterialOption[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload: CachedMaterialsPayload = {
+      items,
+      updatedAt: Date.now(),
+    };
+    window.localStorage.setItem(MATERIALS_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore storage quota or serialization issues.
+  }
+};
 
 const getLocalDateRotationKey = (): string => {
   const now = new Date();
@@ -124,6 +165,11 @@ const downscaleImage = (
   });
 
 const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange, onStartNewProject }) => {
+  const initialCachedMaterialsRef = useRef<MaterialOption[] | null>(null);
+  if (initialCachedMaterialsRef.current === null) {
+    initialCachedMaterialsRef.current = readCachedMaterials();
+  }
+  const hasInitialCachedMaterialsRef = useRef(Boolean(initialCachedMaterialsRef.current?.length));
   const { isAuthenticated, getAccessToken } = useAuth();
   const { remaining, refreshUsage, incrementLocalUsage, isAnonymous } = useUsage();
   const boardRef = useRef<MaterialOption[]>(board);
@@ -145,11 +191,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     return initial;
   });
   const [customMaterialMode, setCustomMaterialMode] = useState<CustomMaterialMode>(null);
-  const [materialPalette, setMaterialPalette] = useState<MaterialOption[]>(MATERIAL_PALETTE);
+  const [materialPalette, setMaterialPalette] = useState<MaterialOption[]>(
+    () => initialCachedMaterialsRef.current ?? MATERIAL_PALETTE
+  );
   const [customMaterialName, setCustomMaterialName] = useState('');
   const [customMaterialDescription, setCustomMaterialDescription] = useState('');
   const [isUsingFallbackPalette, setIsUsingFallbackPalette] = useState(false);
-  const [isLoadingMaterials, setIsLoadingMaterials] = useState(true);
+  const [isLoadingMaterials] = useState(false);
   const [detectionImage, setDetectionImage] = useState<UploadedImage | null>(null);
   const [detectedMaterials, setDetectedMaterials] = useState<MaterialOption[]>([]);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState<Set<string>>(new Set());
@@ -283,15 +331,17 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
           merged.push(...fallbackById.values());
           setMaterialPalette(merged);
           setIsUsingFallbackPalette(false);
+          writeCachedMaterials(merged);
+          hasInitialCachedMaterialsRef.current = true;
         } else {
-          setIsUsingFallbackPalette(true);
+          if (!hasInitialCachedMaterialsRef.current) {
+            setIsUsingFallbackPalette(true);
+          }
         }
       } catch (error) {
         console.warn('Falling back to hardcoded material palette:', error);
-        setIsUsingFallbackPalette(true);
-      } finally {
-        if (mounted) {
-          setIsLoadingMaterials(false);
+        if (mounted && !hasInitialCachedMaterialsRef.current) {
+          setIsUsingFallbackPalette(true);
         }
       }
     };
@@ -399,7 +449,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const migratedMaterials = useMemo(() => migrateAllMaterials(materialPalette), [materialPalette]);
 
   // Organize materials by category path
-  const materialsByPath = useMemo(() => {
+  const materialsByPath = useMemo<Record<string, MaterialOption[]>>(() => {
     const map: Record<string, MaterialOption[]> = {};
     migratedMaterials.forEach((mat) => {
       const paths = mat.treePaths || [];
@@ -453,7 +503,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     if (!searchTokens.length) return materialsByPath;
 
     const next: Record<string, MaterialOption[]> = {};
-    Object.entries(materialsByPath).forEach(([path, list]) => {
+    (Object.entries(materialsByPath) as Array<[string, MaterialOption[]]>).forEach(([path, list]) => {
       const filtered = list.filter((item) => materialMatchesSearch(item));
       if (filtered.length > 0) {
         next[path] = filtered;
@@ -1088,7 +1138,11 @@ IMPORTANT:
                       return acc;
                     }, {} as Record<string, Array<{ material: MaterialOption; boardIndex: number }>>);
 
-                    return Object.entries(grouped).map(([categoryName, items]) => (
+                    const groupedEntries = Object.entries(grouped) as Array<
+                      [string, Array<{ material: MaterialOption; boardIndex: number }>]
+                    >;
+
+                    return groupedEntries.map(([categoryName, items]) => (
                     <div key={categoryName} className="space-y-2">
                       <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 px-2">
                         {categoryName}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { SignInButton } from '@clerk/clerk-react';
 import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../auth';
-import { getGenerations, PrecedentResult } from '../api';
+import { getGenerations, moveGenerationsToProject, PrecedentResult, type Project } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
-import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock } from 'lucide-react';
+import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock, Plus } from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 interface Generation {
@@ -29,7 +29,10 @@ interface DashboardProps {
     savedPrecedents?: PrecedentResult[] | null;
     projectId?: string | null;
     projectName?: string | null;
+    generationId?: string | null;
   }) => void;
+  onOpenProjectModal?: () => void;
+  projects?: Project[];
 }
 
 type BoardItemLike = {
@@ -169,13 +172,38 @@ type ProjectGroup = {
   createdAt: string; // Earliest generation timestamp
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }) => {
+async function downloadUrl(url: string, filename: string) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
+
+const Dashboard: React.FC<DashboardProps> = ({
+  onNavigate,
+  onRestoreGeneration,
+  onOpenProjectModal,
+  projects = [],
+}) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit, purchasedCredits } = useUsage();
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [movingGenerationIds, setMovingGenerationIds] = useState<Set<string>>(new Set());
+  const [moveError, setMoveError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
   const limit_per_page = 12;
   const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
@@ -427,7 +455,34 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
       savedPrecedents: savedPrecedents || null,
       projectId: projectId || null,
       projectName: projectName || null,
+      generationId: gen.id,
     });
+  };
+
+  const handleMoveGenerations = async (
+    generationIds: string[],
+    targetProjectId: string
+  ) => {
+    if (!isAuthenticated || isPreviewMode || !targetProjectId || !generationIds.length) return;
+
+    setMoveError(null);
+    setMovingGenerationIds((prev) => new Set([...prev, ...generationIds]));
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error('Missing access token');
+      const result = await moveGenerationsToProject(token, generationIds, targetProjectId);
+      const updatedById = new Map(result.items.map((item) => [item.id, item]));
+      setGenerations((prev) => prev.map((item) => updatedById.get(item.id) || item));
+    } catch (error) {
+      console.error('Failed to move generation:', error);
+      setMoveError(error instanceof Error ? error.message : 'Failed to move generation');
+    } finally {
+      setMovingGenerationIds((prev) => {
+        const next = new Set(prev);
+        generationIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    }
   };
 
   if (!canAccessDashboard) {
@@ -468,13 +523,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
         )}
 
         {/* Header */}
-        <div className="border-b border-gray-200 pb-6">
-          <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back, {user?.name || 'User'}
-          </p>
+        <div className="flex items-start justify-between border-b border-gray-200 pb-6">
+          <div>
+            <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mt-2">
+              Welcome back, {user?.name || 'User'}
+            </p>
+          </div>
+          {onOpenProjectModal && (
+            <button
+              onClick={onOpenProjectModal}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Project
+            </button>
+          )}
         </div>
 
         {/* Usage Stats */}
@@ -554,6 +620,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                   Preview sample data shown so you can test the restore buttons without live generation history.
                 </div>
               )}
+              {moveError && (
+                <div className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {moveError}
+                </div>
+              )}
 
               {/* Project Cards */}
               {projectGroups.projects.length > 0 && (
@@ -621,6 +692,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                   gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                                 const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                                 const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+                                const generationIdsToMove = [gen.id, ...attachments.map((item) => item.id)];
+                                const isMoving = generationIdsToMove.some((id) => movingGenerationIds.has(id));
+                                const currentProjectId = extractProjectFromMaterials(gen.materials)?.id || '';
+                                const canMove = !isPreviewMode && projects.length > 0;
 
                                 return (
                                   <div
@@ -635,14 +710,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                           loading="lazy"
                                         />
-                                        <a
-                                          href={gen.blobUrl}
-                                          download
+                                        <button
+                                          onClick={(e) => { e.preventDefault(); downloadUrl(gen.blobUrl!, `image-${gen.id}.png`); }}
                                           className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
                                           aria-label="Download image"
                                         >
                                           <Download className="w-3.5 h-3.5" />
-                                        </a>
+                                        </button>
                                       </div>
                                     ) : (
                                       <div className="aspect-square bg-gray-100 flex items-center justify-center">
@@ -664,10 +738,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                             const rawUrl = pdf.blobUrl || '';
                                             const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
                                             return rawUrl ? (
-                                              <a
+                                              <button
                                                 key={pdf.id}
-                                                href={rawUrl}
-                                                download
+                                                onClick={() => downloadUrl(rawUrl, `${isMaterialsSheet ? 'materials-sheet' : 'briefing'}-${pdf.id}.pdf`)}
                                                 className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
                                                   isMaterialsSheet
                                                     ? 'text-emerald-700 bg-emerald-100'
@@ -676,7 +749,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                               >
                                                 <Download className="w-3 h-3" />
                                                 {isMaterialsSheet ? 'Sheet' : 'Briefing'}
-                                              </a>
+                                              </button>
                                             ) : null;
                                           })}
                                         </div>
@@ -684,10 +757,30 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                       {restoreLabel && canRestore && (
                                         <button
                                           onClick={() => handleRestoreGeneration(gen)}
-                                          className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                          className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors mb-2"
                                         >
                                           {restoreLabel}
                                         </button>
+                                      )}
+                                      {canMove && (
+                                        <select
+                                          value={currentProjectId}
+                                          disabled={isMoving}
+                                          onChange={(event) => {
+                                            const nextProjectId = event.target.value;
+                                            if (!nextProjectId || nextProjectId === currentProjectId) return;
+                                            void handleMoveGenerations(generationIdsToMove, nextProjectId);
+                                          }}
+                                          className="w-full border border-gray-200 bg-white px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-600 disabled:bg-gray-100 disabled:text-gray-400"
+                                          aria-label="Move to project"
+                                        >
+                                          <option value="">Move to project</option>
+                                          {projects.map((targetProject) => (
+                                            <option key={targetProject.id} value={targetProject.id}>
+                                              {targetProject.name}
+                                            </option>
+                                          ))}
+                                        </select>
                                       )}
                                     </div>
                                   </div>
@@ -739,6 +832,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                             gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
                           const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                           const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
+                          const generationIdsToMove = [gen.id, ...attachments.map((item) => item.id)];
+                          const isMoving = generationIdsToMove.some((id) => movingGenerationIds.has(id));
+                          const currentProjectId = extractProjectFromMaterials(gen.materials)?.id || '';
+                          const canMove = !isPreviewMode && projects.length > 0;
 
                           return (
                             <div
@@ -753,14 +850,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     loading="lazy"
                                   />
-                                  <a
-                                    href={gen.blobUrl}
-                                    download
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); downloadUrl(gen.blobUrl!, `image-${gen.id}.png`); }}
                                     className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 border border-gray-200 text-gray-700 shadow-sm"
                                     aria-label="Download image"
                                   >
                                     <Download className="w-3.5 h-3.5" />
-                                  </a>
+                                  </button>
                                 </div>
                               ) : (
                                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
@@ -782,10 +878,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                       const rawUrl = pdf.blobUrl || '';
                                       const isMaterialsSheet = getPdfBucket(pdf) === 'materialsSheet';
                                       return rawUrl ? (
-                                        <a
+                                        <button
                                           key={pdf.id}
-                                          href={rawUrl}
-                                          download
+                                          onClick={() => downloadUrl(rawUrl, `${isMaterialsSheet ? 'materials-sheet' : 'briefing'}-${pdf.id}.pdf`)}
                                           className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded ${
                                             isMaterialsSheet
                                               ? 'text-emerald-700 bg-emerald-100'
@@ -794,7 +889,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                         >
                                           <Download className="w-3 h-3" />
                                           {isMaterialsSheet ? 'Sheet' : 'Briefing'}
-                                        </a>
+                                        </button>
                                       ) : null;
                                     })}
                                   </div>
@@ -802,10 +897,30 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, onRestoreGeneration }
                                 {restoreLabel && canRestore && (
                                   <button
                                     onClick={() => handleRestoreGeneration(gen)}
-                                    className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors"
+                                    className="w-full px-2 py-1 font-mono text-[9px] uppercase tracking-widest border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors mb-2"
                                   >
                                     {restoreLabel}
                                   </button>
+                                )}
+                                {canMove && (
+                                  <select
+                                    value={currentProjectId}
+                                    disabled={isMoving}
+                                    onChange={(event) => {
+                                      const nextProjectId = event.target.value;
+                                      if (!nextProjectId || nextProjectId === currentProjectId) return;
+                                      void handleMoveGenerations(generationIdsToMove, nextProjectId);
+                                    }}
+                                    className="w-full border border-gray-200 bg-white px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-600 disabled:bg-gray-100 disabled:text-gray-400"
+                                    aria-label="Move to project"
+                                  >
+                                    <option value="">Move to project</option>
+                                    {projects.map((targetProject) => (
+                                      <option key={targetProject.id} value={targetProject.id}>
+                                        {targetProject.name}
+                                      </option>
+                                    ))}
+                                  </select>
                                 )}
                               </div>
                             </div>

@@ -1,10 +1,22 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ImageDown, Loader2, Sparkles, Upload, Wand2, X } from 'lucide-react';
-import { callGeminiImage, saveGenerationAuth, checkQuota, consumeCredits, CREDIT_COSTS, GenerationType, getGenerations, type Generation } from '../api';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import {
+  callGeminiImage,
+  callOpenAIImage,
+  saveGenerationAuth,
+  savePdfAuth,
+  checkQuota,
+  consumeCredits,
+  CREDIT_COSTS,
+  GenerationType,
+  getGenerations,
+  getSavedMaterialTranslation,
+  translateRenderToProducts,
+  type Generation,
+} from '../api';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from '../types';
 import { isAuthBypassEnabled, useAuth, useUsage } from '../auth';
-import { getRenderViewGuidance } from '../utils/renderViewGuidance';
-import { formatFinishForDisplay } from '../utils/materialDisplay';
+import { DrawingType } from '../utils/renderViewGuidance';
 import { trackEvent } from '../utils/analytics';
 import { IMAGE_MODEL_FALLBACK_WARNING, isImageModelFallbackUsed } from '../utils/imageModelFallback';
 import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
@@ -14,28 +26,32 @@ import {
 } from '../utils/freeCreditSupport';
 import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
 import UsageDisplay from './UsageDisplay';
-
-type SceneControl = {
-  enabled: boolean;
-  value: number;
-};
-
-type SceneControls = {
-  weather: SceneControl;
-  activity: SceneControl;
-  timeOfDay: SceneControl;
-  season: SceneControl;
-  viewCharacter: SceneControl;
-};
-
-// Project type for grouping generations
-type Project = {
-  id: string;
-  name: string;
-  createdAt: string;
-};
-
-type ImageSourceMode = 'upload' | 'project';
+import type {
+  MaterialTranslationContext,
+  MaterialTranslationResult,
+  MaterialTranslationStatus,
+} from '../types/materialTranslation';
+import {
+  buildPreservedFilename,
+  buildTimestampedFilename,
+  calculateAspectRatio,
+  createNamedObjectUrlFromSource,
+  dataUrlSizeBytes,
+  dataUrlToInlineData,
+  downscaleImage,
+  isDataUri,
+  loadImage,
+} from '../utils/imageProcessing';
+import { DEFAULT_SCENE_CONTROLS } from './apply-materials/constants';
+import MaterialTranslationPanel from './apply-materials/MaterialTranslationPanel';
+import PostProcessingModal from './apply-materials/PostProcessingModal';
+import ProjectContextPanel from './apply-materials/ProjectContextPanel';
+import ProjectContextHeader from './ProjectContextHeader';
+import RenderSetupPanel from './apply-materials/RenderSetupPanel';
+import RenderWorkspacePanel from './apply-materials/RenderWorkspacePanel';
+import SceneControlsSection from './apply-materials/SceneControlsSection';
+import { buildApplyRenderPrompt } from './apply-materials/promptBuilder';
+import type { ImageSourceMode, Project, SceneControls } from './apply-materials/types';
 
 interface ApplyMaterialsProps {
   onNavigate?: (page: string) => void;
@@ -61,129 +77,15 @@ interface ApplyMaterialsProps {
   onRenderNoteChange: (note: string) => void;
   appliedEditPrompt: string;
   onAppliedEditPromptChange: (prompt: string) => void;
+  appliedRenderGenerationId: string | null;
+  onAppliedRenderGenerationIdChange: (generationId: string | null) => void;
   // Project state
   currentProject?: Project | null;
+  onCreateProject?: () => Promise<Project | null>;
 }
 
-const WEATHER_OPTIONS = ['clear / sunny', 'soft overcast', 'heavy overcast', 'misty / moody', 'wet after rain'];
-const ACTIVITY_OPTIONS = ['empty', 'sparse', 'moderate', 'busy'];
-const TIME_OPTIONS = ['morning', 'midday', 'afternoon / evening', 'dusk', 'night'];
-const SEASON_OPTIONS = ['spring', 'summer', 'autumn', 'winter'];
-const VIEW_OPTIONS = ['clean architectural', 'lightly lived-in', 'lived-in scene', 'editorial photo', 'candid street view'];
-
-const DEFAULT_SCENE_CONTROLS: SceneControls = {
-  weather: { enabled: false, value: 0 },
-  activity: { enabled: false, value: 0 },
-  timeOfDay: { enabled: false, value: 0 },
-  season: { enabled: false, value: 0 },
-  viewCharacter: { enabled: false, value: 0 }
-};
-
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
-const MAX_UPLOAD_DIMENSION = 1000;
-const RESIZE_QUALITY = 0.82;
-const RESIZE_MIME = 'image/webp';
-const dataUrlSizeBytes = (dataUrl: string) => {
-  const base64 = dataUrl.split(',')[1] || '';
-  const padding = (base64.match(/=+$/)?.[0].length ?? 0);
-  return Math.floor((base64.length * 3) / 4) - padding;
-};
-
-const isDataUri = (value: string) => value.startsWith('data:');
-
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-
-const loadImage = (src: string, useCrossOrigin = true) =>
-  new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    if (useCrossOrigin) {
-      img.crossOrigin = 'anonymous';
-    }
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-
-const downscaleImage = (
-  dataUrl: string,
-  targetMime = RESIZE_MIME,
-  quality = RESIZE_QUALITY
-): Promise<{ dataUrl: string; width: number; height: number; mimeType: string; sizeBytes: number }> =>
-  new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.width, img.height));
-      const width = Math.max(1, Math.round(img.width * scale));
-      const height = Math.max(1, Math.round(img.height * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas not supported in this browser.'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      const mime = targetMime || 'image/jpeg';
-      const resizedUrl = canvas.toDataURL(mime, quality);
-      resolve({
-        dataUrl: resizedUrl,
-        width,
-        height,
-        mimeType: mime,
-        sizeBytes: dataUrlSizeBytes(resizedUrl)
-      });
-    };
-    img.onerror = reject;
-    img.src = dataUrl;
-  });
-
-const calculateAspectRatio = (width: number, height: number): string => {
-  const ratio = width / height;
-
-  const validRatios: { label: string; value: number }[] = [
-    { label: '1:1', value: 1 },
-    { label: '3:2', value: 3 / 2 },
-    { label: '2:3', value: 2 / 3 },
-    { label: '3:4', value: 3 / 4 },
-    { label: '4:3', value: 4 / 3 },
-    { label: '4:5', value: 4 / 5 },
-    { label: '5:4', value: 5 / 4 },
-    { label: '9:16', value: 9 / 16 },
-    { label: '16:9', value: 16 / 9 },
-    { label: '21:9', value: 21 / 9 }
-  ];
-
-  let closest = validRatios[0];
-  let minDiff = Math.abs(ratio - closest.value);
-
-  for (const validRatio of validRatios) {
-    const diff = Math.abs(ratio - validRatio.value);
-    if (diff < minDiff) {
-      minDiff = diff;
-      closest = validRatio;
-    }
-  }
-
-  return closest.label;
-};
-
-const dataUrlToInlineData = (dataUrl: string) => {
-  const [meta, content] = dataUrl.split(',');
-  const mimeMatch = meta?.match(/data:(.*);base64/);
-  return {
-    inlineData: {
-      mimeType: mimeMatch?.[1] || 'image/png',
-      data: content || ''
-    }
-  };
-};
+const RECENT_STYLE_REFERENCE_LIMIT = 8;
 
 const formatCreditCostMessage = (credits: number) =>
   credits === 1
@@ -193,7 +95,7 @@ const formatCreditCostMessage = (credits: number) =>
 const PROJECT_GENERATION_LABELS: Partial<Record<Generation['type'], string>> = {
   moodboard: 'Moodboard',
   applyMaterials: 'Render',
-  upscale: '4K Upscale'
+  upscale: 'Final Output (4K)'
 };
 
 const isPdfBlobUrl = (blobUrl?: string) => {
@@ -232,6 +134,9 @@ const formatRelativeTime = (value: string): string => {
   return `${years} year${years === 1 ? '' : 's'} ago`;
 };
 
+const getSceneControlValues = (controls: SceneControls): Array<SceneControls[keyof SceneControls]> =>
+  Object.values(controls) as Array<SceneControls[keyof SceneControls]>;
+
 const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onNavigate,
   board,
@@ -256,17 +161,31 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   onRenderNoteChange,
   appliedEditPrompt,
   onAppliedEditPromptChange,
+  appliedRenderGenerationId,
+  onAppliedRenderGenerationIdChange,
   // Project state
-  currentProject
+  currentProject,
+  onCreateProject
 }) => {
   // Auth and usage hooks
   const { isAuthenticated, getAccessToken } = useAuth();
-  const { refreshUsage, incrementLocalUsage, isAnonymous, canGenerate, remaining, purchasedCredits, isAdmin } = useUsage();
+  const { refreshUsage, incrementLocalUsage, canGenerate, remaining, purchasedCredits, isAdmin } = useUsage();
+
+  // Check for localStorage admin bypass (for testing)
+  const isLocalAdminBypassEnabled = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  }, []);
+  const isTestingEnvironment = Boolean(import.meta.env.DEV || isAuthBypassEnabled || isLocalAdminBypassEnabled);
+
+  // Effective canGenerate that includes admin bypass
+  const effectiveCanGenerate = canGenerate || isLocalAdminBypassEnabled;
 
   // Local UI state only (transient, doesn't need to persist)
   const [status, setStatus] = useState<'idle' | 'render'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [imageModelFallbackWarning, setImageModelFallbackWarning] = useState<string | null>(null);
+  const [imageProvider, setImageProvider] = useState<'gemini' | 'openai'>('gemini');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectingProjectImageId, setSelectingProjectImageId] = useState<string | null>(null);
   const [projectGenerations, setProjectGenerations] = useState<Generation[]>([]);
@@ -274,8 +193,26 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const [projectGenerationsError, setProjectGenerationsError] = useState<string | null>(null);
   const [baseImageSourceMode, setBaseImageSourceMode] = useState<ImageSourceMode>('upload');
   const [styleReferenceSourceMode, setStyleReferenceSourceMode] = useState<ImageSourceMode>('upload');
+  const [drawingType, setDrawingType] = useState<DrawingType>('auto');
   const [renderingMode, setRenderingMode] = useState<'upload-1k' | 'upscale-4k' | 'edit' | null>(null);
+  const [compareSplitPercent, setCompareSplitPercent] = useState(100);
+  const [previousRenderUrl, setPreviousRenderUrl] = useState<string | null>(null);
+  const [workspaceDisplayUrl, setWorkspaceDisplayUrl] = useState<string | null>(null);
+  const [isWorkspaceImageModalOpen, setIsWorkspaceImageModalOpen] = useState(false);
+  const [isSetupSceneControlsOpen, setIsSetupSceneControlsOpen] = useState(false);
+  const [isRefineSceneControlsOpen, setIsRefineSceneControlsOpen] = useState(false);
+  const [materialTranslationStatus, setMaterialTranslationStatus] = useState<MaterialTranslationStatus>('idle');
+  const [materialTranslationResult, setMaterialTranslationResult] = useState<MaterialTranslationResult | null>(null);
+  const [materialTranslationError, setMaterialTranslationError] = useState<string | null>(null);
+  const [materialTranslationCreatedAt, setMaterialTranslationCreatedAt] = useState<string | null>(null);
+  const [materialTranslationRenderId, setMaterialTranslationRenderId] = useState<string | null>(null);
+  const [isExportingSpecificationPdf, setIsExportingSpecificationPdf] = useState(false);
+  const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'render' | 'translation'>('render');
+  const [isPersistingRenderRecord, setIsPersistingRenderRecord] = useState(false);
+  const loadedMaterialTranslationRenderRef = useRef<string | null>(null);
   const prevMoodboardRef = useRef(moodboardRenderUrl);
+  const applyRenderInFlightRef = useRef(false);
+  const workspaceObjectUrlRef = useRef<string | null>(null);
   const baseFileInputRef = useRef<HTMLInputElement | null>(null);
   const styleReferenceFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -287,6 +224,37 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const setSceneControls = onSceneControlsChange;
   const setRenderNote = onRenderNoteChange;
   const setAppliedEditPrompt = onAppliedEditPromptChange;
+  const setAppliedRenderGenerationId = onAppliedRenderGenerationIdChange;
+
+  const resetMaterialTranslationState = (options?: { closePanel?: boolean }) => {
+    setMaterialTranslationStatus('idle');
+    setMaterialTranslationResult(null);
+    setMaterialTranslationError(null);
+    setMaterialTranslationCreatedAt(null);
+    setMaterialTranslationRenderId(null);
+    loadedMaterialTranslationRenderRef.current = null;
+    if (options?.closePanel) {
+      setActiveWorkspaceTab('render');
+    }
+  };
+
+  const resetBaseImageDependentState = () => {
+    setDrawingType('auto');
+    setStyleReferenceImage(null);
+    setStyleReferenceSource(null);
+    setStyleReferenceSourceId(null);
+    setStyleReferenceSourceMode('upload');
+    setSceneControls(DEFAULT_SCENE_CONTROLS);
+    setRenderNote('');
+    setAppliedEditPrompt('');
+    onAppliedRenderUrlChange(null);
+    setAppliedRenderGenerationId(null);
+    setIsPersistingRenderRecord(false);
+    setPreviousRenderUrl(null);
+    setImageModelFallbackWarning(null);
+    resetMaterialTranslationState({ closePanel: true });
+    setError(null);
+  };
 
   // Reset scene controls only when a NEW moodboard is generated
   useEffect(() => {
@@ -301,16 +269,27 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     [board]
   );
   const uploadedImage = uploadedImages[0] ?? null;
+  const workspaceImageUrl = appliedRenderUrl || uploadedImage?.dataUrl || null;
+  const workspaceImageAlt = appliedRenderUrl ? 'Applied render' : uploadedImage ? 'Base image preview' : '';
   const hasProjectImagePicker = Boolean(currentProject?.id);
   const hasSceneControlsEnabled = useMemo(
-    () => (Object.values(sceneControls) as SceneControl[]).some((control) => control.enabled),
+    () => getSceneControlValues(sceneControls).some((control) => control.enabled),
     [sceneControls]
   );
+  useEffect(() => {
+    if (!hasSceneControlsEnabled) return;
+    if (appliedRenderUrl) {
+      setIsRefineSceneControlsOpen(true);
+      return;
+    }
+    setIsSetupSceneControlsOpen(true);
+  }, [hasSceneControlsEnabled, appliedRenderUrl]);
   const projectImageGenerations = useMemo(
     () =>
       projectGenerations
         .filter((generation) => getGenerationProjectId(generation) === currentProject?.id)
-        .filter(isSelectableProjectGeneration),
+        .filter(isSelectableProjectGeneration)
+        .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     [currentProject?.id, projectGenerations]
   );
   const effectiveStyleReferenceSource = useMemo<StyleReferenceSource | null>(() => {
@@ -320,10 +299,132 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const styleReferenceSourceLabel = effectiveStyleReferenceSource === 'project'
     ? 'Sourced from project render'
     : 'Uploaded file';
-  const styleReferenceHint = effectiveStyleReferenceSource === 'project'
-    ? 'Will match material expression for visual consistency across this project.'
-    : 'Will influence lighting and atmosphere only. Materials come from your palette.';
   const excludedCount = board.length - renderMaterials.length;
+  const canCompareBeforeAfter = Boolean(appliedRenderUrl && uploadedImage);
+  const renderDiagnostics = useMemo(() => {
+    const warnings: string[] = [];
+
+    if (renderMaterials.length > 0 && renderMaterials.length < 2) {
+      warnings.push('Only one material is active. Consider at least two mapped materials for stronger realism.');
+    }
+
+    const activeCategoryCount = new Set(renderMaterials.map((item) => item.category)).size;
+    if (renderMaterials.length > 0 && activeCategoryCount < 2) {
+      warnings.push('Material selection is concentrated in one category. Coverage may look incomplete.');
+    }
+
+    if (styleReferenceImage && hasSceneControlsEnabled) {
+      warnings.push('Style reference and scene controls are both active. Scene controls will override conflicting style cues.');
+    }
+
+    return warnings;
+  }, [
+    uploadedImage?.width,
+    uploadedImage?.height,
+    renderMaterials,
+    styleReferenceImage,
+    hasSceneControlsEnabled,
+    appliedRenderUrl,
+  ]);
+
+  const handleSceneControlEnabledChange = (key: keyof SceneControls, enabled: boolean) => {
+    setSceneControls({
+      ...sceneControls,
+      [key]: {
+        ...sceneControls[key],
+        enabled
+      }
+    });
+  };
+
+  const handleSceneControlValueChange = (key: keyof SceneControls, value: number) => {
+    setSceneControls({
+      ...sceneControls,
+      [key]: {
+        ...sceneControls[key],
+        value
+      }
+    });
+  };
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const revokeWorkspaceObjectUrl = () => {
+      if (workspaceObjectUrlRef.current) {
+        URL.revokeObjectURL(workspaceObjectUrlRef.current);
+        workspaceObjectUrlRef.current = null;
+      }
+    };
+
+    if (!workspaceImageUrl) {
+      revokeWorkspaceObjectUrl();
+      setWorkspaceDisplayUrl(null);
+      return;
+    }
+
+    const filename = appliedRenderUrl
+      ? buildTimestampedFilename('applied-render', workspaceImageUrl)
+      : uploadedImage
+      ? buildPreservedFilename(uploadedImage.name, workspaceImageUrl)
+      : buildTimestampedFilename('render', workspaceImageUrl);
+
+    if (!isDataUri(workspaceImageUrl)) {
+      revokeWorkspaceObjectUrl();
+      setWorkspaceDisplayUrl(workspaceImageUrl);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const objectUrl = await createNamedObjectUrlFromSource(workspaceImageUrl, filename);
+        if (isCancelled) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        revokeWorkspaceObjectUrl();
+        workspaceObjectUrlRef.current = objectUrl;
+        setWorkspaceDisplayUrl(objectUrl);
+      } catch {
+        if (!isCancelled) {
+          revokeWorkspaceObjectUrl();
+          setWorkspaceDisplayUrl(workspaceImageUrl);
+        }
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+      revokeWorkspaceObjectUrl();
+    };
+  }, [appliedRenderUrl, uploadedImage, workspaceImageUrl]);
+
+  useEffect(() => {
+    if (workspaceDisplayUrl) return;
+    setIsWorkspaceImageModalOpen(false);
+  }, [workspaceDisplayUrl]);
+
+  useEffect(() => {
+    if (appliedRenderUrl) return;
+    setActiveWorkspaceTab('render');
+  }, [appliedRenderUrl]);
+
+  useEffect(() => {
+    if (!isWorkspaceImageModalOpen || typeof window === 'undefined') return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsWorkspaceImageModalOpen(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isWorkspaceImageModalOpen]);
 
   useEffect(() => {
     if (!hasProjectImagePicker) {
@@ -376,12 +477,13 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
         const allItems: Generation[] = [];
         let offset = 0;
-        const limit = 100;
+        const shouldFetchAllPages = baseImageSourceMode === 'project';
+        const limit = shouldFetchAllPages ? 100 : RECENT_STYLE_REFERENCE_LIMIT;
 
         while (true) {
           const data = await getGenerations(token, { limit, offset });
           allItems.push(...(data.items || []));
-          if (!data.hasMore) break;
+          if (!shouldFetchAllPages || !data.hasMore) break;
           offset += limit;
         }
 
@@ -414,6 +516,64 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     styleReferenceSourceMode
   ]);
 
+  useEffect(() => {
+    if (!appliedRenderGenerationId || !isAuthenticated) return;
+    if (loadedMaterialTranslationRenderRef.current === appliedRenderGenerationId) return;
+
+    let isCancelled = false;
+
+    const loadSavedTranslation = async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token) return;
+        const saved = await getSavedMaterialTranslation(appliedRenderGenerationId, token);
+        if (isCancelled || !saved?.result) return;
+
+        setMaterialTranslationResult(saved.result);
+        setMaterialTranslationStatus('ready');
+        setMaterialTranslationError(null);
+        setMaterialTranslationCreatedAt(saved.createdAt || null);
+        setMaterialTranslationRenderId(appliedRenderGenerationId);
+        loadedMaterialTranslationRenderRef.current = appliedRenderGenerationId;
+      } catch (err) {
+        const message = err instanceof Error ? err.message.toLowerCase() : '';
+        if (message.includes('no saved material translation') || message.includes('status 404')) {
+          if (!isCancelled && materialTranslationRenderId !== appliedRenderGenerationId) {
+            setMaterialTranslationResult(null);
+            setMaterialTranslationStatus('idle');
+            setMaterialTranslationError(null);
+            setMaterialTranslationCreatedAt(null);
+            setMaterialTranslationRenderId(null);
+          }
+          loadedMaterialTranslationRenderRef.current = appliedRenderGenerationId;
+          return;
+        }
+        if (!isCancelled) {
+          console.warn('Could not load saved material translation', err);
+        }
+      }
+    };
+
+    void loadSavedTranslation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [appliedRenderGenerationId, getAccessToken, isAuthenticated, materialTranslationRenderId]);
+
+  useEffect(() => {
+    if (!appliedRenderGenerationId) return;
+    if (!materialTranslationRenderId) return;
+    if (materialTranslationRenderId === appliedRenderGenerationId) return;
+
+    setMaterialTranslationResult(null);
+    setMaterialTranslationStatus('idle');
+    setMaterialTranslationError(null);
+    setMaterialTranslationCreatedAt(null);
+    setMaterialTranslationRenderId(null);
+    setActiveWorkspaceTab('render');
+  }, [appliedRenderGenerationId, materialTranslationRenderId]);
+
   const handleToggleExclude = (idxToToggle: number, value: boolean) => {
     if (!onBoardChange) return;
     onBoardChange(
@@ -440,30 +600,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const buildMaterialKey = () => {
     if (!renderMaterials.length) return 'No materials selected yet.';
     return renderMaterials.map((item) => `${item.name} — ${item.finish}`).join('\n');
-  };
-
-  const buildSceneControlsText = (controls: SceneControls): string => {
-    const parts: string[] = [];
-
-    if (controls.weather.enabled) {
-      parts.push(`adjust atmospheric weather to ${WEATHER_OPTIONS[controls.weather.value]} (sky, clouds, light quality only - preserve all geometry and landscape)`);
-    }
-    if (controls.activity.enabled) {
-      parts.push(`adjust entourage to ${ACTIVITY_OPTIONS[controls.activity.value]} activity level (people count/density only - no changes to architecture or site)`);
-    }
-    if (controls.timeOfDay.enabled) {
-      parts.push(`adjust lighting to ${TIME_OPTIONS[controls.timeOfDay.value]} (sun angle, shadows, ambient light only - keep everything else identical)`);
-    }
-    if (controls.season.enabled) {
-      parts.push(`adjust seasonal character to ${SEASON_OPTIONS[controls.season.value]} (vegetation appearance, foliage color only - preserve landscape type and site layout)`);
-    }
-    if (controls.viewCharacter.enabled) {
-      parts.push(`adjust scene styling to ${VIEW_OPTIONS[controls.viewCharacter.value]} character (entourage detail level, styling approach only - no geometry changes)`);
-    }
-
-    if (parts.length === 0) return '';
-
-    return `SUBTLE SCENE ADJUSTMENTS (preserve all architecture, geometry, camera, and landscape): ${parts.join('; ')}.`;
   };
 
   const processImageDataUrl = async ({
@@ -493,6 +629,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const handleRemoveBaseImage = () => {
     setUploadedImages([]);
+    resetBaseImageDependentState();
   };
 
   const handleRemoveStyleReference = () => {
@@ -542,10 +679,31 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const selectedGenerationId = target === 'base'
       ? uploadedImage?.sourceGenerationId || null
       : styleReferenceSourceId;
+    const recentStyleReferenceGenerations = projectImageGenerations.slice(0, RECENT_STYLE_REFERENCE_LIMIT);
+    const selectedStyleGeneration = target === 'style' && selectedGenerationId
+      ? projectImageGenerations.find((generation) => generation.id === selectedGenerationId) ?? null
+      : null;
+    const generationsToRender = target === 'style'
+      ? selectedStyleGeneration && !recentStyleReferenceGenerations.some((generation) => generation.id === selectedStyleGeneration.id)
+        ? [selectedStyleGeneration, ...recentStyleReferenceGenerations.slice(0, RECENT_STYLE_REFERENCE_LIMIT - 1)]
+        : recentStyleReferenceGenerations
+      : projectImageGenerations;
+    const hiddenCount = target === 'style'
+      ? Math.max(projectImageGenerations.length - generationsToRender.length, 0)
+      : 0;
 
     return (
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {projectImageGenerations.map((generation) => {
+      <div className="space-y-2">
+        {target === 'style' && (
+          <div className="flex items-center justify-between gap-3 text-xs text-gray-500">
+            <span>
+              Showing the {generationsToRender.length} most recent project renders for style matching.
+            </span>
+            {hiddenCount > 0 ? <span>{hiddenCount} older render{hiddenCount === 1 ? '' : 's'} hidden.</span> : null}
+          </div>
+        )}
+        <div className={target === 'style' ? 'flex gap-3 overflow-x-auto pb-2' : 'grid grid-cols-2 gap-3 md:grid-cols-3'}>
+        {generationsToRender.map((generation) => {
           const isSelected = selectedGenerationId === generation.id;
           const isSelecting = selectingProjectImageId === `${target}:${generation.id}`;
           return (
@@ -554,7 +712,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
               type="button"
               onClick={() => void handleProjectGenerationSelect(generation, target)}
               disabled={Boolean(selectingProjectImageId)}
-              className={`overflow-hidden border p-2 text-left transition-colors ${
+              className={`${target === 'style' ? 'w-40 shrink-0' : 'overflow-hidden'} border p-2 text-left transition-colors ${
                 isSelected ? 'border-black bg-gray-50' : 'border-gray-200 bg-white hover:border-black'
               } disabled:cursor-wait disabled:opacity-70`}
             >
@@ -582,6 +740,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             </button>
           );
         })}
+        </div>
       </div>
     );
   };
@@ -594,8 +753,10 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       imageModelUsed?: string;
       imageFallbackUsed?: boolean;
     }
-  ) => {
+  ): Promise<string | null> => {
     const trimmedNote = renderNote.trim();
+    const project = currentProject || (onCreateProject ? await onCreateProject() : null);
+
     console.log('=== SAVING RENDER ===');
     console.log('moodboardRenderUrl prop:', moodboardRenderUrl ? `${moodboardRenderUrl.substring(0, 80)}...` : 'null');
 
@@ -647,29 +808,33 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           ? styleReferenceSourceId || undefined
           : undefined,
       // Project identification
-      projectId: currentProject?.id,
-      projectName: currentProject?.name
+      projectId: project?.id,
+      projectName: project?.name
     };
 
     if (!isAuthenticated) {
       console.warn('Skipping save-generation: user not authenticated.');
-      return;
+      return null;
     }
 
     try {
       const token = await getAccessToken();
       if (!token) {
         console.warn('Skipping save-generation: missing access token.');
-        return;
+        return null;
       }
-      await saveGenerationAuth({
+      const saved = await saveGenerationAuth({
         prompt,
         imageDataUri,
         materials: metadata,
         generationType
       }, token);
+      return typeof saved.generationId === 'string' && saved.generationId.trim()
+        ? saved.generationId
+        : null;
     } catch (err) {
       console.error('Authenticated save failed:', err);
+      return null;
     }
   };
 
@@ -680,6 +845,587 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       return calculateAspectRatio(image.width, image.height);
     } catch {
       return null;
+    }
+  };
+
+  const getAccessTokenWithRetry = useCallback(async (): Promise<string | null> => {
+    if (!isAuthenticated) return null;
+
+    let token = await getAccessToken();
+    if (token) return token;
+
+    // Clerk can briefly report authenticated while token hydration is still in flight.
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    token = await getAccessToken();
+    return token;
+  }, [getAccessToken, isAuthenticated]);
+
+  const buildMaterialTranslationContext = (): MaterialTranslationContext => {
+    const selectedMaterialPalette = renderMaterials
+      .slice(0, 20)
+      .map((material) => `${material.name} (${material.category})`);
+
+    return {
+      projectType: currentProject?.name || undefined,
+      region: undefined,
+      userMaterials: renderMaterials
+        .slice(0, 20)
+        .map((material) => ({
+          id: material.id,
+          name: material.name,
+          category: material.category,
+          finish: material.finish,
+        })),
+      selectedMaterialPalette,
+      sustainabilityPreference: undefined,
+      budgetTier: undefined,
+    };
+  };
+
+  const runMaterialTranslation = async (options?: { force?: boolean }) => {
+    if (!appliedRenderUrl) return;
+    if (materialTranslationStatus === 'loading') return;
+    if (materialTranslationResult && !options?.force) {
+      setActiveWorkspaceTab('translation');
+      return;
+    }
+
+    setActiveWorkspaceTab('translation');
+    setMaterialTranslationStatus('loading');
+    setMaterialTranslationError(null);
+
+    try {
+      const token = isAuthenticated ? await getAccessToken() : null;
+      const response = await translateRenderToProducts(
+        {
+          imageUrl: appliedRenderUrl,
+          projectId: currentProject?.id,
+          renderId: appliedRenderGenerationId || undefined,
+          context: buildMaterialTranslationContext(),
+        },
+        {
+          accessToken: token,
+          timeoutMs: 120000,
+        }
+      );
+
+      setMaterialTranslationResult(response.result);
+      setMaterialTranslationStatus('ready');
+      setMaterialTranslationError(null);
+      setMaterialTranslationCreatedAt(response.createdAt || new Date().toISOString());
+      const resolvedRenderId =
+        (typeof response.renderId === 'string' && response.renderId.trim()) ||
+        appliedRenderGenerationId ||
+        null;
+      setMaterialTranslationRenderId(resolvedRenderId);
+
+      if (resolvedRenderId) {
+        loadedMaterialTranslationRenderRef.current = resolvedRenderId;
+        setAppliedRenderGenerationId(resolvedRenderId);
+      }
+    } catch (err) {
+      setMaterialTranslationStatus('error');
+      const message = err instanceof Error ? err.message : 'Could not translate this render right now.';
+      setMaterialTranslationError(
+        message === 'auth_required' ? 'Please sign in to continue.' : message
+      );
+    }
+  };
+
+  const handleTranslateToProducts = () => {
+    if (!appliedRenderUrl) return;
+    if (materialTranslationResult) {
+      setActiveWorkspaceTab('translation');
+      return;
+    }
+    void runMaterialTranslation();
+  };
+
+  const handleReanalyseMaterialTranslation = () => {
+    setActiveWorkspaceTab('translation');
+    void runMaterialTranslation({ force: true });
+  };
+
+  const loadImageAsDataUri = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Could not load render image for PDF.');
+    }
+
+    const blob = await response.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Could not read render image data.'));
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleDownloadSpecificationPdf = async () => {
+    if (!materialTranslationResult) {
+      setMaterialTranslationError('No specification pathways available to export yet.');
+      return;
+    }
+
+    setIsExportingSpecificationPdf(true);
+    try {
+      const translation = materialTranslationResult;
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+      type RGB = [number, number, number];
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginX = 24;
+      const topMargin = 24;
+      const bottomLimit = pageHeight - 28;
+      const contentWidth = pageWidth - marginX * 2;
+      let cursorY = topMargin;
+
+      const splitLines = (text: string, maxWidth: number): string[] =>
+        (doc.splitTextToSize(
+          (text || '-')
+            .replace(/\s+/g, ' ')
+            .trim(),
+          maxWidth
+        ) as string[]) || ['-'];
+
+      const ensureSpace = (neededHeight: number) => {
+        if (cursorY + neededHeight <= bottomLimit) return;
+        doc.addPage();
+        cursorY = topMargin;
+      };
+
+      const drawBadge = (
+        text: string,
+        x: number,
+        y: number,
+        background: RGB,
+        foreground: RGB
+      ): number => {
+        const badgeHeight = 12;
+        const badgeWidth = doc.getTextWidth(text) + 12;
+        doc.setFillColor(background[0], background[1], background[2]);
+        doc.roundedRect(x, y, badgeWidth, badgeHeight, 6, 6, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7);
+        doc.setTextColor(foreground[0], foreground[1], foreground[2]);
+        doc.text(text, x + 6, y + 8.2);
+        return badgeWidth;
+      };
+
+      const pickFirst = (...values: Array<string | undefined | null>): string => {
+        for (const value of values) {
+          const normalized = String(value || '').trim();
+          if (normalized) return normalized;
+        }
+        return '';
+      };
+
+      const collectLegacySuppliers = (
+        system: (typeof translation.systems)[number]
+      ): Array<{ name: string; url: string }> => {
+        const pool: Array<{ name: string; url: string }> = [];
+
+        if (Array.isArray(system.recommendedPathway?.manufacturers)) {
+          pool.push(...system.recommendedPathway.manufacturers);
+        }
+        if (Array.isArray(system.alternativePathway?.manufacturers)) {
+          pool.push(...system.alternativePathway.manufacturers);
+        }
+        if (Array.isArray(system.buildableOptions)) {
+          for (const option of system.buildableOptions.slice(0, 2)) {
+            if (Array.isArray(option.manufacturers)) {
+              pool.push(...option.manufacturers);
+            }
+          }
+        }
+
+        const deduped = new Map<string, { name: string; url: string }>();
+        for (const supplier of pool) {
+          const name = String(supplier?.name || '').trim();
+          const url = String(supplier?.url || '').trim();
+          if (!name || !url) continue;
+
+          const key = `${name.toLowerCase()}|${url.toLowerCase()}`;
+          if (!deduped.has(key)) {
+            deduped.set(key, { name, url });
+          }
+        }
+
+        return Array.from(deduped.values()).slice(0, 3);
+      };
+
+      const resolveSuppliers = (
+        system: (typeof translation.systems)[number]
+      ): Array<{ name: string; url: string }> => {
+        const current = Array.isArray(system.possibleSuppliers)
+          ? system.possibleSuppliers
+              .map((supplier) => ({
+                name: String(supplier?.name || '').trim(),
+                url: String(supplier?.url || '').trim(),
+              }))
+              .filter((supplier) => supplier.name && supplier.url)
+              .slice(0, 3)
+          : [];
+
+        if (current.length > 0) return current;
+        return collectLegacySuppliers(system);
+      };
+
+      const resolveCostBand = (system: (typeof translation.systems)[number]): string | null => {
+        const value = String(system.costBand || '').trim();
+        if (value && value !== 'unknown') return value;
+        const recommended = String(system.recommendedPathway?.costBand || '').trim();
+        if (recommended) return recommended;
+        const legacy = String(system.buildableOptions?.[0]?.costBand || '').trim();
+        return legacy || null;
+      };
+
+      const resolveCarbonSignal = (system: (typeof translation.systems)[number]): string | null => {
+        const value = String(system.carbonSignal || '').trim();
+        if (value && value !== 'unknown') return value;
+        const recommended = String(system.recommendedPathway?.carbonSignal || '').trim();
+        if (recommended && recommended !== 'unknown') return recommended;
+        const legacy = String(system.buildableOptions?.[0]?.carbonSignal || '').trim();
+        if (legacy && legacy !== 'unknown') return legacy;
+        return null;
+      };
+
+      const generatedLabel = new Date().toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+
+      const confidence = translation.summary.confidence;
+      const confidenceBadgeStyle: Record<typeof confidence, { bg: RGB; text: RGB }> = {
+        high: { bg: [220, 252, 231], text: [22, 101, 52] },
+        medium: { bg: [219, 234, 254], text: [30, 64, 175] },
+        low: { bg: [254, 243, 199], text: [146, 64, 14] },
+      };
+
+      const headerHeight = 68;
+      ensureSpace(headerHeight + 12);
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(marginX, cursorY, contentWidth, headerHeight, 8, 8, 'F');
+      doc.setFillColor(236, 253, 245);
+      doc.roundedRect(marginX + contentWidth * 0.48, cursorY, contentWidth * 0.52, headerHeight, 8, 8, 'F');
+      doc.setDrawColor(209, 250, 229);
+      doc.roundedRect(marginX, cursorY, contentWidth, headerHeight, 8, 8, 'S');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.setTextColor(31, 41, 55);
+      doc.text('SPECIFICATION PATHWAYS', marginX + 12, cursorY + 20);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(75, 85, 99);
+      doc.text('Render-led architectural routes for early-stage decision support.', marginX + 12, cursorY + 36);
+      doc.text(`Generated ${generatedLabel}`, marginX + 12, cursorY + 50);
+
+      drawBadge(
+        `CONFIDENCE: ${confidence.toUpperCase()}`,
+        marginX + contentWidth - 118,
+        cursorY + 10,
+        confidenceBadgeStyle[confidence].bg,
+        confidenceBadgeStyle[confidence].text
+      );
+
+      cursorY += headerHeight + 12;
+
+      if (appliedRenderUrl) {
+        try {
+          const imageDataUri = await loadImageAsDataUri(appliedRenderUrl);
+          const image = await loadImage(imageDataUri);
+          const imagePadding = 12;
+          const maxWidth = contentWidth - imagePadding * 2;
+          const maxHeight = 212;
+          const imageRatio = image.width / image.height;
+          let drawWidth = maxWidth;
+          let drawHeight = drawWidth / imageRatio;
+          if (drawHeight > maxHeight) {
+            drawHeight = maxHeight;
+            drawWidth = drawHeight * imageRatio;
+          }
+
+          const imageCardHeight = drawHeight + 26;
+          ensureSpace(imageCardHeight + 12);
+
+          doc.setFillColor(255, 255, 255);
+          doc.setDrawColor(229, 231, 235);
+          doc.roundedRect(marginX, cursorY, contentWidth, imageCardHeight, 8, 8, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(107, 114, 128);
+          doc.text('REFERENCE RENDER', marginX + imagePadding, cursorY + 14);
+
+          const imageFormat = imageDataUri.includes('image/png') ? 'PNG' : 'JPEG';
+          const imageX = marginX + (contentWidth - drawWidth) / 2;
+          doc.addImage(
+            imageDataUri,
+            imageFormat,
+            imageX,
+            cursorY + 18,
+            drawWidth,
+            drawHeight,
+            undefined,
+            'FAST'
+          );
+
+          cursorY += imageCardHeight + 14;
+        } catch (imageError) {
+          console.warn('Specification PDF image embedding failed', imageError);
+        }
+      }
+
+      ensureSpace(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(75, 85, 99);
+      doc.text('KEY SYSTEM PATHWAYS', marginX, cursorY);
+      cursorY += 12;
+
+      for (const system of translation.systems.slice(0, 4)) {
+        const evidenceStrength = String(system.evidenceStrength || 'medium').toLowerCase();
+        const readsAs = pickFirst(
+          system.readsAs,
+          system.whyThisReadsThisWay,
+          system.visualIntent,
+          system.likelySystem,
+          'Likely system intent inferred from render evidence.'
+        );
+        const likelyRoute = pickFirst(
+          system.likelyRoute,
+          system.recommendedPathway?.name,
+          system.likelySystem,
+          system.buildableOptions?.[0]?.name,
+          'Likely route requires project-specific validation.'
+        );
+        const alternative = pickFirst(
+          system.alternative,
+          system.alternativePathway?.name,
+          system.buildableOptions?.[1]?.name,
+          system.buildableOptions?.[0]?.name,
+          'Alternative route to test against programme and buildability priorities.'
+        );
+        const watchOut = pickFirst(
+          system.watchOut,
+          system.risks?.[0],
+          system.designNote,
+          system.tradeOff,
+          'Check interfaces, movement, fire, and drainage strategy before route lock-in.'
+        );
+        const suppliers = resolveSuppliers(system);
+        const costBand = resolveCostBand(system);
+        const carbonSignal = resolveCarbonSignal(system);
+
+        const maxTextWidth = contentWidth - 24;
+        const readsLines = splitLines(readsAs, maxTextWidth);
+        const likelyLines = splitLines(likelyRoute, maxTextWidth);
+        const alternativeLines = splitLines(alternative, maxTextWidth);
+        const watchOutLines = splitLines(watchOut, maxTextWidth);
+
+        const fieldHeight = (lineCount: number) => 12 + lineCount * 9.2 + 4;
+        const suppliersHeight = suppliers.length > 0 ? 12 + suppliers.length * 20 : 0;
+        const cardHeight =
+          26 +
+          fieldHeight(readsLines.length) +
+          fieldHeight(likelyLines.length) +
+          fieldHeight(alternativeLines.length) +
+          fieldHeight(watchOutLines.length) +
+          suppliersHeight +
+          8;
+
+        ensureSpace(cardHeight + 10);
+        const cardTop = cursorY;
+
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(marginX, cardTop, contentWidth, cardHeight, 8, 8, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(17, 24, 39);
+        doc.text(String(system.category || 'System').toUpperCase(), marginX + 12, cardTop + 16);
+
+        const evidenceBadge = evidenceStrength === 'high'
+          ? { bg: [220, 252, 231] as RGB, text: [22, 101, 52] as RGB, label: 'EVIDENCE: HIGH' }
+          : evidenceStrength === 'low'
+          ? { bg: [254, 243, 199] as RGB, text: [146, 64, 14] as RGB, label: 'EVIDENCE: LOW' }
+          : { bg: [219, 234, 254] as RGB, text: [30, 64, 175] as RGB, label: 'EVIDENCE: MEDIUM' };
+
+        const badgeQueue: Array<{ label: string; bg: RGB; text: RGB }> = [evidenceBadge];
+        if (costBand) {
+          badgeQueue.push({
+            label: `COST ${String(costBand).toUpperCase()}`,
+            bg: [243, 244, 246],
+            text: [55, 65, 81],
+          });
+        }
+        if (carbonSignal) {
+          badgeQueue.push({
+            label: `CARBON ${String(carbonSignal).toUpperCase()}`,
+            bg: [241, 245, 249],
+            text: [71, 85, 105],
+          });
+        }
+
+        let badgeX = marginX + contentWidth - 12;
+        for (let index = badgeQueue.length - 1; index >= 0; index -= 1) {
+          const badge = badgeQueue[index];
+          const badgeWidth = doc.getTextWidth(badge.label) + 12;
+          badgeX -= badgeWidth;
+          drawBadge(badge.label, badgeX, cardTop + 8, badge.bg, badge.text);
+          badgeX -= 6;
+        }
+
+        let bodyY = cardTop + 30;
+
+        const drawField = (label: string, lines: string[]) => {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.8);
+          doc.setTextColor(107, 114, 128);
+          doc.text(label.toUpperCase(), marginX + 12, bodyY);
+          bodyY += 10;
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(31, 41, 55);
+          doc.text(lines, marginX + 12, bodyY);
+          bodyY += lines.length * 9.2 + 4;
+        };
+
+        drawField('Reads as', readsLines);
+        drawField('Likely route', likelyLines);
+        drawField('Alternative', alternativeLines);
+        drawField('Watch-out', watchOutLines);
+
+        if (suppliers.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.8);
+          doc.setTextColor(107, 114, 128);
+          doc.text('POSSIBLE SUPPLIERS', marginX + 12, bodyY);
+          bodyY += 10;
+
+          const linkApi = doc as unknown as {
+            textWithLink?: (
+              text: string,
+              x: number,
+              y: number,
+              options: { url: string }
+            ) => void;
+          };
+
+          for (const supplier of suppliers.slice(0, 3)) {
+            const linkLabel = supplier.name;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8.7);
+            doc.setTextColor(37, 99, 235);
+            if (typeof linkApi.textWithLink === 'function') {
+              linkApi.textWithLink(linkLabel, marginX + 12, bodyY, { url: supplier.url });
+            } else {
+              doc.text(linkLabel, marginX + 12, bodyY);
+            }
+            const underlineWidth = Math.min(doc.getTextWidth(linkLabel), maxTextWidth - 4);
+            doc.setDrawColor(59, 130, 246);
+            doc.line(marginX + 12, bodyY + 1.5, marginX + 12 + underlineWidth, bodyY + 1.5);
+            bodyY += 9;
+
+            const supplierUrlLine = splitLines(supplier.url, maxTextWidth - 8)[0];
+            doc.setFontSize(7.3);
+            doc.setTextColor(100, 116, 139);
+            doc.text(supplierUrlLine, marginX + 16, bodyY);
+            bodyY += 11;
+          }
+        }
+
+        cursorY = cardTop + cardHeight + 10;
+      }
+
+      const realityCheck = (translation.realityCheck || []).slice(0, 3);
+      if (realityCheck.length > 0) {
+        const realityLines = realityCheck.flatMap((item) =>
+          splitLines(`- ${item}`, contentWidth - 24)
+        );
+        const realityHeight = Math.max(68, 24 + realityLines.length * 9.2 + 8);
+        ensureSpace(realityHeight + 8);
+
+        doc.setFillColor(249, 250, 251);
+        doc.setDrawColor(229, 231, 235);
+        doc.roundedRect(marginX, cursorY, contentWidth, realityHeight, 8, 8, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(75, 85, 99);
+        doc.text('REALITY CHECK', marginX + 12, cursorY + 16);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.8);
+        doc.setTextColor(55, 65, 81);
+        doc.text(realityLines, marginX + 12, cursorY + 30);
+        cursorY += realityHeight + 12;
+      }
+
+      ensureSpace(30);
+      doc.setDrawColor(229, 231, 235);
+      doc.line(marginX, cursorY, pageWidth - marginX, cursorY);
+      cursorY += 11;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(107, 114, 128);
+      doc.text(`Generated by MoodboardLab | ${generatedLabel}`, pageWidth / 2, cursorY, {
+        align: 'center',
+      });
+      cursorY += 9;
+
+      const disclaimerLines = splitLines(
+        translation.summary.disclaimer ||
+          'Early-stage guidance only. Validate routes through project-specific design development.',
+        contentWidth - 44
+      ).slice(0, 2);
+      doc.setFontSize(6.75);
+      doc.setTextColor(148, 163, 184);
+      doc.text(disclaimerLines, pageWidth / 2, cursorY, { align: 'center' });
+
+      doc.save('specification-pathways.pdf');
+      trackEvent('download_pdf', {
+        pdf_type: 'specification_pathways',
+        source: 'render',
+      });
+
+      if (isAuthenticated) {
+        try {
+          const token = await getAccessToken();
+          if (token) {
+            const pdfDataUri = doc.output('datauristring');
+            await savePdfAuth(
+              {
+                pdfDataUri,
+                pdfType: 'specificationPathways',
+                materials: {
+                  board,
+                  materialTranslation: materialTranslationResult,
+                  renderId: appliedRenderGenerationId,
+                },
+              },
+              token
+            );
+          }
+        } catch (saveErr) {
+          console.warn('Specification pathways PDF downloaded but could not save to backend', saveErr);
+        }
+      }
+    } catch (err) {
+      console.error('Specification pathways PDF export failed', err);
+      setMaterialTranslationError(
+        err instanceof Error ? err.message : 'Could not create the specification pathways PDF.'
+      );
+    } finally {
+      setIsExportingSpecificationPdf(false);
     }
   };
 
@@ -730,6 +1476,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         sourceGenerationId: null
       });
       if (target === 'base') {
+        resetBaseImageDependentState();
         setUploadedImages([processedImage]);
       } else {
         setStyleReferenceImage(processedImage);
@@ -756,6 +1503,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         sourceGenerationId: generation.id
       });
       if (target === 'base') {
+        resetBaseImageDependentState();
         setUploadedImages([processedImage]);
       } else {
         setStyleReferenceImage(processedImage);
@@ -782,7 +1530,14 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     baseImageDataUrl?: string;
     imageSize?: '1K' | '4K';
     renderMode?: 'upload-1k' | 'upscale-4k' | 'edit';
+    drawingType?: DrawingType;
   }): Promise<boolean> => {
+    if (applyRenderInFlightRef.current) {
+      return false;
+    }
+    applyRenderInFlightRef.current = true;
+
+    try {
     const currentBaseImageDataUrl =
       options?.baseImageDataUrl ??
       (options?.renderMode === 'upscale-4k' ? appliedRenderUrl : null);
@@ -798,30 +1553,34 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       generationMode === '4k'
         ? CREDIT_COSTS.FOUR_K_GENERATION
         : CREDIT_COSTS.RENDER_GENERATION;
+    const totalRequiredCredits = requiredCredits;
     const billedGenerationType = options?.renderMode === 'upscale-4k' ? 'upscale' : 'applyMaterials';
 
     // Check quota - server-side for authenticated users, shared local quota for anonymous users
-    if (isAuthenticated) {
+    if (isTestingEnvironment) {
+      // Skip quota checks in local/staging testing environments.
+      console.log('[Quota Check] Bypassed (testing environment)');
+    } else if (isAuthenticated) {
       // Refresh and check server-side quota
       try {
-        const token = await getAccessToken();
+        const token = await getAccessTokenWithRetry();
         if (token) {
           const quotaCheck = await checkQuota(token);
           if (generationMode === '4k' && !quotaCheck.isAdmin && (quotaCheck.purchasedCredits || 0) < CREDIT_COSTS.FOUR_K_GENERATION) {
-            setError('Render 4K requires at least 5 purchased credits.');
+            setError('Finalise (4K) requires at least 5 purchased credits.');
             return false;
           }
           if (
             isFreeCreditsBlockedForNetwork({
               freeCreditsBlocked: quotaCheck.freeCreditsBlocked,
             }) &&
-            (quotaCheck.purchasedCredits || 0) < requiredCredits
+            (quotaCheck.purchasedCredits || 0) < totalRequiredCredits
           ) {
             setError(getFreeCreditsBlockedMessage());
             return false;
           }
-          if (!quotaCheck.canGenerate || quotaCheck.remaining < requiredCredits) {
-            setError(formatCreditCostMessage(requiredCredits));
+          if (!quotaCheck.canGenerate || quotaCheck.remaining < totalRequiredCredits) {
+            setError(formatCreditCostMessage(totalRequiredCredits));
             return false;
           }
         }
@@ -830,8 +1589,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         // Continue with render if quota check fails (graceful degradation)
       }
     } else {
-      if (remaining < requiredCredits) {
-        setError(formatCreditCostMessage(requiredCredits));
+      if (remaining < totalRequiredCredits) {
+        setError(formatCreditCostMessage(totalRequiredCredits));
         return false;
       }
     }
@@ -845,7 +1604,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       return false;
     }
     if (isUpscalingRender && !currentBaseImageDataUrl) {
-      setError('Create a render first before generating a 4K version.');
+      setError('Create a sketch render first before finalising to 4K.');
       return false;
     }
     if (!isEditingRender && !isUpscalingRender && !uploadedImage) {
@@ -857,76 +1616,24 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     setRenderingMode(options?.renderMode ?? null);
     setError(null);
     setImageModelFallbackWarning(null);
-
-    const materialsByCategory: Record<string, MaterialOption[]> = {};
-    renderMaterials.forEach((item) => {
-      if (!materialsByCategory[item.category]) {
-        materialsByCategory[item.category] = [];
-      }
-      materialsByCategory[item.category].push(item);
+    setIsPersistingRenderRecord(false);
+    setAppliedRenderGenerationId(null);
+    resetMaterialTranslationState({ closePanel: true });
+    const prompt = buildApplyRenderPrompt({
+      renderMaterials,
+      sceneControls,
+      renderNote,
+      editPrompt: options?.editPrompt,
+      requestedDrawingType: options?.drawingType ?? 'auto',
+      uploadedImageName: uploadedImage?.name || null,
+      isEditingRender,
+      isUpscalingRender,
+      styleReferenceImagePresent: Boolean(styleReferenceImage),
+      effectiveStyleReferenceSource,
+      hasSceneControlsEnabled,
+      summaryText,
     });
-
-    const perMaterialLines = Object.entries(materialsByCategory)
-      .map(([category, items]) => {
-        const categoryHeader = `\n[${category.toUpperCase()}]`;
-        const itemLines = items
-          .map((item) => {
-            const finishHasColorInfo =
-              Boolean(item.colorLabel) ||
-              item.finish.includes(' — ') ||
-              item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
-              item.finish.toLowerCase().includes('colour') ||
-              item.finish.toLowerCase().includes('color') ||
-              item.finish.toLowerCase().includes('select');
-
-            let colorInfo = '';
-            if (finishHasColorInfo) {
-              if (item.colorLabel) {
-                colorInfo = ` | color: ${item.colorLabel}`;
-              } else {
-                const labelMatch = item.finish.match(/ — ([^(]+)/);
-                if (labelMatch) {
-                  colorInfo = ` | color: ${labelMatch[1].trim()}`;
-                } else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
-                  colorInfo = ` | color: ${item.tone}`;
-                }
-              }
-            }
-
-            return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
-          })
-          .join('\n');
-        return `${categoryHeader}\n${itemLines}`;
-      })
-      .join('\n');
-
-    const trimmedNote = renderNote.trim();
-    const sceneControlsText = buildSceneControlsText(sceneControls);
-    const noTextRule =
-      'CRITICAL REQUIREMENT - ABSOLUTELY NO TEXT WHATSOEVER in the image: no words, letters, numbers, labels, captions, logos, watermarks, signatures, stamps, or typographic marks of ANY kind. NO pseudo-text, NO scribbles, NO marks that resemble writing. This is a STRICT requirement that must be followed. The image must be completely free of all textual elements, letters, numbers, and symbols.';
-    const viewGuidanceInput = `${options?.editPrompt || ''}\n${trimmedNote}`.trim();
-    const viewGuidance = getRenderViewGuidance(viewGuidanceInput);
-    const atmosphereInstruction = viewGuidance.isTechnicalView
-      ? '- Use neutral, even lighting and keep edges/cut geometry crisp; avoid cinematic haze, vignette, and dramatic color grading.'
-      : '- Include atmospheric effects: subtle depth haze, realistic sky, natural color grading.';
-
-    const basePrompt = isUpscalingRender
-      ? `Create a 4K upscaled version of the provided architectural render. Preserve the exact composition, camera position, geometry, materials, entourage, and lighting from the source image. Do not redesign or reinterpret the image. Increase resolution, sharpen material detail, and improve fine-grain realism only.`
-      : isEditingRender
-      ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\nBEFORE MAKING ANY CHANGES - CRITICAL CONSTRAINTS TO PRESERVE:\n- GEOMETRY: Keep ALL building forms, volumes, floor plans, and structural massing EXACTLY as shown - pixel-accurate preservation required\n- CAMERA: Use EXACT same viewpoint, angle, height, focal length, framing - no perspective shifts allowed\n- LANDSCAPE: Preserve ALL terrain, topography, water bodies, ground plane, site context - if water exists keep it, if hills exist keep them, do NOT change landscape type\n- ARCHITECTURE: Do NOT add, remove, resize, or relocate any windows, doors, walls, roofs, or structural elements\n- SITE: Keep all paths, decking, paving, retaining walls, and site infrastructure exactly as shown\n- ONLY ADJUST: Atmosphere (sky, clouds, weather), lighting quality (sun angle, shadows), entourage (people, vegetation appearance within existing landscape), and surface material finishes\n\n${options?.editPrompt || ''}${sceneControlsText ? `\n${sceneControlsText}` : ''}${trimmedNote ? `\nAdditional render note: ${trimmedNote}` : ''}`
-      : `Transform the provided base image into a PHOTOREALISTIC architectural render while applying the materials listed below. Materials are organized by their architectural category to help you understand where each should be applied. If the input is a line drawing, sketch, CAD export (SketchUp, Revit, AutoCAD), or diagram, you MUST convert it into a fully photorealistic visualization with realistic lighting, textures, depth, and atmosphere.\n\n${noTextRule}\n\nMaterials to apply (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- VIEW CONTROL:\n- ${viewGuidance.styleDirective}\n- ${viewGuidance.cameraDirective}\n- ${viewGuidance.antiDriftDirective}\n- OUTPUT MUST BE PHOTOREALISTIC: realistic lighting, shadows, reflections, material textures, and depth of field\n- APPLY MATERIALS ACCORDING TO THEIR CATEGORIES: floors to horizontal surfaces, walls to vertical surfaces, ceilings to overhead surfaces, external materials to facades, etc.\n- If input is a line drawing/sketch/CAD export: interpret the geometry and convert to photorealistic render\n- If input is already photorealistic: enhance and apply materials while maintaining realism\n\nGEOMETRY PRESERVATION - CRITICAL:\n- STRICT ADHERENCE TO INPUT GEOMETRY: Do NOT alter, modify, reshape, or reinterpret the building forms, volumes, or spatial layout from the base image\n- PRESERVE EXACT BUILDING FOOTPRINT: Maintain the precise floor plan, building outline, and structural massing shown in the input\n- LOCK CAMERA POSITION: Use the EXACT camera angle, viewpoint height, focal length, and framing from the base image - do not shift perspective or change the view\n- MAINTAIN PROPORTIONS: Keep all dimensional relationships, floor heights, window-to-wall ratios, and scale relationships identical to the input\n- RESPECT ARCHITECTURAL ELEMENTS: Do not add, remove, resize, or relocate windows, doors, columns, walls, roofs, or any structural components\n- PRESERVE SPATIAL RELATIONSHIPS: Maintain distances between buildings, relationship to ground plane, and overall site composition\n- NO GEOMETRY DRIFT: The building shape, form, and layout must remain pixel-accurate to the input - only materials, lighting, and surface finishes should change\n\n- Apply materials accurately with realistic scale cues (joints, brick coursing, panel seams, wood grain direction)\n- Add realistic environmental lighting (natural daylight, ambient occlusion, soft shadows)\n${atmosphereInstruction}\n- Materials must look tactile and realistic with proper surface properties (roughness, reflectivity, texture detail)\n- Maintain architectural accuracy while achieving photographic quality\n- White background not required; enhance or maintain contextual environment from base image\n${sceneControlsText ? `- ${sceneControlsText}\n` : ''}${trimmedNote ? `- Additional requirements: ${trimmedNote}\n` : ''}`;
     const useStyleReference = Boolean(styleReferenceImage && !isUpscalingRender);
-    const sceneControlsOverrideLine = hasSceneControlsEnabled
-      ? '\n- Where scene controls (time of day, weather, season) conflict with the style reference, the SCENE CONTROLS take priority.'
-      : '';
-    const projectStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE (FROM THIS PROJECT):\nTwo images are provided.\n- IMAGE 1 is the BASE IMAGE and is the ONLY authority on geometry, composition, camera, massing, landscape, and architectural layout.\n- IMAGE 2 is a PROJECT STYLE REFERENCE generated from the same material palette.\n\nUse IMAGE 2 to ensure VISUAL CONSISTENCY across the project:\n- Match how each material has been rendered - board direction, joint spacing, texture scale, surface reflectivity, colour tone, and weathering character\n- Maintain the same lighting quality, shadow behaviour, and colour temperature\n- Ensure the two renders look like they belong to the same architectural scheme\n- Carry forward the same level of material detail and photographic quality\n\nThe material list above still controls WHAT materials go WHERE. The project reference controls HOW those same materials should be expressed visually - their texture, scale, tone, and finish quality.\n\nABSOLUTE GEOMETRY FIREWALL:\n- NEVER transfer, blend, average, merge, interpolate, or borrow geometry from IMAGE 2\n- Do NOT copy building form, silhouette, rooflines, window patterns, door positions, facade arrangement, floor count, structural rhythm, site layout, horizon line, or camera perspective from IMAGE 2\n- If IMAGE 2 conflicts with IMAGE 1 in ANY spatial or architectural way, discard IMAGE 2 geometry completely and follow IMAGE 1 exactly\n- Treat IMAGE 2 as a material-expression, lighting, and finish-quality reference only - NOT as a spatial reference\n- Final output must preserve the footprint, outline, openings, proportions, and framing of IMAGE 1 only${sceneControlsOverrideLine}`;
-    const externalStyleReferenceBlock = `\n\nSTYLE REFERENCE IMAGE (EXTERNAL):\nTwo images are provided.\n- IMAGE 1 is the BASE IMAGE and is the ONLY authority on geometry, composition, camera, massing, landscape, and architectural layout.\n- IMAGE 2 is an EXTERNAL STYLE REFERENCE.\n\nUse IMAGE 2 ONLY to inform the overall rendering quality:\n- Lighting behaviour (how light falls on surfaces, shadow softness, sun angle quality)\n- Colour grading and colour temperature (warm/cool, muted/saturated)\n- Depth of field and photographic character\n- Overall atmospheric mood\n\nSTRICT EXTERNAL REFERENCE RULES:\n- Do NOT take ANY material, colour, or surface information from IMAGE 2. ALL materials must come strictly and exclusively from the material list above. The material palette is the only authority on what materials appear and where.\n- NEVER transfer, blend, average, merge, interpolate, or borrow geometry from IMAGE 2.\n- Do NOT copy building form, silhouette, rooflines, window patterns, door positions, facade arrangement, floor count, structural rhythm, site layout, horizon line, or camera perspective from IMAGE 2.\n- If IMAGE 2 conflicts with IMAGE 1 in ANY spatial or architectural way, discard IMAGE 2 geometry completely and follow IMAGE 1 exactly.\n- Treat IMAGE 2 as a lighting, atmosphere, and photographic-quality reference only - NOT as a spatial or material reference.\n- This reference influences HOW the render looks, not WHAT it contains.${sceneControlsOverrideLine}`;
-    const styleReferenceBlock = effectiveStyleReferenceSource === 'project'
-      ? projectStyleReferenceBlock
-      : externalStyleReferenceBlock;
-    const prompt = useStyleReference
-      ? `${basePrompt}${styleReferenceBlock}`
-      : basePrompt;
 
     console.log('=== PROMPT BEING SENT TO AI ===');
     console.log(prompt);
@@ -957,6 +1664,79 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         }
       }
 
+      const calculateOpenAISize = (ratio: string, requestedSize: '1K' | '4K'): string => {
+        const [widthPart, heightPart] = ratio.split(':').map(Number);
+        const safeWidthPart = widthPart || 1;
+        const safeHeightPart = heightPart || 1;
+        const targetRatio = safeWidthPart / safeHeightPart;
+
+        const to16 = (value: number, mode: 'up' | 'down' = 'up'): number =>
+          mode === 'down'
+            ? Math.max(16, Math.floor(value / 16) * 16)
+            : Math.max(16, Math.ceil(value / 16) * 16);
+
+        const MAX_EDGE = 3840; // <= 3840 and divisible by 16
+        const MIN_PIXELS = 655360;
+        const MAX_PIXELS = 8294400;
+        const MAX_RATIO = 3;
+
+        // 4K mode pushes to max supported edge; standard mode stays around HD.
+        const targetLongEdge = requestedSize === '4K' ? 3840 : 1024;
+        let width = targetRatio >= 1 ? targetLongEdge : targetLongEdge * targetRatio;
+        let height = targetRatio >= 1 ? targetLongEdge / targetRatio : targetLongEdge;
+
+        let w = to16(width, 'up');
+        let h = to16(height, 'up');
+
+        const applyMaxEdge = () => {
+          const maxEdge = Math.max(w, h);
+          if (maxEdge <= MAX_EDGE) return;
+          const scale = MAX_EDGE / maxEdge;
+          w = to16(w * scale, 'down');
+          h = to16(h * scale, 'down');
+        };
+
+        const applyMaxPixels = () => {
+          const pixels = w * h;
+          if (pixels <= MAX_PIXELS) return;
+          const scale = Math.sqrt(MAX_PIXELS / pixels);
+          w = to16(w * scale, 'down');
+          h = to16(h * scale, 'down');
+        };
+
+        const applyMinPixels = () => {
+          const pixels = w * h;
+          if (pixels >= MIN_PIXELS) return;
+          const scale = Math.sqrt(MIN_PIXELS / Math.max(1, pixels));
+          w = to16(w * scale, 'up');
+          h = to16(h * scale, 'up');
+        };
+
+        const applyRatioLimit = () => {
+          const longEdge = Math.max(w, h);
+          const shortEdge = Math.max(1, Math.min(w, h));
+          if (longEdge / shortEdge <= MAX_RATIO) return;
+          const limitedShort = to16(longEdge / MAX_RATIO, 'up');
+          if (w >= h) {
+            h = limitedShort;
+          } else {
+            w = limitedShort;
+          }
+        };
+
+        applyRatioLimit();
+        applyMaxEdge();
+        applyMaxPixels();
+        applyMinPixels();
+        applyMaxEdge();
+        applyMaxPixels();
+        applyRatioLimit();
+
+        return `${w}x${h}`;
+      };
+
+      const openaiImageSize = calculateOpenAISize(aspectRatio, imageSize);
+
       const imageParts =
         ((isEditingRender || isUpscalingRender) && baseImageDataUrl
           ? [dataUrlToInlineData(baseImageDataUrl)]
@@ -967,7 +1747,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         ? [...imageParts, dataUrlToInlineData(styleReferenceImage.dataUrl)]
         : imageParts;
 
-      const payload = {
+      const singlePayload = {
         contents: [
           {
             parts: [
@@ -987,50 +1767,82 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         }
       };
 
-      const data = await callGeminiImage(payload);
-      const fallbackUsed = isImageModelFallbackUsed(data);
-      const modelUsed = typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined;
-      setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
-      let img: string | null = null;
-      let mime: string | null = null;
-      const candidates = data?.candidates || [];
-      for (const c of candidates) {
-        const parts = c?.content?.parts || c?.parts || [];
-        for (const p of parts) {
-          const inline = p.inlineData || p.inline_data;
-          if (inline?.data) {
-            img = inline.data;
-            mime = inline.mimeType || inline.mime_type || 'image/png';
-            break;
+      const extractImageFromResponse = (data: unknown): string | null => {
+        const candidates = (data as { candidates?: unknown[] })?.candidates || [];
+        for (const c of candidates) {
+          const parts = (c as { content?: { parts?: unknown[] }; parts?: unknown[] })?.content?.parts
+            || (c as { parts?: unknown[] })?.parts || [];
+          for (const p of parts) {
+            const inline = (p as { inlineData?: { data: string; mimeType?: string }; inline_data?: { data: string; mime_type?: string } })?.inlineData
+              || (p as { inline_data?: { data: string; mime_type?: string } })?.inline_data;
+            if (inline?.data) {
+              const mime = (inline as { mimeType?: string; mime_type?: string }).mimeType
+                || (inline as { mime_type?: string }).mime_type || 'image/png';
+              return `data:${mime};base64,${inline.data}`;
+            }
           }
         }
-        if (img) break;
+        return null;
+      };
+
+      const openAIBaseImageDataUrl =
+        isEditingRender || isUpscalingRender
+          ? baseImageDataUrl
+          : uploadedImage?.dataUrl || null;
+
+      const openaiImageQuality = imageSize === '4K' ? 'high' : 'medium';
+
+      const authToken = isAuthenticated ? await getAccessTokenWithRetry() : null;
+      const hasUsableAuthToken = Boolean(authToken);
+      const canUseOpenAiWithoutToken = isTestingEnvironment || isAuthBypassEnabled;
+      if (imageProvider === 'openai' && !hasUsableAuthToken && !canUseOpenAiWithoutToken) {
+        throw new Error('OpenAI rendering requires a signed-in session token. Please sign in again or switch provider to Gemini.');
       }
-      if (!img) throw new Error('Gemini did not return an image payload.');
-      const newUrl = `data:${mime || 'image/png'};base64,${img}`;
 
-      if (isAuthenticated) {
-        const token = await getAccessToken();
-        if (!token) {
-          throw new Error('Please sign in to continue.');
+      const data = await (
+        imageProvider === 'openai'
+          ? callOpenAIImage(prompt, openAIBaseImageDataUrl ?? undefined, {
+              timeoutMs: 240000,
+              size: openaiImageSize,
+              quality: openaiImageQuality,
+              accessToken: authToken,
+              generationType: billedGenerationType,
+              generationMode,
+            })
+          : callGeminiImage(singlePayload, { timeoutMs: 120000 })
+      );
+      const fallbackUsed = imageProvider !== 'openai' && isImageModelFallbackUsed(data);
+      const modelUsed = imageProvider === 'openai' ? 'gpt-image-2' : (typeof data?.imageModelUsed === 'string' ? data.imageModelUsed : undefined);
+
+      const newUrl = extractImageFromResponse(data);
+      if (!newUrl) {
+        throw new Error('Gemini did not return an image payload.');
+      }
+
+      setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
+
+      if (hasUsableAuthToken) {
+        if (imageProvider !== 'openai') {
+          await consumeCredits(authToken!, {
+            generationType: billedGenerationType,
+            generationMode,
+            credits: requiredCredits,
+            reason:
+              generationMode === '4k'
+                ? 'apply-render-4k'
+                : generationMode === 'iterative'
+                ? 'apply-render-edit'
+                : 'apply-render-standard',
+          });
         }
-
-        await consumeCredits(token, {
-          generationType: billedGenerationType,
-          generationMode,
-          reason:
-            generationMode === '4k'
-              ? 'apply-render-4k'
-              : generationMode === 'iterative'
-              ? 'apply-render-edit'
-              : 'apply-render-standard',
-        });
         await refreshUsage();
       } else {
         incrementLocalUsage(requiredCredits, billedGenerationType);
       }
 
+      setPreviousRenderUrl(appliedRenderUrl);
       onAppliedRenderUrlChange(newUrl);
+      setActiveWorkspaceTab('render');
 
       // Reset scene controls after successful render
       setSceneControls(DEFAULT_SCENE_CONTROLS);
@@ -1046,23 +1858,36 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         event_label: eventLabel,
       });
 
-      void persistGeneration(newUrl, prompt, billedGenerationType, {
-        imageModelUsed: modelUsed,
-        imageFallbackUsed: fallbackUsed
-      });
+      if (hasUsableAuthToken) {
+        setIsPersistingRenderRecord(true);
+        void persistGeneration(newUrl, prompt, billedGenerationType, {
+          imageModelUsed: modelUsed,
+          imageFallbackUsed: fallbackUsed
+        }).then((savedGenerationId) => {
+          if (savedGenerationId) {
+            setAppliedRenderGenerationId(savedGenerationId);
+          }
+        }).finally(() => {
+          setIsPersistingRenderRecord(false);
+        });
+      }
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not reach the Gemini image backend.');
+      const message = err instanceof Error ? err.message : 'Could not reach the Gemini image backend.';
+      setError(message === 'auth_required' ? 'Please sign in to continue.' : message);
       return false;
     } finally {
       setStatus('idle');
       setRenderingMode(null);
     }
+    } finally {
+      applyRenderInFlightRef.current = false;
+    }
   };
 
   const handleAppliedEdit = async () => {
     const trimmed = appliedEditPrompt.trim();
-    const hasSceneControls = (Object.values(sceneControls) as SceneControl[]).some(control => control.enabled);
+    const hasSceneControls = getSceneControlValues(sceneControls).some((control) => control.enabled);
 
     if (!appliedRenderUrl) {
       setError('Render with an upload first.');
@@ -1075,7 +1900,8 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     const wasUpdated = await runApplyRender({
       editPrompt: trimmed,
       baseImageDataUrl: appliedRenderUrl,
-      renderMode: 'edit'
+      renderMode: 'edit',
+      drawingType
     });
     if (wasUpdated) {
       setAppliedEditPrompt('');
@@ -1084,16 +1910,18 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const handleRender4K = async () => {
     if (!appliedRenderUrl) {
-      setError('Create a render first before generating a 4K version.');
+      setError('Create a sketch render first before finalising to 4K.');
       return;
     }
     if (!canUse4K) {
-      setError('Render 4K requires at least 5 purchased credits.');
+      setError('Finalise (4K) requires at least 5 purchased credits.');
       return;
     }
 
     const confirmed = window.confirm(
-      'Render 4K will upscale the current image and cost 5 credits. Continue?'
+      isTestingEnvironment
+        ? 'Finalise will create a high-resolution 4K version of your sketch. Continue?'
+        : 'Finalise will create a high-resolution 4K version and cost 5 credits. This is your final output. Continue?'
     );
     if (!confirmed) {
       return;
@@ -1102,37 +1930,65 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     await runApplyRender({
       baseImageDataUrl: appliedRenderUrl,
       imageSize: '4K',
-      renderMode: 'upscale-4k'
+      renderMode: 'upscale-4k',
+      drawingType
     });
   };
 
 
-  const canUse4K = Boolean(isAuthenticated && (isAdmin || purchasedCredits >= CREDIT_COSTS.FOUR_K_GENERATION));
-  const fourKTooltip = isAdmin
-    ? 'Generate a 4K upscale of the current render'
+  const canUse4K = isTestingEnvironment || Boolean(isAuthenticated && (isAdmin || purchasedCredits >= CREDIT_COSTS.FOUR_K_GENERATION));
+  const fourKTooltip = isTestingEnvironment || isAdmin
+    ? 'Create high-resolution 4K final output from your sketch'
     : canUse4K
-    ? 'Generate a 4K upscale of the current render'
+    ? 'Create high-resolution 4K final output from your sketch'
     : 'Requires at least 5 purchased credits';
+  const hasMaterialTranslation = Boolean(materialTranslationResult);
+  const isTranslatingToProducts = materialTranslationStatus === 'loading';
+  const canTranslateToProducts = Boolean(
+    appliedRenderUrl &&
+      (!isAuthenticated || hasMaterialTranslation || Boolean(appliedRenderGenerationId)) &&
+      !isPersistingRenderRecord
+  );
+  const translateToProductsHint =
+    isAuthenticated && !hasMaterialTranslation && !appliedRenderGenerationId
+      ? 'Saving render record before specification pathways...'
+      : null;
+  const canStartRender = status === 'idle' && board.length > 0 && renderMaterials.length > 0 && effectiveCanGenerate && Boolean(uploadedImage);
+  const unmetRenderRequirements = useMemo(() => {
+    const hints: string[] = [];
+    if (status !== 'idle') hints.push('Wait for the current render to finish.');
+    if (board.length === 0) hints.push('Add materials to your palette.');
+    else if (renderMaterials.length === 0) hints.push('Include at least one material in render (none can be excluded).');
+    if (!uploadedImage) hints.push('Upload or select a base image.');
+    if (!effectiveCanGenerate) hints.push('No generation credits available.');
+    return hints;
+  }, [status, board.length, renderMaterials.length, uploadedImage, effectiveCanGenerate]);
+  const isGeneratingBaseRender = status === 'render' && renderingMode === 'upload-1k';
 
   return (
     <div className="w-full min-h-screen pt-20 bg-white">
-      <div className="max-w-screen-2xl mx-auto px-6 md:px-8 lg:px-12 py-12 space-y-10">
-        <div className="flex flex-col lg:flex-row gap-6 border-b border-gray-200 pb-6">
-          <div>
-            <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter">
+      <div className="mx-auto max-w-[1800px] px-6 md:px-8 xl:px-10 2xl:px-12 py-6 space-y-6">
+        <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
               Render
             </h1>
-            <p className="font-sans text-gray-600 max-w-2xl mt-3">
-              Upload a base image and apply the materials from your workspace to generate a new render.
-            </p>
-            <div className="flex flex-wrap gap-3 mt-4">
-              <button
-                onClick={() => onNavigate?.('moodboard')}
-                className="px-4 py-2 border border-gray-200 uppercase font-mono text-[11px] tracking-widest hover:border-black"
-              >
-                Back to workspace
-              </button>
+            <ProjectContextHeader project={currentProject || null} className="text-xs" />
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+              Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} sketch+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)
             </div>
+            {/* Image Provider Selector (Test Environment) */}
+            <select
+              value={imageProvider}
+              onChange={(e) => setImageProvider(e.target.value as 'gemini' | 'openai')}
+              className="px-3 py-2 border border-gray-200 uppercase font-mono text-[10px] tracking-widest hover:border-black cursor-pointer bg-white"
+              title="Switch between image generation models"
+            >
+              <option value="gemini">Gemini</option>
+              <option value="openai">OpenAI (GPT Image 2)</option>
+            </select>
           </div>
         </div>
 
@@ -1158,8 +2014,6 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        <UsageDisplay variant="minimal" showSignUpPrompt={!isAuthBypassEnabled && isAnonymous} />
-
         {board.length === 0 && !appliedRenderUrl && (
           <div className="border border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
             <p className="font-sans text-amber-800 text-sm">
@@ -1174,812 +2028,128 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)]">
-          {moodboardRenderUrl ? (
-            <div className="border border-gray-200 bg-white p-4 space-y-3">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-                Current Moodboard
-              </div>
-              <div className="border border-gray-200 bg-gray-50 flex items-center justify-center">
-                <img
-                  src={moodboardRenderUrl}
-                  alt="Moodboard preview"
-                  className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
+        <div className="grid gap-6 xl:grid-cols-[minmax(400px,520px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(440px,580px)_minmax(0,1fr)] xl:items-start">
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto">
+            <RenderSetupPanel
+              canStartRender={canStartRender}
+              onGenerateRender={() => void runApplyRender({ renderMode: 'upload-1k', drawingType })}
+              isGeneratingBaseRender={isGeneratingBaseRender}
+              unmetRenderRequirements={unmetRenderRequirements}
+              renderDiagnostics={renderDiagnostics}
+              baseImageSourceMode={baseImageSourceMode}
+              onBaseImageSourceModeChange={setBaseImageSourceMode}
+              hasProjectImagePicker={hasProjectImagePicker}
+              baseFileInputRef={baseFileInputRef}
+              onBaseFileInputChange={onBaseFileInputChange}
+              baseProjectPicker={renderProjectPickerState('base')}
+              uploadedImage={uploadedImage}
+              onRemoveBaseImage={handleRemoveBaseImage}
+              drawingType={drawingType}
+              onDrawingTypeChange={setDrawingType}
+              renderNote={renderNote}
+              onRenderNoteChange={setRenderNote}
+              setupSceneControls={
+                <SceneControlsSection
+                  contextLabel="setup"
+                  idPrefix="setup"
+                  disabled={false}
+                  isOpen={isSetupSceneControlsOpen}
+                  onToggleOpen={() => setIsSetupSceneControlsOpen((prev) => !prev)}
+                  hideHeader
+                  sceneControls={sceneControls}
+                  onToggleEnabled={handleSceneControlEnabledChange}
+                  onChangeValue={handleSceneControlValueChange}
                 />
-              </div>
-            </div>
-          ) : (
-            <div className="border border-gray-200 bg-white p-4 space-y-3">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-                Moodboard Preview
-              </div>
-              <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-                <p className="font-sans text-sm text-gray-600">
-                  {restoredWithoutMoodboard
-                    ? 'No moodboard is saved with this render.'
-                    : 'No moodboard generated yet.'}
-                </p>
-                <button
-                  onClick={() => {
-                    onClearRestoredFlag?.();
-                    onNavigate?.('moodboard');
-                  }}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
-                >
-                  Go to workspace
-                </button>
-              </div>
-            </div>
-          )}
-
-              <div className="border border-gray-200 bg-white p-4 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-                    Materials in Render
-                  </div>
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-                    {renderMaterials.length}/{board.length} included
-                  </div>
-                </div>
-                <p className="font-sans text-xs text-gray-600">
-                  Tick a material to exclude it from this render. Excluded materials still stay in the sustainability report.
-                </p>
-                {board.length === 0 ? (
-                  <div className="border border-dashed border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-600">
-                    No materials selected yet.
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-                    {board.map((item, idx) => (
-                      <label
-                        key={`${item.id}-${idx}`}
-                        className={`flex items-start gap-3 border border-gray-200 p-2 bg-white hover:bg-gray-50 ${
-                          item.excludeFromMoodboardRender ? 'opacity-70' : ''
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={Boolean(item.excludeFromMoodboardRender)}
-                          onChange={(e) => handleToggleExclude(idx, e.target.checked)}
-                          className="mt-1 h-3 w-3 border-gray-300 text-gray-900"
-                          aria-label={`Exclude ${item.name} from render`}
-                        />
-                        <div className="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0" style={{ backgroundColor: item.tone }} />
-                        <div className="min-w-0">
-                          <div className="font-sans text-sm text-gray-900 truncate">{item.name}</div>
-                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500 truncate">
-                            {formatFinishForDisplay(item.finish)}
-                          </div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {excludedCount > 0 && (
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                    {excludedCount} excluded from render
-                  </div>
-                )}
-              </div>
-
-	              <div className="space-y-3 border border-gray-200 bg-white p-4">
-	                <div className="space-y-3 border border-gray-200 bg-white p-3">
-	                  <div className="flex items-center justify-between gap-3">
-	                    <div>
-	                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-	                        Base Image
-	                      </div>
-	                      <p className="mt-1 text-sm text-gray-600">
-	                        Use one base image to define geometry, composition, and camera angle.
-	                      </p>
-	                    </div>
-	                  </div>
-	                  <div className="flex flex-wrap gap-2">
-	                    <button
-	                      type="button"
-	                      onClick={() => setBaseImageSourceMode('upload')}
-	                      className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
-	                        baseImageSourceMode === 'upload'
-	                          ? 'border-black bg-black text-white'
-	                          : 'border-gray-300 bg-white text-gray-700 hover:border-black'
-	                      }`}
-	                    >
-	                      <Upload className="h-3.5 w-3.5" />
-	                      Upload
-	                    </button>
-	                    {hasProjectImagePicker && (
-	                      <button
-	                        type="button"
-	                        onClick={() => setBaseImageSourceMode('project')}
-	                        className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
-	                          baseImageSourceMode === 'project'
-	                            ? 'border-black bg-black text-white'
-	                            : 'border-gray-300 bg-white text-gray-700 hover:border-black'
-	                        }`}
-	                      >
-	                        <ImageDown className="h-3.5 w-3.5" />
-	                        From Project
-	                      </button>
-	                    )}
-	                  </div>
-	                  {baseImageSourceMode === 'upload' ? (
-	                    <>
-	                      <input
-	                        ref={baseFileInputRef}
-	                        type="file"
-	                        accept="image/*"
-	                        onChange={onBaseFileInputChange}
-	                        className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-	                      />
-	                      <p className="font-sans text-sm text-gray-600">
-	                        Upload one image to use as the base for the next render. Uploading a new image replaces the current one. Line drawings and sketches will give the best results.
-	                      </p>
-	                    </>
-	                  ) : (
-	                    renderProjectPickerState('base')
-	                  )}
-	                  {uploadedImage && (
-	                    <div className="border border-gray-200 bg-white p-2 max-w-sm">
-	                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-	                        <img src={uploadedImage.dataUrl} alt={uploadedImage.name} className="w-full h-full object-cover" />
-	                      </div>
-	                      <div className="mt-2 flex items-center justify-between gap-3">
-	                        <div className="min-w-0">
-	                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
-	                            {uploadedImage.name}
-	                          </div>
-	                          <div className="mt-1 text-xs text-gray-500">
-	                            {uploadedImage.sourceGenerationId ? 'Sourced from project render' : 'Uploaded file'}
-	                          </div>
-	                        </div>
-	                        <div className="flex gap-2">
-	                          <button
-	                            type="button"
-	                            onClick={openBaseFilePicker}
-	                            className="px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
-	                          >
-	                            Replace
-	                          </button>
-	                          <button
-	                            type="button"
-	                            onClick={handleRemoveBaseImage}
-	                            className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
-	                          >
-	                            <X className="h-3 w-3" />
-	                            Remove
-	                          </button>
-	                        </div>
-	                      </div>
-	                    </div>
-	                  )}
-	                </div>
-	                <div className="space-y-3 border border-dashed border-gray-300 bg-gray-50 p-3">
-	                  <div className="flex items-start justify-between gap-3">
-	                    <div>
-	                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-	                        Style Reference (Optional)
-	                      </div>
-	                      <p className="mt-1 text-sm text-gray-600">
-	                        Influences lighting, atmosphere, and colour grade. Does not affect materials or geometry.
-	                      </p>
-	                    </div>
-	                    <Sparkles className="h-4 w-4 text-gray-400" />
-	                  </div>
-	                  <div className="flex flex-wrap gap-2">
-	                    <button
-	                      type="button"
-	                      onClick={() => setStyleReferenceSourceMode('upload')}
-	                      className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
-	                        styleReferenceSourceMode === 'upload'
-	                          ? 'border-black bg-black text-white'
-	                          : 'border-gray-300 bg-white text-gray-700 hover:border-black'
-	                      }`}
-	                    >
-	                      <Upload className="h-3.5 w-3.5" />
-	                      Upload
-	                    </button>
-	                    {hasProjectImagePicker && (
-	                      <button
-	                        type="button"
-	                        onClick={() => setStyleReferenceSourceMode('project')}
-	                        className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
-	                          styleReferenceSourceMode === 'project'
-	                            ? 'border-black bg-black text-white'
-	                            : 'border-gray-300 bg-white text-gray-700 hover:border-black'
-	                        }`}
-	                      >
-	                        <ImageDown className="h-3.5 w-3.5" />
-	                        From Project
-	                      </button>
-	                    )}
-	                  </div>
-	                  {styleReferenceSourceMode === 'upload' ? (
-	                    <input
-	                      ref={styleReferenceFileInputRef}
-	                      type="file"
-	                      accept="image/*"
-	                      onChange={onStyleReferenceFileInputChange}
-	                      className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-	                    />
-	                  ) : (
-	                    renderProjectPickerState('style')
-	                  )}
-	                  {styleReferenceImage ? (
-	                    <div className="border border-dashed border-gray-300 bg-white p-2 max-w-xs">
-	                      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-	                        <img src={styleReferenceImage.dataUrl} alt={styleReferenceImage.name} className="w-full h-full object-cover" />
-	                      </div>
-	                      <div className="mt-2 flex items-center justify-between gap-3">
-	                        <div className="min-w-0">
-                          <div className="font-mono text-[10px] uppercase tracking-widest text-gray-600 truncate">
-                            {styleReferenceImage.name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            {styleReferenceSourceLabel}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            {styleReferenceHint}
-                          </div>
-                        </div>
-	                        <button
-	                          type="button"
-	                          onClick={handleRemoveStyleReference}
-	                          className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 font-mono text-[9px] uppercase tracking-widest text-gray-700 hover:border-black"
-	                        >
-	                          <X className="h-3 w-3" />
-	                          Remove
-	                        </button>
-	                      </div>
-	                    </div>
-	                  ) : null}
-	                </div>
-	                <div className="space-y-2">
-	                  <label className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-	                    Custom render instructions (optional)
-	                  </label>
-	                  <textarea
-	                    value={renderNote}
-	                    onChange={(e) => setRenderNote(e.target.value)}
-	                    placeholder="E.g., street-level exterior view at dusk with wet paving, or frontal elevation view with neutral lighting."
-	                    className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
-	                  />
-	                </div>
-
-                {/* Scene Controls Panel */}
-                <div className="space-y-3 border border-gray-200 bg-white p-3">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                    Scene Controls (Optional)
-                  </div>
-
-                  {/* Weather / Atmosphere */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="weather-enable"
-                        checked={sceneControls.weather.enabled}
-                        onChange={(e) => setSceneControls(prev => ({
-                          ...prev,
-                          weather: { ...prev.weather, enabled: e.target.checked }
-                        }))}
-                        className="h-3 w-3 border-gray-300 text-gray-900"
-                      />
-                      <label htmlFor="weather-enable" className="font-sans text-xs text-gray-700">
-                        Weather / Atmosphere
-                      </label>
-                    </div>
-                    {sceneControls.weather.enabled && (
-                      <div className="ml-5 space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          {WEATHER_OPTIONS[sceneControls.weather.value]}
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max={WEATHER_OPTIONS.length - 1}
-                          step="1"
-                          value={sceneControls.weather.value}
-                          onChange={(e) => setSceneControls(prev => ({
-                            ...prev,
-                            weather: { ...prev.weather, value: parseInt(e.target.value) }
-                          }))}
-                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Activity Level */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="activity-enable"
-                        checked={sceneControls.activity.enabled}
-                        onChange={(e) => setSceneControls(prev => ({
-                          ...prev,
-                          activity: { ...prev.activity, enabled: e.target.checked }
-                        }))}
-                        className="h-3 w-3 border-gray-300 text-gray-900"
-                      />
-                      <label htmlFor="activity-enable" className="font-sans text-xs text-gray-700">
-                        Activity Level
-                      </label>
-                    </div>
-                    {sceneControls.activity.enabled && (
-                      <div className="ml-5 space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          {ACTIVITY_OPTIONS[sceneControls.activity.value]}
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max={ACTIVITY_OPTIONS.length - 1}
-                          step="1"
-                          value={sceneControls.activity.value}
-                          onChange={(e) => setSceneControls(prev => ({
-                            ...prev,
-                            activity: { ...prev.activity, value: parseInt(e.target.value) }
-                          }))}
-                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Time of Day */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="time-enable"
-                        checked={sceneControls.timeOfDay.enabled}
-                        onChange={(e) => setSceneControls(prev => ({
-                          ...prev,
-                          timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
-                        }))}
-                        className="h-3 w-3 border-gray-300 text-gray-900"
-                      />
-                      <label htmlFor="time-enable" className="font-sans text-xs text-gray-700">
-                        Time of Day
-                      </label>
-                    </div>
-                    {sceneControls.timeOfDay.enabled && (
-                      <div className="ml-5 space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          {TIME_OPTIONS[sceneControls.timeOfDay.value]}
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max={TIME_OPTIONS.length - 1}
-                          step="1"
-                          value={sceneControls.timeOfDay.value}
-                          onChange={(e) => setSceneControls(prev => ({
-                            ...prev,
-                            timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
-                          }))}
-                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Season */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="season-enable"
-                        checked={sceneControls.season.enabled}
-                        onChange={(e) => setSceneControls(prev => ({
-                          ...prev,
-                          season: { ...prev.season, enabled: e.target.checked }
-                        }))}
-                        className="h-3 w-3 border-gray-300 text-gray-900"
-                      />
-                      <label htmlFor="season-enable" className="font-sans text-xs text-gray-700">
-                        Season
-                      </label>
-                    </div>
-                    {sceneControls.season.enabled && (
-                      <div className="ml-5 space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          {SEASON_OPTIONS[sceneControls.season.value]}
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max={SEASON_OPTIONS.length - 1}
-                          step="1"
-                          value={sceneControls.season.value}
-                          onChange={(e) => setSceneControls(prev => ({
-                            ...prev,
-                            season: { ...prev.season, value: parseInt(e.target.value) }
-                          }))}
-                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                      </div>
-                    )}
-                  </div>
-
-	                  {/* View Character */}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="view-enable"
-                        checked={sceneControls.viewCharacter.enabled}
-                        onChange={(e) => setSceneControls(prev => ({
-                          ...prev,
-                          viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
-                        }))}
-                        className="h-3 w-3 border-gray-300 text-gray-900"
-                      />
-                      <label htmlFor="view-enable" className="font-sans text-xs text-gray-700">
-                        View Character
-                      </label>
-                    </div>
-                    {sceneControls.viewCharacter.enabled && (
-                      <div className="ml-5 space-y-1">
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                          {VIEW_OPTIONS[sceneControls.viewCharacter.value]}
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max={VIEW_OPTIONS.length - 1}
-                          step="1"
-                          value={sceneControls.viewCharacter.value}
-                          onChange={(e) => setSceneControls(prev => ({
-                            ...prev,
-                            viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
-                          }))}
-                          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        />
-                      </div>
-                    )}
-	                  </div>
-	                </div>
-	                {styleReferenceImage && hasSceneControlsEnabled && (
-	                  <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-	                    Scene controls will override the style reference where they conflict.
-	                  </div>
-	                )}
-	                <button
-	                  onClick={() => runApplyRender({ renderMode: 'upload-1k' })}
-	                  disabled={status !== 'idle' || !board.length || renderMaterials.length === 0 || !canGenerate || !uploadedImage}
-	                  className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-	                >
-	                  {status === 'render' && renderingMode === 'upload-1k' ? (
-	                    <>
-	                      <Loader2 className="w-4 h-4 animate-spin" />
-	                      Rendering with Upload
-	                    </>
-	                  ) : (
-	                    <>
-	                      <ImageDown className="w-4 h-4" />
-	                      Render with Upload
-	                    </>
-	                  )}
-	                </button>
-	              </div>
-            </div>
-
-            {appliedRenderUrl && (
-              <div className="space-y-4">
-                <div className="border border-gray-200 p-4 bg-white space-y-3">
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 font-semibold">
-                      Applied Render
-                    </div>
-                  </div>
-                  <div className="relative w-full border border-gray-200 bg-gray-50 flex items-center justify-center p-2">
-                    <img
-                      src={appliedRenderUrl}
-                      alt="Applied render"
-                      className={`max-h-[75vh] max-w-full h-auto w-auto object-contain transition-all duration-300 ${status === 'render' ? 'blur-sm opacity-70' : ''}`}
-                    />
-                    {status === 'render' && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-2 bg-white/80 px-4 py-3 rounded-lg shadow-sm">
-                          <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
-                          <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Generating...</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                      Refine Your Render
-                    </div>
-                    <p className="font-sans text-sm text-gray-700">
-                      Describe changes you'd like to make, or use the scene controls below to adjust lighting, weather, and activity.
-                    </p>
-                    <textarea
-                      value={appliedEditPrompt}
-                      onChange={(e) => setAppliedEditPrompt(e.target.value)}
-                      placeholder="E.g., add people walking, change to evening atmosphere, include more vegetation and street furniture."
-                      disabled={!canGenerate}
-                      className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical disabled:bg-gray-100 disabled:text-gray-400"
-                    />
-
-                    {/* Scene Controls Panel for Edits */}
-                    <div className="space-y-3 border border-gray-200 bg-white p-3">
-                      <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600 font-semibold">
-                        Scene Controls (Optional)
-                      </div>
-
-                      {/* Weather / Atmosphere */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="weather-enable-edit"
-                            checked={sceneControls.weather.enabled}
-                            onChange={(e) => setSceneControls(prev => ({
-                              ...prev,
-                              weather: { ...prev.weather, enabled: e.target.checked }
-                            }))}
-                            disabled={!canGenerate}
-                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
-                          />
-                          <label htmlFor="weather-enable-edit" className="font-sans text-xs text-gray-700">
-                            Weather / Atmosphere
-                          </label>
-                        </div>
-                        {sceneControls.weather.enabled && (
-                          <div className="ml-5 space-y-1">
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                              {WEATHER_OPTIONS[sceneControls.weather.value]}
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={WEATHER_OPTIONS.length - 1}
-                              step="1"
-                              value={sceneControls.weather.value}
-                              onChange={(e) => setSceneControls(prev => ({
-                                ...prev,
-                                weather: { ...prev.weather, value: parseInt(e.target.value) }
-                              }))}
-                              disabled={!canGenerate}
-                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Activity Level */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="activity-enable-edit"
-                            checked={sceneControls.activity.enabled}
-                            onChange={(e) => setSceneControls(prev => ({
-                              ...prev,
-                              activity: { ...prev.activity, enabled: e.target.checked }
-                            }))}
-                            disabled={!canGenerate}
-                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
-                          />
-                          <label htmlFor="activity-enable-edit" className="font-sans text-xs text-gray-700">
-                            Activity Level
-                          </label>
-                        </div>
-                        {sceneControls.activity.enabled && (
-                          <div className="ml-5 space-y-1">
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                              {ACTIVITY_OPTIONS[sceneControls.activity.value]}
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={ACTIVITY_OPTIONS.length - 1}
-                              step="1"
-                              value={sceneControls.activity.value}
-                              onChange={(e) => setSceneControls(prev => ({
-                                ...prev,
-                                activity: { ...prev.activity, value: parseInt(e.target.value) }
-                              }))}
-                              disabled={!canGenerate}
-                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Time of Day */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="time-enable-edit"
-                            checked={sceneControls.timeOfDay.enabled}
-                            onChange={(e) => setSceneControls(prev => ({
-                              ...prev,
-                              timeOfDay: { ...prev.timeOfDay, enabled: e.target.checked }
-                            }))}
-                            disabled={!canGenerate}
-                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
-                          />
-                          <label htmlFor="time-enable-edit" className="font-sans text-xs text-gray-700">
-                            Time of Day
-                          </label>
-                        </div>
-                        {sceneControls.timeOfDay.enabled && (
-                          <div className="ml-5 space-y-1">
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                              {TIME_OPTIONS[sceneControls.timeOfDay.value]}
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={TIME_OPTIONS.length - 1}
-                              step="1"
-                              value={sceneControls.timeOfDay.value}
-                              onChange={(e) => setSceneControls(prev => ({
-                                ...prev,
-                                timeOfDay: { ...prev.timeOfDay, value: parseInt(e.target.value) }
-                              }))}
-                              disabled={!canGenerate}
-                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Season */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="season-enable-edit"
-                            checked={sceneControls.season.enabled}
-                            onChange={(e) => setSceneControls(prev => ({
-                              ...prev,
-                              season: { ...prev.season, enabled: e.target.checked }
-                            }))}
-                            disabled={!canGenerate}
-                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
-                          />
-                          <label htmlFor="season-enable-edit" className="font-sans text-xs text-gray-700">
-                            Season
-                          </label>
-                        </div>
-                        {sceneControls.season.enabled && (
-                          <div className="ml-5 space-y-1">
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                              {SEASON_OPTIONS[sceneControls.season.value]}
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={SEASON_OPTIONS.length - 1}
-                              step="1"
-                              value={sceneControls.season.value}
-                              onChange={(e) => setSceneControls(prev => ({
-                                ...prev,
-                                season: { ...prev.season, value: parseInt(e.target.value) }
-                              }))}
-                              disabled={!canGenerate}
-                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* View Character */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="view-enable-edit"
-                            checked={sceneControls.viewCharacter.enabled}
-                            onChange={(e) => setSceneControls(prev => ({
-                              ...prev,
-                              viewCharacter: { ...prev.viewCharacter, enabled: e.target.checked }
-                            }))}
-                            disabled={!canGenerate}
-                            className="h-3 w-3 border-gray-300 text-gray-900 disabled:opacity-50"
-                          />
-                          <label htmlFor="view-enable-edit" className="font-sans text-xs text-gray-700">
-                            View Character
-                          </label>
-                        </div>
-                        {sceneControls.viewCharacter.enabled && (
-                          <div className="ml-5 space-y-1">
-                            <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                              {VIEW_OPTIONS[sceneControls.viewCharacter.value]}
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={VIEW_OPTIONS.length - 1}
-                              step="1"
-                              value={sceneControls.viewCharacter.value}
-                              onChange={(e) => setSceneControls(prev => ({
-                                ...prev,
-                                viewCharacter: { ...prev.viewCharacter, value: parseInt(e.target.value) }
-                              }))}
-                              disabled={!canGenerate}
-                              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
-                            />
-                          </div>
-                        )}
-	                      </div>
-	                    </div>
-	                    {styleReferenceImage && hasSceneControlsEnabled && (
-	                      <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-	                        Scene controls will override the style reference where they conflict.
-	                      </div>
-	                    )}
-
-	                    <div className="flex flex-wrap gap-3">
-                      <button
-                        onClick={handleAppliedEdit}
-                        disabled={status !== 'idle' || !appliedRenderUrl || !canGenerate}
-                        className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-                      >
-                        {status === 'render' && renderingMode === 'edit' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Updating render
-                          </>
-                        ) : (
-                          <>
-                            <Wand2 className="w-4 h-4" />
-                            Apply changes
-                          </>
-                        )}
-                      </button>
-                      <div className="relative group">
-                        <button
-                          onClick={handleRender4K}
-                          disabled={status !== 'idle' || !appliedRenderUrl || !canUse4K}
-                          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300"
-                        >
-                          {status === 'render' && renderingMode === 'upscale-4k' ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Rendering 4K
-                            </>
-                          ) : (
-                            <>
-                              <Wand2 className="w-4 h-4" />
-                              Render 4K
-                            </>
-                          )}
-                        </button>
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          {canUse4K ? 'Upscale current render to 4K. Costs 5 credits.' : fourKTooltip}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDownloadImage(appliedRenderUrl, 'applied')}
-                        disabled={downloadingId === 'applied' || status !== 'idle'}
-                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400"
-                      >
-                        {downloadingId === 'applied' ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Downloading...
-                          </>
-                        ) : (
-                          <>
-                            <ImageDown className="w-4 h-4" />
-                            Download Render
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+              }
+              styleReferenceSourceMode={styleReferenceSourceMode}
+              onStyleReferenceSourceModeChange={setStyleReferenceSourceMode}
+              styleReferenceFileInputRef={styleReferenceFileInputRef}
+              onStyleReferenceFileInputChange={onStyleReferenceFileInputChange}
+              styleProjectPicker={renderProjectPickerState('style')}
+              styleReferenceImage={styleReferenceImage}
+              styleReferenceSourceLabel={styleReferenceSourceLabel}
+              onRemoveStyleReference={handleRemoveStyleReference}
+              showSceneControlsOverrideNotice={Boolean(styleReferenceImage && hasSceneControlsEnabled)}
+            />
+            <ProjectContextPanel
+              moodboardRenderUrl={moodboardRenderUrl}
+              restoredWithoutMoodboard={restoredWithoutMoodboard}
+              onClearRestoredFlag={onClearRestoredFlag}
+              onNavigate={onNavigate}
+              renderMaterialsCount={renderMaterials.length}
+              board={board}
+              excludedCount={excludedCount}
+              onToggleExclude={handleToggleExclude}
+            />
+          </aside>
+          <RenderWorkspacePanel
+            appliedRenderUrl={appliedRenderUrl}
+            uploadedImageAvailable={Boolean(uploadedImage)}
+            workspaceImageUrl={workspaceImageUrl}
+            workspaceDisplayUrl={workspaceDisplayUrl}
+            workspaceImageAlt={workspaceImageAlt}
+            canCompareBeforeAfter={canCompareBeforeAfter}
+            compareSplitPercent={compareSplitPercent}
+            onCompareSplitPercentChange={setCompareSplitPercent}
+            comparisonBaseImageUrl={previousRenderUrl ?? uploadedImage?.dataUrl ?? null}
+            status={status}
+            renderingMode={renderingMode}
+            onOpenPreview={() => setIsWorkspaceImageModalOpen(true)}
+            onChooseBaseImage={openBaseFilePicker}
+            appliedEditPrompt={appliedEditPrompt}
+            onAppliedEditPromptChange={setAppliedEditPrompt}
+            effectiveCanGenerate={effectiveCanGenerate}
+            refineSceneControls={
+              <SceneControlsSection
+                contextLabel="refine"
+                idPrefix="refine"
+                disabled={!effectiveCanGenerate}
+                isOpen={isRefineSceneControlsOpen}
+                onToggleOpen={() => setIsRefineSceneControlsOpen((prev) => !prev)}
+                sceneControls={sceneControls}
+                onToggleEnabled={handleSceneControlEnabledChange}
+                onChangeValue={handleSceneControlValueChange}
+              />
+            }
+            showSceneControlsOverrideNotice={Boolean(styleReferenceImage && hasSceneControlsEnabled)}
+            onApplyChanges={() => void handleAppliedEdit()}
+            onRender4K={() => void handleRender4K()}
+            canUse4K={canUse4K}
+            fourKTooltip={fourKTooltip}
+            onDownloadRender={() => void handleDownloadImage(appliedRenderUrl || '', 'applied')}
+            isDownloadingApplied={downloadingId === 'applied'}
+            activeWorkspaceTab={activeWorkspaceTab}
+            onWorkspaceTabChange={setActiveWorkspaceTab}
+            onTranslateToProducts={handleTranslateToProducts}
+            isTranslatingToProducts={isTranslatingToProducts}
+            hasMaterialTranslation={hasMaterialTranslation}
+            canTranslateToProducts={canTranslateToProducts}
+            translateToProductsHint={translateToProductsHint}
+            materialTranslationPanel={
+              <MaterialTranslationPanel
+                isOpen={activeWorkspaceTab === 'translation'}
+                status={materialTranslationStatus}
+                result={materialTranslationResult}
+                error={materialTranslationError}
+                createdAt={materialTranslationCreatedAt}
+                isDownloadingPdf={isExportingSpecificationPdf}
+                onClose={() => setActiveWorkspaceTab('render')}
+                onReanalyse={handleReanalyseMaterialTranslation}
+                onDownloadPdf={() => void handleDownloadSpecificationPdf()}
+              />
+            }
+          />
+        </div>
       </div>
+      <PostProcessingModal
+        isOpen={isWorkspaceImageModalOpen}
+        previewUrl={workspaceDisplayUrl || workspaceImageUrl}
+        title={appliedRenderUrl ? 'Render Preview' : 'Image Preview'}
+        imageAlt={workspaceImageAlt}
+        isDownloading={downloadingId === 'modal-preview'}
+        onDownload={() => void handleDownloadImage(workspaceDisplayUrl || workspaceImageUrl || '', 'modal-preview')}
+        onClose={() => setIsWorkspaceImageModalOpen(false)}
+      />
     </div>
   );
 };

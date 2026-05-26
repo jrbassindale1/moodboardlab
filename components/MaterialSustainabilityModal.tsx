@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Leaf, X } from 'lucide-react';
 import type { MaterialFact, MaterialLifecycleStage } from '../data/materialFacts';
 import type { MaterialOption } from '../types';
@@ -44,9 +45,9 @@ const MaterialSustainabilityModal: React.FC<MaterialSustainabilityModalProps> = 
   material,
   fact,
   onClose,
-}) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-4 overflow-y-auto">
-    <div className="relative w-full max-w-4xl bg-white shadow-2xl my-auto">
+}) => createPortal(
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-4 overflow-y-auto" onClick={onClose}>
+    <div className="relative w-full max-w-4xl bg-white shadow-2xl my-auto" onClick={(e) => e.stopPropagation()}>
       <div className="max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-green-50">
           <div className="flex items-center gap-3">
@@ -352,7 +353,8 @@ const MaterialSustainabilityModal: React.FC<MaterialSustainabilityModalProps> = 
         </div>
       </div>
     </div>
-  </div>
+  </div>,
+  document.body
 );
 
 export default MaterialSustainabilityModal;

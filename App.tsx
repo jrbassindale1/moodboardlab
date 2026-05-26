@@ -15,9 +15,18 @@ import MaterialAdmin from './components/MaterialAdmin';
 import BrandPage from './components/BrandPage';
 import BrandSubmissionForm from './components/BrandSubmissionForm';
 import BrandAdmin from './components/BrandAdmin';
+import InactivityWarningModal from './components/InactivityWarningModal';
+import ProjectCreateModal from './components/ProjectCreateModal';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
-import type { PrecedentResult } from './api';
+import {
+  createProjectApi,
+  getProjects,
+  type CreateProjectPayload,
+  type PrecedentResult,
+  type Project,
+} from './api';
 import type {
   SustainabilityBriefingPayload,
   SustainabilityBriefingResponse,
@@ -25,8 +34,19 @@ import type {
 import { getBriefingMaterialsKey } from './utils/sustainabilityBriefing';
 import { trackPageView } from './utils/analytics';
 import { clearMoodboardCache } from './utils/clearCache';
+import {
+  setSessionData,
+  getSessionData,
+  removeSessionData,
+  setUserPreference,
+  getUserPreference,
+  setCurrentUserId,
+  clearAllStorage,
+  migrateOldStorageKeys,
+} from './utils/storageManager';
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
+import { isDataUri } from './utils/imageProcessing';
 
 // Scene control types (shared with ApplyMaterials)
 type SceneControl = {
@@ -57,16 +77,12 @@ const APPLIED_URL_CACHE_KEY = 'moodboard_applied_url_v1';
 const APPLY_STATE_CACHE_KEY = 'moodboard_apply_state_v1';
 const PROJECT_CACHE_KEY = 'moodboard_current_project_v1';
 
-// Project type for grouping generations
-type Project = {
-  id: string;
-  name: string;
-  createdAt: string;
-};
-
-const generateProjectId = (): string => {
-  return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-};
+/**
+ * Data URLs for generated images can be multi-megabyte strings and quickly exceed
+ * browser sessionStorage limits. Cache only non-data URLs (e.g. backend blob URLs).
+ */
+const canPersistRenderUrl = (value: string | null): value is string =>
+  Boolean(value && !isDataUri(value));
 
 const formatProjectDate = (): string => {
   const now = new Date();
@@ -94,18 +110,15 @@ const getNextProjectNumber = (): number => {
   const todayKey = getTodayDateKey();
 
   try {
-    const raw = window.localStorage.getItem(PROJECT_COUNTER_KEY);
-    if (raw) {
-      const counter = JSON.parse(raw) as ProjectCounter;
-      if (counter.date === todayKey) {
-        // Same day, increment counter
-        const newCount = counter.count + 1;
-        window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: newCount }));
-        return newCount;
-      }
+    const counter = getSessionData<ProjectCounter>(PROJECT_COUNTER_KEY);
+    if (counter && counter.date === todayKey) {
+      // Same day, increment counter
+      const newCount = counter.count + 1;
+      setSessionData(PROJECT_COUNTER_KEY, { date: todayKey, count: newCount });
+      return newCount;
     }
     // New day or no counter, start at 1
-    window.localStorage.setItem(PROJECT_COUNTER_KEY, JSON.stringify({ date: todayKey, count: 1 }));
+    setSessionData(PROJECT_COUNTER_KEY, { date: todayKey, count: 1 });
     return 1;
   } catch {
     return 1;
@@ -122,15 +135,18 @@ const formatProjectName = (): string => {
   return `Moodboard ${dateStr} (${projectNumber})`;
 };
 
-const readProjectCache = (): Project | null => {
+const readProjectCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(PROJECT_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<Project>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!parsed.id || !parsed.name) return null;
-    return parsed as Project;
+    const cached = getUserPreference<unknown>(PROJECT_CACHE_KEY);
+    if (typeof cached === 'string') return cached;
+    if (cached && typeof cached === 'object') {
+      const legacyProjectId = (cached as { id?: unknown }).id;
+      return typeof legacyProjectId === 'string' && legacyProjectId.trim()
+        ? legacyProjectId
+        : null;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -144,17 +160,14 @@ type ApplyStateCache = {
   sceneControls: SceneControls;
   renderNote: string;
   appliedEditPrompt: string;
+  appliedRenderGenerationId: string | null;
   savedAt: string;
 };
 
 const readApplyStateCache = (): ApplyStateCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(APPLY_STATE_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<ApplyStateCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    return parsed as ApplyStateCache;
+    return getSessionData<ApplyStateCache>(APPLY_STATE_CACHE_KEY);
   } catch {
     return null;
   }
@@ -163,7 +176,7 @@ const readApplyStateCache = (): ApplyStateCache | null => {
 const readRenderUrlCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return window.localStorage.getItem(RENDER_URL_CACHE_KEY);
+    return getSessionData<string>(RENDER_URL_CACHE_KEY);
   } catch {
     return null;
   }
@@ -172,7 +185,7 @@ const readRenderUrlCache = (): string | null => {
 const readAppliedUrlCache = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return window.localStorage.getItem(APPLIED_URL_CACHE_KEY);
+    return getSessionData<string>(APPLIED_URL_CACHE_KEY);
   } catch {
     return null;
   }
@@ -193,12 +206,7 @@ type BoardCache = {
 const readBriefingCache = (): BriefingCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(BRIEFING_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BriefingCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!parsed.materialsKey || !parsed.briefing || !parsed.payload) return null;
-    return parsed as BriefingCache;
+    return getSessionData<BriefingCache>(BRIEFING_CACHE_KEY);
   } catch {
     return null;
   }
@@ -207,12 +215,7 @@ const readBriefingCache = (): BriefingCache | null => {
 const readBoardCache = (): BoardCache | null => {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(BOARD_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<BoardCache>;
-    if (!parsed || typeof parsed !== 'object') return null;
-    if (!Array.isArray(parsed.board)) return null;
-    return { board: parsed.board as MaterialOption[], savedAt: parsed.savedAt || '' };
+    return getSessionData<BoardCache>(BOARD_CACHE_KEY);
   } catch {
     return null;
   }
@@ -224,13 +227,14 @@ const getInitialPage = (): string => {
 };
 
 const App: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, logout, getAccessToken } = useAuth();
   const { checkoutStatus, dismissCheckoutStatus } = useUsage();
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
   const [restoredWithoutMoodboard, setRestoredWithoutMoodboard] = useState(false);
   const [appliedRenderUrl, setAppliedRenderUrl] = useState<string | null>(null);
+  const [appliedRenderGenerationId, setAppliedRenderGenerationId] = useState<string | null>(null);
   const [sustainabilityBriefing, setSustainabilityBriefing] =
     useState<SustainabilityBriefingResponse | null>(null);
   const [briefingPayload, setBriefingPayload] = useState<SustainabilityBriefingPayload | null>(null);
@@ -252,26 +256,52 @@ const App: React.FC = () => {
   // Lifted state from Moodboard (persists across navigation)
   const [moodboardEditPrompt, setMoodboardEditPrompt] = useState('');
 
-  // Project state - groups all generations under a single project
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(() => readProjectCache());
+  const [isProjectsLoading, setIsProjectsLoading] = useState(false);
+  const [isProjectCreateModalOpen, setIsProjectCreateModalOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const briefingCacheRef = useRef<BriefingCache | null>(null);
   const boardCacheRestoredRef = useRef(false);
   const hasSyncedLocationRef = useRef(false);
-  const projectCacheRestoredRef = useRef(false);
   const hasInitializedAuthStateRef = useRef(false);
   const wasAuthenticatedRef = useRef(false);
+
+  const currentProject = useMemo(
+    () => projects.find((project) => project.id === currentProjectId) || null,
+    [projects, currentProjectId]
+  );
+
+  // Inactivity timeout - warn after 4 hours, auto-logout after 5 more minutes
+  const {
+    showWarning: showInactivityWarning,
+    secondsRemaining: inactivitySecondsRemaining,
+    dismissWarning: dismissInactivityWarning,
+    logoutNow: inactivityLogoutNow,
+  } = useInactivityTimeout({
+    enabled: isAuthenticated,
+    onLogout: logout,
+    // For testing, you can use shorter timeouts:
+    // warningTimeoutMs: 30 * 1000, // 30 seconds
+    // logoutDelayMs: 10 * 1000,    // 10 seconds
+  });
 
   const materialsKey = useMemo(() => getBriefingMaterialsKey(selectedMaterials), [selectedMaterials]);
 
   const clearWorkspaceAfterSignOut = useCallback(() => {
-    clearMoodboardCache();
+    // Clear all storage (sessionStorage + user-scoped localStorage)
+    if (user?.id) {
+      clearAllStorage();
+    }
+    setCurrentUserId(null);
     briefingCacheRef.current = null;
     setCurrentPage('concept');
     setSelectedMaterials([]);
     setMoodboardRenderUrl(null);
     setRestoredWithoutMoodboard(false);
     setAppliedRenderUrl(null);
+    setAppliedRenderGenerationId(null);
     setSustainabilityBriefing(null);
     setBriefingPayload(null);
     setBriefingMaterialsKey(null);
@@ -285,8 +315,18 @@ const App: React.FC = () => {
     setRenderNote('');
     setAppliedEditPrompt('');
     setMoodboardEditPrompt('');
-    setCurrentProject(null);
-  }, []);
+    setProjects([]);
+    setCurrentProjectId(null);
+  }, [user?.id]);
+
+  // Set current user ID for storage scoping
+  useEffect(() => {
+    if (user?.id) {
+      setCurrentUserId(user.id);
+    } else {
+      setCurrentUserId(null);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     briefingCacheRef.current = readBriefingCache();
@@ -306,46 +346,107 @@ const App: React.FC = () => {
     wasAuthenticatedRef.current = isAuthenticated;
   }, [clearWorkspaceAfterSignOut, isAuthenticated]);
 
-  // Restore project from localStorage on mount
-  useEffect(() => {
-    if (projectCacheRestoredRef.current) return;
-    projectCacheRestoredRef.current = true;
-    const cached = readProjectCache();
-    if (cached) {
-      setCurrentProject(cached);
-    }
-  }, []);
-
-  // Persist project to localStorage
+  // Persist selected project ID to user-scoped localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (currentProject) {
-        window.localStorage.setItem(PROJECT_CACHE_KEY, JSON.stringify(currentProject));
-      } else {
-        window.localStorage.removeItem(PROJECT_CACHE_KEY);
-      }
+      setUserPreference(PROJECT_CACHE_KEY, currentProjectId);
     } catch {
       // Ignore storage errors
     }
-  }, [currentProject]);
+  }, [currentProjectId]);
+
+  const loadProjects = useCallback(async () => {
+    if (!isAuthenticated) return;
+
+    setIsProjectsLoading(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        setProjects([]);
+        setCurrentProjectId(null);
+        return;
+      }
+
+      const items = await getProjects(token);
+      setProjects(items);
+      setCurrentProjectId((prev) => {
+        if (prev && items.some((project) => project.id === prev)) {
+          return prev;
+        }
+
+        const cachedProjectId = readProjectCache();
+        if (cachedProjectId && items.some((project) => project.id === cachedProjectId)) {
+          return cachedProjectId;
+        }
+
+        return items[0]?.id || null;
+      });
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    } finally {
+      setIsProjectsLoading(false);
+    }
+  }, [getAccessToken, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProjects([]);
+      setCurrentProjectId(null);
+      return;
+    }
+    void loadProjects();
+  }, [isAuthenticated, loadProjects]);
+
+  const handleCreateProject = useCallback(async (payload: CreateProjectPayload) => {
+    if (!isAuthenticated) {
+      throw new Error('Please sign in to continue.');
+    }
+
+    setIsCreatingProject(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        throw new Error('Please sign in to continue.');
+      }
+
+      const created = await createProjectApi(token, payload);
+      setProjects((prev) => [created, ...prev.filter((project) => project.id !== created.id)]);
+      setCurrentProjectId(created.id);
+    } finally {
+      setIsCreatingProject(false);
+    }
+  }, [getAccessToken, isAuthenticated]);
+
+  const ensureCurrentProject = useCallback(async (): Promise<Project | null> => {
+    if (currentProject) return currentProject;
+    if (!isAuthenticated) return null;
+
+    try {
+      const token = await getAccessToken();
+      if (!token) return null;
+
+      const created = await createProjectApi(token, {
+        name: formatProjectName(),
+        entryRoute: 'mood',
+      });
+
+      setProjects((prev) => [created, ...prev.filter((project) => project.id !== created.id)]);
+      setCurrentProjectId(created.id);
+      return created;
+    } catch (error) {
+      console.error('Failed to ensure current project:', error);
+      return null;
+    }
+  }, [currentProject, getAccessToken, isAuthenticated]);
 
   // Create a new project (called when generating first moodboard)
-  const createNewProject = (): Project => {
-    const project: Project = {
-      id: generateProjectId(),
-      name: formatProjectName(),
-      createdAt: new Date().toISOString(),
-    };
-    setCurrentProject(project);
-    return project;
-  };
-
-  // Start a fresh project (clears current project and related state)
+  // Start a fresh project context (clears selected project and related render state)
   const startNewProject = () => {
-    setCurrentProject(null);
+    setCurrentProjectId(null);
     setMoodboardRenderUrl(null);
     setAppliedRenderUrl(null);
+    setAppliedRenderGenerationId(null);
     setSustainabilityBriefing(null);
     setBriefingPayload(null);
     setBriefingMaterialsKey(null);
@@ -423,7 +524,7 @@ const App: React.FC = () => {
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(BRIEFING_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(BRIEFING_CACHE_KEY, cache);
       briefingCacheRef.current = cache;
     } catch {
       // Ignore storage errors (quota, private mode, etc.)
@@ -441,7 +542,7 @@ const App: React.FC = () => {
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(BOARD_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(BOARD_CACHE_KEY, cache);
     } catch {
       // Ignore storage errors (quota, private mode, etc.)
     }
@@ -450,37 +551,43 @@ const App: React.FC = () => {
   // Restore render URLs from localStorage on mount
   useEffect(() => {
     const cachedRenderUrl = readRenderUrlCache();
-    if (cachedRenderUrl && !moodboardRenderUrl) {
+    if (cachedRenderUrl && isDataUri(cachedRenderUrl)) {
+      // Clean up legacy oversized cache entries.
+      removeSessionData(RENDER_URL_CACHE_KEY);
+    } else if (cachedRenderUrl && !moodboardRenderUrl) {
       setMoodboardRenderUrl(cachedRenderUrl);
     }
     const cachedAppliedUrl = readAppliedUrlCache();
-    if (cachedAppliedUrl && !appliedRenderUrl) {
+    if (cachedAppliedUrl && isDataUri(cachedAppliedUrl)) {
+      // Clean up legacy oversized cache entries.
+      removeSessionData(APPLIED_URL_CACHE_KEY);
+    } else if (cachedAppliedUrl && !appliedRenderUrl) {
       setAppliedRenderUrl(cachedAppliedUrl);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist moodboardRenderUrl to localStorage
+  // Persist moodboardRenderUrl to sessionStorage (non-data URLs only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (moodboardRenderUrl) {
-        window.localStorage.setItem(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
+      if (canPersistRenderUrl(moodboardRenderUrl)) {
+        setSessionData(RENDER_URL_CACHE_KEY, moodboardRenderUrl);
       } else {
-        window.localStorage.removeItem(RENDER_URL_CACHE_KEY);
+        removeSessionData(RENDER_URL_CACHE_KEY);
       }
     } catch {
       // Ignore storage errors
     }
   }, [moodboardRenderUrl]);
 
-  // Persist appliedRenderUrl to localStorage
+  // Persist appliedRenderUrl to sessionStorage (non-data URLs only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      if (appliedRenderUrl) {
-        window.localStorage.setItem(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
+      if (canPersistRenderUrl(appliedRenderUrl)) {
+        setSessionData(APPLIED_URL_CACHE_KEY, appliedRenderUrl);
       } else {
-        window.localStorage.removeItem(APPLIED_URL_CACHE_KEY);
+        removeSessionData(APPLIED_URL_CACHE_KEY);
       }
     } catch {
       // Ignore storage errors
@@ -502,6 +609,7 @@ const App: React.FC = () => {
     if (cached.sceneControls) setSceneControls(cached.sceneControls);
     if (cached.renderNote) setRenderNote(cached.renderNote);
     if (cached.appliedEditPrompt) setAppliedEditPrompt(cached.appliedEditPrompt);
+    setAppliedRenderGenerationId(cached.appliedRenderGenerationId ?? null);
   }, []);
 
   // Persist Apply page state to localStorage
@@ -515,14 +623,15 @@ const App: React.FC = () => {
       sceneControls,
       renderNote,
       appliedEditPrompt,
+      appliedRenderGenerationId,
       savedAt: new Date().toISOString(),
     };
     try {
-      window.localStorage.setItem(APPLY_STATE_CACHE_KEY, JSON.stringify(cache));
+      setSessionData(APPLY_STATE_CACHE_KEY, cache);
     } catch {
       // Ignore storage errors
     }
-  }, [uploadedImages, styleReferenceImage, styleReferenceSource, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt]);
+  }, [uploadedImages, styleReferenceImage, styleReferenceSource, styleReferenceSourceId, sceneControls, renderNote, appliedEditPrompt, appliedRenderGenerationId]);
 
   useEffect(() => {
     if (!briefingMaterialsKey) return;
@@ -569,6 +678,7 @@ const App: React.FC = () => {
     savedPrecedents: restoredPrecedents,
     projectId: restoredProjectId,
     projectName: restoredProjectName,
+    generationId: restoredGenerationId,
   }: {
     targetPage: 'moodboard' | 'apply';
     board: MaterialOption[];
@@ -580,19 +690,38 @@ const App: React.FC = () => {
     savedPrecedents?: PrecedentResult[] | null;
     projectId?: string | null;
     projectName?: string | null;
+    generationId?: string | null;
   }) => {
+    // Save the last generation ID for auto-restore on next login
+    if (restoredGenerationId) {
+      setUserPreference('last_generation_id', restoredGenerationId);
+    }
+
     setSelectedMaterials(board);
 
     // Restore project context if available
     if (restoredProjectId && restoredProjectName) {
-      setCurrentProject({
-        id: restoredProjectId,
-        name: restoredProjectName,
-        createdAt: new Date().toISOString() // We don't have the original, use now
+      setCurrentProjectId(restoredProjectId);
+      setProjects((prev) => {
+        if (prev.some((project) => project.id === restoredProjectId)) {
+          return prev;
+        }
+        const now = new Date().toISOString();
+        return [
+          {
+            id: restoredProjectId,
+            name: restoredProjectName,
+            createdAt: now,
+            updatedAt: now,
+            userId: user?.id,
+          },
+          ...prev,
+        ];
       });
     }
 
     if (targetPage === 'moodboard') {
+      setAppliedRenderGenerationId(null);
       // Convert to data URI to prevent "Load failed" errors when the URL expires
       if (generationImageUrl) {
         try {
@@ -638,6 +767,7 @@ const App: React.FC = () => {
         setAppliedRenderUrl(generationImageUrl);
       }
     }
+    setAppliedRenderGenerationId(restoredGenerationId || null);
     // Always set moodboard URL when restoring (clears any existing if none saved)
     console.log('=== RESTORE FROM DASHBOARD ===');
     console.log('restoredMoodboardUrl:', restoredMoodboardUrl ? `${restoredMoodboardUrl.substring(0, 100)}...` : 'null');
@@ -693,7 +823,7 @@ const App: React.FC = () => {
             moodboardEditPrompt={moodboardEditPrompt}
             onMoodboardEditPromptChange={setMoodboardEditPrompt}
             currentProject={currentProject}
-            onCreateProject={createNewProject}
+            onCreateProject={ensureCurrentProject}
           />
         );
       case 'apply':
@@ -721,7 +851,10 @@ const App: React.FC = () => {
             onRenderNoteChange={setRenderNote}
             appliedEditPrompt={appliedEditPrompt}
             onAppliedEditPromptChange={setAppliedEditPrompt}
+            appliedRenderGenerationId={appliedRenderGenerationId}
+            onAppliedRenderGenerationIdChange={setAppliedRenderGenerationId}
             currentProject={currentProject}
+            onCreateProject={ensureCurrentProject}
           />
         );
       case 'product':
@@ -735,7 +868,14 @@ const App: React.FC = () => {
       case 'pricing':
         return <Pricing />;
       case 'dashboard':
-        return <Dashboard onNavigate={setCurrentPage} onRestoreGeneration={handleRestoreGeneration} />;
+        return (
+          <Dashboard
+            onNavigate={setCurrentPage}
+            onRestoreGeneration={handleRestoreGeneration}
+            onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
+            projects={projects}
+          />
+        );
       case 'material-admin':
         return <MaterialAdmin onNavigate={setCurrentPage} />;
       case 'brand-register':
@@ -793,6 +933,11 @@ const App: React.FC = () => {
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         boardCount={selectedMaterials.length}
+        currentProject={currentProject}
+        projects={projects}
+        onSelectProject={(project) => setCurrentProjectId(project.id)}
+        onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
+        isProjectsLoading={isProjectsLoading}
       />
 
       {checkoutStatus && checkoutBannerClasses && (
@@ -949,6 +1094,21 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Inactivity Warning Modal */}
+      <InactivityWarningModal
+        isOpen={showInactivityWarning}
+        secondsRemaining={inactivitySecondsRemaining}
+        onStayLoggedIn={dismissInactivityWarning}
+        onLogout={inactivityLogoutNow}
+      />
+
+      <ProjectCreateModal
+        isOpen={isProjectCreateModalOpen}
+        onClose={() => setIsProjectCreateModalOpen(false)}
+        onCreateProject={handleCreateProject}
+        isLoading={isCreatingProject}
+      />
     </div>
   );
 };

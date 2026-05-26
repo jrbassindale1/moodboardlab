@@ -4,6 +4,7 @@ import type { PrecedentResult } from '../../api';
 
 interface PrecedentCardProps {
   precedent: PrecedentResult;
+  isLoadingImage?: boolean;
 }
 
 const SOURCE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -14,7 +15,7 @@ const SOURCE_COLORS: Record<string, { bg: string; text: string }> = {
   other: { bg: 'bg-gray-100', text: 'text-gray-600' },
 };
 
-const PrecedentCard: React.FC<PrecedentCardProps> = ({ precedent }) => {
+const PrecedentCard: React.FC<PrecedentCardProps> = ({ precedent, isLoadingImage }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -28,7 +29,10 @@ const PrecedentCard: React.FC<PrecedentCardProps> = ({ precedent }) => {
     <div className="group flex flex-col border border-gray-200 bg-white hover:border-gray-400 transition-colors">
       {/* Image container */}
       <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
-        {precedent.imageUrl && !imageError ? (
+        {isLoadingImage ? (
+          // Loading skeleton while fetching image URL
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]" />
+        ) : precedent.imageUrl && !imageError ? (
           <>
             {!imageLoaded && (
               <div className="absolute inset-0 animate-pulse bg-gray-200" />
@@ -67,14 +71,16 @@ const PrecedentCard: React.FC<PrecedentCardProps> = ({ precedent }) => {
           {precedent.description}
         </p>
 
-        {/* Action button */}
-        <button
-          onClick={handleOpenLink}
-          className="mt-4 w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 text-gray-700 font-mono text-[11px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
-        >
-          <span>View Project</span>
-          <ExternalLink className="w-3 h-3" />
-        </button>
+        {/* Action buttons */}
+        <div className="mt-4">
+          <button
+            onClick={handleOpenLink}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-200 text-gray-700 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white hover:border-black transition-colors"
+          >
+            <span>View</span>
+            <ExternalLink className="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </div>
   );

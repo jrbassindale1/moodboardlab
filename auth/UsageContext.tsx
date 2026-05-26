@@ -56,10 +56,27 @@ interface UsageContextType {
 
 const UsageContext = createContext<UsageContextType | null>(null);
 
+const FALLBACK_USAGE_CONTEXT: UsageContextType = {
+  usage: null,
+  remaining: ANONYMOUS_MONTHLY_LIMIT,
+  limit: 10,
+  isLoading: false,
+  refreshUsage: async () => {},
+  canGenerate: true,
+  incrementLocalUsage: () => {},
+  isAnonymous: true,
+  purchasedCredits: 0,
+  freeRemaining: ANONYMOUS_MONTHLY_LIMIT,
+  isAdmin: false,
+  checkoutStatus: null,
+  dismissCheckoutStatus: () => {},
+};
+
 export const useUsage = (): UsageContextType => {
   const context = useContext(UsageContext);
   if (!context) {
-    throw new Error('useUsage must be used within a UsageProvider');
+    console.error('useUsage called outside UsageProvider; using fallback usage context.');
+    return FALLBACK_USAGE_CONTEXT;
   }
   return context;
 };

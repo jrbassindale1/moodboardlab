@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { X, Loader2, AlertCircle, Search, RefreshCw } from 'lucide-react';
 import { MaterialOption } from '../../types';
-import { searchPrecedents, consumeCredits, checkQuota, PrecedentResult } from '../../api';
+import { searchPrecedents, checkQuota, PrecedentResult } from '../../api';
 import { useAuth, useUsage, isAuthBypassEnabled } from '../../auth';
 import PrecedentCard from './PrecedentCard';
 import {
@@ -33,8 +33,6 @@ const ERROR_MESSAGES: Record<SearchError['type'], string> = {
   auth_required: 'Please sign in to search for precedents.',
 };
 
-const SEARCH_CREDIT_COST = 1;
-
 const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
   isOpen,
   onClose,
@@ -43,30 +41,19 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
 }) => {
   const { isAuthenticated, getAccessToken } = useAuth();
   const { refreshUsage } = useUsage();
+  const isLocalAdminBypassEnabled =
+    typeof window !== 'undefined' && localStorage.getItem('moodboard_admin_bypass_enabled') === 'true';
+  const isTestingEnvironment = Boolean(import.meta.env.DEV || isAuthBypassEnabled || isLocalAdminBypassEnabled);
   const [status, setStatus] = useState<SearchStatus>('idle');
   const [results, setResults] = useState<PrecedentResult[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [error, setError] = useState<SearchError | null>(null);
+  const searchInFlightRef = useRef(false);
 
   const performSearch = useCallback(async () => {
-    if (materials.length === 0) {
-      setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
-      setStatus('error');
-      return;
-    }
-
-    // Check authentication (unless bypass is enabled)
-    if (!isAuthBypassEnabled && !isAuthenticated) {
-      setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
-      setStatus('error');
-      return;
-    }
-
-    setStatus('loading');
-    setError(null);
-    setResults([]);
-
     try {
+      if (searchInFlightRef.current) {
+        return;
       // Check quota before searching
       if (!isAuthBypassEnabled && isAuthenticated) {
         const token = await getAccessToken();
@@ -93,50 +80,85 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
           return;
         }
       }
+      searchInFlightRef.current = true;
 
-      // Perform the search
-      const response = await searchPrecedents(materials, { maxResults: 12 });
-      setSearchQuery(response.query);
-
-      if (response.results.length === 0) {
+      if (materials.length === 0) {
         setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
         setStatus('error');
         return;
       }
 
-      // Consume credits after successful search
-      if (!isAuthBypassEnabled && isAuthenticated) {
-        try {
-          const token = await getAccessToken();
-          if (token) {
-            await consumeCredits(token, {
-              generationType: 'precedentSearch',
-              credits: SEARCH_CREDIT_COST,
-              reason: 'precedent-search',
-            });
-            await refreshUsage();
-          }
-        } catch (err) {
-          console.error('Failed to consume credits:', err);
-          // Don't fail the search if credit consumption fails
+      // Check authentication (unless bypass is enabled)
+      if (!isTestingEnvironment && !isAuthenticated) {
+        setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+        setStatus('error');
+        return;
+      }
+
+      setStatus('loading');
+      setError(null);
+      setResults([]);
+
+      try {
+        let accessToken: string | null = null;
+        if (isAuthenticated) {
+          accessToken = await getAccessToken();
         }
-      }
 
-      setResults(response.results);
-      setStatus('success');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        // Check quota before searching
+        if (!isTestingEnvironment && isAuthenticated) {
+          if (!accessToken) {
+            setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+            setStatus('error');
+            return;
+          }
 
-      if (errorMessage === 'rate_limit') {
-        setError({ type: 'rate_limit', message: ERROR_MESSAGES.rate_limit });
-      } else if (errorMessage.includes('timed out') || errorMessage.includes('network')) {
-        setError({ type: 'network', message: ERROR_MESSAGES.network });
-      } else {
-        setError({ type: 'api_error', message: ERROR_MESSAGES.api_error });
+          const quota = await checkQuota(accessToken);
+          if (!quota.canGenerate) {
+            setError({ type: 'quota_exceeded', message: ERROR_MESSAGES.quota_exceeded });
+            setStatus('error');
+            return;
+          }
+        }
+
+        // Perform the search
+        const response = await searchPrecedents(materials, {
+          maxResults: 12,
+          accessToken,
+        });
+        setSearchQuery(response.query);
+
+        if (response.results.length === 0) {
+          setError({ type: 'no_results', message: ERROR_MESSAGES.no_results });
+          setStatus('error');
+          return;
+        }
+
+        // Credits are consumed server-side by the search endpoint.
+        if (!isTestingEnvironment && isAuthenticated) {
+          void refreshUsage();
+        }
+
+        setResults(response.results);
+        setStatus('success');
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
+        if (errorMessage === 'auth_required') {
+          setError({ type: 'auth_required', message: ERROR_MESSAGES.auth_required });
+        } else if (errorMessage === 'rate_limit') {
+          setError({ type: 'rate_limit', message: ERROR_MESSAGES.rate_limit });
+        } else if (errorMessage.includes('timed out') || errorMessage.includes('network')) {
+          setError({ type: 'network', message: ERROR_MESSAGES.network });
+        } else {
+          setError({ type: 'api_error', message: ERROR_MESSAGES.api_error });
+        }
+        setStatus('error');
       }
-      setStatus('error');
+    } finally {
+      searchInFlightRef.current = false;
     }
-  }, [materials, isAuthenticated, getAccessToken, refreshUsage]);
+  }, [materials, isTestingEnvironment, isAuthenticated, getAccessToken, refreshUsage]);
 
   // Trigger search when modal opens
   useEffect(() => {

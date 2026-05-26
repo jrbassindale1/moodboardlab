@@ -1,25 +1,33 @@
+import {
+  clearSessionData,
+  clearUserData,
+  clearGlobalSensitiveKeys,
+  getCurrentUserId,
+} from './storageManager';
+
 /**
- * Clears all moodboard-related data from localStorage.
+ * @deprecated Use storageManager.clearAllStorage() instead.
+ * This function is kept for backward compatibility.
+ * Clears all moodboard-related data from both sessionStorage and localStorage.
  * Called on logout to ensure user data doesn't persist across accounts.
  */
 export const clearMoodboardCache = (): void => {
   if (typeof window === 'undefined') return;
 
-  const cacheKeys = [
-    'moodboard_sustainability_briefing_v1',
-    'moodboard_selected_materials_v1',
-    'moodboard_render_url_v1',
-    'moodboard_applied_url_v1',
-    'moodboard_apply_state_v1',
-    'moodboard_current_project_v1',
-    'moodboard_project_counter_v1',
-  ];
+  try {
+    // Clear sessionStorage (auto-clears on browser close anyway)
+    clearSessionData();
 
-  cacheKeys.forEach((key) => {
-    try {
-      window.localStorage.removeItem(key);
-    } catch {
-      // Ignore storage errors
+    // Clear user-scoped localStorage
+    const userId = getCurrentUserId();
+    if (userId) {
+      clearUserData(userId);
     }
-  });
+
+    // Clear sensitive global keys (admin bypass, cached user data, etc.)
+    clearGlobalSensitiveKeys();
+  } catch {
+    // Ignore storage errors
+  }
 };
+

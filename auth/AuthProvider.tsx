@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, ReactNode } from 'react';
 import { ClerkProvider, useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { clerkPubKey, isClerkAuthEnabled } from './authConfig';
+import { clerkPubKey, isAuthBypassEnabled, isClerkAuthEnabled } from './authConfig';
 import { trackEvent } from '../utils/analytics';
 import { clearMoodboardCache } from '../utils/clearCache';
 
@@ -20,9 +20,16 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const AUTH_BYPASS_USER = {
+  id: 'local-dev-bypass',
+  name: 'Local Dev',
+  email: null,
+  imageUrl: null,
+} as const;
+
 const AUTH_UNAVAILABLE_CONTEXT: AuthContextType = {
-  user: null,
-  isAuthenticated: false,
+  user: isAuthBypassEnabled ? AUTH_BYPASS_USER : null,
+  isAuthenticated: isAuthBypassEnabled,
   isLoading: false,
   login: () => console.warn('Authentication unavailable in this environment'),
   logout: async () => {},

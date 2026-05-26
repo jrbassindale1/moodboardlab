@@ -85,7 +85,7 @@ export function useMaterialIcons(
       );
 
       // Merge with existing icons
-      const updatedIcons = new Map([...icons, ...newIcons]);
+      const updatedIcons = new Map<string, MaterialIcon>([...icons, ...newIcons]);
       setIcons(updatedIcons);
       saveMaterialIcons(updatedIcons);
 
@@ -151,7 +151,7 @@ export function useMaterialIcons(
         }
       );
 
-      const updatedIcons = new Map([...icons, ...newIcons]);
+      const updatedIcons = new Map<string, MaterialIcon>([...icons, ...newIcons]);
       setIcons(updatedIcons);
       saveMaterialIcons(updatedIcons);
 
