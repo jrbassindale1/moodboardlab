@@ -1566,7 +1566,7 @@ export async function getBrandAnalytics(accessToken: string, brandId: string, si
 
 export async function getMyBrand(accessToken: string): Promise<BrandSummary | null> {
   const res = await fetchWithTimeout(
-    `${getApiBase()}/api/brands`,
+    `${getApiBase()}/api/brands?mine=true`,
     { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
     10000,
   );
