@@ -1,10 +1,11 @@
 import React from 'react';
-import { Award, Box, ExternalLink, FileText, Leaf } from 'lucide-react';
+import { Award, Box, ExternalLink, FileText, Leaf, Mail } from 'lucide-react';
 import { MaterialOption } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
 import { buildMaterialFact } from '../../data/materialFacts';
 import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../../utils/materialCarbon';
+import { trackMaterialInteraction } from '../../api';
 import type { MaterialFact } from '../../data/materialFacts';
 
 interface MaterialCardProps {
@@ -13,9 +14,11 @@ interface MaterialCardProps {
   getCategoryDisplayName: (category: MaterialOption['category']) => string;
   onAdd: (mat: MaterialOption, customization?: undefined, skipModal?: undefined, el?: HTMLElement | null) => void;
   onShowSustainability: (material: MaterialOption, fact: MaterialFact) => void;
+  onRequestSample?: (mat: MaterialOption) => void;
+  accessToken?: string;
 }
 
-const SOURCE_BADGE: Record<string, { label: string; classes: string }> = {
+const TIER_BADGE: Record<string, { label: string; classes: string }> = {
   'verified-brand': {
     label: 'Verified',
     classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -32,11 +35,34 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
   getCategoryDisplayName,
   onAdd,
   onShowSustainability,
+  onRequestSample,
+  accessToken,
 }) => {
   const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
-  const sourceBadge = mat.source ? SOURCE_BADGE[mat.source] : undefined;
+  const tierBadge = mat.source ? TIER_BADGE[mat.source] : undefined;
   const isBranded = mat.source === 'verified-brand' || mat.source === 'partner-brand';
+  const isGeneric = !mat.source || mat.source === 'generic';
   const hasQuickLinks = isBranded && (mat.productPageUrl || mat.specSheetUrl || mat.epdUrl || mat.bimObjectUrl);
+
+  const handleSpecSheet = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    trackMaterialInteraction(mat, 'spec_sheet', accessToken);
+  };
+
+  const handleEpd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    trackMaterialInteraction(mat, 'epd', accessToken);
+  };
+
+  const handleProductPage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    trackMaterialInteraction(mat, 'product_page', accessToken);
+  };
+
+  const handleBim = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    trackMaterialInteraction(mat, 'bim', accessToken);
+  };
 
   return (
     <article className="group space-y-3">
@@ -63,14 +89,19 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         )}
         <div className="w-full h-full hidden" style={{ backgroundColor: mat.tone }} />
 
-        {sourceBadge && (
-          <span className={`absolute top-2 left-2 inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${sourceBadge.classes}`}>
-            {sourceBadge.label}
+        {/* Source badge — top left */}
+        {tierBadge ? (
+          <span className={`absolute top-2 left-2 inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${tierBadge.classes}`}>
+            {tierBadge.label}
           </span>
-        )}
+        ) : isGeneric ? (
+          <span className="absolute top-2 left-2 inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest bg-gray-50 text-gray-400 border-gray-200">
+            AI estimate
+          </span>
+        ) : null}
       </div>
 
-      {/* Brand attribution */}
+      {/* Brand attribution — only for branded */}
       {isBranded && mat.brandName && (
         <div className="flex items-center gap-2">
           {mat.brandLogoUrl && (
@@ -82,7 +113,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="text-[10px] font-mono uppercase tracking-widest text-gray-500 hover:text-black truncate"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); trackMaterialInteraction(mat, 'product_page', accessToken); }}
             >
               {mat.brandName}
             </a>
@@ -115,7 +146,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         )}
       </div>
 
-      {/* Certifications */}
+      {/* Certifications — branded only */}
       {isBranded && mat.certifications && mat.certifications.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {mat.certifications.map((cert) => (
@@ -129,18 +160,17 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         </div>
       )}
 
-      {/* Carbon — only shown for branded materials */}
-      {isBranded && mat.carbonIntensity && (
+      {/* Carbon */}
+      {mat.carbonIntensity && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[mat.carbonIntensity]}`}
-            >
+            <span className={`inline-flex items-center border px-2 py-1 text-[10px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[mat.carbonIntensity]}`}>
               {CARBON_IMPACT_LABELS[mat.carbonIntensity]}
             </span>
             {mat.embodiedCarbonA1A3 != null && (
               <span className="text-[10px] font-mono text-gray-500">
                 {mat.embodiedCarbonA1A3} kgCO₂e/kg
+                {isGeneric && <span className="text-gray-400"> ~</span>}
               </span>
             )}
           </div>
@@ -150,14 +180,21 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               onShowSustainability(mat, buildMaterialFact(mat));
             }}
             className="p-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors group"
-            title="View sustainability credentials"
+            title={isGeneric ? 'View AI-estimated sustainability data' : 'View verified sustainability credentials'}
           >
             <Leaf className="w-4 h-4 text-emerald-600 group-hover:text-emerald-700" />
           </button>
         </div>
       )}
 
-      {/* Quick links */}
+      {/* AI data notice — generic only */}
+      {isGeneric && (
+        <p className="text-[9px] font-mono text-gray-400 leading-relaxed">
+          Data AI-estimated. Not manufacturer verified.
+        </p>
+      )}
+
+      {/* Quick links — branded only */}
       {hasQuickLinks && (
         <div className="flex gap-2">
           {mat.productPageUrl && (
@@ -165,7 +202,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               href={mat.productPageUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleProductPage}
               className="p-1.5 border border-gray-200 hover:border-black transition-colors"
               title="View product"
             >
@@ -177,7 +214,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               href={mat.specSheetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleSpecSheet}
               className="p-1.5 border border-gray-200 hover:border-black transition-colors"
               title="Spec sheet"
             >
@@ -189,7 +226,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               href={mat.epdUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleEpd}
               className="p-1.5 border border-gray-200 hover:border-black transition-colors"
               title="EPD"
             >
@@ -201,18 +238,41 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
               href={mat.bimObjectUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleBim}
               className="p-1.5 border border-gray-200 hover:border-black transition-colors"
               title="BIM object"
             >
               <Box className="w-3.5 h-3.5 text-gray-500" />
             </a>
           )}
+          {/* Request sample — branded only */}
+          {onRequestSample && mat.brandId && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onRequestSample(mat); }}
+              className="p-1.5 border border-gray-200 hover:border-black transition-colors ml-auto"
+              title="Request sample"
+            >
+              <Mail className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+          )}
         </div>
       )}
 
+      {/* Request sample button — branded with no other links */}
+      {!hasQuickLinks && isBranded && onRequestSample && mat.brandId && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRequestSample(mat); }}
+          className="w-full py-2 text-xs font-mono uppercase tracking-widest border border-gray-200 hover:border-black transition-colors text-gray-600 hover:text-black"
+        >
+          Request sample
+        </button>
+      )}
+
       <button
-        onClick={(e) => onAdd(mat, undefined, undefined, e.currentTarget)}
+        onClick={(e) => {
+          trackMaterialInteraction(mat, 'add_to_board', accessToken);
+          onAdd(mat, undefined, undefined, e.currentTarget);
+        }}
         className="w-full py-3 text-xs font-mono uppercase tracking-widest transition-colors bg-arch-black text-white hover:bg-gray-900"
       >
         Add to board

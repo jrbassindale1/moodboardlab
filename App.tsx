@@ -15,6 +15,7 @@ import MaterialAdmin from './components/MaterialAdmin';
 import BrandPage from './components/BrandPage';
 import BrandSubmissionForm from './components/BrandSubmissionForm';
 import BrandAdmin from './components/BrandAdmin';
+import ManufacturerDashboard from './components/ManufacturerDashboard';
 import InactivityWarningModal from './components/InactivityWarningModal';
 import ProjectCreateModal from './components/ProjectCreateModal';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
@@ -882,6 +883,8 @@ const App: React.FC = () => {
         return <BrandSubmissionForm onNavigate={setCurrentPage} />;
       case 'brand-admin':
         return <BrandAdmin onNavigate={setCurrentPage} />;
+      case 'manufacturer-dashboard':
+        return <ManufacturerDashboard onNavigate={setCurrentPage} />;
       default:
         return <Concept onNavigate={setCurrentPage} onViewBrand={(slug) => setCurrentPage(`brand:${slug}`)} />;
     }

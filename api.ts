@@ -1417,3 +1417,160 @@ export async function deleteProjectApi(
 
   return res.json();
 }
+
+// ============================================
+// Brands
+// ============================================
+
+export interface BrandSummary {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string;
+  website?: string;
+  tagline?: string;
+  tier: 'partner' | 'verified' | 'standard';
+  contactEmail?: string;
+  materialCount?: number;
+  isFeatured: boolean;
+  featuredOrder?: number;
+}
+
+export async function getFeaturedBrands(): Promise<BrandSummary[]> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands?featured=true`,
+    { method: 'GET' },
+    10000,
+  );
+  if (!res.ok) return [];
+  const data = await res.json() as { brands: BrandSummary[] };
+  return data.brands ?? [];
+}
+
+export async function getBrandBySlug(slug: string): Promise<{ brand: BrandSummary; materials: MaterialOption[] } | null> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands?slug=${encodeURIComponent(slug)}`,
+    { method: 'GET' },
+    10000,
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+// ============================================
+// Sample Requests
+// ============================================
+
+export interface SampleRequestPayload {
+  brandId: string;
+  materialId: string;
+  materialName: string;
+  brandName: string;
+  requesterName: string;
+  requesterEmail: string;
+  requesterCompany?: string;
+  requesterRole?: string;
+  message?: string;
+  projectType?: string;
+}
+
+export async function submitSampleRequest(payload: SampleRequestPayload, accessToken?: string): Promise<void> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/sample-requests`,
+    { method: 'POST', headers, body: JSON.stringify(payload) },
+    10000,
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { error?: string };
+    throw new Error(err.error ?? 'Failed to submit request');
+  }
+}
+
+export async function getSampleRequests(accessToken: string, brandId?: string): Promise<any[]> {
+  const url = brandId
+    ? `${getApiBase()}/api/sample-requests?brandId=${encodeURIComponent(brandId)}`
+    : `${getApiBase()}/api/sample-requests`;
+  const res = await fetchWithTimeout(
+    url,
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    10000,
+  );
+  if (!res.ok) return [];
+  const data = await res.json() as { requests: any[] };
+  return data.requests ?? [];
+}
+
+// ============================================
+// Material Interaction Tracking
+// ============================================
+
+export type InteractionType = 'view' | 'add_to_board' | 'spec_sheet' | 'epd' | 'bim' | 'product_page' | 'sample_request';
+
+let _sessionId: string | null = null;
+function getSessionId(): string {
+  if (!_sessionId) {
+    _sessionId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+  return _sessionId;
+}
+
+export function trackMaterialInteraction(
+  mat: { id: string; name: string; brandId?: string; brandName?: string; source?: string },
+  interactionType: InteractionType,
+  accessToken?: string,
+): void {
+  if (!mat.brandId || mat.source === 'generic') return;
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
+  fetch(`${getApiBase()}/api/material-interaction`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      brandId: mat.brandId,
+      materialId: mat.id,
+      materialName: mat.name,
+      brandName: mat.brandName ?? '',
+      interactionType,
+      sessionId: getSessionId(),
+    }),
+  }).catch(() => { /* silently ignore */ });
+}
+
+// ============================================
+// Brand Analytics (manufacturer dashboard)
+// ============================================
+
+export interface BrandAnalytics {
+  brandId: string;
+  totals: { views: number; addToBoard: number; specSheet: number; epd: number; sampleRequest: number; total: number };
+  materials: Array<{ materialId: string; materialName: string; views: number; addToBoard: number; specSheet: number; epd: number; sampleRequest: number; total: number }>;
+  trend: Array<{ month: string; count: number }>;
+}
+
+export async function getBrandAnalytics(accessToken: string, brandId: string, since?: string): Promise<BrandAnalytics | null> {
+  const params = new URLSearchParams({ brandId });
+  if (since) params.set('since', since);
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brand-analytics?${params}`,
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    10000,
+  );
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getMyBrand(accessToken: string): Promise<BrandSummary | null> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands`,
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    10000,
+  );
+  if (!res.ok) return null;
+  const data = await res.json() as { brands: BrandSummary[] };
+  return data.brands?.[0] ?? null;
+}

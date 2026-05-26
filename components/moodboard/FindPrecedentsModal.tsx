@@ -17,6 +17,8 @@ interface FindPrecedentsModalProps {
   onSave?: (precedents: PrecedentResult[]) => void;
 }
 
+const SEARCH_CREDIT_COST = 1;
+
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 interface SearchError {
@@ -54,6 +56,7 @@ const FindPrecedentsModal: React.FC<FindPrecedentsModalProps> = ({
     try {
       if (searchInFlightRef.current) {
         return;
+      }
       // Check quota before searching
       if (!isAuthBypassEnabled && isAuthenticated) {
         const token = await getAccessToken();

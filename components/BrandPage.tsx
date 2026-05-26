@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { getMaterials } from '../api';
+import { getBrandBySlug, type BrandSummary } from '../api';
 import { MaterialOption } from '../types';
-import { FEATURED_BRANDS } from '../data/featuredBrands';
 import MaterialCard from './materialSelection/MaterialCard';
 import MaterialSustainabilityModal from './MaterialSustainabilityModal';
+import SampleRequestModal from './SampleRequestModal';
 import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 
 interface BrandPageProps {
@@ -19,26 +19,33 @@ const TIER_BADGE: Record<string, { label: string; classes: string }> = {
 };
 
 const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
-  const brand = FEATURED_BRANDS.find((b) => b.slug === brandSlug);
+  const [brand, setBrand] = useState<BrandSummary | null>(null);
   const [materials, setMaterials] = useState<MaterialOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{
     material: MaterialOption;
     fact: MaterialFact;
   } | null>(null);
+  const [sampleRequestMat, setSampleRequestMat] = useState<MaterialOption | null>(null);
 
   useEffect(() => {
-    if (!brand) {
-      setIsLoading(false);
-      return;
-    }
-    getMaterials()
-      .then((all) => setMaterials(all.filter((m) => m.brandId === brand.id)))
-      .catch(() => {})
+    setIsLoading(true);
+    setNotFound(false);
+    getBrandBySlug(brandSlug)
+      .then((result) => {
+        if (!result) {
+          setNotFound(true);
+        } else {
+          setBrand(result.brand);
+          setMaterials(result.materials ?? []);
+        }
+      })
+      .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
-  }, [brand?.id]);
+  }, [brandSlug]);
 
-  if (!brand) {
+  if (notFound) {
     return (
       <div className="w-full pt-20 min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -50,6 +57,25 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
             <ArrowLeft className="w-4 h-4" />
             Back to home
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !brand) {
+    return (
+      <div className="w-full pt-20 animate-pulse">
+        <div className="max-w-screen-2xl mx-auto px-6 pt-6">
+          <div className="h-4 w-16 bg-gray-100" />
+        </div>
+        <div className="border-b border-gray-100 py-12">
+          <div className="max-w-screen-2xl mx-auto px-6 flex gap-6">
+            <div className="w-16 h-16 bg-gray-100" />
+            <div className="space-y-2 flex-1">
+              <div className="h-8 w-48 bg-gray-100" />
+              <div className="h-4 w-80 bg-gray-100" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -86,14 +112,17 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
               <h1 className="font-display text-3xl md:text-4xl uppercase font-bold tracking-tight">
                 {brand.name}
               </h1>
-              <span
-                className={`inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${tierBadge.classes}`}
-              >
-                {tierBadge.label}
+              <span className={`inline-flex items-center border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${tierBadge.classes}`}>
+                {tierBadge.label} — Manufacturer verified data
               </span>
             </div>
             {brand.tagline && (
               <p className="font-sans text-gray-600 text-lg leading-relaxed">{brand.tagline}</p>
+            )}
+            {materials.length > 0 && (
+              <p className="font-mono text-xs text-gray-400 uppercase tracking-widest">
+                {materials.length} products with verified specifications
+              </p>
             )}
           </div>
 
@@ -118,20 +147,7 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
           <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Products</p>
         </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-3 animate-pulse">
-                <div className="aspect-square bg-gray-200 border border-arch-line" />
-                <div className="space-y-2">
-                  <div className="h-3 w-16 bg-gray-200 rounded" />
-                  <div className="h-4 w-24 bg-gray-200 rounded" />
-                  <div className="h-3 w-20 bg-gray-200 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : materials.length > 0 ? (
+        {materials.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {materials.map((mat) => (
               <MaterialCard
@@ -143,13 +159,14 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
                 onShowSustainability={(material, fact) =>
                   setSustainabilityMaterial({ material, fact })
                 }
+                onRequestSample={(m) => setSampleRequestMat(m)}
               />
             ))}
           </div>
         ) : (
           <div className="border border-dashed border-gray-200 py-16 text-center">
             <p className="font-sans text-gray-500 text-sm">
-              Materials from this brand are being added to the library.
+              Products from this brand are being added to the library.
             </p>
           </div>
         )}
@@ -160,6 +177,13 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
           material={sustainabilityMaterial.material}
           fact={sustainabilityMaterial.fact}
           onClose={() => setSustainabilityMaterial(null)}
+        />
+      )}
+
+      {sampleRequestMat && (
+        <SampleRequestModal
+          mat={sampleRequestMat}
+          onClose={() => setSampleRequestMat(null)}
         />
       )}
     </div>

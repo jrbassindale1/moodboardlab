@@ -15,6 +15,7 @@ import {
 } from '../utils/freeCreditSupport';
 import { formatFinishForDisplay } from '../utils/materialDisplay';
 import MaterialCard from './materialSelection/MaterialCard';
+import SampleRequestModal from './SampleRequestModal';
 import MaterialOptionsModal from './materialSelection/MaterialOptionsModal';
 import PhotoDetectionFlow from './materialSelection/PhotoDetectionFlow';
 
@@ -205,12 +206,19 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
+  const [sampleRequestMat, setSampleRequestMat] = useState<MaterialOption | null>(null);
+  const [resolvedAccessToken, setResolvedAccessToken] = useState<string | undefined>(undefined);
   const [selectedVariety, setSelectedVariety] = useState<string | null>(null);
   const [selectedFinishOption, setSelectedFinishOption] = useState<string | null>(null);
   const [selectedColorOption, setSelectedColorOption] = useState<{ label: string; tone: string } | null>(null);
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getAccessToken().then(setResolvedAccessToken).catch(() => {});
+  }, [isAuthenticated]);
 
   const handleClearAllMaterials = () => {
     onBoardChange([]);
@@ -1351,6 +1359,8 @@ IMPORTANT:
                       getCategoryDisplayName={getCategoryDisplayName}
                       onAdd={(m, _c, _s, el) => handleAdd(m, undefined, undefined, el)}
                       onShowSustainability={(material, fact) => setSustainabilityMaterial({ material, fact })}
+                      onRequestSample={(m) => setSampleRequestMat(m)}
+                      accessToken={resolvedAccessToken}
                     />
                   ))}
                 </div>
@@ -1428,6 +1438,14 @@ IMPORTANT:
           material={sustainabilityMaterial.material}
           fact={sustainabilityMaterial.fact}
           onClose={() => setSustainabilityMaterial(null)}
+        />
+      )}
+
+      {sampleRequestMat && (
+        <SampleRequestModal
+          mat={sampleRequestMat}
+          onClose={() => setSampleRequestMat(null)}
+          accessToken={resolvedAccessToken}
         />
       )}
     </div>

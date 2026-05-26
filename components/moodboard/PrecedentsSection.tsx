@@ -431,7 +431,6 @@ const PrecedentsSection: React.FC<PrecedentsSectionProps> = ({
               </div>
             )}
           </div>
-        )}
 
         {/* Empty state */}
         {status === 'idle' && !hasSavedPrecedents && (

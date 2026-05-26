@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Menu, X, Zap, ChevronDown, FolderOpen } from 'lucide-react';
 import AuthButton from './AuthButton';
 import BuyCreditsModal from './BuyCreditsModal';
 import ProjectSwitcherDropdown from './ProjectSwitcherDropdown';
 import { useAuth, useUsage } from '../auth';
 import { getPathForPage } from '../utils/siteSeo';
+import { getMyBrand } from '../api';
 import type { Project } from '../api';
 
 interface NavbarProps {
@@ -31,10 +32,19 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showBuyCreditsModal, setShowBuyCreditsModal] = useState(false);
   const [isProjectSwitcherOpen, setIsProjectSwitcherOpen] = useState(false);
+  const [isBrandUser, setIsBrandUser] = useState(false);
   const projectButtonRef = useRef<HTMLButtonElement>(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, getAccessToken } = useAuth();
   const { remaining, isLoading: isUsageLoading } = useUsage();
   const isAdmin = user?.email?.toLowerCase() === 'jrbassindale@yahoo.co.uk';
+
+  useEffect(() => {
+    if (!isAuthenticated) { setIsBrandUser(false); return; }
+    getAccessToken()
+      .then((token) => getMyBrand(token))
+      .then((b) => setIsBrandUser(Boolean(b)))
+      .catch(() => setIsBrandUser(false));
+  }, [isAuthenticated]);
   const materialCountLabel = boardCount > 99 ? '99+' : `${boardCount}`;
   const creditBalanceLabel = isUsageLoading ? '...' : remaining > 9999 ? '9999+' : `${remaining}`;
 
@@ -46,11 +56,13 @@ const Navbar: React.FC<NavbarProps> = ({
   ];
   const navItemsDesktop = [
     ...baseNavItems,
+    ...(isBrandUser ? [{ id: 'manufacturer-dashboard', label: 'My Brand' }] : []),
     ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
     ...(isAdmin ? [{ id: 'brand-admin', label: 'Brand Admin' }] : []),
   ];
   const navItemsMobile = [
     ...baseNavItems,
+    ...(isBrandUser ? [{ id: 'manufacturer-dashboard', label: 'My Brand' }] : []),
     ...(isAdmin ? [{ id: 'material-admin', label: 'Material Admin' }] : []),
     ...(isAdmin ? [{ id: 'brand-admin', label: 'Brand Admin' }] : []),
   ];
