@@ -13,7 +13,6 @@ import type {
   MaterialTranslationResult,
 } from './types/materialTranslation';
 
-
 // ============================================
 // Precedent Search Types
 // ============================================
