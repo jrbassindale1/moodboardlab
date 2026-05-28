@@ -85,6 +85,49 @@ const formatCategoryLabel = (category: string): string => {
     .join(' ');
 };
 
+const cleanValue = (value?: string | number | null) => {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/\s+/g, ' ').trim();
+};
+
+const getProductSummary = (item: MaterialOption) => {
+  const isProductRecord = item.source === 'verified-brand' || item.source === 'partner-brand';
+  if (!isProductRecord) return null;
+
+  const identity = [
+    cleanValue(item.brandName),
+    cleanValue(item.productRange),
+    cleanValue(item.productCode),
+  ].filter(Boolean).join(' / ');
+
+  const spec = [
+    item.dimensions?.thickness ? `${cleanValue(item.dimensions.thickness)} thick` : '',
+    cleanValue(item.fireRating),
+    cleanValue(item.acousticRating),
+    cleanValue(item.thermalValue),
+    cleanValue(item.slipResistance),
+  ].filter(Boolean).slice(0, 3).join(' / ');
+
+  const supply = [
+    cleanValue(item.priceRange),
+    cleanValue(item.leadTime),
+  ].filter(Boolean).join(' / ');
+
+  const certifications = (item.certifications || [])
+    .map(cleanValue)
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(' / ');
+
+  return {
+    label: item.source === 'partner-brand' ? 'Partner product' : 'Verified product',
+    identity,
+    spec,
+    supply,
+    certifications,
+  };
+};
+
 const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
   board,
   onNavigate,
@@ -205,6 +248,7 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                     ? item.coloredIconBlobUrl
                     : (item.colorVariantId ? getCachedColoredIcon(item.colorVariantId) : null);
                   const isNoteExpanded = expandedNoteIdx === originalIdx;
+                  const productSummary = getProductSummary(item);
                   return (
                     <div
                       key={`${item.id}-${originalIdx}`}
@@ -267,6 +311,24 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                           <p className="font-mono text-[9px] uppercase tracking-widest text-gray-500 mt-0.5">
                             {formatFinishForDisplay(item.finish)}
                           </p>
+                          {productSummary && (
+                            <div className="mt-1 space-y-0.5">
+                              <p className="font-mono text-[9px] uppercase tracking-widest text-indigo-700">
+                                {productSummary.label}
+                                {productSummary.identity ? ` / ${productSummary.identity}` : ''}
+                              </p>
+                              {productSummary.spec && (
+                                <p className="font-sans text-[11px] leading-snug text-gray-600">
+                                  {productSummary.spec}
+                                </p>
+                              )}
+                              {(productSummary.certifications || productSummary.supply) && (
+                                <p className="font-sans text-[11px] leading-snug text-gray-500">
+                                  {[productSummary.certifications, productSummary.supply].filter(Boolean).join(' / ')}
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span
                               className={`inline-flex items-center border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[materialFact.carbonIntensity]}`}

@@ -36,6 +36,8 @@ import {
   getFreeCreditsBlockedMessage,
   isFreeCreditsBlockedForNetwork,
 } from '../utils/freeCreditSupport';
+import { resolveImageSourceToDataUrl } from '../utils/imageUtils';
+import { downscaleImage } from '../utils/imageProcessing';
 import AuthPromptModal from './AuthPromptModal';
 import FreeCreditsBlockedNotice from './FreeCreditsBlockedNotice';
 
@@ -61,6 +63,8 @@ import {
 } from '../utils/sustainabilityBriefing';
 
 type BoardItem = MaterialOption;
+
+const MAX_MOODBOARD_REFERENCE_IMAGES = 10;
 
 // Use enhanced sustainability insight type from types/sustainability.ts
 type SustainabilityInsight = EnhancedSustainabilityInsight;
@@ -240,6 +244,228 @@ const normalizeSelectedMaterial = (material: MaterialOption): MaterialOption =>
 
 const normalizeBoardItems = (items: MaterialOption[]) => items.map(normalizeSelectedMaterial);
 
+const cleanPromptValue = (value?: string | number | null) => {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/\s+/g, ' ').trim();
+};
+
+const getPromptList = (items?: string[] | null, limit = 4) =>
+  (items || [])
+    .map(cleanPromptValue)
+    .filter(Boolean)
+    .slice(0, limit)
+    .join(', ');
+
+const getMaterialPromptDetails = (item: MaterialOption) => {
+  const details: string[] = [];
+  const isProductRecord = item.source === 'verified-brand' || item.source === 'partner-brand';
+
+  if (isProductRecord) {
+    details.push(`product type: ${item.source === 'partner-brand' ? 'paid partner product' : 'verified product'}`);
+  }
+
+  const brand = cleanPromptValue(item.brandName);
+  if (brand) details.push(`brand/manufacturer: ${brand}`);
+
+  const range = cleanPromptValue(item.productRange);
+  if (range) details.push(`range/collection: ${range}`);
+
+  const code = cleanPromptValue(item.productCode);
+  if (code) details.push(`product code/SKU: ${code}`);
+
+  const selectedVariety = cleanPromptValue(item.selectedVariety);
+  if (selectedVariety) details.push(`selected variety: ${selectedVariety}`);
+
+  const dimensions = [
+    item.dimensions?.thickness ? `thickness ${cleanPromptValue(item.dimensions.thickness)}` : '',
+    item.dimensions?.width ? `width ${cleanPromptValue(item.dimensions.width)}` : '',
+    item.dimensions?.length ? `length ${cleanPromptValue(item.dimensions.length)}` : '',
+    item.dimensions?.weightPerM2 ? `weight ${cleanPromptValue(item.dimensions.weightPerM2)}` : '',
+  ].filter(Boolean).join(', ');
+  if (dimensions) details.push(`dimensions: ${dimensions}`);
+
+  const technical = [
+    item.fireRating ? `fire ${cleanPromptValue(item.fireRating)}` : '',
+    item.acousticRating ? `acoustic ${cleanPromptValue(item.acousticRating)}` : '',
+    item.thermalValue ? `thermal ${cleanPromptValue(item.thermalValue)}` : '',
+    item.slipResistance ? `slip ${cleanPromptValue(item.slipResistance)}` : '',
+    item.warranty ? `warranty ${cleanPromptValue(item.warranty)}` : '',
+  ].filter(Boolean).join(', ');
+  if (technical) details.push(`technical: ${technical}`);
+
+  const sustainability = [
+    item.embodiedCarbonA1A3 != null ? `A1-A3 ${item.embodiedCarbonA1A3} kgCO2e/kg` : '',
+    item.recycledContentPct != null ? `${item.recycledContentPct}% recycled content` : '',
+    item.recycledAtEol != null ? `recyclable at end of life: ${item.recycledAtEol ? 'yes' : 'no'}` : '',
+    item.vocClass ? `VOC ${cleanPromptValue(item.vocClass)}` : '',
+  ].filter(Boolean).join(', ');
+  if (sustainability) details.push(`verified sustainability: ${sustainability}`);
+
+  const certifications = getPromptList(item.certifications);
+  if (certifications) details.push(`certifications: ${certifications}`);
+
+  const commercial = [
+    item.priceRange ? `price range ${cleanPromptValue(item.priceRange)}` : '',
+    item.leadTime ? `lead time ${cleanPromptValue(item.leadTime)}` : '',
+    item.minOrderQty ? `min order ${cleanPromptValue(item.minOrderQty)}` : '',
+  ].filter(Boolean).join(', ');
+  if (commercial) details.push(`commercial: ${commercial}`);
+
+  const note = cleanPromptValue(item.note);
+  if (note) details.push(`workspace note: ${note}`);
+
+  return details.join(' | ');
+};
+
+const buildMoodboardMaterialPromptLine = (item: MaterialOption) => {
+  const finishHasColorInfo = Boolean(item.colorLabel) ||
+                              item.finish.includes(' — ') ||
+                              item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
+                              item.finish.toLowerCase().includes('colour') ||
+                              item.finish.toLowerCase().includes('color') ||
+                              item.finish.toLowerCase().includes('select');
+
+  let colorInfo = '';
+  if (finishHasColorInfo) {
+    if (item.colorLabel) {
+      colorInfo = ` | color: ${item.colorLabel}`;
+    } else {
+      const labelMatch = item.finish.match(/ — ([^(]+)/);
+      if (labelMatch) {
+        colorInfo = ` | color: ${labelMatch[1].trim()}`;
+      } else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
+        colorInfo = ` | color: ${item.tone}`;
+      }
+    }
+  }
+
+  const productDetails = getMaterialPromptDetails(item);
+  return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}${productDetails ? ` | ${productDetails}` : ''}`;
+};
+
+const getDisplayDomain = (url?: string | null) => {
+  const cleaned = cleanPromptValue(url);
+  if (!cleaned) return '';
+  try {
+    return new URL(cleaned).hostname.replace(/^www\./, '');
+  } catch {
+    return cleaned.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  }
+};
+
+const getMoodboardKeyProductLines = (item: MaterialOption) => {
+  const isProductRecord = item.source === 'verified-brand' || item.source === 'partner-brand';
+  if (!isProductRecord) return [];
+
+  const lines: string[] = [];
+  const brand = cleanPromptValue(item.brandName);
+  const range = cleanPromptValue(item.productRange);
+  const code = cleanPromptValue(item.productCode);
+  const website = getDisplayDomain(item.productPageUrl || item.brandWebsite);
+
+  const identity = [brand, range, code].filter(Boolean).join(' / ');
+  if (identity) lines.push(identity);
+  if (website) lines.push(website);
+
+  const performance = [
+    item.fireRating ? `Fire: ${cleanPromptValue(item.fireRating)}` : '',
+    item.acousticRating ? `Acoustic: ${cleanPromptValue(item.acousticRating)}` : '',
+    item.thermalValue ? `Thermal: ${cleanPromptValue(item.thermalValue)}` : '',
+    item.slipResistance ? `Slip: ${cleanPromptValue(item.slipResistance)}` : '',
+  ].filter(Boolean).slice(0, 2).join(' | ');
+  if (performance) lines.push(performance);
+
+  const dimensions = [
+    item.dimensions?.thickness ? cleanPromptValue(item.dimensions.thickness) : '',
+    item.dimensions?.width ? cleanPromptValue(item.dimensions.width) : '',
+    item.dimensions?.length ? cleanPromptValue(item.dimensions.length) : '',
+  ].filter(Boolean).join(' x ');
+  if (dimensions) lines.push(`Size: ${dimensions}`);
+
+  const certifications = getPromptList(item.certifications, 3);
+  if (certifications) lines.push(`Certs: ${certifications}`);
+
+  const commercial = [
+    item.priceRange ? cleanPromptValue(item.priceRange) : '',
+    item.leadTime ? cleanPromptValue(item.leadTime) : '',
+  ].filter(Boolean).join(' | ');
+  if (commercial) lines.push(commercial);
+
+  return lines.slice(0, 5);
+};
+
+type MoodboardReferenceImage = {
+  material: MaterialOption;
+  dataUrl: string;
+  sourceKind: 'uploaded' | 'partner-product';
+};
+
+const getMoodboardReferenceCandidates = (items: MaterialOption[], limit: number) => {
+  if (limit <= 0) return [];
+  const seen = new Set<string>();
+  const candidates: Array<{
+    material: MaterialOption;
+    source: string;
+    sourceKind: MoodboardReferenceImage['sourceKind'];
+  }> = [];
+
+  const addCandidate = (
+    material: MaterialOption,
+    source: string | undefined,
+    sourceKind: MoodboardReferenceImage['sourceKind']
+  ) => {
+    const cleaned = cleanPromptValue(source);
+    if (!cleaned || seen.has(cleaned) || candidates.length >= limit) return;
+    seen.add(cleaned);
+    candidates.push({ material, source: cleaned, sourceKind });
+  };
+
+  for (const item of items) {
+    if (item.isCustom || item.id.startsWith('detected-')) {
+      addCandidate(item, item.customImage, 'uploaded');
+    }
+
+    if (item.source === 'partner-brand') {
+      (item.productImages || []).forEach((image) => addCandidate(item, image, 'partner-product'));
+      addCandidate(item, item.customImage, 'partner-product');
+    }
+
+    if (candidates.length >= limit) break;
+  }
+
+  return candidates;
+};
+
+const prepareMoodboardReferenceImages = async (
+  items: MaterialOption[],
+  limit: number
+): Promise<MoodboardReferenceImage[]> => {
+  const candidates = getMoodboardReferenceCandidates(items, limit);
+  const prepared: MoodboardReferenceImage[] = [];
+
+  for (const candidate of candidates) {
+    try {
+      const dataUrl = candidate.source.startsWith('data:')
+        ? candidate.source
+        : await resolveImageSourceToDataUrl(candidate.source);
+      const resized = await downscaleImage(dataUrl);
+      prepared.push({
+        material: candidate.material,
+        dataUrl: resized.dataUrl,
+        sourceKind: candidate.sourceKind,
+      });
+    } catch (err) {
+      console.warn('[Moodboard References] Could not prepare reference image', {
+        materialId: candidate.material.id,
+        sourceKind: candidate.sourceKind,
+        error: err,
+      });
+    }
+  }
+
+  return prepared;
+};
+
 const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
   a === b ||
   (a.id === b.id &&
@@ -252,7 +478,13 @@ const areBoardItemsEquivalent = (a: MaterialOption, b: MaterialOption) =>
     a.colorVariantId === b.colorVariantId &&
     a.customImage === b.customImage &&
     a.excludeFromMoodboardRender === b.excludeFromMoodboardRender &&
-    a.note === b.note);
+    a.note === b.note &&
+    a.source === b.source &&
+    a.brandName === b.brandName &&
+    a.productRange === b.productRange &&
+    a.productCode === b.productCode &&
+    a.priceRange === b.priceRange &&
+    a.leadTime === b.leadTime);
 
 const areBoardsEquivalent = (a: MaterialOption[], b: MaterialOption[]) =>
   a.length === b.length && a.every((item, index) => areBoardItemsEquivalent(item, b[index]));
@@ -1067,7 +1299,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     try {
       const image = await loadImage(url);
       const padding = 32;
-      const minPanelWidth = 400;
+      const minPanelWidth = 520;
       const targetWidth = Math.max(
         Math.round(image.height * 1.414),
         image.width + minPanelWidth + padding * 3
@@ -1155,7 +1387,15 @@ const Moodboard: React.FC<MoodboardProps> = ({
       const textX = swatchX + swatchSize + 12;
       const textWidth = panelWidth - (textX - panelX) - 20;
 
-      list.forEach((item) => {
+      const panelBottom = panelY + panelHeight - 28;
+      for (const [idx, item] of list.entries()) {
+        if (cursorY > panelBottom) {
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '12px "Helvetica Neue", Arial, sans-serif';
+          ctx.fillText(`+ ${list.length - idx} more materials`, textX, panelBottom);
+          break;
+        }
+
         const centerY = cursorY - 6;
         ctx.fillStyle = item.tone;
         ctx.beginPath();
@@ -1174,15 +1414,30 @@ const Moodboard: React.FC<MoodboardProps> = ({
         if (item.category) sublineParts.push(formatCategoryLabel(item.category));
         const subline = sublineParts.join(' • ');
 
+        let lastY = cursorY;
         if (subline) {
           ctx.fillStyle = '#4b5563';
           ctx.font = '12px "Helvetica Neue", Arial, sans-serif';
-          const lastY = wrapText(ctx, subline, textX, cursorY + 16, textWidth, 16);
-          cursorY = lastY + 28;
-        } else {
-          cursorY += 36;
+          lastY = wrapText(ctx, subline, textX, cursorY + 16, textWidth, 16);
         }
-      });
+
+        const productLines = getMoodboardKeyProductLines(item);
+        if (productLines.length) {
+          const badge = item.source === 'partner-brand' ? 'PAID PARTNER PRODUCT' : 'VERIFIED PRODUCT';
+          ctx.fillStyle = item.source === 'partner-brand' ? '#3730a3' : '#047857';
+          ctx.font = '700 10px "Helvetica Neue", Arial, sans-serif';
+          lastY += 17;
+          ctx.fillText(badge, textX, lastY);
+
+          ctx.fillStyle = '#374151';
+          ctx.font = '11px "Helvetica Neue", Arial, sans-serif';
+          productLines.forEach((line) => {
+            lastY = wrapText(ctx, line, textX, lastY + 14, textWidth, 13);
+          });
+        }
+
+        cursorY = lastY + 24;
+      }
 
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
@@ -1674,39 +1929,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
     const perMaterialLines = Object.entries(materialsByCategory)
       .map(([category, items]) => {
         const categoryHeader = `\n[${category.toUpperCase()}]`;
-        const itemLines = items.map((item) => {
-          // Only include color if it's explicitly selected:
-          // - finish contains " — " (color label was added)
-          // - finish contains hex in parentheses like "(#ffffff)"
-          // - finish contains "colour" or "color" (paint materials)
-          // - finish contains "select" (materials that require color selection)
-          const finishHasColorInfo = Boolean(item.colorLabel) ||
-                                      item.finish.includes(' — ') ||
-                                      item.finish.match(/\(#[0-9a-fA-F]{6}\)/) ||
-                                      item.finish.toLowerCase().includes('colour') ||
-                                      item.finish.toLowerCase().includes('color') ||
-                                      item.finish.toLowerCase().includes('select');
-
-          // For materials with explicit color selection, extract and include the color
-          let colorInfo = '';
-          if (finishHasColorInfo) {
-            if (item.colorLabel) {
-              colorInfo = ` | color: ${item.colorLabel}`;
-            } else {
-              // If finish has a color label (e.g., "— White"), extract it
-              const labelMatch = item.finish.match(/ — ([^(]+)/);
-              if (labelMatch) {
-                colorInfo = ` | color: ${labelMatch[1].trim()}`;
-              }
-              // Otherwise if it has a hex color in parentheses, use that
-              else if (item.finish.match(/\(#[0-9a-fA-F]{6}\)/)) {
-                colorInfo = ` | color: ${item.tone}`;
-              }
-            }
-          }
-
-          return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
-        }).join('\n');
+        const itemLines = items.map(buildMoodboardMaterialPromptLine).join('\n');
         return `${categoryHeader}\n${itemLines}`;
       })
       .join('\n');
@@ -2033,7 +2256,7 @@ ${JSON.stringify(proseContext)}`;
         ? 'Upscale this image to 4K high-resolution quality. Preserve all details and composition while significantly increasing clarity and resolution.'
       : isEditingRender
         ? `You are in a multi-turn render conversation. Use the provided previous render as the base image and update it while preserving the composition, camera, and lighting. Keep material assignments consistent with the list below and do not remove existing context unless explicitly requested.\n\n${noTextRule}\n\nVIEW CONTROL:\n- ${moodboardEditViewGuidance.styleDirective}\n- ${moodboardEditViewGuidance.cameraDirective}\n- ${moodboardEditViewGuidance.antiDriftDirective}\n\nMaterials to respect:\n${summaryText}\n\nNew instruction:\n${options.editPrompt}`
-        : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
+        : `Create one clean, standalone moodboard image showcasing these materials together. Materials are organized by their architectural category. White background, balanced composition, soft lighting.\n\n${noTextRule}\n\nMaterials (organized by category):\n${perMaterialLines}\n\nCRITICAL INSTRUCTIONS:\n- Arrange materials logically based on their categories (floors, walls, ceilings, external elements, etc.)\n- For paid/verified products, respect the supplied brand, range, SKU, dimensions, technical ratings, certifications, and commercial constraints as product-specific context. Use those details to make the material representation more accurate, but do not render readable logos, labels, product codes, certification marks, or text.\n- Show materials at realistic scales and with appropriate textures\n- Include subtle context to demonstrate how materials work together in an architectural setting\n`;
 
     // For OpenAI moodboard generation, add stricter constraint to prevent material creep
     if (mode === 'render' && imageProvider === 'openai' && !isEditingRender && !isUpscalingTo4K) {
@@ -2061,14 +2284,44 @@ ${JSON.stringify(proseContext)}`;
         // Determine aspect ratio based on context
         const aspectRatio = '1:1';
         const imageSize = isUpscalingTo4K ? '4K' : '1K';
+        const baseImageParts = isEditingRender && options?.baseImageDataUrl
+          ? [dataUrlToInlineData(options.baseImageDataUrl)]
+          : [];
+        const referenceLimit = isUpscalingTo4K
+          ? 0
+          : Math.max(0, MAX_MOODBOARD_REFERENCE_IMAGES - baseImageParts.length);
+        const moodboardReferenceImages = referenceLimit > 0
+          ? await prepareMoodboardReferenceImages(renderMaterials, referenceLimit)
+          : [];
+
+        if (abortController.signal.aborted || !isMountedRef.current) {
+          console.log('[Moodboard Render] Request aborted while preparing reference images');
+          return false;
+        }
+
+        if (moodboardReferenceImages.length) {
+          const referenceList = moodboardReferenceImages
+            .map((reference, index) => {
+              const sourceLabel = reference.sourceKind === 'partner-product'
+                ? 'paid partner product photo'
+                : 'user-uploaded photo';
+              return `- Reference photo ${index + 1}: ${reference.material.name} (${reference.material.finish || reference.material.category}) — ${sourceLabel}`;
+            })
+            .join('\n');
+
+          prompt += `\n\nPHOTO REFERENCE MODE:\n${moodboardReferenceImages.length} reference photo${moodboardReferenceImages.length === 1 ? ' is' : 's are'} attached to this request. Gemini accepts up to ${MAX_MOODBOARD_REFERENCE_IMAGES} image inputs, so only the first ${MAX_MOODBOARD_REFERENCE_IMAGES} total images are sent. These are user-uploaded custom/detected photos or paid partner product photos only; generic catalogue materials do not include reference photos.\n\nUse the reference photos to reinterpret the listed objects/products/materials into the moodboard. Preserve their recognisable form, material character, colour, proportions, and texture cues, but restyle them as clean architectural moodboard samples that belong with the rest of the palette. Do not copy photo backgrounds, labels, logos, watermarks, packaging, people, room context, or readable text.\n\nReference photo mapping:\n${referenceList}`;
+        }
+
+        const referenceImageParts = moodboardReferenceImages.map((reference) =>
+          dataUrlToInlineData(reference.dataUrl)
+        );
+        const imageParts = [...baseImageParts, ...referenceImageParts];
         const payload = {
           contents: [
             {
               parts: [
                 { text: prompt },
-                ...(isEditingRender && options?.baseImageDataUrl
-                  ? [dataUrlToInlineData(options.baseImageDataUrl)]
-                  : [])
+                ...imageParts
               ]
             }
           ],
@@ -2092,7 +2345,7 @@ ${JSON.stringify(proseContext)}`;
 
         const data = await (
           imageProvider === 'openai'
-            ? callOpenAIImage(prompt, isEditingRender ? options?.baseImageDataUrl : undefined, {
+            ? callOpenAIImage(prompt, isEditingRender ? options?.baseImageDataUrl : moodboardReferenceImages[0]?.dataUrl, {
                 signal: abortController.signal,
                 timeoutMs: 240000,
                 size: '1024x1024',
