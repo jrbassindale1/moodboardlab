@@ -24,6 +24,7 @@ jobs:
         with:
           submodules: true
           lfs: false
+          persist-credentials: false
 
       - name: Install OIDC Client from Core Package
         run: npm install --no-save @actions/core@1.6.0 @actions/http-client
@@ -52,7 +53,7 @@ jobs:
           output_location: "dist"
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
-      # --- Staging: write a .env file so Vite picks up staging vars during Oryx build ---
+      # --- Staging: write .env so Vite picks up staging-specific vars during Oryx build ---
 
       - name: Write staging .env
         if: github.ref == 'refs/heads/staging'
@@ -75,7 +76,6 @@ jobs:
           app_location: "/"
           api_location: ""
           output_location: "dist"
-          github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
