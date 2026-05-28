@@ -53,8 +53,7 @@ jobs:
           output_location: "dist"
           github_id_token: ${{ steps.idtoken.outputs.result }}
 
-      # --- Staging: write .env so Vite picks up staging-specific vars during Oryx build ---
-
+      # Staging: write .env so Vite picks up dev Clerk key and staging API URL
       - name: Write staging .env
         if: github.ref == 'refs/heads/staging'
         env:
@@ -76,6 +75,7 @@ jobs:
           app_location: "/"
           api_location: ""
           output_location: "dist"
+          github_id_token: ${{ steps.idtoken.outputs.result }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -88,3 +88,4 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AGREEABLE_RIVER_02D882203 }}
           action: "close"
+          app_location: "/"
