@@ -785,6 +785,8 @@ const App: React.FC = () => {
         <BrandPage
           brandSlug={currentPage.slice(6)}
           onNavigate={setCurrentPage}
+          board={selectedMaterials}
+          onBoardChange={setSelectedMaterials}
         />
       );
     }

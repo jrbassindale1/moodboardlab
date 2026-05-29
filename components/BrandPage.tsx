@@ -10,6 +10,8 @@ import { buildMaterialFact, type MaterialFact } from '../data/materialFacts';
 interface BrandPageProps {
   brandSlug: string;
   onNavigate: (page: string) => void;
+  board: MaterialOption[];
+  onBoardChange: (items: MaterialOption[]) => void;
 }
 
 const TIER_BADGE: Record<string, { label: string; classes: string }> = {
@@ -18,7 +20,7 @@ const TIER_BADGE: Record<string, { label: string; classes: string }> = {
   standard: { label: 'Standard', classes: 'bg-gray-50 text-gray-600 border-gray-200' },
 };
 
-const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
+const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate, board, onBoardChange }) => {
   const [brand, setBrand] = useState<BrandSummary | null>(null);
   const [materials, setMaterials] = useState<MaterialOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +46,17 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
   }, [brandSlug]);
+
+  const handleAddToBoard = (mat: MaterialOption) => {
+    const isDuplicate = board.some(
+      (item) =>
+        item.id === mat.id &&
+        (item.tone ?? '') === (mat.tone ?? '') &&
+        (item.finish ?? '') === (mat.finish ?? '')
+    );
+    if (isDuplicate) return;
+    onBoardChange([...board, mat]);
+  };
 
   if (notFound) {
     return (
@@ -155,7 +168,7 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
                 mat={mat}
                 showCategory={false}
                 getCategoryDisplayName={() => ''}
-                onAdd={() => onNavigate('materials')}
+                onAdd={(m) => handleAddToBoard(m)}
                 onShowSustainability={(material, fact) =>
                   setSustainabilityMaterial({ material, fact })
                 }
