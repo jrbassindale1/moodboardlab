@@ -1954,15 +1954,16 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       ? 'Saving render record before specification pathways...'
       : null;
   const canStartRender = status === 'idle' && board.length > 0 && renderMaterials.length > 0 && effectiveCanGenerate && Boolean(uploadedImage);
+  const showMissingMaterialsNotice = board.length === 0 && !appliedRenderUrl;
   const unmetRenderRequirements = useMemo(() => {
     const hints: string[] = [];
     if (status !== 'idle') hints.push('Wait for the current render to finish.');
-    if (board.length === 0) hints.push('Add materials to your palette.');
+    if (board.length === 0 && !showMissingMaterialsNotice) hints.push('Add materials to your palette.');
     else if (renderMaterials.length === 0) hints.push('Include at least one material in render (none can be excluded).');
     if (!uploadedImage) hints.push('Upload or select a base image.');
     if (!effectiveCanGenerate) hints.push('No generation credits available.');
     return hints;
-  }, [status, board.length, renderMaterials.length, uploadedImage, effectiveCanGenerate]);
+  }, [status, board.length, renderMaterials.length, uploadedImage, effectiveCanGenerate, showMissingMaterialsNotice]);
   const isGeneratingBaseRender = status === 'render' && renderingMode === 'upload-1k';
 
   return (
@@ -2014,7 +2015,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
           </div>
         )}
 
-        {board.length === 0 && !appliedRenderUrl && (
+        {showMissingMaterialsNotice && (
           <div className="border border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
             <p className="font-sans text-amber-800 text-sm">
               Add materials to your palette before generating renders. You can upload a base image below, but rendering requires a material selection.

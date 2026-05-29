@@ -4,7 +4,7 @@ import { MATERIAL_PALETTE, RAL_COLOR_OPTIONS } from '../constants';
 import { MaterialOption, UploadedImage } from '../types';
 import { CATEGORIES } from '../data/categories';
 import { migrateAllMaterials } from '../data/categoryMigration';
-import { callGeminiText, checkQuota, consumeCredits, getMaterials } from '../api';
+import { callGeminiText, checkQuota, consumeCredits, getMaterials, getAllBrands, type BrandSummary } from '../api';
 import { type MaterialFact } from '../data/materialFacts';
 import MaterialSustainabilityModal from './MaterialSustainabilityModal';
 import { useAuth, useUsage } from '../auth';
@@ -41,6 +41,12 @@ const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
 const SMALL_SCREEN_QUERY = '(max-width: 639px)';
+
+const BRAND_TIER_BADGE: Record<string, { label: string; classes: string }> = {
+  partner: { label: 'Partner', classes: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  verified: { label: 'Verified', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  standard: { label: 'Standard', classes: 'bg-gray-50 text-gray-600 border-gray-200' },
+};
 
 const CARBON_SORT_ORDER: Record<NonNullable<MaterialOption['carbonIntensity']>, number> = {
   low: 0,
@@ -214,6 +220,9 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [brands, setBrands] = useState<BrandSummary[] | null>(null);
+  const [brandsLoading, setBrandsLoading] = useState(false);
+  const brandsLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -358,6 +367,16 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!selectedCategory?.startsWith('Brands>') || brandsLoadedRef.current) return;
+    brandsLoadedRef.current = true;
+    setBrandsLoading(true);
+    getAllBrands()
+      .then(setBrands)
+      .catch(() => setBrands([]))
+      .finally(() => setBrandsLoading(false));
+  }, [selectedCategory]);
 
   // Helper to get user-friendly category display names
   const getCategoryDisplayName = (category: MaterialOption['category']): string => {
@@ -981,6 +1000,15 @@ IMPORTANT:
   };
 
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
+  const isBrandsCategory = Boolean(selectedCategory?.startsWith('Brands>'));
+
+  const filteredBrands = useMemo(() => {
+    if (!brands) return [];
+    if (selectedCategory === 'Brands>Partner Brands') return brands.filter((b) => b.tier === 'partner');
+    if (selectedCategory === 'Brands>Verified Brands') return brands.filter((b) => b.tier === 'verified');
+    return brands;
+  }, [brands, selectedCategory]);
+
   const isDefaultLibraryView = !selectedCategory && searchTokens.length === 0;
   const isLibrarySearchMode = !selectedCategory && searchTokens.length > 0;
   const showMaterialGrid = Boolean(selectedCategory || isLibrarySearchMode || isDefaultLibraryView);
@@ -1201,7 +1229,7 @@ IMPORTANT:
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
             {/* Page title + search */}
-            {!isCustomCategory && (
+            {!isCustomCategory && !isBrandsCategory && (
               <>
                 <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
                   <div>
@@ -1245,6 +1273,92 @@ IMPORTANT:
                 </div>
               </>
             )}
+
+            {/* Brands Directory */}
+            {isBrandsCategory ? (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
+                  <div>
+                    <h1 className="text-3xl font-display uppercase tracking-tight mb-2">
+                      {selectedCategory === 'Brands>Partner Brands'
+                        ? 'Partner Brands'
+                        : selectedCategory === 'Brands>Verified Brands'
+                        ? 'Verified Brands'
+                        : 'All Brands'}
+                    </h1>
+                    <p className="text-sm text-gray-600 font-sans">
+                      {brandsLoading
+                        ? 'Loading brands...'
+                        : `${filteredBrands.length} verified manufacturer${filteredBrands.length === 1 ? '' : 's'} with confirmed product data`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="px-3 py-1.5 border border-gray-200 text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-black hover:border-black transition-colors flex-shrink-0"
+                  >
+                    Back to Library
+                  </button>
+                </div>
+
+                {brandsLoading ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="border border-gray-100 p-4 space-y-3">
+                        <div className="w-12 h-12 bg-gray-100" />
+                        <div className="h-4 w-24 bg-gray-100 rounded" />
+                        <div className="h-3 w-16 bg-gray-100 rounded" />
+                        <div className="h-3 w-32 bg-gray-100 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : filteredBrands.length > 0 ? (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {filteredBrands.map((brand) => {
+                      const badge = BRAND_TIER_BADGE[brand.tier] ?? BRAND_TIER_BADGE.standard;
+                      return (
+                        <button
+                          key={brand.id}
+                          onClick={() => onNavigate(`brand:${brand.slug}`)}
+                          className="group border border-gray-200 p-4 text-left hover:border-black transition-colors"
+                        >
+                          <div className="w-12 h-12 border border-gray-100 flex items-center justify-center mb-4 bg-gray-50">
+                            {brand.logoUrl ? (
+                              <img
+                                src={brand.logoUrl}
+                                alt={brand.name}
+                                className="w-full h-full object-contain p-1"
+                              />
+                            ) : (
+                              <span className="font-display text-xl font-bold uppercase text-gray-400">
+                                {brand.name.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-display text-sm uppercase font-bold tracking-tight mb-1 group-hover:underline">
+                            {brand.name}
+                          </p>
+                          <span className={`inline-flex items-center border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest mb-2 ${badge.classes}`}>
+                            {badge.label}
+                          </span>
+                          {brand.tagline && (
+                            <p className="text-xs font-sans text-gray-500 line-clamp-2 mt-1">{brand.tagline}</p>
+                          )}
+                          {brand.materialCount != null && brand.materialCount > 0 && (
+                            <p className="text-[10px] font-mono text-gray-400 mt-2 uppercase tracking-widest">
+                              {brand.materialCount} product{brand.materialCount === 1 ? '' : 's'}
+                            </p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-gray-200 py-16 text-center">
+                    <p className="font-sans text-gray-500 text-sm">No brands found in this category.</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             {/* Custom Material Creation */}
             {isCustomCategory ? (

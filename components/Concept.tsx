@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ArrowRight, Wand2 } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Building2, Factory, FileText, Leaf, Sparkles, Wand2 } from 'lucide-react';
 import WorkflowStrip from './WorkflowStrip';
 import heroMoodboard from '../images/moodboard-2.webp';
 import { getPathForPage } from '../utils/siteSeo';
@@ -38,6 +38,60 @@ const sustainabilityHighlights = [
   {
     title: 'One continuous workflow',
     copy: 'The same palette drives presentation visuals, applied renders, and downstream material handoff.',
+  },
+];
+
+const heroProofPoints = [
+  'Verified specifications',
+  'Applied design renders',
+  'Sustainability context',
+];
+
+const heroMaterials = [
+  { name: 'Natural oak veneer', meta: 'FSC joinery panel', score: 'Low embodied carbon' },
+  { name: 'Recycled aluminium', meta: 'Powder coated frame', score: 'EPD available' },
+  { name: 'Limewash plaster', meta: 'Mineral wall finish', score: 'Low VOC' },
+];
+
+const audienceCards = [
+  {
+    eyebrow: 'For designers',
+    title: 'Build palettes from real products, not loose inspiration.',
+    copy: 'Select materials, compare specification and sustainability trade-offs, then generate moodboards, applied renders, and client-ready handoff material from the same palette.',
+    action: 'Start designing',
+    page: 'materials',
+    icon: Building2,
+  },
+  {
+    eyebrow: 'For manufacturers',
+    title: 'Get specified where material decisions begin.',
+    copy: 'Put verified finishes, EPDs, product imagery, and technical data inside the concept-stage workflow architects already use to explore palettes.',
+    action: 'List products',
+    page: 'brand-register',
+    icon: Factory,
+  },
+];
+
+const productOutcomes = [
+  {
+    title: 'Material library',
+    copy: 'Real brands, finishes, colours, system notes, and environmental evidence in one searchable workflow.',
+    icon: BadgeCheck,
+  },
+  {
+    title: 'AI moodboard',
+    copy: 'Generate clean palette visuals that show texture, adjacency, scale, and the product data behind each choice.',
+    icon: Sparkles,
+  },
+  {
+    title: 'Applied renders',
+    copy: 'Upload a sketch, elevation, or reference image and test selected materials directly on a design before committing.',
+    icon: Wand2,
+  },
+  {
+    title: 'Specification handoff',
+    copy: 'Carry the same selected materials into sustainability briefings, applied renders, and exportable project records.',
+    icon: FileText,
   },
 ];
 
@@ -106,14 +160,18 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
     <div className="w-full pt-20 animate-in fade-in duration-700 bg-white">
       {/* Hero */}
       <header className="relative overflow-hidden border-b border-gray-200">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100" />
-        <div className="relative max-w-screen-2xl mx-auto px-6 pt-12 pb-20 md:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tight leading-[0.95]">
-              Material palette workspace for architects and designers.
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#ffffff_0%,#f7f8f4_46%,#eef3e7_100%)]" />
+        <div className="relative max-w-screen-2xl mx-auto px-6 pt-10 pb-12 md:pt-16 md:pb-16 grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
+          <div className="lg:col-span-4 space-y-7">
+            <div className="inline-flex items-center gap-3 border border-gray-200 bg-white px-3 py-2 shadow-sm">
+              <Leaf className="w-4 h-4 text-lime-700" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-700">Real materials. Real data. Real outputs.</span>
+            </div>
+            <h1 className="font-display text-4xl md:text-5xl xl:text-6xl font-bold uppercase tracking-tight leading-[0.92]">
+              Specify real materials. Generate moodboards and applied renders.
             </h1>
-            <p className="font-sans text-lg md:text-xl text-gray-700 max-w-3xl leading-relaxed">
-              Curate a material palette with real specifications and sustainability data. Generate photorealistic renders of your materials applied to buildings, free during launch.
+            <p className="font-sans text-lg md:text-xl text-gray-700 max-w-2xl leading-relaxed">
+              Moodboard Lab turns verified product data into visual material palettes, sustainability insight, and applied design renders for architecture and interior design teams.
             </p>
             <div className="flex flex-wrap gap-4">
               <a
@@ -124,19 +182,109 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
                 <Wand2 className="w-4 h-4" />
                 <span className="font-mono text-xs uppercase tracking-widest">Start Free</span>
               </a>
+              <a
+                href={getPathForPage('brand-register')}
+                onClick={(event) => handleNavigateClick(event, 'brand-register')}
+                className="border border-gray-300 bg-white text-black px-6 py-3 flex items-center gap-3 hover:border-black transition-colors"
+              >
+                <Factory className="w-4 h-4" />
+                <span className="font-mono text-xs uppercase tracking-widest">For Manufacturers</span>
+              </a>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              {heroProofPoints.map((item) => (
+                <div key={item} className="border-l border-gray-300 pl-3">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-gray-600 leading-relaxed">{item}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-8">
             <div className="relative overflow-hidden border border-gray-200 bg-white shadow-xl">
               <img
                 src={heroMoodboard}
                 alt="Material palette render preview"
-                className="w-full h-[420px] md:h-[520px] lg:h-[560px] object-cover"
+                className="w-full h-[430px] md:h-[560px] lg:h-[620px] object-cover"
               />
+              <div className="absolute inset-x-0 bottom-0 grid grid-cols-1 md:grid-cols-[minmax(260px,0.9fr)_1fr] gap-0 border-t border-gray-200 bg-white/95 backdrop-blur">
+                <div className="border-b md:border-b-0 md:border-r border-gray-200 p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-500">Palette output</p>
+                  <p className="mt-2 font-display text-2xl uppercase leading-none">Specification plus visual proof.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3">
+                  {heroMaterials.map((material) => (
+                    <div key={material.name} className="border-b sm:border-b-0 sm:border-r last:border-r-0 border-gray-200 p-4">
+                      <p className="font-display text-sm uppercase tracking-wide text-gray-950">{material.name}</p>
+                      <p className="mt-1 font-sans text-xs text-gray-600">{material.meta}</p>
+                      <p className="mt-3 font-mono text-[9px] uppercase tracking-widest text-lime-700">{material.score}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Audience Value */}
+      <section className="border-b border-gray-200 bg-white py-16">
+        <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-5 space-y-3">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-gray-500">One workflow, two sides of the market</p>
+              <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95]">
+                A better meeting point for specification.
+              </h2>
+            </div>
+            <p className="lg:col-span-7 font-sans text-lg md:text-xl text-gray-700 leading-relaxed">
+              Designers need fast visual confidence without losing technical accuracy. Manufacturers need their verified product data to appear before choices are already fixed. Moodboard Lab connects both moments.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {audienceCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <article key={card.eyebrow} className="border border-gray-200 bg-gray-50 p-6 md:p-8">
+                  <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-4 max-w-2xl">
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-5 h-5 text-gray-800" />
+                        <p className="font-mono text-xs uppercase tracking-[0.2em] text-gray-500">{card.eyebrow}</p>
+                      </div>
+                      <h3 className="font-display text-3xl md:text-4xl uppercase tracking-tight leading-none">{card.title}</h3>
+                      <p className="font-sans text-gray-700 leading-relaxed">{card.copy}</p>
+                    </div>
+                    <a
+                      href={getPathForPage(card.page)}
+                      onClick={(event) => handleNavigateClick(event, card.page)}
+                      className="inline-flex shrink-0 items-center gap-3 border border-gray-900 bg-white px-5 py-3 hover:bg-black hover:text-white transition-colors"
+                    >
+                      <span className="font-mono text-xs uppercase tracking-widest">{card.action}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Product Outcomes */}
+      <section className="border-b border-gray-200 bg-slate-950 text-white py-14">
+        <div className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {productOutcomes.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} className="border border-white/15 p-6">
+                <Icon className="w-5 h-5 text-lime-300" />
+                <h3 className="mt-5 font-display text-2xl uppercase tracking-wide">{item.title}</h3>
+                <p className="mt-3 font-sans text-sm leading-relaxed text-white/70">{item.copy}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Sustainability */}
       <section className="border-b border-lime-200 bg-[linear-gradient(135deg,#f7f7ee_0%,#edf6dd_52%,#f5f2e9_100%)] py-16">

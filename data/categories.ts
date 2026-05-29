@@ -52,6 +52,15 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
+    id: 'brands',
+    label: 'Brands',
+    children: [
+      { id: 'all-brands', label: 'All Brands' },
+      { id: 'partner-brands', label: 'Partner Brands' },
+      { id: 'verified-brands', label: 'Verified Brands' },
+    ],
+  },
+  {
     id: 'custom',
     label: 'Custom',
     children: [

@@ -51,7 +51,7 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
         <div className="text-center space-y-4">
           <p className="font-mono text-sm uppercase tracking-widest text-gray-500">Brand not found</p>
           <button
-            onClick={() => onNavigate('concept')}
+            onClick={() => onNavigate('materials')}
             className="flex items-center gap-2 mx-auto text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -88,7 +88,7 @@ const BrandPage: React.FC<BrandPageProps> = ({ brandSlug, onNavigate }) => {
       {/* Back nav */}
       <div className="max-w-screen-2xl mx-auto px-6 pt-6">
         <button
-          onClick={() => onNavigate('concept')}
+          onClick={() => onNavigate('materials')}
           className="flex items-center gap-2 text-sm font-mono uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

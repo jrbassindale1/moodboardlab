@@ -1448,6 +1448,17 @@ export async function getFeaturedBrands(): Promise<BrandSummary[]> {
   return data.brands ?? [];
 }
 
+export async function getAllBrands(): Promise<BrandSummary[]> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands`,
+    { method: 'GET' },
+    10000,
+  );
+  if (!res.ok) return [];
+  const data = await res.json() as { brands: BrandSummary[] };
+  return data.brands ?? [];
+}
+
 export async function getBrandBySlug(slug: string): Promise<{ brand: BrandSummary; materials: MaterialOption[] } | null> {
   const res = await fetchWithTimeout(
     `${getApiBase()}/api/brands?slug=${encodeURIComponent(slug)}`,

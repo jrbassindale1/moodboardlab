@@ -1,21 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
-import Concept from './components/Concept';
-import Moodboard from './components/Moodboard';
-import ApplyMaterials from './components/ApplyMaterials';
-import MaterialSelection from './components/MaterialSelection';
-import Product from './components/Product';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import TermsOfService from './components/TermsOfService';
-import Contact from './components/Contact';
-import Pricing from './components/Pricing';
 import CookieBanner from './components/CookieBanner';
-import Dashboard from './components/Dashboard';
-import MaterialAdmin from './components/MaterialAdmin';
-import BrandPage from './components/BrandPage';
-import BrandSubmissionForm from './components/BrandSubmissionForm';
-import BrandAdmin from './components/BrandAdmin';
-import ManufacturerDashboard from './components/ManufacturerDashboard';
 import InactivityWarningModal from './components/InactivityWarningModal';
 import ProjectCreateModal from './components/ProjectCreateModal';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
@@ -48,6 +33,22 @@ import {
 import { applyPageSeo, getPageFromPath, getPathForPage } from './utils/siteSeo';
 import { resolveImageSourceToDataUrl } from './utils/imageUtils';
 import { isDataUri } from './utils/imageProcessing';
+
+const Concept = lazy(() => import('./components/Concept'));
+const Moodboard = lazy(() => import('./components/Moodboard'));
+const ApplyMaterials = lazy(() => import('./components/ApplyMaterials'));
+const MaterialSelection = lazy(() => import('./components/MaterialSelection'));
+const Product = lazy(() => import('./components/Product'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./components/TermsOfService'));
+const Contact = lazy(() => import('./components/Contact'));
+const Pricing = lazy(() => import('./components/Pricing'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const MaterialAdmin = lazy(() => import('./components/MaterialAdmin'));
+const BrandPage = lazy(() => import('./components/BrandPage'));
+const BrandSubmissionForm = lazy(() => import('./components/BrandSubmissionForm'));
+const BrandAdmin = lazy(() => import('./components/BrandAdmin'));
+const ManufacturerDashboard = lazy(() => import('./components/ManufacturerDashboard'));
 
 // Scene control types (shared with ApplyMaterials)
 type SceneControl = {
@@ -890,6 +891,14 @@ const App: React.FC = () => {
     }
   };
 
+  const pageFallback = (
+    <div className="min-h-[60vh] pt-28 px-6 bg-white">
+      <div className="max-w-screen-2xl mx-auto border border-gray-200 bg-gray-50 p-6">
+        <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Loading workspace</p>
+      </div>
+    </div>
+  );
+
   const handlePageLinkClick = (
     event: React.MouseEvent<HTMLAnchorElement>,
     page: string
@@ -968,7 +977,9 @@ const App: React.FC = () => {
 
       <main className={`flex-grow relative ${checkoutStatus ? 'pt-20 sm:pt-16' : ''}`}>
         <div className="relative">
-          {renderPage()}
+          <Suspense fallback={pageFallback}>
+            {renderPage()}
+          </Suspense>
         </div>
       </main>
 

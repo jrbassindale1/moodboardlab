@@ -84,8 +84,8 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ openPreferences, onClosePre
   if (!showBanner) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4">
-      <div className="max-w-screen-lg mx-auto bg-white border border-gray-200 shadow-lg rounded-lg p-4 md:p-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 md:inset-x-auto md:right-4 md:max-w-md">
+      <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-4 md:p-5 flex flex-col gap-4">
         <div className="space-y-2">
           <p className="font-display text-lg uppercase">Cookies & ads</p>
           <p className="font-sans text-sm text-gray-700 leading-relaxed">
@@ -93,22 +93,22 @@ const CookieBanner: React.FC<CookieBannerProps> = ({ openPreferences, onClosePre
             You can choose personalized ads and analytics, or limit to essential and non-personalized ads.
           </p>
         </div>
-        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
           <button
             onClick={() => setShowPreferences(true)}
-            className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md font-mono text-xs uppercase tracking-widest hover:bg-gray-50 transition"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50 transition"
           >
             Manage choices
           </button>
           <button
             onClick={handleEssentialOnly}
-            className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md font-mono text-xs uppercase tracking-widest hover:bg-gray-50 transition"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-[10px] uppercase tracking-widest hover:bg-gray-50 transition"
           >
             Essential only
           </button>
           <button
             onClick={handleAcceptAll}
-            className="w-full md:w-auto px-4 py-2 bg-black text-white rounded-md font-mono text-xs uppercase tracking-widest hover:bg-gray-900 transition"
+            className="w-full px-3 py-2 bg-black text-white rounded-md font-mono text-[10px] uppercase tracking-widest hover:bg-gray-900 transition"
           >
             Allow all
           </button>
