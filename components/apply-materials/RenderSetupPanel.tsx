@@ -71,7 +71,7 @@ const RenderSetupPanel = ({
             Render Setup
           </div>
           <p className="mt-1 text-sm text-gray-600">
-            Select Base Image and optional controls.
+            Choose the project image your material palette should be applied to.
           </p>
         </div>
         <button
@@ -85,12 +85,12 @@ const RenderSetupPanel = ({
               Rendering
             </>
           ) : (
-            <>
-              <Wand2 className="w-4 h-4" />
-              Generate Sketch Render
-            </>
-          )}
-        </button>
+              <>
+                <Wand2 className="w-4 h-4" />
+                Generate Render
+              </>
+            )}
+          </button>
       </div>
       {!canStartRender && unmetRenderRequirements.length > 0 && (
         <div className="border border-amber-200 bg-amber-50 px-3 py-2 font-sans text-xs text-amber-800">
@@ -111,17 +111,23 @@ const RenderSetupPanel = ({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="font-mono text-[12px] uppercase tracking-widest text-gray-600 font-bold">
-              Base Image
+              Project Image
             </div>
             <p className="mt-1 text-sm text-gray-600">
-              Sets the view and geometry.
+              Sets the view, geometry, and composition.
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => onBaseImageSourceModeChange('upload')}
+            onClick={() => {
+              if (baseImageSourceMode === 'upload') {
+                baseFileInputRef.current?.click();
+              } else {
+                onBaseImageSourceModeChange('upload');
+              }
+            }}
             className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
               baseImageSourceMode === 'upload'
                 ? 'border-black bg-black text-white'
@@ -148,19 +154,14 @@ const RenderSetupPanel = ({
         </div>
         <div className="space-y-3">
           <div className="min-w-0 space-y-3">
-            {baseImageSourceMode === 'upload' ? (
-              <div className="space-y-2">
-                <input
-                  ref={baseFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onBaseFileInputChange}
-                  className="w-full text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-                />
-              </div>
-            ) : (
-              baseProjectPicker
-            )}
+            <input
+              ref={baseFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onBaseFileInputChange}
+              className="hidden"
+            />
+            {baseImageSourceMode !== 'upload' && baseProjectPicker}
             {uploadedImage && (
               <div className="flex items-center justify-between gap-3 border border-gray-200 bg-white px-3 py-2">
                 <div className="min-w-0">
@@ -255,7 +256,13 @@ const RenderSetupPanel = ({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => onStyleReferenceSourceModeChange('upload')}
+                onClick={() => {
+                  if (styleReferenceSourceMode === 'upload') {
+                    styleReferenceFileInputRef.current?.click();
+                  } else {
+                    onStyleReferenceSourceModeChange('upload');
+                  }
+                }}
                 className={`inline-flex items-center gap-2 px-3 py-2 border font-mono text-[10px] uppercase tracking-widest ${
                   styleReferenceSourceMode === 'upload'
                     ? 'border-black bg-black text-white'
@@ -280,17 +287,14 @@ const RenderSetupPanel = ({
                 </button>
               )}
             </div>
-            {styleReferenceSourceMode === 'upload' ? (
-              <input
-                ref={styleReferenceFileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={onStyleReferenceFileInputChange}
-                className="text-sm font-sans file:mr-3 file:rounded-none file:border file:border-gray-300 file:bg-white file:px-3 file:py-2 file:text-[11px] file:uppercase file:tracking-widest file:font-mono file:text-gray-700 file:hover:bg-gray-50"
-              />
-            ) : (
-              styleProjectPicker
-            )}
+            <input
+              ref={styleReferenceFileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={onStyleReferenceFileInputChange}
+              className="hidden"
+            />
+            {styleReferenceSourceMode !== 'upload' && styleProjectPicker}
             {styleReferenceImage ? (
               <div className="border border-dashed border-gray-300 bg-white p-2 max-w-xs">
                 <div className="aspect-[4/3] overflow-hidden bg-gray-100">

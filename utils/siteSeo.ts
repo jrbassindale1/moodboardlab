@@ -29,7 +29,7 @@ const PAGE_SEO: Record<string, PageSeo> = {
   },
   moodboard: {
     path: '/moodboard',
-    title: 'Workspace | Moodboard Lab',
+    title: 'Moodboard | Moodboard Lab',
     description:
       'Review selected materials, generate photoreal moodboards, and create presentation-ready visuals for design reviews and client conversations.',
   },

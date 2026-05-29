@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronRight, X } from 'lucide-react';
 import type { MaterialOption } from '../../types';
 import { formatFinishForDisplay } from '../../utils/materialDisplay';
 
@@ -11,6 +12,7 @@ interface ProjectContextPanelProps {
   board: MaterialOption[];
   excludedCount: number;
   onToggleExclude: (index: number, value: boolean) => void;
+  collapseMoodboardByDefault?: boolean;
 }
 
 const ProjectContextPanel = ({
@@ -22,30 +24,49 @@ const ProjectContextPanel = ({
   board,
   excludedCount,
   onToggleExclude,
+  collapseMoodboardByDefault,
 }: ProjectContextPanelProps) => {
+  const [isMoodboardOpen, setIsMoodboardOpen] = useState(!collapseMoodboardByDefault);
+
+  useEffect(() => {
+    setIsMoodboardOpen(!collapseMoodboardByDefault);
+  }, [collapseMoodboardByDefault]);
+
   return (
     <div className="border border-gray-200 bg-white p-4 space-y-4">
       <div className="font-mono text-[14px] uppercase tracking-widest text-gray-600 font-bold">
-        Render Context
+        Project Context
       </div>
 
       <div className="space-y-4">
         <div className="space-y-3 border-b border-gray-200 pb-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="font-mono text-[12px] uppercase tracking-widest text-gray-600 font-bold">
+            <button
+              type="button"
+              onClick={() => setIsMoodboardOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-widest text-gray-600 hover:text-black"
+            >
+              {isMoodboardOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               {moodboardRenderUrl ? 'Moodboard' : 'Moodboard Preview'}
+            </button>
+            <div className="flex items-center gap-3">
+              {!isMoodboardOpen && moodboardRenderUrl ? (
+                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+                  Saved
+                </span>
+              ) : null}
+              {moodboardRenderUrl ? (
+                <button
+                  type="button"
+                  onClick={() => onNavigate?.('moodboard')}
+                  className="font-mono text-[10px] uppercase tracking-widest text-gray-500 hover:text-black"
+                >
+                  Open Moodboard
+                </button>
+              ) : null}
             </div>
-            {moodboardRenderUrl ? (
-              <button
-                type="button"
-                onClick={() => onNavigate?.('moodboard')}
-                className="font-mono text-[10px] uppercase tracking-widest text-gray-500 hover:text-black"
-              >
-                Open Workspace
-              </button>
-            ) : null}
           </div>
-          {moodboardRenderUrl ? (
+          {isMoodboardOpen && moodboardRenderUrl ? (
             <button
               type="button"
               onClick={() => onNavigate?.('moodboard')}
@@ -60,14 +81,14 @@ const ProjectContextPanel = ({
               </div>
               <div className="flex items-center justify-between border-t border-gray-200 bg-white px-3 py-2">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
-                  View full moodboard
+                  Open Moodboard
                 </span>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-gray-700 opacity-0 transition-opacity group-hover:opacity-100">
                   Open
                 </span>
               </div>
             </button>
-          ) : (
+          ) : isMoodboardOpen ? (
             <div className="flex flex-col items-center justify-center border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center space-y-3">
               <p className="font-sans text-sm text-gray-600">
                 {restoredWithoutMoodboard
@@ -81,23 +102,23 @@ const ProjectContextPanel = ({
                 }}
                 className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
               >
-                Go to workspace
+                Open Moodboard
               </button>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="font-mono text-[12px] uppercase tracking-widest text-gray-600 font-bold">
-              Materials in Render
+              Material Palette
             </div>
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
               {renderMaterialsCount}/{board.length} included
             </div>
           </div>
           <p className="font-sans text-xs text-gray-600">
-            Tick a material to exclude it from this render. Excluded materials still stay in the sustainability report.
+            These materials will be applied to the project image. Untick anything you want to leave out of this render only.
           </p>
           {board.length === 0 ? (
             <div className="border border-dashed border-gray-200 bg-gray-50 p-4 text-center text-sm text-gray-600">
@@ -114,10 +135,10 @@ const ProjectContextPanel = ({
                 >
                   <input
                     type="checkbox"
-                    checked={Boolean(item.excludeFromMoodboardRender)}
-                    onChange={(event) => onToggleExclude(index, event.target.checked)}
+                    checked={!item.excludeFromMoodboardRender}
+                    onChange={(event) => onToggleExclude(index, !event.target.checked)}
                     className="mt-1 h-3 w-3 border-gray-300 text-gray-900"
-                    aria-label={`Exclude ${item.name} from render`}
+                    aria-label={`Include ${item.name} in render`}
                   />
                   <div className="w-8 h-8 rounded-full border border-gray-200 flex-shrink-0" style={{ backgroundColor: item.tone }} />
                   <div className="min-w-0">
@@ -125,6 +146,11 @@ const ProjectContextPanel = ({
                     <div className="font-mono text-[10px] uppercase tracking-widest text-gray-500 truncate">
                       {formatFinishForDisplay(item.finish)}
                     </div>
+                    {(item.brandName || item.productRange || item.productCode) && (
+                      <div className="mt-1 font-mono text-[9px] uppercase tracking-widest text-gray-400 truncate">
+                        {[item.brandName, item.productRange, item.productCode ? `SKU ${item.productCode}` : ''].filter(Boolean).join(' / ')}
+                      </div>
+                    )}
                   </div>
                 </label>
               ))}

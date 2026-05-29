@@ -1448,14 +1448,29 @@ export async function getFeaturedBrands(): Promise<BrandSummary[]> {
   return data.brands ?? [];
 }
 
-export async function getAllBrands(): Promise<BrandSummary[]> {
+export async function getAllBrands(opts?: { search?: string; tier?: string }): Promise<BrandSummary[]> {
+  const params = new URLSearchParams();
+  if (opts?.search) params.set('search', opts.search);
+  if (opts?.tier) params.set('tier', opts.tier);
+  const qs = params.size ? `?${params}` : '';
   const res = await fetchWithTimeout(
-    `${getApiBase()}/api/brands`,
+    `${getApiBase()}/api/brands${qs}`,
     { method: 'GET' },
     10000,
   );
   if (!res.ok) return [];
   const data = await res.json() as { brands: BrandSummary[] };
+  return data.brands ?? [];
+}
+
+export async function getAllBrandsAdmin(accessToken: string): Promise<(BrandSummary & { isActive: boolean; isFeatured: boolean; featuredOrder?: number; countryOfOrigin?: string; contactEmail?: string })[]> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands`,
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    10000,
+  );
+  if (!res.ok) return [];
+  const data = await res.json() as { brands: any[] };
   return data.brands ?? [];
 }
 
@@ -1585,4 +1600,54 @@ export async function getMyBrand(accessToken: string): Promise<BrandSummary | nu
   if (!res.ok) return null;
   const data = await res.json() as { brands: BrandSummary[] };
   return data.brands?.[0] ?? null;
+}
+
+export type BrandUpdatePayload = Partial<Pick<BrandSummary, 'name' | 'tagline' | 'logoUrl' | 'website'> & {
+  countryOfOrigin: string;
+  tier: BrandSummary['tier'];
+  isActive: boolean;
+  isFeatured: boolean;
+  featuredOrder: number;
+}>;
+
+export async function updateBrand(accessToken: string, brandId: string, updates: BrandUpdatePayload): Promise<BrandSummary | null> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brands/${encodeURIComponent(brandId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(updates),
+    },
+    10000,
+  );
+  if (!res.ok) return null;
+  const data = await res.json() as { brand: BrandSummary };
+  return data.brand;
+}
+
+// ============================================
+// Favourites
+// ============================================
+
+export async function getFavourites(accessToken: string): Promise<MaterialOption[]> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/favourites`,
+    { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
+    10000,
+  );
+  if (!res.ok) return [];
+  const data = await res.json() as { items: MaterialOption[] };
+  return data.items ?? [];
+}
+
+export async function saveFavourites(accessToken: string, items: MaterialOption[]): Promise<void> {
+  await fetchWithTimeout(
+    `${getApiBase()}/api/favourites`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    },
+    10000,
+  );
 }

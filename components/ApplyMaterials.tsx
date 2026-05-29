@@ -84,7 +84,7 @@ interface ApplyMaterialsProps {
   onCreateProject?: () => Promise<Project | null>;
 }
 
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB limit
 const RECENT_STYLE_REFERENCE_LIMIT = 8;
 
 const formatCreditCostMessage = (credits: number) =>
@@ -132,6 +132,48 @@ const formatRelativeTime = (value: string): string => {
   if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`;
   const years = Math.round(days / 365);
   return `${years} year${years === 1 ? '' : 's'} ago`;
+};
+
+const cleanAttributionValue = (value?: string | number | null): string => {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/\s+/g, ' ').trim();
+};
+
+const getAttributionDomain = (url?: string | null): string => {
+  const cleaned = cleanAttributionValue(url);
+  if (!cleaned) return '';
+  try {
+    return new URL(cleaned).hostname.replace(/^www\./, '');
+  } catch {
+    return cleaned.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  }
+};
+
+const wrapCanvasText = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number
+) => {
+  const words = text.split(' ');
+  let line = '';
+  let cursorY = y;
+
+  words.forEach((word) => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      ctx.fillText(line, x, cursorY);
+      line = word;
+      cursorY += lineHeight;
+    } else {
+      line = testLine;
+    }
+  });
+
+  if (line) ctx.fillText(line, x, cursorY);
+  return cursorY;
 };
 
 const getSceneControlValues = (controls: SceneControls): Array<SceneControls[keyof SceneControls]> =>
@@ -592,7 +634,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     }, {});
     const lines = Object.entries(grouped).map(([cat, items]) => {
       const categoryItems = items as MaterialOption[];
-      return `${cat}: ${categoryItems.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`;
+      return `${cat}: ${categoryItems.map((i) => `${i.brandName ? `${i.brandName} – ` : ''}${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`;
     });
     return lines.join('\n');
   }, [renderMaterials]);
@@ -1432,12 +1474,100 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
   const handleDownloadImage = async (url: string, renderId?: string) => {
     if (!url) return;
     setDownloadingId(renderId || null);
+    const shouldIncludeMaterialKey = Boolean(appliedRenderUrl && (renderId === 'applied' || renderId === 'modal-preview'));
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Could not download the rendered image.');
       const blob = await response.blob();
       const extension =
         blob.type === 'image/jpeg' ? 'jpg' : blob.type === 'image/webp' ? 'webp' : 'png';
+
+      if (shouldIncludeMaterialKey && renderMaterials.length > 0) {
+        const sourceObjectUrl = URL.createObjectURL(blob);
+        try {
+          const image = await loadImage(sourceObjectUrl);
+          const padding = 28;
+          const keyPanelWidth = Math.min(420, Math.max(320, Math.round(image.width * 0.28)));
+          const canvas = document.createElement('canvas');
+          canvas.width = image.width + keyPanelWidth + padding * 3;
+          canvas.height = image.height + padding * 2;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Canvas not supported in this browser.');
+
+          ctx.fillStyle = '#f9fafb';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          const imageX = padding;
+          const imageY = padding;
+          ctx.drawImage(image, imageX, imageY, image.width, image.height);
+
+          const panelX = imageX + image.width + padding;
+          const panelY = padding;
+          const panelHeight = image.height;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(panelX, panelY, keyPanelWidth, panelHeight);
+          ctx.strokeStyle = '#e5e7eb';
+          ctx.strokeRect(panelX, panelY, keyPanelWidth, panelHeight);
+
+          ctx.fillStyle = '#111827';
+          ctx.font = '700 20px "Helvetica Neue", Arial, sans-serif';
+          ctx.fillText('MOODBOARD-LAB.COM', panelX + 18, panelY + 34);
+          ctx.font = '700 15px "Helvetica Neue", Arial, sans-serif';
+          ctx.fillText('Material & Brand Key', panelX + 18, panelY + 58);
+
+          const textX = panelX + 48;
+          const swatchX = panelX + 20;
+          const textWidth = keyPanelWidth - 66;
+          const panelBottom = panelY + panelHeight - 24;
+          let cursorY = panelY + 88;
+
+          for (const [index, item] of renderMaterials.entries()) {
+            if (cursorY > panelBottom - 28) {
+              ctx.fillStyle = '#6b7280';
+              ctx.font = '12px "Helvetica Neue", Arial, sans-serif';
+              ctx.fillText(`+ ${renderMaterials.length - index} more materials`, textX, panelBottom);
+              break;
+            }
+
+            ctx.fillStyle = item.tone || '#d1d5db';
+            ctx.beginPath();
+            ctx.arc(swatchX + 8, cursorY - 5, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#d1d5db';
+            ctx.stroke();
+
+            ctx.fillStyle = '#111827';
+            ctx.font = '700 13px "Helvetica Neue", Arial, sans-serif';
+            let lastY = wrapCanvasText(ctx, item.name, textX, cursorY, textWidth, 15);
+
+            const attributionLines = [
+              cleanAttributionValue(item.brandName),
+              [cleanAttributionValue(item.productRange), item.productCode ? `SKU: ${cleanAttributionValue(item.productCode)}` : '']
+                .filter(Boolean)
+                .join(' / '),
+              getAttributionDomain(item.productPageUrl || item.brandWebsite),
+            ].filter(Boolean);
+
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '11px "Helvetica Neue", Arial, sans-serif';
+            attributionLines.slice(0, 3).forEach((line) => {
+              lastY = wrapCanvasText(ctx, line, textX, lastY + 14, textWidth, 13);
+            });
+
+            cursorY = lastY + 22;
+          }
+
+          const link = document.createElement('a');
+          link.href = canvas.toDataURL('image/png');
+          link.download = `applied-render-material-key-${Date.now()}.png`;
+          link.click();
+        } finally {
+          URL.revokeObjectURL(sourceObjectUrl);
+        }
+        return;
+      }
+
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = objectUrl;
@@ -1459,7 +1589,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       return;
     }
     if (file.size > MAX_UPLOAD_BYTES) {
-      setError(`Upload "${file.name}" is over the 5 MB limit.`);
+      setError(`Upload "${file.name}" is over the 10 MB limit.`);
       return;
     }
     try {
@@ -1604,11 +1734,11 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
       return false;
     }
     if (isUpscalingRender && !currentBaseImageDataUrl) {
-      setError('Create a sketch render first before finalising to 4K.');
+      setError('Create a render first before finalising to 4K.');
       return false;
     }
     if (!isEditingRender && !isUpscalingRender && !uploadedImage) {
-      setError('Upload at least one base image first.');
+      setError('Upload or select a project image first.');
       return false;
     }
 
@@ -1821,7 +1951,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
       setImageModelFallbackWarning(fallbackUsed ? IMAGE_MODEL_FALLBACK_WARNING : null);
 
-      if (hasUsableAuthToken) {
+      if (hasUsableAuthToken && !isAdmin) {
         if (imageProvider !== 'openai') {
           await consumeCredits(authToken!, {
             generationType: billedGenerationType,
@@ -1910,7 +2040,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const handleRender4K = async () => {
     if (!appliedRenderUrl) {
-      setError('Create a sketch render first before finalising to 4K.');
+      setError('Create a render first before finalising to 4K.');
       return;
     }
     if (!canUse4K) {
@@ -1920,7 +2050,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
     const confirmed = window.confirm(
       isTestingEnvironment
-        ? 'Finalise will create a high-resolution 4K version of your sketch. Continue?'
+        ? 'Finalise will create a high-resolution 4K version of your render. Continue?'
         : 'Finalise will create a high-resolution 4K version and cost 5 credits. This is your final output. Continue?'
     );
     if (!confirmed) {
@@ -1938,9 +2068,9 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
 
   const canUse4K = isTestingEnvironment || Boolean(isAuthenticated && (isAdmin || purchasedCredits >= CREDIT_COSTS.FOUR_K_GENERATION));
   const fourKTooltip = isTestingEnvironment || isAdmin
-    ? 'Create high-resolution 4K final output from your sketch'
+    ? 'Create high-resolution 4K final output from your render'
     : canUse4K
-    ? 'Create high-resolution 4K final output from your sketch'
+    ? 'Create high-resolution 4K final output from your render'
     : 'Requires at least 5 purchased credits';
   const hasMaterialTranslation = Boolean(materialTranslationResult);
   const isTranslatingToProducts = materialTranslationStatus === 'loading';
@@ -1960,7 +2090,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
     if (status !== 'idle') hints.push('Wait for the current render to finish.');
     if (board.length === 0 && !showMissingMaterialsNotice) hints.push('Add materials to your palette.');
     else if (renderMaterials.length === 0) hints.push('Include at least one material in render (none can be excluded).');
-    if (!uploadedImage) hints.push('Upload or select a base image.');
+    if (!uploadedImage) hints.push('Upload or select a project image.');
     if (!effectiveCanGenerate) hints.push('No generation credits available.');
     return hints;
   }, [status, board.length, renderMaterials.length, uploadedImage, effectiveCanGenerate, showMissingMaterialsNotice]);
@@ -1974,11 +2104,14 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
             <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
               Render
             </h1>
+            <p className="max-w-3xl font-sans text-sm text-gray-600">
+              Apply the selected material palette to a project image, then refine the result or translate it back into product pathways.
+            </p>
             <ProjectContextHeader project={currentProject || null} className="text-xs" />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
             <div className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
-              Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} sketch+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)
+              Costs: {CREDIT_COSTS.MOODBOARD_GENERATION} moodboard / {CREDIT_COSTS.RENDER_GENERATION} render+edits / {CREDIT_COSTS.FOUR_K_GENERATION} final (4K)
             </div>
             {/* Image Provider Selector (Test Environment) */}
             <select
@@ -2018,7 +2151,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         {showMissingMaterialsNotice && (
           <div className="border border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
             <p className="font-sans text-amber-800 text-sm">
-              Add materials to your palette before generating renders. You can upload a base image below, but rendering requires a material selection.
+              Add materials to your palette before generating renders. You can upload a project image below, but rendering requires a material selection.
             </p>
             <button
               onClick={() => onNavigate?.('materials')}
@@ -2030,7 +2163,7 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
         )}
 
         <div className="grid gap-6 xl:grid-cols-[minmax(400px,520px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(440px,580px)_minmax(0,1fr)] xl:items-start">
-          <aside className="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto">
+          <aside className="order-2 space-y-4 xl:sticky xl:top-24 xl:order-1 xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto">
             <RenderSetupPanel
               canStartRender={canStartRender}
               onGenerateRender={() => void runApplyRender({ renderMode: 'upload-1k', drawingType })}
@@ -2081,65 +2214,68 @@ const ApplyMaterials: React.FC<ApplyMaterialsProps> = ({
               board={board}
               excludedCount={excludedCount}
               onToggleExclude={handleToggleExclude}
+              collapseMoodboardByDefault={Boolean(uploadedImage || appliedRenderUrl)}
             />
           </aside>
-          <RenderWorkspacePanel
-            appliedRenderUrl={appliedRenderUrl}
-            uploadedImageAvailable={Boolean(uploadedImage)}
-            workspaceImageUrl={workspaceImageUrl}
-            workspaceDisplayUrl={workspaceDisplayUrl}
-            workspaceImageAlt={workspaceImageAlt}
-            canCompareBeforeAfter={canCompareBeforeAfter}
-            compareSplitPercent={compareSplitPercent}
-            onCompareSplitPercentChange={setCompareSplitPercent}
-            comparisonBaseImageUrl={previousRenderUrl ?? uploadedImage?.dataUrl ?? null}
-            status={status}
-            renderingMode={renderingMode}
-            onOpenPreview={() => setIsWorkspaceImageModalOpen(true)}
-            onChooseBaseImage={openBaseFilePicker}
-            appliedEditPrompt={appliedEditPrompt}
-            onAppliedEditPromptChange={setAppliedEditPrompt}
-            effectiveCanGenerate={effectiveCanGenerate}
-            refineSceneControls={
-              <SceneControlsSection
-                contextLabel="refine"
-                idPrefix="refine"
-                disabled={!effectiveCanGenerate}
-                isOpen={isRefineSceneControlsOpen}
-                onToggleOpen={() => setIsRefineSceneControlsOpen((prev) => !prev)}
-                sceneControls={sceneControls}
-                onToggleEnabled={handleSceneControlEnabledChange}
-                onChangeValue={handleSceneControlValueChange}
-              />
-            }
-            showSceneControlsOverrideNotice={Boolean(styleReferenceImage && hasSceneControlsEnabled)}
-            onApplyChanges={() => void handleAppliedEdit()}
-            onRender4K={() => void handleRender4K()}
-            canUse4K={canUse4K}
-            fourKTooltip={fourKTooltip}
-            onDownloadRender={() => void handleDownloadImage(appliedRenderUrl || '', 'applied')}
-            isDownloadingApplied={downloadingId === 'applied'}
-            activeWorkspaceTab={activeWorkspaceTab}
-            onWorkspaceTabChange={setActiveWorkspaceTab}
-            onTranslateToProducts={handleTranslateToProducts}
-            isTranslatingToProducts={isTranslatingToProducts}
-            hasMaterialTranslation={hasMaterialTranslation}
-            canTranslateToProducts={canTranslateToProducts}
-            translateToProductsHint={translateToProductsHint}
-            materialTranslationPanel={
-              <MaterialTranslationPanel
-                isOpen={activeWorkspaceTab === 'translation'}
-                status={materialTranslationStatus}
-                result={materialTranslationResult}
-                error={materialTranslationError}
-                createdAt={materialTranslationCreatedAt}
-                isDownloadingPdf={isExportingSpecificationPdf}
-                onClose={() => setActiveWorkspaceTab('render')}
-                onReanalyse={handleReanalyseMaterialTranslation}
-                onDownloadPdf={() => void handleDownloadSpecificationPdf()}
-              />
-            }
-          />
+          <div className="order-1 xl:order-2">
+            <RenderWorkspacePanel
+              appliedRenderUrl={appliedRenderUrl}
+              uploadedImageAvailable={Boolean(uploadedImage)}
+              workspaceImageUrl={workspaceImageUrl}
+              workspaceDisplayUrl={workspaceDisplayUrl}
+              workspaceImageAlt={workspaceImageAlt}
+              canCompareBeforeAfter={canCompareBeforeAfter}
+              compareSplitPercent={compareSplitPercent}
+              onCompareSplitPercentChange={setCompareSplitPercent}
+              comparisonBaseImageUrl={previousRenderUrl ?? uploadedImage?.dataUrl ?? null}
+              status={status}
+              renderingMode={renderingMode}
+              onOpenPreview={() => setIsWorkspaceImageModalOpen(true)}
+              onChooseBaseImage={openBaseFilePicker}
+              appliedEditPrompt={appliedEditPrompt}
+              onAppliedEditPromptChange={setAppliedEditPrompt}
+              effectiveCanGenerate={effectiveCanGenerate}
+              refineSceneControls={
+                <SceneControlsSection
+                  contextLabel="refine"
+                  idPrefix="refine"
+                  disabled={!effectiveCanGenerate}
+                  isOpen={isRefineSceneControlsOpen}
+                  onToggleOpen={() => setIsRefineSceneControlsOpen((prev) => !prev)}
+                  sceneControls={sceneControls}
+                  onToggleEnabled={handleSceneControlEnabledChange}
+                  onChangeValue={handleSceneControlValueChange}
+                />
+              }
+              showSceneControlsOverrideNotice={Boolean(styleReferenceImage && hasSceneControlsEnabled)}
+              onApplyChanges={() => void handleAppliedEdit()}
+              onRender4K={() => void handleRender4K()}
+              canUse4K={canUse4K}
+              fourKTooltip={fourKTooltip}
+              onDownloadRender={() => void handleDownloadImage(appliedRenderUrl || '', 'applied')}
+              isDownloadingApplied={downloadingId === 'applied'}
+              activeWorkspaceTab={activeWorkspaceTab}
+              onWorkspaceTabChange={setActiveWorkspaceTab}
+              onTranslateToProducts={handleTranslateToProducts}
+              isTranslatingToProducts={isTranslatingToProducts}
+              hasMaterialTranslation={hasMaterialTranslation}
+              canTranslateToProducts={canTranslateToProducts}
+              translateToProductsHint={translateToProductsHint}
+              materialTranslationPanel={
+                <MaterialTranslationPanel
+                  isOpen={activeWorkspaceTab === 'translation'}
+                  status={materialTranslationStatus}
+                  result={materialTranslationResult}
+                  error={materialTranslationError}
+                  createdAt={materialTranslationCreatedAt}
+                  isDownloadingPdf={isExportingSpecificationPdf}
+                  onClose={() => setActiveWorkspaceTab('render')}
+                  onReanalyse={handleReanalyseMaterialTranslation}
+                  onDownloadPdf={() => void handleDownloadSpecificationPdf()}
+                />
+              }
+            />
+          </div>
         </div>
       </div>
       <PostProcessingModal

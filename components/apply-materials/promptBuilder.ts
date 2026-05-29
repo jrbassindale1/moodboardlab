@@ -83,7 +83,13 @@ const buildPerMaterialLines = (renderMaterials: MaterialOption[]) => {
             }
           }
 
-          return `- ${item.name} (${item.finish})${colorInfo} | description: ${item.description}`;
+          const brand = item.brandName?.trim() || '';
+          const range = item.productRange?.trim() || '';
+          const code = item.productCode?.trim() || '';
+          const brandInfo = brand ? ` | brand: ${brand}` : '';
+          const rangeInfo = range ? ` | range: ${range}` : '';
+          const codeInfo = code ? ` | ref: ${code}` : '';
+          return `- ${item.name} (${item.finish})${colorInfo}${brandInfo}${rangeInfo}${codeInfo} | description: ${item.description}`;
         })
         .join('\n');
       return `${categoryHeader}\n${itemLines}`;

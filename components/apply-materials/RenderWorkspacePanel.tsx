@@ -88,14 +88,14 @@ const RenderWorkspacePanel = ({
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
             <div className="font-mono text-[14px] uppercase tracking-widest text-gray-600 font-bold">
-              {appliedRenderUrl ? 'Applied Materials Render' : 'Render Workspace'}
+              {appliedRenderUrl ? 'Applied Materials Render' : 'Project Render'}
             </div>
             <p className="mt-1 text-sm text-gray-600">
               {appliedRenderUrl
                 ? 'Review the current render, then refine, upscale, or download it.'
                 : uploadedImageAvailable
-                ? 'Your base image is staged here. Generate the render to see the materialised output.'
-                : 'Upload or select a base image to start generating a render.'}
+                ? 'Your project image is staged here. Generate the render to apply the selected materials.'
+                : 'Upload or select a project image to start applying the selected materials.'}
             </p>
           </div>
           {appliedRenderUrl && (
@@ -159,7 +159,7 @@ const RenderWorkspacePanel = ({
                 Compare Before / After
               </p>
               <p className="text-xs text-gray-600">
-                Drag the slider to compare the base image and applied materials render.
+                Drag the slider to compare the project image and applied materials render.
               </p>
             </div>
             <input
@@ -238,16 +238,34 @@ const RenderWorkspacePanel = ({
           </div>
         ) : (
           <div className="flex min-h-[420px] items-center justify-center border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-            <div className="space-y-3 max-w-md">
+            <div className="max-w-md space-y-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center border border-gray-300 bg-white">
+                <Upload className="h-5 w-5 text-gray-500" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-display text-lg uppercase tracking-wide text-gray-950">
+                  Choose a project image
+                </p>
+                <p className="font-sans text-sm leading-relaxed text-gray-600">
+                  Upload a sketch, photograph, model view, or drawing. The selected material palette will be applied to this image.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2 font-mono text-[9px] uppercase tracking-widest text-gray-400">
+                <span>JPG</span>
+                <span>/</span>
+                <span>PNG</span>
+                <span>/</span>
+                <span>WebP</span>
+              </div>
               <p className="font-sans text-sm text-gray-600">
-                The render output will appear here once you upload a base image and generate.
+                The render will appear here once you choose a project image and generate.
               </p>
               <button
                 onClick={onChooseBaseImage}
-                className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 bg-white font-mono text-[10px] uppercase tracking-widest hover:border-black"
+                className="inline-flex items-center gap-2 border border-black bg-black px-4 py-3 font-mono text-[11px] uppercase tracking-widest text-white hover:bg-gray-900"
               >
                 <Upload className="h-3.5 w-3.5" />
-                Choose Base Image
+                Choose Project Image
               </button>
             </div>
           </div>
@@ -315,7 +333,7 @@ const RenderWorkspacePanel = ({
                       )}
                     </button>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs font-mono uppercase tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      {canUse4K ? 'Create 4K final output from sketch render. Costs 5 credits.' : fourKTooltip}
+                      {canUse4K ? 'Create 4K final output from this render. Costs 5 credits.' : fourKTooltip}
                       <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
                     </div>
                   </div>
@@ -352,8 +370,8 @@ const RenderWorkspacePanel = ({
         ) : (
           <div className="border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
             {uploadedImageAvailable
-              ? 'The base image is ready. Use the setup panel to the left to fine-tune the input, then generate the render.'
-              : 'Choose a base image and the generated render will appear here.'}
+              ? 'The project image is ready. Use the setup panel to fine-tune the input, then generate the render.'
+              : 'Choose a project image and the generated render will appear here.'}
           </div>
         )}
       </div>

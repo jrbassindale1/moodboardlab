@@ -50,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const baseNavItems = [
     { id: 'materials', label: 'Materials' },
-    { id: 'moodboard', label: 'Workspace' },
+    { id: 'moodboard', label: 'Moodboard' },
     { id: 'apply', label: 'Render' },
     { id: 'dashboard', label: 'Dashboard' }
   ];
@@ -102,9 +102,6 @@ const Navbar: React.FC<NavbarProps> = ({
           <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">
             Moodboard Lab
           </h1>
-          <span className="hidden sm:block font-mono text-xs text-gray-500 tracking-widest uppercase">
-            Moodboard & Material Workspace
-          </span>
         </a>
 
         <div className="flex items-center gap-4 md:gap-8">
@@ -215,7 +212,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     </div>
                   ) : projects.length === 0 ? (
                     <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-gray-400">
-                      No projects yet
+                      Projects appear after generation
                     </div>
                   ) : (
                     projects.map((project) => {
@@ -248,7 +245,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className="w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest text-gray-700 hover:bg-gray-50"
                 >
-                  + New Project
+                  + Name New Project
                 </button>
               </div>
             )}

@@ -46,7 +46,7 @@ const ProjectContextHeader: React.FC<ProjectContextHeaderProps> = ({
           onClick={onChangeProject}
           className="font-mono text-[10px] uppercase tracking-widest text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0 ml-auto"
         >
-          Change
+          Switch
         </button>
       )}
     </div>

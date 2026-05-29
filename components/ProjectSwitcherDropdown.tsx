@@ -94,7 +94,7 @@ const ProjectSwitcherDropdown: React.FC<ProjectSwitcherDropdownProps> = ({
         <div className="px-4 py-6 text-center">
           <FolderOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-sm text-gray-500 mb-1">No projects yet</p>
-          <p className="text-xs text-gray-400">Create your first project to get started</p>
+          <p className="text-xs text-gray-400">Projects are created when you generate, or you can name one now.</p>
         </div>
       ) : (
         <div className="max-h-64 overflow-y-auto">

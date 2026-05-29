@@ -11,6 +11,13 @@ export type Category = {
 
 export const CATEGORIES: Category[] = [
   {
+    id: 'favourites',
+    label: 'Favourites',
+    children: [
+      { id: 'my-favourites', label: 'My Favourites' },
+    ],
+  },
+  {
     id: 'structure',
     label: 'Structure',
     children: [

@@ -42,9 +42,9 @@ const sustainabilityHighlights = [
 ];
 
 const heroProofPoints = [
-  'Verified specifications',
-  'Applied design renders',
-  'Sustainability context',
+  'Select real materials',
+  'Apply to project images',
+  'Keep data attached',
 ];
 
 const heroMaterials = [
@@ -56,16 +56,16 @@ const heroMaterials = [
 const audienceCards = [
   {
     eyebrow: 'For designers',
-    title: 'Build palettes from real products, not loose inspiration.',
-    copy: 'Select materials, compare specification and sustainability trade-offs, then generate moodboards, applied renders, and client-ready handoff material from the same palette.',
+    title: 'Test material ideas visually.',
+    copy: 'Build palettes from real products, compare key specification data, and apply selected materials to sketches, elevations, or reference images.',
     action: 'Start designing',
     page: 'materials',
     icon: Building2,
   },
   {
     eyebrow: 'For manufacturers',
-    title: 'Get specified where material decisions begin.',
-    copy: 'Put verified finishes, EPDs, product imagery, and technical data inside the concept-stage workflow architects already use to explore palettes.',
+    title: 'Make products useful at concept stage.',
+    copy: 'Add finishes, images, EPDs, and specification data so designers can discover and use your materials while projects are still forming.',
     action: 'List products',
     page: 'brand-register',
     icon: Factory,
@@ -74,51 +74,48 @@ const audienceCards = [
 
 const productOutcomes = [
   {
-    title: 'Material library',
-    copy: 'Real brands, finishes, colours, system notes, and environmental evidence in one searchable workflow.',
+    title: 'Select materials',
+    copy: 'Choose real brands, finishes, colours, system notes, and environmental evidence in one searchable workflow.',
     icon: BadgeCheck,
   },
   {
-    title: 'AI moodboard',
-    copy: 'Generate clean palette visuals that show texture, adjacency, scale, and the product data behind each choice.',
+    title: 'Generate moodboards',
+    copy: 'Create clean palette visuals that show texture, adjacency, scale, and the product data behind each choice.',
     icon: Sparkles,
   },
   {
-    title: 'Applied renders',
+    title: 'Apply to images',
     copy: 'Upload a sketch, elevation, or reference image and test selected materials directly on a design before committing.',
     icon: Wand2,
   },
   {
-    title: 'Specification handoff',
+    title: 'Export notes',
     copy: 'Carry the same selected materials into sustainability briefings, applied renders, and exportable project records.',
     icon: FileText,
   },
 ];
 
-const featureCards = [
+const projectOutputs = [
   {
-    title: 'Curate',
-    copy: 'Build a material palette with drag-and-drop selection, custom colours, real product data, and concise specification details.',
+    label: '01',
+    title: 'Material key',
+    copy: 'A concise schedule of selected products, finishes, colours, and sustainability notes.',
   },
   {
-    title: 'Sustainability',
-    copy: 'See environmental insight on every material in one click, with early guidance on carbon hotspots and better alternatives.',
+    label: '02',
+    title: 'Moodboard render',
+    copy: 'A clean palette composition showing texture, proportion, and adjacency for early reviews.',
   },
   {
-    title: 'Render',
-    copy: 'Generate photorealistic palette compositions that show texture, tone, and adjacency clearly for reviews and client presentations.',
+    label: '03',
+    title: 'Applied design render',
+    copy: 'The same palette tested on a sketch, elevation, room image, or reference view.',
   },
   {
-    title: 'Apply',
-    copy: 'Upload a sketch, elevation, or reference image and see your selected materials applied with context, light, and scale.',
+    label: '04',
+    title: 'Project handoff',
+    copy: 'Exportable material records that keep product evidence connected to the visual story.',
   },
-];
-
-const outcomes = [
-  'Present material choices to clients with real specifications, not just images.',
-  'Show sustainability data at concept stage before design decisions are locked.',
-  'Generate convincing visuals without a 3D visualiser or render artist.',
-  'Test material palettes on your actual designs before committing.',
 ];
 
 const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
@@ -161,17 +158,17 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
       {/* Hero */}
       <header className="relative overflow-hidden border-b border-gray-200">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,#ffffff_0%,#f7f8f4_46%,#eef3e7_100%)]" />
-        <div className="relative max-w-screen-2xl mx-auto px-6 pt-10 pb-12 md:pt-16 md:pb-16 grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
+        <div className="relative max-w-screen-2xl mx-auto px-6 pt-[15px] pb-12 md:pb-16 grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-start">
           <div className="lg:col-span-4 space-y-7">
             <div className="inline-flex items-center gap-3 border border-gray-200 bg-white px-3 py-2 shadow-sm">
               <Leaf className="w-4 h-4 text-lime-700" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-700">Real materials. Real data. Real outputs.</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-gray-700">Select. Visualise. Apply. Specify.</span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl xl:text-6xl font-bold uppercase tracking-tight leading-[0.92]">
-              Specify real materials. Generate moodboards and applied renders.
+            <h1 className="font-display text-4xl md:text-5xl xl:text-5xl font-bold uppercase tracking-tight leading-[0.94]">
+              Select real materials. Visualise them in your project.
             </h1>
             <p className="font-sans text-lg md:text-xl text-gray-700 max-w-2xl leading-relaxed">
-              Moodboard Lab turns verified product data into visual material palettes, sustainability insight, and applied design renders for architecture and interior design teams.
+              Moodboard Lab turns product data into moodboards, applied renders, sustainability notes, and project-ready material records.
             </p>
             <div className="flex flex-wrap gap-4">
               <a
@@ -199,12 +196,12 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
               ))}
             </div>
           </div>
-          <div className="lg:col-span-8">
-            <div className="relative overflow-hidden border border-gray-200 bg-white shadow-xl">
+          <div className="lg:col-span-8 lg:self-stretch">
+            <div className="relative h-full overflow-hidden border border-gray-200 bg-white shadow-xl">
               <img
                 src={heroMoodboard}
                 alt="Material palette render preview"
-                className="w-full h-[430px] md:h-[560px] lg:h-[620px] object-cover"
+                className="w-full h-[430px] md:h-[560px] lg:h-full lg:min-h-[620px] object-cover"
               />
               <div className="absolute inset-x-0 bottom-0 grid grid-cols-1 md:grid-cols-[minmax(260px,0.9fr)_1fr] gap-0 border-t border-gray-200 bg-white/95 backdrop-blur">
                 <div className="border-b md:border-b-0 md:border-r border-gray-200 p-4">
@@ -231,13 +228,13 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
         <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
             <div className="lg:col-span-5 space-y-3">
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-gray-500">One workflow, two sides of the market</p>
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-gray-500">Select. Visualise. Apply. Specify.</p>
               <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95]">
-                A better meeting point for specification.
+                One palette can carry the whole material idea.
               </h2>
             </div>
             <p className="lg:col-span-7 font-sans text-lg md:text-xl text-gray-700 leading-relaxed">
-              Designers need fast visual confidence without losing technical accuracy. Manufacturers need their verified product data to appear before choices are already fixed. Moodboard Lab connects both moments.
+              Start with real products, generate a moodboard, test the palette on a project image, and keep the specification data attached.
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -286,18 +283,57 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
         </div>
       </section>
 
+      {/* Workflow Strip */}
+      <WorkflowStrip />
+
+      {/* Full Project Output */}
+      <section className="bg-gray-50 py-16 border-b border-gray-200">
+        <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
+          <div className="flex items-center gap-3">
+            <span className="h-[1px] w-12 bg-black" />
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Full project output</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            <div className="lg:col-span-4 space-y-4">
+              <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95]">
+                One palette, several useful project outputs.
+              </h2>
+              <p className="font-sans text-gray-700 leading-relaxed">
+                This section is ready for a complete example project: material choices, generated moodboard, applied render, and the specification evidence that ties them together.
+              </p>
+            </div>
+            <div className="lg:col-span-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2 border border-gray-200 bg-white p-5">
+                  <div className="aspect-[16/9] border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                    <p className="font-mono text-xs uppercase tracking-widest text-gray-400">Project output hero asset</p>
+                  </div>
+                </div>
+                {projectOutputs.map((item) => (
+                  <article key={item.title} className="border border-gray-200 bg-white p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-gray-400">{item.label}</p>
+                    <h3 className="mt-3 font-display text-2xl uppercase tracking-wide">{item.title}</h3>
+                    <p className="mt-3 font-sans text-sm leading-relaxed text-gray-700">{item.copy}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Sustainability */}
       <section className="border-b border-lime-200 bg-[linear-gradient(135deg,#f7f7ee_0%,#edf6dd_52%,#f5f2e9_100%)] py-16">
         <div className="max-w-screen-2xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-4">
-            <p className="font-mono text-xs uppercase tracking-[0.22em] text-lime-900/70">Embedded from concept stage</p>
+            <p className="font-mono text-xs uppercase tracking-[0.22em] text-lime-900/70">Specification confidence</p>
             <h2 className="font-display text-4xl md:text-5xl font-bold uppercase tracking-tight leading-[0.95] text-slate-900">
-              Sustainability starts with the first material.
+              Sustainability stays attached to the palette.
             </h2>
           </div>
           <div className="lg:col-span-7 space-y-6">
             <p className="font-sans text-lg md:text-xl text-slate-800 max-w-4xl leading-relaxed">
-              Your material palette is a specification, not a collage. Environmental data is embedded in every material choice at concept stage, so carbon, circularity, and practical trade-offs show up before a separate Stage 4 review.
+              Environmental context sits alongside the visual work, so carbon, circularity, and practical trade-offs stay visible while the material idea develops.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {sustainabilityHighlights.map((item) => (
@@ -310,9 +346,6 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
           </div>
         </div>
       </section>
-
-      {/* Workflow Strip */}
-      <WorkflowStrip />
 
       {/* Partner Brands */}
       <section className="bg-white py-16 border-b border-gray-100">
@@ -390,32 +423,40 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
                   })
                 )}
               </div>
-              <p className="font-sans text-sm text-gray-500">
-                Are you a manufacturer?{' '}
-                <a
-                  href={getPathForPage('brand-register')}
-                  onClick={(e) => handleNavigateClick(e, 'brand-register')}
-                  className="underline hover:text-black transition-colors"
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <button
+                  onClick={() => onNavigate('brands')}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-black text-xs font-mono uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
                 >
-                  Get your products featured →
-                </a>
-              </p>
+                  Browse all brands →
+                </button>
+                <p className="font-sans text-sm text-gray-500">
+                  Are you a manufacturer?{' '}
+                  <a
+                    href={getPathForPage('brand-register')}
+                    onClick={(e) => handleNavigateClick(e, 'brand-register')}
+                    className="underline hover:text-black transition-colors"
+                  >
+                    Get your products featured →
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Recent Generations */}
+      {/* Recent Material Studies */}
       <section className="bg-white py-12 border-b border-gray-100">
         <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent generations</p>
+            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Recent material studies</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
               <p className="font-sans text-gray-700 leading-relaxed">
-                Recent generations created in Moodboard Lab. Each one shows how real material choices can become fast, presentation-ready visuals.
+                Recent material studies created in Moodboard Lab. Each one shows how selected products can become fast, presentation-ready visuals.
               </p>
             </div>
             <div className="lg:col-span-2">
@@ -448,49 +489,11 @@ const Concept: React.FC<ConceptProps> = ({ onNavigate, onViewBrand }) => {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="bg-white py-16 border-b border-gray-100">
-        <div className="max-w-screen-2xl mx-auto px-6 space-y-10">
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Features</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {featureCards.map((feature) => (
-              <div key={feature.title} className="space-y-3 border border-gray-200 bg-gray-50 p-6">
-                <h3 className="font-display text-2xl uppercase font-semibold">{feature.title}</h3>
-                <p className="font-sans text-gray-700 leading-relaxed">{feature.copy}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Outcomes */}
-      <section className="bg-gray-50 py-16 border-b border-gray-200">
-        <div className="max-w-screen-2xl mx-auto px-6 space-y-6">
-          <div className="flex items-center gap-3">
-            <span className="h-[1px] w-12 bg-black" />
-            <p className="font-mono text-xs uppercase tracking-widest text-gray-600">Outcomes</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {outcomes.map((item, idx) => (
-              <div key={idx} className="border border-gray-200 bg-white p-4">
-                <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-                  {String(idx + 1).padStart(2, '0')}
-                </div>
-                <p className="font-sans text-gray-800">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA */}
       <section className="bg-black text-white py-16">
         <div className="max-w-screen-xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <h3 className="font-display text-3xl md:text-4xl font-bold uppercase tracking-tight text-center md:text-left">
-            Build your first material palette.
+            Build your first material study.
           </h3>
           <button
             onClick={() => onNavigate('materials')}

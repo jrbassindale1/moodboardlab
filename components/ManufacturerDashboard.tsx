@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart2, Mail, Package } from 'lucide-react';
+import { ArrowLeft, BarChart2, Building2, Check, Mail, Package, Trophy } from 'lucide-react';
 import { useAuth } from '../auth';
 import {
   getMyBrand,
   getBrandAnalytics,
   getSampleRequests,
+  updateBrand,
   type BrandSummary,
   type BrandAnalytics,
 } from '../api';
+
+type TimeRange = 'all' | 'month';
 
 interface ManufacturerDashboardProps {
   onNavigate: (page: string) => void;
 }
 
-type Tab = 'analytics' | 'requests';
+type Tab = 'analytics' | 'requests' | 'profile';
 
 type SampleRequest = {
   id: string;
@@ -26,7 +29,7 @@ type SampleRequest = {
   requesterRole?: string;
   message?: string;
   projectType?: string;
-  status: 'new' | 'viewed' | 'responded';
+  status: 'new' | 'viewed' | 'responded' | 'closed';
   createdAt: string;
 };
 
@@ -34,12 +37,14 @@ const STATUS_BADGE: Record<SampleRequest['status'], string> = {
   new: 'bg-amber-50 text-amber-700 border-amber-200',
   viewed: 'bg-blue-50 text-blue-700 border-blue-200',
   responded: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  closed: 'bg-gray-50 text-gray-400 border-gray-200',
 };
 
 const STATUS_LABELS: Record<SampleRequest['status'], string> = {
   new: 'New',
   viewed: 'Viewed',
   responded: 'Responded',
+  closed: 'Closed',
 };
 
 function getApiBase() {
@@ -67,9 +72,14 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
   const [analytics, setAnalytics] = useState<BrandAnalytics | null>(null);
   const [requests, setRequests] = useState<SampleRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<SampleRequest | null>(null);
   const [isPatching, setIsPatching] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [profileForm, setProfileForm] = useState({ name: '', tagline: '', website: '', countryOfOrigin: '', logoUrl: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
@@ -80,6 +90,13 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
         const b = await getMyBrand(token);
         if (!b) { setNotFound(true); return; }
         setBrand(b);
+        setProfileForm({
+          name: b.name ?? '',
+          tagline: b.tagline ?? '',
+          website: b.website ?? '',
+          countryOfOrigin: (b as BrandSummary & { countryOfOrigin?: string }).countryOfOrigin ?? '',
+          logoUrl: b.logoUrl ?? '',
+        });
 
         const [a, r] = await Promise.all([
           getBrandAnalytics(token, b.id),
@@ -91,6 +108,21 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
       .catch(() => setNotFound(true))
       .finally(() => setIsLoading(false));
   }, [isAuthenticated, authLoading]);
+
+  useEffect(() => {
+    if (!brand || isLoading) return;
+    setIsAnalyticsLoading(true);
+    getAccessToken()
+      .then(async (token) => {
+        const since = timeRange === 'month'
+          ? new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+          : undefined;
+        const a = await getBrandAnalytics(token, brand.id, since);
+        if (a) setAnalytics(a);
+      })
+      .catch(() => {/* silent */})
+      .finally(() => setIsAnalyticsLoading(false));
+  }, [timeRange, brand]);
 
   const patchRequestStatus = async (req: SampleRequest, status: SampleRequest['status']) => {
     setIsPatching(true);
@@ -111,6 +143,28 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
       }
     } catch { /* silent */ }
     finally { setIsPatching(false); }
+  };
+
+  const saveProfile = async () => {
+    if (!brand) return;
+    setProfileSaving(true);
+    setProfileSaved(false);
+    try {
+      const token = await getAccessToken();
+      const updated = await updateBrand(token, brand.id, {
+        name: profileForm.name || undefined,
+        tagline: profileForm.tagline || undefined,
+        website: profileForm.website || undefined,
+        logoUrl: profileForm.logoUrl || undefined,
+        countryOfOrigin: profileForm.countryOfOrigin || undefined,
+      });
+      if (updated) {
+        setBrand(updated);
+        setProfileSaved(true);
+        setTimeout(() => setProfileSaved(false), 3000);
+      }
+    } catch { /* silent */ }
+    finally { setProfileSaving(false); }
   };
 
   const maxTrend = analytics?.trend.reduce((m, t) => Math.max(m, t.count), 0) ?? 0;
@@ -155,7 +209,7 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
     );
   }
 
-  const newRequestCount = requests.filter((r) => r.status === 'new').length;
+  const newRequestCount = requests.filter((r) => r.status === 'new' && r.status !== 'closed').length;
 
   return (
     <div className="w-full pt-16 min-h-screen bg-white flex flex-col">
@@ -176,6 +230,7 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
         {([
           { key: 'analytics', label: 'Analytics', icon: BarChart2 },
           { key: 'requests', label: `Sample Requests${newRequestCount > 0 ? ` (${newRequestCount})` : ''}`, icon: Mail },
+          { key: 'profile', label: 'Brand Profile', icon: Building2 },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -193,11 +248,64 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
       <div className="flex-1 overflow-y-auto">
         {tab === 'analytics' && (
           <div className="max-w-5xl mx-auto px-6 py-8 space-y-10">
+            {/* Time range toggle */}
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                {timeRange === 'month' ? 'This month' : 'All time'}
+              </p>
+              <div className="flex border border-gray-200">
+                {([
+                  { key: 'all', label: 'All Time' },
+                  { key: 'month', label: 'This Month' },
+                ] as const).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTimeRange(key)}
+                    className={`px-3 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${
+                      timeRange === key ? 'bg-black text-white' : 'bg-white text-gray-500 hover:text-black'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Totals */}
-            {analytics ? (
+            {analytics && !isAnalyticsLoading ? (
               <>
+                {/* Top product highlight */}
+                {analytics.materials.length > 0 && (() => {
+                  const top = analytics.materials.slice().sort((a, b) => b.total - a.total)[0];
+                  return (
+                    <section className="border border-gray-200 p-5 flex items-center gap-5 bg-gray-50">
+                      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-amber-50 border border-amber-200">
+                        <Trophy className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-[9px] uppercase tracking-widest text-gray-400 mb-0.5">Top product this period</p>
+                        <p className="font-display text-sm uppercase tracking-wide truncate">{top.materialName}</p>
+                      </div>
+                      <div className="flex gap-6 flex-shrink-0">
+                        <div className="text-center">
+                          <p className="font-display text-xl font-bold">{top.views}</p>
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-gray-400">Views</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-display text-xl font-bold">{top.addToBoard}</p>
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-gray-400">Added</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="font-display text-xl font-bold">{top.total}</p>
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-gray-400">Total</p>
+                        </div>
+                      </div>
+                    </section>
+                  );
+                })()}
+
                 <section className="space-y-4">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">All-time totals</p>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">Totals</p>
                   <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                     {METRIC_COLS.map(({ key, label }) => (
                       <div key={key} className="border border-gray-200 p-4 space-y-1">
@@ -264,6 +372,10 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
                   </section>
                 )}
               </>
+            ) : isAnalyticsLoading ? (
+              <div className="py-20 text-center">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-400">Loading…</p>
+              </div>
             ) : (
               <div className="py-20 text-center">
                 <Package className="w-8 h-8 text-gray-300 mx-auto mb-3" />
@@ -273,6 +385,66 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {tab === 'profile' && (
+          <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">
+            <div>
+              <h2 className="font-display text-xl uppercase tracking-wide mb-1">Brand Profile</h2>
+              <p className="text-sm text-gray-500 font-sans">
+                Updates apply immediately to your brand page and all product listings.
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {([
+                { key: 'name', label: 'Brand Name', type: 'text', placeholder: 'e.g. ROCKWOOL UK' },
+                { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'One-line description for the homepage' },
+                { key: 'website', label: 'Website', type: 'url', placeholder: 'https://www.example.com' },
+                { key: 'countryOfOrigin', label: 'Country of Origin', type: 'text', placeholder: 'e.g. United Kingdom' },
+              ] as const).map(({ key, label, type, placeholder }) => (
+                <div key={key}>
+                  <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-1.5">{label}</label>
+                  <input
+                    type={type}
+                    value={profileForm[key]}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full border border-gray-200 px-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
+                  />
+                </div>
+              ))}
+
+              <div>
+                <label className="block font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-1.5">Logo URL</label>
+                {profileForm.logoUrl && (
+                  <img src={profileForm.logoUrl} alt="Logo preview" className="h-10 w-auto object-contain mb-2 border border-gray-100 p-1" />
+                )}
+                <input
+                  type="url"
+                  value={profileForm.logoUrl}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, logoUrl: e.target.value }))}
+                  placeholder="https://… (paste blob URL after uploading)"
+                  className="w-full border border-gray-200 px-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 pt-2">
+              <button
+                onClick={saveProfile}
+                disabled={profileSaving}
+                className="px-6 py-2.5 bg-black text-white text-xs font-mono uppercase tracking-widest hover:bg-gray-900 transition-colors disabled:opacity-50"
+              >
+                {profileSaving ? 'Saving…' : 'Save changes'}
+              </button>
+              {profileSaved && (
+                <span className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-emerald-600">
+                  <Check className="w-3.5 h-3.5" /> Saved
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -360,8 +532,8 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
 
                   <div className="border-t border-gray-200 pt-4 space-y-2">
                     <p className="font-mono text-[9px] uppercase tracking-widest text-gray-400">Update status</p>
-                    <div className="flex gap-2">
-                      {(['new', 'viewed', 'responded'] as const).map((s) => (
+                    <div className="flex gap-2 flex-wrap">
+                      {(['new', 'viewed', 'responded', 'closed'] as const).map((s) => (
                         <button
                           key={s}
                           disabled={isPatching || selectedRequest.status === s}

@@ -80,7 +80,7 @@ const Product: React.FC<ProductProps> = ({ onNavigate }) => {
               className="bg-black text-white px-6 py-3 flex items-center gap-3 hover:bg-gray-900 transition-colors"
             >
               <Wand2 className="w-4 h-4" />
-              <span className="font-mono text-xs uppercase tracking-widest">Open Workspace</span>
+              <span className="font-mono text-xs uppercase tracking-widest">Open Moodboard</span>
             </a>
             <a
               href={getPathForPage('concept')}

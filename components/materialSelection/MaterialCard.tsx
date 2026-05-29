@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, Box, ExternalLink, FileText, Leaf, Mail } from 'lucide-react';
+import { Award, Bookmark, Box, ExternalLink, FileText, Leaf, Mail } from 'lucide-react';
 import { MaterialOption } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
 import { formatDescriptionForDisplay, formatFinishForDisplay } from '../../utils/materialDisplay';
@@ -16,6 +16,8 @@ interface MaterialCardProps {
   onShowSustainability: (material: MaterialOption, fact: MaterialFact) => void;
   onRequestSample?: (mat: MaterialOption) => void;
   accessToken?: string;
+  isFavourite?: boolean;
+  onToggleFavourite?: (mat: MaterialOption) => void;
 }
 
 const TIER_BADGE: Record<string, { label: string; classes: string }> = {
@@ -37,6 +39,8 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
   onShowSustainability,
   onRequestSample,
   accessToken,
+  isFavourite = false,
+  onToggleFavourite,
 }) => {
   const { webpUrl, pngUrl } = getMaterialIconUrls(mat);
   const tierBadge = mat.source ? TIER_BADGE[mat.source] : undefined;
@@ -88,6 +92,23 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
           </picture>
         )}
         <div className="w-full h-full hidden" style={{ backgroundColor: mat.tone }} />
+
+        {/* Bookmark — top right */}
+        {onToggleFavourite && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleFavourite(mat); }}
+            className={`absolute top-2 right-2 p-1.5 border transition-all ${
+              isFavourite
+                ? 'bg-amber-50 border-amber-300 opacity-100'
+                : 'bg-white/90 border-gray-200 opacity-0 group-hover:opacity-100'
+            }`}
+            title={isFavourite ? 'Remove from favourites' : 'Save to favourites'}
+          >
+            <Bookmark
+              className={`w-3 h-3 ${isFavourite ? 'text-amber-600 fill-amber-600' : 'text-gray-500'}`}
+            />
+          </button>
+        )}
 
         {/* Source badge — top left */}
         {tierBadge ? (

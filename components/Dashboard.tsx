@@ -4,7 +4,26 @@ import { useAuth, useUsage, isClerkAuthEnabled, isAuthBypassEnabled } from '../a
 import { getGenerations, moveGenerationsToProject, PrecedentResult, type Project } from '../api';
 import type { MaterialOption } from '../types';
 import type { SustainabilityBriefingResponse, SustainabilityBriefingPayload } from '../utils/sustainabilityBriefing';
-import { Calendar, Image, Loader2, LogIn, Download, ChevronDown, ChevronRight, FolderOpen, Clock, Plus } from 'lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  Download,
+  FileText,
+  FolderOpen,
+  Image,
+  Layers,
+  Loader2,
+  LogIn,
+  MapPin,
+  Pencil,
+  Plus,
+  Sparkles,
+  Trash2,
+} from 'lucide-react';
 import { trackEvent } from '../utils/analytics';
 
 interface Generation {
@@ -33,6 +52,8 @@ interface DashboardProps {
   }) => void;
   onOpenProjectModal?: () => void;
   projects?: Project[];
+  onRenameProject?: (projectId: string, name: string) => Promise<void>;
+  onDeleteProject?: (projectId: string) => Promise<void>;
 }
 
 type BoardItemLike = {
@@ -43,10 +64,11 @@ type BoardItemLike = {
 
 const typeLabels: Record<string, string> = {
   moodboard: 'Moodboard',
-  applyMaterials: 'Applied Materials',
+  applyMaterials: 'Render',
   upscale: '4K Upscale',
   materialIcon: 'Material Icon',
   sustainabilityBriefing: 'Sustainability',
+  precedentSearch: 'Precedents',
 };
 const PREVIEW_SAMPLE_BOARD: MaterialOption[] = [
   {
@@ -167,9 +189,19 @@ const extractProjectFromMaterials = (materials?: unknown): { id: string; name: s
 type ProjectGroup = {
   projectId: string;
   projectName: string;
+  project?: Project;
   generations: Array<{ gen: Generation; attachments: Generation[] }>;
-  moodboardGen?: Generation; // The main moodboard for this project (used as cover)
-  createdAt: string; // Earliest generation timestamp
+  moodboardGen?: Generation;
+  latestImageGen?: Generation;
+  latestAt: string;
+  createdAt: string;
+};
+
+type ProjectAction = {
+  label: string;
+  hint: string;
+  page?: string;
+  generation?: Generation;
 };
 
 async function downloadUrl(url: string, filename: string) {
@@ -190,11 +222,76 @@ async function downloadUrl(url: string, filename: string) {
   }
 }
 
+const formatRelativeDate = (dateString: string): string => {
+  const timestamp = toTimestamp(dateString);
+  if (!timestamp) return 'Recently';
+  const diffMs = Date.now() - timestamp;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  if (diffMins < 2) return 'Just now';
+  if (diffMins < 60) return `${diffMins} mins ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return new Date(timestamp).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const getProjectCounts = (project: ProjectGroup) => {
+  const generations = project.generations.map((item) => item.gen);
+  const attachments = project.generations.flatMap((item) => item.attachments);
+  return {
+    moodboards: generations.filter((gen) => gen.type === 'moodboard').length,
+    renders: generations.filter((gen) => gen.type === 'applyMaterials' || gen.type === 'upscale').length,
+    documents: attachments.length,
+    precedents: generations.filter((gen) => gen.type === 'precedentSearch').length,
+  };
+};
+
+const getProjectAction = (project: ProjectGroup): ProjectAction => {
+  const latestRestorable = [...project.generations]
+    .sort((a, b) => toTimestamp(b.gen.createdAt) - toTimestamp(a.gen.createdAt))
+    .map((item) => item.gen)
+    .find((gen) => {
+      const targetPage =
+        gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
+      return targetPage && extractBoardFromMaterials(gen.materials).length > 0;
+    });
+
+  if (latestRestorable) {
+    return {
+      label: latestRestorable.type === 'moodboard' ? 'Open Moodboard' : 'Open Render',
+      hint: 'Continue from the latest project output.',
+      generation: latestRestorable,
+    };
+  }
+
+  if (!project.generations.length) {
+    return {
+      label: 'Start With Materials',
+      hint: 'Choose materials to generate your first project output.',
+      page: project.project?.entryRoute === 'sketch' ? 'apply' : 'materials',
+    };
+  }
+
+  return {
+    label: 'Open Render',
+    hint: 'Apply your material palette to a project image.',
+    page: 'apply',
+  };
+};
+
 const Dashboard: React.FC<DashboardProps> = ({
   onNavigate,
   onRestoreGeneration,
   onOpenProjectModal,
   projects = [],
+  onRenameProject,
+  onDeleteProject,
 }) => {
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const { usage, remaining, limit, purchasedCredits } = useUsage();
@@ -206,7 +303,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [moveError, setMoveError] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
   const limit_per_page = 12;
-  const isPreviewMode = isAuthBypassEnabled && !isAuthenticated;
+  const isPreviewMode = isAuthBypassEnabled;
   const canAccessDashboard = isAuthenticated || isPreviewMode;
   const previewDisplayItems = useMemo(() => {
     if (!isPreviewMode) return [];
@@ -313,30 +410,55 @@ const Dashboard: React.FC<DashboardProps> = ({
     const groups = new Map<string, ProjectGroup>();
     const ungrouped: Array<{ gen: Generation; attachments: Generation[] }> = [];
     const itemsToGroup = isPreviewMode ? previewDisplayItems : displayItems;
+    const projectById = new Map(projects.map((project) => [project.id, project]));
+
+    for (const project of projects) {
+      groups.set(project.id, {
+        projectId: project.id,
+        projectName: project.name,
+        project,
+        generations: [],
+        latestAt: project.updatedAt || project.createdAt,
+        createdAt: project.createdAt,
+      });
+    }
 
     for (const item of itemsToGroup) {
-      const project = extractProjectFromMaterials(item.gen.materials);
+      const embeddedProject = extractProjectFromMaterials(item.gen.materials);
 
-      if (project) {
-        if (!groups.has(project.id)) {
-          groups.set(project.id, {
-            projectId: project.id,
-            projectName: project.name,
+      if (embeddedProject) {
+        const apiProject = projectById.get(embeddedProject.id);
+        if (!groups.has(embeddedProject.id)) {
+          groups.set(embeddedProject.id, {
+            projectId: embeddedProject.id,
+            projectName: apiProject?.name || embeddedProject.name,
+            project: apiProject,
             generations: [],
+            latestAt: apiProject?.updatedAt || item.gen.createdAt,
             createdAt: item.gen.createdAt
           });
         }
-        const group = groups.get(project.id)!;
+        const group = groups.get(embeddedProject.id)!;
         group.generations.push(item);
+        if (apiProject) {
+          group.project = apiProject;
+          group.projectName = apiProject.name;
+        }
 
         // Track moodboard as cover image
         if (item.gen.type === 'moodboard' && !group.moodboardGen) {
           group.moodboardGen = item.gen;
         }
+        if (item.gen.blobUrl && isNewerGeneration(item.gen, group.latestImageGen)) {
+          group.latestImageGen = item.gen;
+        }
 
         // Update createdAt to earliest
         if (toTimestamp(item.gen.createdAt) < toTimestamp(group.createdAt)) {
           group.createdAt = item.gen.createdAt;
+        }
+        if (toTimestamp(item.gen.createdAt) > toTimestamp(group.latestAt)) {
+          group.latestAt = item.gen.createdAt;
         }
       } else {
         ungrouped.push(item);
@@ -345,19 +467,58 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     // Sort projects by most recent activity (newest first)
     const sortedGroups = Array.from(groups.values()).sort((a, b) => {
-      const aLatest = Math.max(...a.generations.map(g => toTimestamp(g.gen.createdAt)));
-      const bLatest = Math.max(...b.generations.map(g => toTimestamp(g.gen.createdAt)));
-      return bLatest - aLatest;
+      return toTimestamp(b.latestAt) - toTimestamp(a.latestAt);
     });
 
     return { projects: sortedGroups, ungrouped };
-  }, [displayItems, isPreviewMode, previewDisplayItems]);
+  }, [displayItems, isPreviewMode, previewDisplayItems, projects]);
+
+  const dashboardStats = useMemo(() => {
+    const allProjectGroups = projectGroups.projects;
+    const activeProjects = allProjectGroups.filter((project) => project.generations.length > 0).length;
+    const allGenerations = [...displayItems, ...(isPreviewMode ? previewDisplayItems : [])].map((item) => item.gen);
+    return {
+      projects: allProjectGroups.length,
+      activeProjects,
+      moodboards: allGenerations.filter((gen) => gen.type === 'moodboard').length,
+      renders: allGenerations.filter((gen) => gen.type === 'applyMaterials' || gen.type === 'upscale').length,
+    };
+  }, [displayItems, isPreviewMode, previewDisplayItems, projectGroups.projects]);
 
   // State for expanded projects
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
   // State for recent generations section (legacy items without projectId, starts closed)
   const [recentGenExpanded, setRecentGenExpanded] = useState(false);
+
+  // Rename / delete state
+  const [renamingProjectId, setRenamingProjectId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameSaving, setRenameSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteSaving, setDeleteSaving] = useState(false);
+
+  const handleRenameSubmit = async (projectId: string) => {
+    if (!renameValue.trim() || !onRenameProject) return;
+    setRenameSaving(true);
+    try {
+      await onRenameProject(projectId, renameValue.trim());
+      setRenamingProjectId(null);
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
+  const handleDeleteConfirm = async (projectId: string) => {
+    if (!onDeleteProject) return;
+    setDeleteSaving(true);
+    try {
+      await onDeleteProject(projectId);
+      setConfirmDeleteId(null);
+    } finally {
+      setDeleteSaving(false);
+    }
+  };
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
@@ -438,12 +599,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     const projectId = materials?.projectId as string | undefined;
     const projectName = materials?.projectName as string | undefined;
 
-    console.log('=== DASHBOARD RESTORE ===');
-    console.log('Generation type:', gen.type);
-    console.log('Materials keys:', materials ? Object.keys(materials) : 'no materials');
-    console.log('moodboardRenderUrl present:', !!moodboardRenderUrl);
-    console.log('projectId:', projectId || 'none');
-
     onRestoreGeneration({
       targetPage,
       board,
@@ -518,18 +673,18 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="max-w-screen-2xl mx-auto px-6 py-12 space-y-8">
         {isPreviewMode && (
           <div className="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Preview mode: authentication is bypassed in this environment. Dashboard data is hidden, but layout and UI changes are visible.
+            Preview mode: authentication is bypassed in this environment. Fake project data is shown so layout and restore flows can be tested safely.
           </div>
         )}
 
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-gray-200 pb-6">
+        <div className="flex flex-col gap-5 border-b border-gray-200 pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-display text-5xl font-bold uppercase tracking-tighter">
-              Dashboard
+              Projects
             </h1>
-            <p className="text-gray-600 mt-2">
-              Welcome back, {user?.name || 'User'}
+            <p className="text-gray-600 mt-2 max-w-2xl">
+              Welcome back, {user?.name || 'User'}. Open a project to continue where you left off, or review outputs across all your work.
             </p>
           </div>
           {onOpenProjectModal && (
@@ -544,8 +699,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Usage Stats */}
-        <div className="grid md:grid-cols-2 xl:grid-cols-5 gap-6">
-          <div className="border border-gray-200 p-6">
+        <div className="grid grid-cols-2 gap-px border border-gray-200 bg-gray-200 lg:grid-cols-4 xl:grid-cols-6">
+          <div className="bg-white p-4 sm:p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
               Available Credits
             </div>
@@ -556,62 +711,94 @@ const Dashboard: React.FC<DashboardProps> = ({
               {purchasedCredits > 0 ? `Includes ${purchasedCredits} purchased credits` : `${limit} free each month`}
             </div>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div className="bg-white p-4 sm:p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
               Purchased Credits
             </div>
-            <div className="font-display text-4xl font-bold text-green-600">
+            <div className={`font-display text-4xl font-bold ${purchasedCredits > 0 ? 'text-green-600' : ''}`}>
               {purchasedCredits}
             </div>
             <div className="mt-2 text-sm text-gray-500">
               Non-expiring balance
             </div>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div className="bg-white p-4 sm:p-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
+              Projects
+            </div>
+            <div className="font-display text-4xl font-bold">
+              {dashboardStats.projects}
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              {dashboardStats.activeProjects} active
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
               Moodboards
             </div>
             <div className="font-display text-4xl font-bold">
-              {usage?.moodboard ?? 0}
+              {dashboardStats.moodboards || usage?.moodboard || 0}
             </div>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div className="bg-white p-4 sm:p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
-              Applied Materials
+              Renders
             </div>
             <div className="font-display text-4xl font-bold">
-              {usage?.applyMaterials ?? 0}
+              {dashboardStats.renders || usage?.applyMaterials || 0}
             </div>
           </div>
-          <div className="border border-gray-200 p-6">
+          <div className="bg-white p-4 sm:p-6">
             <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-2">
               Total This Month
             </div>
             <div className="font-display text-4xl font-bold">
-              {usage?.total ?? 0}
+              {usage?.total || (dashboardStats.moodboards + dashboardStats.renders)}
             </div>
           </div>
         </div>
 
         {/* Projects & Generation History */}
         <div>
-          <h2 className="font-display text-2xl font-bold uppercase tracking-tight mb-4">
-            Your Projects
-          </h2>
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-500">
+                Open a project to continue your work, or review outputs from any named project.
+              </p>
+            </div>
+          </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
-          ) : (isPreviewMode ? previewDisplayItems : displayItems).length === 0 ? (
+          ) : projectGroups.projects.length === 0 && projectGroups.ungrouped.length === 0 ? (
             <div className="border border-dashed border-gray-300 p-8 text-center">
               <FolderOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 mb-4">{isPreviewMode ? 'No preview projects available.' : 'No projects yet.'}</p>
-              <button
-                onClick={() => onNavigate?.('moodboard')}
-                className="px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest"
-              >
-                Create Your First Project
-              </button>
+              <h3 className="font-display text-2xl font-bold uppercase tracking-tight">
+                {isPreviewMode ? 'No preview projects available.' : 'No projects yet.'}
+              </h3>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-gray-600">
+                Start by choosing materials. Moodboard Lab can create a named project when you generate your first output, or you can name the project now if you already know the job.
+              </p>
+              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button
+                  onClick={() => onNavigate?.('materials')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest"
+                >
+                  <Layers className="w-4 h-4" />
+                  Start With Materials
+                </button>
+                {onOpenProjectModal && (
+                  <button
+                    onClick={onOpenProjectModal}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white font-mono text-[11px] uppercase tracking-widest hover:border-gray-500 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Name Project First
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <>
@@ -631,65 +818,193 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="space-y-4 mb-8">
                   {projectGroups.projects.map((project) => {
                     const isExpanded = expandedProjects.has(project.projectId);
-                    const genCount = project.generations.length;
+                    const counts = getProjectCounts(project);
+                    const action = getProjectAction(project);
+                    const coverGeneration = project.moodboardGen || project.latestImageGen;
 
                     return (
-                      <div key={project.projectId} className="border border-gray-200 overflow-hidden">
+                      <div key={project.projectId} className="border border-gray-200 bg-white overflow-hidden">
                         {/* Project Header */}
-                        <button
-                          onClick={() => toggleProject(project.projectId)}
-                          className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left"
-                        >
-                          {/* Cover Image */}
-                          <div className="w-20 h-20 flex-shrink-0 bg-gray-100 overflow-hidden">
-                            {project.moodboardGen?.blobUrl ? (
-                              <img
-                                src={project.moodboardGen.blobUrl}
-                                alt={project.projectName}
-                                className="w-full h-full object-cover"
+                        <div className="grid lg:grid-cols-[220px_minmax(0,1fr)_260px]">
+                          <button
+                            onClick={() => toggleProject(project.projectId)}
+                            className="relative h-44 bg-gray-100 text-left lg:h-auto"
+                            aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${project.projectName}`}
+                          >
+                            {coverGeneration?.blobUrl ? (
+                                <img
+                                  src={coverGeneration.blobUrl}
+                                  alt={project.projectName}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <FolderOpen className="h-10 w-10 text-gray-300" />
+                                </div>
+                              )}
+                            <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 bg-white/90 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-700">
+                              <Calendar className="h-3 w-3" />
+                              {formatRelativeDate(project.latestAt)}
+                            </span>
+                          </button>
+
+                          <div className="min-w-0 border-t border-gray-200 p-5 lg:border-l lg:border-t-0">
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                              {project.project?.type && (
+                                <span className="bg-gray-100 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-500">
+                                  {project.project.type}
+                                </span>
+                              )}
+                              {project.project?.stage && (
+                                <span className="bg-gray-100 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-500">
+                                  {project.project.stage}
+                                </span>
+                              )}
+                              {project.project?.location && (
+                                <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                                  <MapPin className="h-3 w-3" />
+                                  {project.project.location}
+                                </span>
+                              )}
+                            </div>
+                            {renamingProjectId === project.projectId ? (
+                              <input
+                                autoFocus
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') void handleRenameSubmit(project.projectId);
+                                  if (e.key === 'Escape') setRenamingProjectId(null);
+                                }}
+                                onBlur={() => void handleRenameSubmit(project.projectId)}
+                                disabled={renameSaving}
+                                className="font-display text-2xl font-bold uppercase tracking-tight text-gray-950 border-b-2 border-black bg-transparent focus:outline-none w-full disabled:opacity-50"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <FolderOpen className="w-8 h-8 text-gray-300" />
+                              <div className="flex items-center gap-2 group/name">
+                                <h3 className="font-display text-2xl font-bold uppercase tracking-tight text-gray-950">
+                                  {project.projectName}
+                                </h3>
+                                {onRenameProject && (
+                                  <button
+                                    onClick={() => { setRenamingProjectId(project.projectId); setRenameValue(project.projectName); }}
+                                    className="opacity-0 group-hover/name:opacity-100 transition-opacity p-1 text-gray-400 hover:text-gray-700"
+                                    aria-label="Rename project"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             )}
-                          </div>
-
-                          {/* Project Info */}
-                          <div className="flex-grow min-w-0">
-                            <h3 className="font-display text-lg font-bold truncate">
-                              {project.projectName}
-                            </h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {new Date(project.createdAt).toLocaleDateString()}
-                              </span>
-                              <span className="font-mono text-[10px] uppercase tracking-widest bg-gray-100 px-2 py-0.5">
-                                {genCount} {genCount === 1 ? 'item' : 'items'}
-                              </span>
+                            {confirmDeleteId === project.projectId ? (
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-gray-600">Delete project?</span>
+                                <button
+                                  onClick={() => void handleDeleteConfirm(project.projectId)}
+                                  disabled={deleteSaving}
+                                  className="font-mono text-[10px] uppercase tracking-widest text-red-600 hover:text-red-800 border border-red-200 px-2 py-1 disabled:opacity-50"
+                                >
+                                  {deleteSaving ? 'Deleting…' : 'Delete'}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="font-mono text-[10px] uppercase tracking-widest text-gray-500 border border-gray-200 px-2 py-1"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : onDeleteProject && renamingProjectId !== project.projectId && (
+                              <button
+                                onClick={() => setConfirmDeleteId(project.projectId)}
+                                className="mt-1 flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            )}
+                            {project.project?.brief && (
+                              <p className="mt-2 line-clamp-2 max-w-3xl text-sm leading-relaxed text-gray-600">
+                                {project.project.brief}
+                              </p>
+                            )}
+                            <div className="mt-4 grid grid-cols-2 gap-px bg-gray-200 sm:grid-cols-4">
+                              {[
+                                { label: 'Moodboards', value: counts.moodboards },
+                                { label: 'Renders', value: counts.renders },
+                                { label: 'Files', value: counts.documents },
+                                { label: 'Precedents', value: counts.precedents },
+                              ].map((item) => (
+                                <div key={item.label} className="bg-gray-50 px-3 py-2">
+                                  <div className="font-mono text-lg font-bold text-gray-900">{item.value}</div>
+                                  <div className="font-mono text-[8px] uppercase tracking-widest text-gray-400">
+                                    {item.label}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
 
-                          {/* Expand/Collapse */}
-                          <div className="flex-shrink-0">
-                            {isExpanded ? (
-                              <ChevronDown className="w-5 h-5 text-gray-400" />
-                            ) : (
-                              <ChevronRight className="w-5 h-5 text-gray-400" />
-                            )}
+                          <div className="border-t border-gray-200 p-5 lg:border-l lg:border-t-0">
+                            <div className="mb-4 flex items-start gap-3">
+                              {project.generations.length ? (
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-700" />
+                              ) : (
+                                <Sparkles className="mt-0.5 h-4 w-4 text-gray-400" />
+                              )}
+                              <div>
+                                <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">
+                                  Next Step
+                                </p>
+                                <p className="mt-1 text-sm leading-relaxed text-gray-600">{action.hint}</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => {
+                                  if (action.generation) {
+                                    handleRestoreGeneration(action.generation);
+                                  } else if (action.page) {
+                                    onNavigate?.(action.page);
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center gap-2 bg-black px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-white transition-colors hover:bg-gray-900"
+                              >
+                                {action.label}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => toggleProject(project.projectId)}
+                                className="inline-flex items-center justify-center gap-2 border border-gray-200 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-gray-600 transition-colors hover:border-black hover:text-black"
+                              >
+                                {isExpanded ? 'Hide Outputs' : 'View Outputs'}
+                                <Layers className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
-                        </button>
+                        </div>
+
+                        {project.generations.length === 0 && !isExpanded && (
+                          <div className="border-t border-gray-200 bg-gray-50 px-5 py-3 text-sm text-gray-500">
+                            This project is ready, but it does not have saved outputs yet.
+                          </div>
+                        )}
 
                         {/* Expanded Content */}
                         {isExpanded && (
                           <div className="border-t border-gray-200 bg-gray-50 p-4">
+                            {project.generations.length === 0 ? (
+                              <div className="border border-dashed border-gray-300 bg-white p-8 text-center">
+                                <FileText className="mx-auto mb-3 h-8 w-8 text-gray-300" />
+                                <p className="text-sm text-gray-500">Outputs from this project will appear here.</p>
+                              </div>
+                            ) : (
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                               {project.generations.map(({ gen, attachments }) => {
                                 const targetPage =
                                   gen.type === 'moodboard' ? 'moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'apply' : null;
                                 const restoreLabel =
-                                  gen.type === 'moodboard' ? 'Open in Workspace' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open in Render' : null;
+                                  gen.type === 'moodboard' ? 'Open Moodboard' : gen.type === 'applyMaterials' || gen.type === 'upscale' ? 'Open Render' : null;
                                 const hasRestorableBoard = extractBoardFromMaterials(gen.materials).length > 0;
                                 const canRestore = Boolean(targetPage && restoreLabel && hasRestorableBoard && onRestoreGeneration);
                                 const generationIdsToMove = [gen.id, ...attachments.map((item) => item.id)];
@@ -787,6 +1102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 );
                               })}
                             </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -807,10 +1123,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     <div className="flex-grow min-w-0">
                       <h3 className="font-display text-lg font-bold">
-                        Other Generations
+                        Unassigned Outputs
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'}
+                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'} not linked to a project
                       </p>
                     </div>
                     <div className="flex-shrink-0">

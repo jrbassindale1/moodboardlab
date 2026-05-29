@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Trash2, StickyNote, Leaf, Wand2, Loader2 } from 'lucide-react';
+import { Trash2, StickyNote, Leaf, ExternalLink, Bookmark } from 'lucide-react';
 import { buildMaterialFact, type MaterialFact } from '../../data/materialFacts';
 import { MaterialOption, MaterialCategory } from '../../types';
 import { getMaterialIconUrls } from '../../utils/materialIconUrls';
@@ -7,6 +7,7 @@ import { formatFinishForDisplay } from '../../utils/materialDisplay';
 import { getCachedColoredIcon } from '../../hooks/useColoredIconGenerator';
 import MaterialSustainabilityModal from '../MaterialSustainabilityModal';
 import { CARBON_IMPACT_CLASSES, CARBON_IMPACT_LABELS } from '../../utils/materialCarbon';
+import { trackMaterialInteraction } from '../../api';
 
 interface ChosenMaterialsListProps {
   board: MaterialOption[];
@@ -14,8 +15,8 @@ interface ChosenMaterialsListProps {
   onRemove: (idx: number) => void;
   onToggleExclude: (idx: number, value: boolean) => void;
   onNoteChange?: (idx: number, note: string) => void;
-  onOpenGenerateModal?: () => void;
-  isGenerating?: boolean;
+  isFavourite?: (id: string) => boolean;
+  onToggleFavourite?: (item: MaterialOption) => void;
 }
 
 // Category display order and labels
@@ -92,7 +93,8 @@ const cleanValue = (value?: string | number | null) => {
 
 const getProductSummary = (item: MaterialOption) => {
   const isProductRecord = item.source === 'verified-brand' || item.source === 'partner-brand';
-  if (!isProductRecord) return null;
+  const hasBrandData = Boolean(item.brandName || item.productRange || item.productCode);
+  if (!isProductRecord && !hasBrandData) return null;
 
   const identity = [
     cleanValue(item.brandName),
@@ -120,7 +122,7 @@ const getProductSummary = (item: MaterialOption) => {
     .join(' / ');
 
   return {
-    label: item.source === 'partner-brand' ? 'Partner product' : 'Verified product',
+    label: item.source === 'partner-brand' ? 'Partner product' : isProductRecord ? 'Verified product' : null,
     identity,
     spec,
     supply,
@@ -134,10 +136,11 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
   onRemove,
   onToggleExclude,
   onNoteChange,
-  onOpenGenerateModal,
-  isGenerating,
+  isFavourite,
+  onToggleFavourite,
 }) => {
   const [expandedNoteIdx, setExpandedNoteIdx] = useState<number | null>(null);
+  const [expandedDetailsIdx, setExpandedDetailsIdx] = useState<number | null>(null);
   const [sustainabilityMaterial, setSustainabilityMaterial] = useState<{ material: MaterialOption; fact: MaterialFact } | null>(null);
 
   const helperCopy =
@@ -192,25 +195,6 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
             {board.length} material{board.length === 1 ? '' : 's'} selected
           </span>
         </div>
-        {board.length > 0 && onOpenGenerateModal && (
-          <button
-            onClick={onOpenGenerateModal}
-            disabled={isGenerating}
-            className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[10px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Generating
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-3.5 h-3.5" />
-                Generate
-              </>
-            )}
-          </button>
-        )}
       </div>
       {helperCopy && (
         <p className="mb-3 font-sans text-xs text-gray-500">{helperCopy}</p>
@@ -248,7 +232,10 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                     ? item.coloredIconBlobUrl
                     : (item.colorVariantId ? getCachedColoredIcon(item.colorVariantId) : null);
                   const isNoteExpanded = expandedNoteIdx === originalIdx;
+                  const isDetailsExpanded = expandedDetailsIdx === originalIdx;
                   const productSummary = getProductSummary(item);
+                  const hasProductLinks = Boolean(item.specSheetUrl || item.bimObjectUrl || item.productPageUrl || item.installGuideUrl);
+                  const hasDetails = Boolean(productSummary || hasProductLinks || item.brandId || onNoteChange || onToggleFavourite);
                   return (
                     <div
                       key={`${item.id}-${originalIdx}`}
@@ -311,57 +298,147 @@ const ChosenMaterialsList: React.FC<ChosenMaterialsListProps> = ({
                           <p className="font-mono text-[9px] uppercase tracking-widest text-gray-500 mt-0.5">
                             {formatFinishForDisplay(item.finish)}
                           </p>
-                          {productSummary && (
-                            <div className="mt-1 space-y-0.5">
-                              <p className="font-mono text-[9px] uppercase tracking-widest text-indigo-700">
-                                {productSummary.label}
-                                {productSummary.identity ? ` / ${productSummary.identity}` : ''}
-                              </p>
-                              {productSummary.spec && (
-                                <p className="font-sans text-[11px] leading-snug text-gray-600">
-                                  {productSummary.spec}
-                                </p>
-                              )}
-                              {(productSummary.certifications || productSummary.supply) && (
-                                <p className="font-sans text-[11px] leading-snug text-gray-500">
-                                  {[productSummary.certifications, productSummary.supply].filter(Boolean).join(' / ')}
-                                </p>
-                              )}
-                            </div>
-                          )}
                           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                             <span
                               className={`inline-flex items-center border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest ${CARBON_IMPACT_CLASSES[materialFact.carbonIntensity]}`}
                             >
                               {CARBON_IMPACT_LABELS[materialFact.carbonIntensity]}
                             </span>
-                            <button
-                              onClick={() => setSustainabilityMaterial({ material: item, fact: materialFact })}
-                              className="inline-flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-emerald-700 transition-colors hover:bg-emerald-100"
-                              title="View material sustainability credentials"
-                            >
-                              <Leaf className="w-3 h-3" />
-                              Info
-                            </button>
-                            <label className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-gray-500">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(item.excludeFromMoodboardRender)}
-                                onChange={(e) => onToggleExclude(originalIdx, e.target.checked)}
-                                className="h-3 w-3 border-gray-300 text-gray-900"
-                              />
-                              Exclude
-                            </label>
-                            <button
-                              onClick={() => setExpandedNoteIdx(isNoteExpanded ? null : originalIdx)}
-                              className={`inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
-                                item.note ? 'text-amber-600 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'
-                              }`}
-                            >
-                              <StickyNote className="w-3 h-3" />
-                              {item.note ? 'Note' : '+Note'}
-                            </button>
+                            {hasDetails && (
+                              <button
+                                onClick={() => setExpandedDetailsIdx(isDetailsExpanded ? null : originalIdx)}
+                                className="font-mono text-[9px] uppercase tracking-widest text-gray-400 hover:text-gray-700 transition-colors"
+                              >
+                                {isDetailsExpanded ? 'Hide details' : 'Details'}
+                              </button>
+                            )}
                           </div>
+
+                          {isDetailsExpanded && (
+                            <div className="mt-2 space-y-2 border-t border-gray-100 pt-2">
+                              {productSummary && (
+                                <div className="space-y-0.5">
+                                  <p className="font-mono text-[9px] uppercase tracking-widest text-indigo-700">
+                                    {[productSummary.label, productSummary.identity].filter(Boolean).join(' / ')}
+                                  </p>
+                                  {productSummary.spec && (
+                                    <p className="font-sans text-[11px] leading-snug text-gray-600">
+                                      {productSummary.spec}
+                                    </p>
+                                  )}
+                                  {(productSummary.certifications || productSummary.supply) && (
+                                    <p className="font-sans text-[11px] leading-snug text-gray-500">
+                                      {[productSummary.certifications, productSummary.supply].filter(Boolean).join(' / ')}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {hasProductLinks && (
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {item.specSheetUrl && (
+                                    <a
+                                      href={item.specSheetUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => trackMaterialInteraction(item, 'spec_sheet')}
+                                      className="inline-flex items-center gap-1 border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-colors"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      Spec Sheet
+                                    </a>
+                                  )}
+                                  {item.bimObjectUrl && (
+                                    <a
+                                      href={item.bimObjectUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => trackMaterialInteraction(item, 'bim')}
+                                      className="inline-flex items-center gap-1 border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-colors"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      BIM Object
+                                    </a>
+                                  )}
+                                  {item.productPageUrl && (
+                                    <a
+                                      href={item.productPageUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => trackMaterialInteraction(item, 'product_page')}
+                                      className="inline-flex items-center gap-1 border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-colors"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      Product Page
+                                    </a>
+                                  )}
+                                  {item.installGuideUrl && (
+                                    <a
+                                      href={item.installGuideUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={() => trackMaterialInteraction(item, 'spec_sheet')}
+                                      className="inline-flex items-center gap-1 border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-widest text-gray-600 hover:bg-gray-100 transition-colors"
+                                    >
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                      Install Guide
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="flex flex-wrap items-center gap-2">
+                                <label className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-gray-500">
+                                  <input
+                                    type="checkbox"
+                                    checked={Boolean(item.excludeFromMoodboardRender)}
+                                    onChange={(e) => onToggleExclude(originalIdx, e.target.checked)}
+                                    className="h-3 w-3 border-gray-300 text-gray-900"
+                                  />
+                                  Exclude from render
+                                </label>
+                                {item.brandId && (
+                                  <button
+                                    onClick={() => onNavigate?.(`brand:${item.brandId}`)}
+                                    className="font-mono text-[9px] uppercase tracking-widest text-indigo-600 hover:text-indigo-800 transition-colors"
+                                  >
+                                    More from this brand
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => setSustainabilityMaterial({ material: item, fact: materialFact })}
+                                  className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest text-emerald-700 transition-colors hover:text-emerald-900"
+                                  title="View material sustainability credentials"
+                                >
+                                  <Leaf className="w-3 h-3" />
+                                  Sustainability info
+                                </button>
+                                {onNoteChange && (
+                                  <button
+                                    onClick={() => setExpandedNoteIdx(isNoteExpanded ? null : originalIdx)}
+                                    className={`inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+                                      item.note ? 'text-amber-600 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                                  >
+                                    <StickyNote className="w-3 h-3" />
+                                    {item.note ? 'Edit note' : 'Add note'}
+                                  </button>
+                                )}
+                                {onToggleFavourite && (
+                                  <button
+                                    onClick={() => onToggleFavourite(item)}
+                                    className={`inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+                                      isFavourite?.(item.id) ? 'text-amber-600 hover:text-amber-700' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                                    title={isFavourite?.(item.id) ? 'Remove from favourites' : 'Save to favourites'}
+                                  >
+                                    <Bookmark className={`w-3 h-3 ${isFavourite?.(item.id) ? 'fill-amber-600' : ''}`} />
+                                    {isFavourite?.(item.id) ? 'Saved' : 'Save'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Remove button */}

@@ -148,7 +148,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             ) : (
               <>
                 <ImageDown className="w-4 h-4" />
-                Download
+                Download sheet
               </>
             )}
           </button>
@@ -157,9 +157,12 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
           >
             <Wand2 className="w-4 h-4" />
-            Open render
+            Apply palette to project image
           </button>
         </div>
+        <p className="font-sans text-xs text-gray-500">
+          Downloaded sheets include the material and brand key for attribution.
+        </p>
       </div>
     </div>
   );

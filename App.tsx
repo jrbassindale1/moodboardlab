@@ -4,10 +4,13 @@ import CookieBanner from './components/CookieBanner';
 import InactivityWarningModal from './components/InactivityWarningModal';
 import ProjectCreateModal from './components/ProjectCreateModal';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
+import { useFavourites } from './hooks/useFavourites';
 import { useAuth, useUsage } from './auth';
 import { MaterialOption, UploadedImage, StyleReferenceSource } from './types';
 import {
   createProjectApi,
+  updateProjectApi,
+  deleteProjectApi,
   getProjects,
   type CreateProjectPayload,
   type PrecedentResult,
@@ -132,9 +135,9 @@ const formatProjectName = (): string => {
   const projectNumber = getNextProjectNumber();
 
   if (projectNumber === 1) {
-    return `Moodboard ${dateStr}`;
+    return `Project ${dateStr}`;
   }
-  return `Moodboard ${dateStr} (${projectNumber})`;
+  return `Project ${dateStr} (${projectNumber})`;
 };
 
 const readProjectCache = (): string | null => {
@@ -231,6 +234,7 @@ const getInitialPage = (): string => {
 const App: React.FC = () => {
   const { isAuthenticated, user, logout, getAccessToken } = useAuth();
   const { checkoutStatus, dismissCheckoutStatus } = useUsage();
+  const { favourites, isFavourite, toggleFavourite } = useFavourites(getAccessToken, isAuthenticated);
   const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [selectedMaterials, setSelectedMaterials] = useState<MaterialOption[]>([]);
   const [moodboardRenderUrl, setMoodboardRenderUrl] = useState<string | null>(null);
@@ -441,6 +445,21 @@ const App: React.FC = () => {
       return null;
     }
   }, [currentProject, getAccessToken, isAuthenticated]);
+
+  const handleRenameProject = useCallback(async (projectId: string, name: string) => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const updated = await updateProjectApi(token, projectId, { name });
+    setProjects((prev) => prev.map((p) => p.id === projectId ? updated : p));
+  }, [getAccessToken]);
+
+  const handleDeleteProject = useCallback(async (projectId: string) => {
+    const token = await getAccessToken();
+    if (!token) return;
+    await deleteProjectApi(token, projectId);
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    if (currentProjectId === projectId) setCurrentProjectId(null);
+  }, [getAccessToken, currentProjectId]);
 
   // Create a new project (called when generating first moodboard)
   // Start a fresh project context (clears selected project and related render state)
@@ -805,6 +824,23 @@ const App: React.FC = () => {
             board={selectedMaterials}
             onBoardChange={setSelectedMaterials}
             onStartNewProject={startNewProject}
+            favourites={favourites}
+            isFavourite={isFavourite}
+            onToggleFavourite={toggleFavourite}
+          />
+        );
+      case 'brands':
+        return (
+          <MaterialSelection
+            onNavigate={setCurrentPage}
+            board={selectedMaterials}
+            onBoardChange={setSelectedMaterials}
+            onStartNewProject={startNewProject}
+            initialOpenSection="brands"
+            initialCategory="Brands>All Brands"
+            favourites={favourites}
+            isFavourite={isFavourite}
+            onToggleFavourite={toggleFavourite}
           />
         );
       case 'moodboard':
@@ -828,6 +864,8 @@ const App: React.FC = () => {
             onMoodboardEditPromptChange={setMoodboardEditPrompt}
             currentProject={currentProject}
             onCreateProject={ensureCurrentProject}
+            isFavourite={isFavourite}
+            onToggleFavourite={toggleFavourite}
           />
         );
       case 'apply':
@@ -878,6 +916,8 @@ const App: React.FC = () => {
             onRestoreGeneration={handleRestoreGeneration}
             onOpenProjectModal={() => setIsProjectCreateModalOpen(true)}
             projects={projects}
+            onRenameProject={handleRenameProject}
+            onDeleteProject={handleDeleteProject}
           />
         );
       case 'material-admin':
@@ -896,7 +936,7 @@ const App: React.FC = () => {
   const pageFallback = (
     <div className="min-h-[60vh] pt-28 px-6 bg-white">
       <div className="max-w-screen-2xl mx-auto border border-gray-200 bg-gray-50 p-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Loading workspace</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-gray-500">Loading Moodboard</p>
       </div>
     </div>
   );
@@ -1035,8 +1075,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="font-mono text-xs text-gray-500 uppercase tracking-widest text-center md:text-right">
-            <p>&copy; {new Date().getFullYear()} Moodboard & Material Workspace.</p>
-            <p className="mt-1">Built for fast material curation and rendering.</p>
+            <p>&copy; {new Date().getFullYear()} Moodboard Lab.</p>
+            <p className="mt-1">Material Moodboards and Renders for Design Teams.</p>
           </div>
         </div>
       </footer>
@@ -1088,7 +1128,7 @@ const App: React.FC = () => {
                 <h3 className="font-display uppercase tracking-widest text-sm mb-2">Quick Steps</h3>
                 <ol className="text-sm text-gray-700 font-sans space-y-2 list-decimal list-inside">
                   <li>Go to `Materials`, search or browse, then click `Add to Board`.</li>
-                  <li>Open `Workspace` and click `Create Moodboard`.</li>
+                  <li>Open `Moodboard` and click `Generate Moodboard`.</li>
                   <li>In the Sustainability Briefing section, review the summary and download PDFs.</li>
                   <li>Open `Render`, upload a JPG/PNG, then `Render with Upload` and refine.</li>
                 </ol>

@@ -24,6 +24,11 @@ interface MaterialSelectionProps {
   board: MaterialOption[];
   onBoardChange: (items: MaterialOption[]) => void;
   onStartNewProject?: () => void;
+  initialCategory?: string;
+  initialOpenSection?: string;
+  favourites?: MaterialOption[];
+  isFavourite?: (id: string) => boolean;
+  onToggleFavourite?: (item: MaterialOption) => void;
 }
 
 type CustomMaterialMode = 'upload' | 'describe' | 'analyse' | null;
@@ -36,7 +41,7 @@ type FlyToBoardAnimation = {
   tone: string;
 };
 
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB limit
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB limit
 const MAX_UPLOAD_DIMENSION = 1000;
 const RESIZE_QUALITY = 0.82;
 const RESIZE_MIME = 'image/webp';
@@ -171,7 +176,7 @@ const downscaleImage = (
     img.src = dataUrl;
   });
 
-const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange, onStartNewProject }) => {
+const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board, onBoardChange, onStartNewProject, initialCategory, initialOpenSection, favourites = [], isFavourite, onToggleFavourite }) => {
   const initialCachedMaterialsRef = useRef<MaterialOption[] | null>(null);
   if (initialCachedMaterialsRef.current === null) {
     initialCachedMaterialsRef.current = readCachedMaterials();
@@ -189,12 +194,13 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<MaterialOption | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory ?? null);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     CATEGORIES.forEach((section) => {
-      initial[section.id] = false;
+      initial[section.id] = section.id === 'favourites';
     });
+    if (initialOpenSection) initial[initialOpenSection] = true;
     return initial;
   });
   const [customMaterialMode, setCustomMaterialMode] = useState<CustomMaterialMode>(null);
@@ -220,8 +226,10 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
   const [flyToBoardAnimation, setFlyToBoardAnimation] = useState<FlyToBoardAnimation | null>(null);
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [isBoardListOpen, setIsBoardListOpen] = useState(false);
   const [brands, setBrands] = useState<BrandSummary[] | null>(null);
   const [brandsLoading, setBrandsLoading] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'branded' | 'generic'>('all');
   const brandsLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -608,6 +616,12 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     });
   }, [displayedMaterials]);
 
+  const finalMaterials = useMemo(() => {
+    if (sourceFilter === 'branded') return sortedMaterials.filter((m) => m.source === 'partner-brand' || m.source === 'verified-brand');
+    if (sourceFilter === 'generic') return sortedMaterials.filter((m) => !m.source || m.source === 'generic');
+    return sortedMaterials;
+  }, [sortedMaterials, sourceFilter]);
+
   // Get category label
   const getCategoryLabel = () => {
     if (!selectedCategory) return 'All Materials';
@@ -776,7 +790,7 @@ const MaterialSelection: React.FC<MaterialSelectionProps> = ({ onNavigate, board
     const file = files[0];
     if (!file.type.startsWith('image/')) return;
     if (file.size > MAX_UPLOAD_BYTES) {
-      setDetectionError('File exceeds 5 MB limit.');
+      setDetectionError('File exceeds 10 MB limit.');
       return;
     }
 
@@ -1001,6 +1015,7 @@ IMPORTANT:
 
   const isCustomCategory = selectedCategory?.startsWith('Custom>');
   const isBrandsCategory = Boolean(selectedCategory?.startsWith('Brands>'));
+  const isFavouritesCategory = Boolean(selectedCategory?.startsWith('Favourites>'));
 
   const filteredBrands = useMemo(() => {
     if (!brands) return [];
@@ -1036,9 +1051,9 @@ IMPORTANT:
       <div className="max-w-screen-2xl mx-auto px-6 py-8 pt-24">
         <div className="flex flex-col gap-6 lg:gap-8 lg:flex-row">
           {/* Left Sidebar - Category filters */}
-          <aside className="w-full space-y-4 lg:space-y-6 lg:w-64 lg:flex-shrink-0">
+          <aside className="flex w-full flex-col gap-4 lg:gap-6 lg:w-64 lg:flex-shrink-0">
             {/* Categories */}
-            <div className="space-y-1">
+            <div className="order-2 space-y-1">
               <h3 className="font-display text-sm uppercase tracking-widest mb-3">Material Categories</h3>
               {isUsingFallbackPalette && (
                 <p className="mb-3 border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-mono uppercase tracking-wide text-amber-800">
@@ -1064,8 +1079,9 @@ IMPORTANT:
                     <div id={`category-section-${section.id}`} className="space-y-0.5">
                       {(section.children || []).map((child) => {
                         const path = `${section.label}>${child.label}`;
+                        const isSpecialSection = section.id === 'favourites' || section.id === 'brands' || section.id === 'custom';
                         const count = (filteredMaterialsByPath[path] || []).length;
-                        if (count === 0 && normalizedSearch) return null;
+                        if (count === 0 && normalizedSearch && !isSpecialSection) return null;
 
                         return (
                           <button
@@ -1102,7 +1118,7 @@ IMPORTANT:
             </div>
 
             {/* Board summary */}
-            <div className="border-t border-gray-200 pt-6 lg:sticky lg:top-24 lg:z-20 lg:bg-white">
+            <div className="order-1 border-b border-gray-200 pb-6 lg:sticky lg:top-24 lg:z-20 lg:bg-white">
               <div
                 ref={cartButtonRef}
                 className={`mb-4 border border-gray-200 bg-white p-4 transition-transform ${isCartPulsing ? 'animate-cart-pulse' : ''}`}
@@ -1112,7 +1128,7 @@ IMPORTANT:
                     <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500">My board</p>
                     <p className="text-sm font-sans text-gray-900">
                       {board.length === 0
-                        ? 'Add materials to start your moodboard'
+                        ? 'Select materials to start a study'
                         : `${board.length} material${board.length === 1 ? '' : 's'} selected`}
                     </p>
                   </div>
@@ -1154,73 +1170,91 @@ IMPORTANT:
                   disabled={!board.length}
                   className="mt-4 inline-flex w-full items-center justify-between border border-black bg-black px-4 py-3 font-mono text-[11px] uppercase tracking-widest text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
                 >
-                  <span>Open workspace</span>
+                  <span>Generate moodboard</span>
                   <ChevronRight className="h-4 w-4" />
                 </button>
 
                 <p className="mt-2 text-xs font-sans text-gray-500">
                   {board.length === 0
                     ? 'Select at least one material to continue.'
-                    : 'Continue to the workspace to generate your moodboard and sustainability report.'}
+                    : 'Create moodboards, applied renders, and specification notes from this palette.'}
                 </p>
               </div>
 
               {/* Materials basket grouped by category */}
               {board.length > 0 && (
-                <div className="space-y-4">
-                  {(() => {
-                    const grouped = board.reduce((acc, material, boardIndex) => {
-                      const categoryLabel = getCategoryDisplayName(material.category);
-                      if (!acc[categoryLabel]) {
-                        acc[categoryLabel] = [];
-                      }
-                      acc[categoryLabel].push({ material, boardIndex });
-                      return acc;
-                    }, {} as Record<string, Array<{ material: MaterialOption; boardIndex: number }>>);
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsBoardListOpen((open) => !open)}
+                    className="flex w-full items-center justify-between gap-2 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-gray-500 hover:text-black"
+                    aria-expanded={isBoardListOpen}
+                    aria-controls="selected-materials-list"
+                  >
+                    <span>Selected materials</span>
+                    <span className="inline-flex items-center gap-1">
+                      {isBoardListOpen ? 'Hide' : 'Show'}
+                      <ChevronRight className={`h-3 w-3 transition-transform ${isBoardListOpen ? 'rotate-90' : ''}`} />
+                    </span>
+                  </button>
+                  {isBoardListOpen && (
+                    <div id="selected-materials-list" className="max-h-64 space-y-4 overflow-y-auto pr-1">
+                      {(() => {
+                        const grouped = board.reduce((acc, material, boardIndex) => {
+                          const categoryLabel = getCategoryDisplayName(material.category);
+                          if (!acc[categoryLabel]) {
+                            acc[categoryLabel] = [];
+                          }
+                          acc[categoryLabel].push({ material, boardIndex });
+                          return acc;
+                        }, {} as Record<string, Array<{ material: MaterialOption; boardIndex: number }>>);
 
-                    const groupedEntries = Object.entries(grouped) as Array<
-                      [string, Array<{ material: MaterialOption; boardIndex: number }>]
-                    >;
+                        const groupedEntries = Object.entries(grouped) as Array<
+                          [string, Array<{ material: MaterialOption; boardIndex: number }>]
+                        >;
 
-                    return groupedEntries.map(([categoryName, items]) => (
-                    <div key={categoryName} className="space-y-2">
-                      <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 px-2">
-                        {categoryName}
-                      </h4>
-                      <div
-                        className="space-y-1"
-                        onDragOver={(e) => handleBasketDragOver(e)}
-                        onDrop={(e) => handleBasketDrop(e, categoryName)}
-                      >
-                        {items.map(({ material, boardIndex }) => (
+                        return groupedEntries.map(([categoryName, items]) => (
+                        <div key={categoryName} className="space-y-2">
+                          <h4 className="font-mono text-[10px] uppercase tracking-widest text-gray-500 px-2">
+                            {categoryName}
+                          </h4>
                           <div
-                            key={`${material.id}-${boardIndex}`}
-                            draggable
-                            onDragStart={(e) => handleBasketDragStart(e, material, boardIndex)}
-                            className="flex items-center gap-2 p-2 bg-white border border-gray-100 hover:border-gray-300 cursor-move group"
+                            className="space-y-1"
+                            onDragOver={(e) => handleBasketDragOver(e)}
+                            onDrop={(e) => handleBasketDrop(e, categoryName)}
                           >
-                            <div
-                              className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0"
-                              style={{ backgroundColor: material.tone }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-sans truncate">{material.name}</p>
-                              <p className="text-[10px] font-mono text-gray-500 truncate">
-                                {formatFinishForDisplay(material.finish)}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => onBoardChange(board.filter((_, i) => i !== boardIndex))}
-                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
+                            {items.map(({ material, boardIndex }) => (
+                              <div
+                                key={`${material.id}-${boardIndex}`}
+                                draggable
+                                onDragStart={(e) => handleBasketDragStart(e, material, boardIndex)}
+                                className="flex items-center gap-2 p-2 bg-white border border-gray-100 hover:border-gray-300 cursor-move group"
+                              >
+                                <div
+                                  className="w-6 h-6 rounded-full border border-gray-200 flex-shrink-0"
+                                  style={{ backgroundColor: material.tone }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-sans truncate">{material.name}</p>
+                                  <p className="text-[10px] font-mono text-gray-500 truncate">
+                                    {formatFinishForDisplay(material.finish)}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => onBoardChange(board.filter((_, i) => i !== boardIndex))}
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-100 rounded"
+                                  aria-label={`Remove ${material.name}`}
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                        ));
+                      })()}
                     </div>
-                    ));
-                  })()}
+                  )}
                 </div>
               )}
             </div>
@@ -1229,31 +1263,45 @@ IMPORTANT:
           {/* Right side - Product grid or custom material form */}
           <main className="flex-1 space-y-6">
             {/* Page title + search */}
-            {!isCustomCategory && !isBrandsCategory && (
+            {!isCustomCategory && !isBrandsCategory && !isFavouritesCategory && (
               <>
                 <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
                   <div>
                     <h1 className="text-3xl font-display uppercase tracking-tight mb-2">
-                      {selectedCategory ? getCategoryLabel() : isDefaultLibraryView ? 'Low Carbon Picks' : 'Material Library'}
+                      {selectedCategory ? getCategoryLabel() : isDefaultLibraryView ? 'Start a Material Study' : 'Material Library'}
                     </h1>
                     <p className="text-sm text-gray-600 font-sans">
                       {selectedCategory
-                        ? `${sortedMaterials.length} product${sortedMaterials.length === 1 ? '' : 's'}`
+                        ? `${finalMaterials.length} product${finalMaterials.length === 1 ? '' : 's'}`
                         : searchTokens.length
                         ? `${sortedMaterials.length} result${sortedMaterials.length === 1 ? '' : 's'} across all categories`
                         : isLoadingMaterials
-                        ? 'Loading curated low-carbon picks...'
-                        : `${sortedMaterials.length} curated low-carbon pick${sortedMaterials.length === 1 ? '' : 's'}, rotated daily. Search the whole library or choose a category to browse all materials.`}
+                        ? 'Loading material picks...'
+                        : `Search the library, browse categories, analyse a reference photo, or start with today's ${sortedMaterials.length} low-carbon pick${sortedMaterials.length === 1 ? '' : 's'}.`}
                     </p>
                   </div>
-                  {selectedCategory && (
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {selectedCategory && (
+                      <button
+                        onClick={() => setSelectedCategory(null)}
+                        className="px-3 py-1.5 border border-gray-200 text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-black hover:border-black transition-colors"
+                      >
+                        Search Whole Library
+                      </button>
+                    )}
                     <button
-                      onClick={() => setSelectedCategory(null)}
-                      className="px-3 py-1.5 border border-gray-200 text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-black hover:border-black transition-colors"
+                      onClick={() => {
+                        setIsFadingOut(true);
+                        setTimeout(() => {
+                          setSelectedCategory('Custom>Analyse Photo');
+                          setIsFadingOut(false);
+                        }, 400);
+                      }}
+                      className="px-3 py-1.5 border border-black text-[10px] font-mono uppercase tracking-widest text-black hover:bg-black hover:text-white transition-colors"
                     >
-                      Search Whole Library
+                      Analyse Reference Photo
                     </button>
-                  )}
+                  </div>
                 </div>
 
                 {/* Search bar */}
@@ -1270,6 +1318,27 @@ IMPORTANT:
                     }
                     className="w-full border-0 border-b border-arch-line pl-10 pr-3 py-2 text-sm font-sans focus:outline-none focus:border-black"
                   />
+                </div>
+
+                {/* Source filter chips */}
+                <div className="flex items-center gap-2">
+                  {([
+                    { key: 'all', label: 'All' },
+                    { key: 'branded', label: 'Branded products' },
+                    { key: 'generic', label: 'AI estimates' },
+                  ] as const).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setSourceFilter(key)}
+                      className={`px-3 py-1 text-[10px] font-mono uppercase tracking-widest border transition-colors ${
+                        sourceFilter === key
+                          ? 'bg-black text-white border-black'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-black hover:text-black'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </>
             )}
@@ -1355,6 +1424,62 @@ IMPORTANT:
                 ) : (
                   <div className="border border-dashed border-gray-200 py-16 text-center">
                     <p className="font-sans text-gray-500 text-sm">No brands found in this category.</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            {/* Favourites */}
+            {isFavouritesCategory ? (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between gap-4 pb-4 border-b border-arch-line">
+                  <div>
+                    <h1 className="text-3xl font-display uppercase tracking-tight mb-2">My Favourites</h1>
+                    <p className="text-sm text-gray-600 font-sans">
+                      {favourites.length === 0
+                        ? 'No saved materials yet.'
+                        : `${favourites.length} saved material${favourites.length === 1 ? '' : 's'}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="px-3 py-1.5 border border-gray-200 text-[10px] font-mono uppercase tracking-widest text-gray-600 hover:text-black hover:border-black transition-colors"
+                  >
+                    Browse Library
+                  </button>
+                </div>
+
+                {favourites.length === 0 ? (
+                  <div className="py-24 text-center space-y-3">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+                      No favourites saved yet
+                    </p>
+                    <p className="font-sans text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+                      Click the bookmark icon on any material card to save it here for use across future projects.
+                    </p>
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="inline-flex items-center gap-2 px-4 py-2 border border-black text-xs font-mono uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+                    >
+                      Browse materials
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                    {favourites.map((mat) => (
+                      <MaterialCard
+                        key={mat.id}
+                        mat={mat}
+                        showCategory
+                        getCategoryDisplayName={getCategoryDisplayName}
+                        onAdd={(m, _c, _s, el) => handleAdd(m, undefined, undefined, el)}
+                        onShowSustainability={(material, fact) => setSustainabilityMaterial({ material, fact })}
+                        onRequestSample={(m) => setSampleRequestMat(m)}
+                        accessToken={resolvedAccessToken}
+                        isFavourite
+                        onToggleFavourite={onToggleFavourite}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
@@ -1451,7 +1576,7 @@ IMPORTANT:
                   </div>
                 )}
               </div>
-            ) : showMaterialGrid ? (
+            ) : !isFavouritesCategory && showMaterialGrid ? (
               <>
                 {/* Product Grid */}
                 {isLoadingMaterials && isDefaultLibraryView ? (
@@ -1469,7 +1594,7 @@ IMPORTANT:
                   </div>
                 ) : (
                 <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 ${isFadingOut ? 'animate-fade-out' : 'animate-fade-in'}`}>
-                  {sortedMaterials.map((mat) => (
+                  {finalMaterials.map((mat) => (
                     <MaterialCard
                       key={mat.id}
                       mat={mat}
@@ -1479,16 +1604,20 @@ IMPORTANT:
                       onShowSustainability={(material, fact) => setSustainabilityMaterial({ material, fact })}
                       onRequestSample={(m) => setSampleRequestMat(m)}
                       accessToken={resolvedAccessToken}
+                      isFavourite={isFavourite ? isFavourite(mat.id) : false}
+                      onToggleFavourite={onToggleFavourite}
                     />
                   ))}
                 </div>
                 )}
 
                 {/* Empty state when no results */}
-                {sortedMaterials.length === 0 && (
+                {finalMaterials.length === 0 && (
                   <div className="text-center py-16">
                     <p className="text-gray-600 font-sans">
-                      {isDefaultLibraryView
+                      {sourceFilter !== 'all'
+                        ? 'No materials match this filter.'
+                        : isDefaultLibraryView
                         ? 'No low-carbon picks are available yet.'
                         : selectedCategory
                         ? 'No materials found in this category.'

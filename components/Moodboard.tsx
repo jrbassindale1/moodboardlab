@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, AlertTriangle, Loader2, Wand2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Loader2, Wand2, CheckCircle2, RefreshCw, ImageIcon, FileText, Search, ArrowRight } from 'lucide-react';
 import ChosenMaterialsList from './moodboard/ChosenMaterialsList';
 import PrecedentsSection from './moodboard/PrecedentsSection';
 import SustainabilityBriefingSection from './moodboard/SustainabilityBriefingSection';
@@ -90,6 +90,9 @@ interface MoodboardProps {
   // Project state
   currentProject?: Project | null;
   onCreateProject?: () => Promise<Project | null>;
+  // Favourites
+  isFavourite?: (id: string) => boolean;
+  onToggleFavourite?: (item: MaterialOption) => void;
 }
 
 type MoodboardFlowProgress = {
@@ -355,43 +358,25 @@ const getDisplayDomain = (url?: string | null) => {
 
 const getMoodboardKeyProductLines = (item: MaterialOption) => {
   const isProductRecord = item.source === 'verified-brand' || item.source === 'partner-brand';
-  if (!isProductRecord) return [];
-
-  const lines: string[] = [];
   const brand = cleanPromptValue(item.brandName);
   const range = cleanPromptValue(item.productRange);
   const code = cleanPromptValue(item.productCode);
   const website = getDisplayDomain(item.productPageUrl || item.brandWebsite);
+  const hasBrandData = Boolean(brand || range || code || website);
+  if (!isProductRecord && !hasBrandData) return [];
 
-  const identity = [brand, range, code].filter(Boolean).join(' / ');
-  if (identity) lines.push(identity);
+  const lines: string[] = [];
+
+  if (brand) lines.push(brand);
+
+  const productLine = [range || item.name, code ? `SKU: ${code}` : '']
+    .filter(Boolean)
+    .join(' / ');
+  if (productLine && productLine !== brand) lines.push(productLine);
+
   if (website) lines.push(website);
 
-  const performance = [
-    item.fireRating ? `Fire: ${cleanPromptValue(item.fireRating)}` : '',
-    item.acousticRating ? `Acoustic: ${cleanPromptValue(item.acousticRating)}` : '',
-    item.thermalValue ? `Thermal: ${cleanPromptValue(item.thermalValue)}` : '',
-    item.slipResistance ? `Slip: ${cleanPromptValue(item.slipResistance)}` : '',
-  ].filter(Boolean).slice(0, 2).join(' | ');
-  if (performance) lines.push(performance);
-
-  const dimensions = [
-    item.dimensions?.thickness ? cleanPromptValue(item.dimensions.thickness) : '',
-    item.dimensions?.width ? cleanPromptValue(item.dimensions.width) : '',
-    item.dimensions?.length ? cleanPromptValue(item.dimensions.length) : '',
-  ].filter(Boolean).join(' x ');
-  if (dimensions) lines.push(`Size: ${dimensions}`);
-
-  const certifications = getPromptList(item.certifications, 3);
-  if (certifications) lines.push(`Certs: ${certifications}`);
-
-  const commercial = [
-    item.priceRange ? cleanPromptValue(item.priceRange) : '',
-    item.leadTime ? cleanPromptValue(item.leadTime) : '',
-  ].filter(Boolean).join(' | ');
-  if (commercial) lines.push(commercial);
-
-  return lines.slice(0, 5);
+  return lines.slice(0, 3);
 };
 
 type MoodboardReferenceImage = {
@@ -660,7 +645,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
   onMoodboardEditPromptChange,
   // Project state
   currentProject,
-  onCreateProject
+  onCreateProject,
+  // Favourites
+  isFavourite,
+  onToggleFavourite,
 }) => {
   // Auth hook for authenticated saves
   const { isAuthenticated, getAccessToken } = useAuth();
@@ -892,7 +880,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
       return acc;
     }, {});
     const lines = (Object.entries(grouped) as Array<[string, MaterialOption[]]>).map(
-      ([cat, items]) => `${cat}: ${items.map((i) => `${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
+      ([cat, items]) => `${cat}: ${items.map((i) => `${i.brandName ? `${i.brandName} – ` : ''}${i.name} (${i.finish}) [color: ${i.tone}]`).join(', ')}`
     );
     return lines.join('\n');
   }, [renderMaterials]);
@@ -1360,7 +1348,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       ctx.fillStyle = '#111827';
       ctx.font = '600 18px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText('Material Key', panelX + 20, panelY + 68);
+      ctx.fillText('Material & Brand Key', panelX + 20, panelY + 68);
 
       const list = renderMaterials.length
         ? renderMaterials
@@ -1423,7 +1411,12 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
         const productLines = getMoodboardKeyProductLines(item);
         if (productLines.length) {
-          const badge = item.source === 'partner-brand' ? 'PAID PARTNER PRODUCT' : 'VERIFIED PRODUCT';
+          const badge =
+            item.source === 'partner-brand'
+              ? 'PARTNER PRODUCT'
+              : item.source === 'verified-brand'
+              ? 'VERIFIED PRODUCT'
+              : 'BRAND PRODUCT';
           ctx.fillStyle = item.source === 'partner-brand' ? '#3730a3' : '#047857';
           ctx.font = '700 10px "Helvetica Neue", Arial, sans-serif';
           lastY += 17;
@@ -1441,7 +1434,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
-      link.download = 'moodboard-sheet.png';
+      link.download = 'moodboard-material-key.png';
       link.click();
       console.log('[Moodboard Download] Download initiated successfully');
     } catch (err) {
@@ -2396,7 +2389,7 @@ ${JSON.stringify(proseContext)}`;
             throw new Error('Please sign in to continue.');
           }
 
-          if (imageProvider !== 'openai') {
+          if (imageProvider !== 'openai' && !isAdmin) {
             await consumeCredits(authToken, {
               generationType: isUpscalingTo4K ? 'upscale' : 'moodboard',
               generationMode: isUpscalingTo4K ? '4k' : (isEditingRender ? 'iterative' : 'standard'),
@@ -2817,8 +2810,11 @@ ${JSON.stringify(proseContext)}`;
         <div className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <h1 className="font-display text-3xl uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
-              Workspace
+              Material Study
             </h1>
+            <p className="max-w-3xl font-sans text-sm text-gray-600">
+              Generate moodboards, sustainability notes, and precedent references from your selected materials.
+            </p>
             <ProjectContextHeader project={currentProject || null} className="text-xs" />
           </div>
           <div className="flex gap-2 items-center">
@@ -2913,8 +2909,8 @@ ${JSON.stringify(proseContext)}`;
                 onRemove={handleRemove}
                 onToggleExclude={handleToggleExclude}
                 onNoteChange={handleNoteChange}
-                onOpenGenerateModal={() => setShowGenerateModal(true)}
-                isGenerating={isCreatingMoodboard}
+                isFavourite={isFavourite}
+                onToggleFavourite={onToggleFavourite}
               />
 
               {flowProgress && (
@@ -3071,17 +3067,101 @@ ${JSON.stringify(proseContext)}`;
                       renderingMode={renderingMode}
                     />
                   ) : (
-                    <div className="border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-                      <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500 mb-4">
-                        No moodboard generated yet
-                      </p>
-                      <button
-                        onClick={() => runMoodboardFlow({ moodboard: true, sustainability: false })}
-                        disabled={!board.length || isCreatingMoodboard || !requireAuthForMoodboard()}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <span>Generate</span>
-                      </button>
+                    <div className="border border-gray-200 bg-white">
+                      <div className="border-b border-gray-200 bg-gray-50 px-6 py-5">
+                        <p className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+                          Project output set
+                        </p>
+                        <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                          <div className="max-w-2xl">
+                            <h2 className="font-display text-2xl uppercase tracking-tight text-gray-950">
+                              Turn this materials list into client-ready outputs.
+                            </h2>
+                            <p className="mt-2 font-sans text-sm leading-relaxed text-gray-600">
+                              Generate the visual board first, then build the supporting sustainability notes, precedent references, and render handoff from the same palette.
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => runMoodboardFlow({ moodboard: true, sustainability: true })}
+                            disabled={!board.length || isCreatingMoodboard || !requireAuthForMoodboard()}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Wand2 className="h-3.5 w-3.5" />
+                            Generate outputs
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid border-b border-gray-200 md:grid-cols-2 xl:grid-cols-4">
+                        {[
+                          {
+                            label: 'Moodboard image',
+                            text: 'A visual composition using the selected products and material finishes.',
+                            icon: ImageIcon,
+                            status: moodboardRenderUrl ? 'Ready' : 'First step',
+                          },
+                          {
+                            label: 'Sustainability notes',
+                            text: 'A briefing that flags carbon, lifecycle, health, and specification considerations.',
+                            icon: FileText,
+                            status: sustainabilityBriefing ? 'Ready' : 'Optional',
+                          },
+                          {
+                            label: 'Precedent references',
+                            text: 'Comparable projects and material-use examples to support the design direction.',
+                            icon: Search,
+                            status: savedPrecedents?.length ? 'Ready' : 'Optional',
+                          },
+                          {
+                            label: 'Render handoff',
+                            text: 'Use the same palette on the Render page to apply materials into a project image.',
+                            icon: ArrowRight,
+                            status: 'Next page',
+                          },
+                        ].map((output) => {
+                          const Icon = output.icon;
+                          return (
+                            <div key={output.label} className="border-b border-gray-200 p-5 last:border-b-0 md:odd:border-r xl:border-b-0 xl:border-r xl:last:border-r-0">
+                              <div className="flex items-start justify-between gap-3">
+                                <Icon className="h-4 w-4 text-gray-500" />
+                                <span className="font-mono text-[9px] uppercase tracking-widest text-gray-400">
+                                  {output.status}
+                                </span>
+                              </div>
+                              <h3 className="mt-4 font-display text-sm uppercase tracking-wide text-gray-950">
+                                {output.label}
+                              </h3>
+                              <p className="mt-2 font-sans text-xs leading-relaxed text-gray-600">
+                                {output.text}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="font-sans text-xs text-gray-500">
+                          {board.length
+                            ? `${board.length} material${board.length === 1 ? '' : 's'} selected. Generate now, or refine the list before creating outputs.`
+                            : 'Add materials before generating project outputs.'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => runMoodboardFlow({ moodboard: true, sustainability: false })}
+                            disabled={!board.length || isCreatingMoodboard || !requireAuthForMoodboard()}
+                            className="inline-flex items-center gap-2 border border-gray-900 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-gray-900 hover:bg-gray-900 hover:text-white disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-white transition-colors"
+                          >
+                            Moodboard only
+                          </button>
+                          <button
+                            onClick={() => onNavigate?.('apply')}
+                            disabled={!board.length}
+                            className="inline-flex items-center gap-2 border border-gray-200 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-gray-600 hover:border-gray-900 hover:text-gray-900 disabled:text-gray-300 disabled:hover:border-gray-200 transition-colors"
+                          >
+                            Open Render
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
