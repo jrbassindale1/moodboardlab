@@ -726,7 +726,13 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Tab state for workspace sections
   type WorkspaceTab = 'moodboard' | 'sustainability' | 'precedents';
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('moodboard');
-  const [viewedTabs, setViewedTabs] = useState<Set<WorkspaceTab>>(new Set(['moodboard'])); // Track which tabs user has viewed
+  const [viewedTabs, setViewedTabs] = useState<Set<WorkspaceTab>>(() => {
+    try {
+      const stored = sessionStorage.getItem('mbl_viewedTabs');
+      if (stored) return new Set(JSON.parse(stored) as WorkspaceTab[]);
+    } catch {}
+    return new Set<WorkspaceTab>(['moodboard']);
+  });
   const [moodboardInvalidated, setMoodboardInvalidated] = useState(false);
   const [precedentsInvalidated, setPrecedentsInvalidated] = useState(false);
   const [precedentsAutoSearchTrigger, setPrecedentsAutoSearchTrigger] = useState(0);
@@ -1287,12 +1293,10 @@ const Moodboard: React.FC<MoodboardProps> = ({
     try {
       const image = await loadImage(url);
       const padding = 32;
-      const minPanelWidth = 520;
-      const targetWidth = Math.max(
-        Math.round(image.height * 1.414),
-        image.width + minPanelWidth + padding * 3
-      );
-      const height = image.height + padding * 2;
+      const minKeyPanelWidth = 220;
+      const a4Width = Math.round((image.height + padding * 2) * Math.SQRT2);
+      const targetWidth = Math.max(a4Width, image.width + minKeyPanelWidth + padding * 3);
+      const height = Math.round(targetWidth / Math.SQRT2);
 
       const canvas = document.createElement('canvas');
       canvas.width = targetWidth;
@@ -1348,7 +1352,7 @@ const Moodboard: React.FC<MoodboardProps> = ({
 
       ctx.fillStyle = '#111827';
       ctx.font = '600 18px "Helvetica Neue", Arial, sans-serif';
-      ctx.fillText('Material & Brand Key', panelX + 20, panelY + 68);
+      ctx.fillText('Material Key', panelX + 20, panelY + 68);
 
       const list = renderMaterials.length
         ? renderMaterials
@@ -1878,7 +1882,11 @@ const Moodboard: React.FC<MoodboardProps> = ({
   // Handler for switching tabs and marking as viewed
   const handleTabChange = (tab: WorkspaceTab) => {
     setActiveTab(tab);
-    setViewedTabs((prev) => new Set(prev).add(tab));
+    setViewedTabs((prev) => {
+      const next = new Set(prev).add(tab);
+      try { sessionStorage.setItem('mbl_viewedTabs', JSON.stringify([...next])); } catch {}
+      return next;
+    });
   };
 
   const runGemini = async (

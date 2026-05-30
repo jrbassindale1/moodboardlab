@@ -39,31 +39,10 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   return (
     <div className="space-y-4 animate-fadeIn">
       <div className="border border-gray-200 p-4 bg-white space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-            Moodboard Render
-          </div>
-          {onRegenerateMoodboard && (
-            <button
-              onClick={onRegenerateMoodboard}
-              disabled={isCreatingMoodboard || status === 'all' || status === 'render'}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isCreatingMoodboard && (status === 'all' || status === 'render') ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Regenerating...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  Regenerate
-                </>
-              )}
-            </button>
-          )}
+        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
+          Moodboard Render
         </div>
-        <div className="relative mx-auto max-w-2xl border border-gray-200 bg-white flex items-center justify-center p-6 shadow-sm">
+        <div className="relative mx-auto max-w-2xl">
           <img
             src={moodboardRenderUrl}
             alt="Moodboard"
@@ -159,6 +138,25 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             <Wand2 className="w-4 h-4" />
             Apply palette to project image
           </button>
+          {onRegenerateMoodboard && (
+            <button
+              onClick={onRegenerateMoodboard}
+              disabled={isCreatingMoodboard || status === 'all' || status === 'render'}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300"
+            >
+              {isCreatingMoodboard && (status === 'all' || status === 'render') ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Regenerate with same materials
+                </>
+              )}
+            </button>
+          )}
         </div>
         <p className="font-sans text-xs text-gray-500">
           Downloaded sheets include the material and brand key for attribution.
