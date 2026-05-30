@@ -9,9 +9,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Space Grotesk', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        // font-display = Space Grotesk for site headings and display typography.
+        display: ['Space Grotesk', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
+        // font-wordmark = Anton for the Moodboard Lab logo only.
+        wordmark: ['Anton', 'Arial Narrow', 'sans-serif'],
       },
       colors: {
         'arch-black': '#1a1a1a',

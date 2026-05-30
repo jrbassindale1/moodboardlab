@@ -1,5 +1,5 @@
-import React from 'react';
-import { Loader2, ImageDown, Wand2, RefreshCw, Maximize2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, ImageDown, Wand2, RefreshCw, Maximize2, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MoodboardRenderSectionProps {
   moodboardRenderUrl: string;
@@ -36,61 +36,32 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
   fourKTooltip,
   renderingMode,
 }) => {
+  const [isRefineOpen, setIsRefineOpen] = useState(false);
+
   return (
     <div className="space-y-4 animate-fadeIn">
-      <div className="border border-gray-200 p-4 bg-white space-y-3">
-        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-500">
-          Moodboard Render
-        </div>
-        <div className="relative mx-auto max-w-2xl">
-          <img
-            src={moodboardRenderUrl}
-            alt="Moodboard"
-            className={`max-h-[80vh] max-w-full h-auto w-auto object-contain transition-all duration-300 ${
-              isRenderInFlight ? 'blur-sm opacity-70' : ''
-            }`}
-          />
-          {isRenderInFlight && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-2 bg-white/80 px-4 py-3 rounded-lg shadow-sm">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
-                <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Generating...</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="border border-gray-200 p-4 bg-white space-y-2">
-        <div className="font-mono text-[11px] uppercase tracking-widest text-gray-600">
-          Refine Your Moodboard
-        </div>
-        <p className="font-sans text-sm text-gray-700">
-          Describe changes you'd like to make to this moodboard. Your materials and composition will be preserved.
-        </p>
-        <textarea
-          value={moodboardEditPrompt}
-          onChange={(e) => setMoodboardEditPrompt(e.target.value)}
-          placeholder="E.g., add people walking through the scene, change to dusk lighting with warm atmosphere, include plants and greenery."
-          className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+      {/* Image — no wrapper box or title */}
+      <div className="relative">
+        <img
+          src={moodboardRenderUrl}
+          alt="Moodboard"
+          className={`block mx-auto max-h-[80vh] max-w-full h-auto w-auto object-contain transition-all duration-300 ${
+            isRenderInFlight ? 'blur-sm opacity-70' : ''
+          }`}
         />
+        {isRenderInFlight && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2 bg-white/80 px-4 py-3 rounded-lg shadow-sm">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-700" />
+              <span className="font-mono text-[11px] uppercase tracking-widest text-gray-600">Generating...</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Action buttons */}
+      <div className="border border-gray-200 p-4 bg-white space-y-3">
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={onMoodboardEdit}
-            disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
-            className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
-          >
-            {status === 'render' && isCreatingMoodboard ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Updating render
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4" />
-                Apply text edit
-              </>
-            )}
-          </button>
           <div className="relative group">
             <button
               onClick={onRender4K}
@@ -114,6 +85,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
             </div>
           </div>
+
           <button
             onClick={() => onDownloadBoard(moodboardRenderUrl, 'moodboard')}
             disabled={downloadingId === 'moodboard'}
@@ -131,6 +103,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
               </>
             )}
           </button>
+
           <button
             onClick={() => onNavigate?.('apply')}
             className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
@@ -138,6 +111,7 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
             <Wand2 className="w-4 h-4" />
             Apply palette to project image
           </button>
+
           {onRegenerateMoodboard && (
             <button
               onClick={onRegenerateMoodboard}
@@ -157,9 +131,50 @@ const MoodboardRenderSection: React.FC<MoodboardRenderSectionProps> = ({
               )}
             </button>
           )}
+
+          <button
+            onClick={() => setIsRefineOpen((prev) => !prev)}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 bg-white text-gray-900 font-mono text-[11px] uppercase tracking-widest hover:border-black"
+          >
+            <Wand2 className="w-4 h-4" />
+            Refine
+            {isRefineOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
         </div>
+
+        {isRefineOpen && (
+          <div className="space-y-2 pt-3 border-t border-gray-100">
+            <p className="font-sans text-sm text-gray-700">
+              Describe changes you'd like to make to this moodboard. Your materials and composition will be preserved.
+            </p>
+            <textarea
+              value={moodboardEditPrompt}
+              onChange={(e) => setMoodboardEditPrompt(e.target.value)}
+              placeholder="E.g., add people walking through the scene, change to dusk lighting with warm atmosphere, include plants and greenery."
+              className="w-full border border-gray-300 px-3 py-2 font-sans text-sm min-h-[80px] resize-vertical"
+            />
+            <button
+              onClick={onMoodboardEdit}
+              disabled={isCreatingMoodboard || status !== 'idle' || !moodboardRenderUrl}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-black bg-black text-white font-mono text-[11px] uppercase tracking-widest hover:bg-gray-900 disabled:bg-gray-300 disabled:border-gray-300"
+            >
+              {status === 'render' && isCreatingMoodboard ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Updating render
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4" />
+                  Apply text edit
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         <p className="font-sans text-xs text-gray-500">
-          Downloaded sheets include the material and brand key for attribution.
+          Downloaded sheets include the material key for attribution.
         </p>
       </div>
     </div>

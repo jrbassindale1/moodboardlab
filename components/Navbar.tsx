@@ -99,7 +99,8 @@ const Navbar: React.FC<NavbarProps> = ({
           className="flex flex-col cursor-pointer group"
           onClick={(event) => handleNavigateClick(event, 'concept')}
         >
-          <h1 className="font-display font-bold text-xl tracking-tighter uppercase group-hover:opacity-70 transition-opacity">
+          {/* font-wordmark is reserved for the Moodboard Lab logo; font-display remains the Space Grotesk heading system. */}
+          <h1 className="font-wordmark uppercase tracking-[0.02em] leading-none text-[#0a0a0a] group-hover:opacity-70 transition-opacity">
             Moodboard Lab
           </h1>
         </a>

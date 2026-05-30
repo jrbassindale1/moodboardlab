@@ -490,6 +490,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // State for recent generations section (legacy items without projectId, starts closed)
   const [recentGenExpanded, setRecentGenExpanded] = useState(false);
+  const hasAutoExpandedUnassignedRef = useRef(false);
 
   // Rename / delete state
   const [renamingProjectId, setRenamingProjectId] = useState<string | null>(null);
@@ -564,6 +565,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     fetchGenerations();
   }, [isAuthenticated, getAccessToken]);
+
+  useEffect(() => {
+    if (hasAutoExpandedUnassignedRef.current || projectGroups.ungrouped.length === 0) {
+      return;
+    }
+    setRecentGenExpanded(true);
+    hasAutoExpandedUnassignedRef.current = true;
+  }, [projectGroups.ungrouped.length]);
 
   const loadMore = async () => {
     if (!isAuthenticated || !hasMore) return;
@@ -1126,7 +1135,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         Unassigned Outputs
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'} not linked to a project
+                        {projectGroups.ungrouped.length} {projectGroups.ungrouped.length === 1 ? 'item' : 'items'} not linked to a project. Assign any output from its project menu.
                       </p>
                     </div>
                     <div className="flex-shrink-0">
@@ -1228,9 +1237,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                                       void handleMoveGenerations(generationIdsToMove, nextProjectId);
                                     }}
                                     className="w-full border border-gray-200 bg-white px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-gray-600 disabled:bg-gray-100 disabled:text-gray-400"
-                                    aria-label="Move to project"
+                                    aria-label="Assign output to project"
                                   >
-                                    <option value="">Move to project</option>
+                                    <option value="">Assign to project</option>
                                     {projects.map((targetProject) => (
                                       <option key={targetProject.id} value={targetProject.id}>
                                         {targetProject.name}
