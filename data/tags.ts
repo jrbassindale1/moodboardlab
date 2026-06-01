@@ -13,45 +13,47 @@ export const MATERIAL_TAGS = [
 
 export type MaterialTag = (typeof MATERIAL_TAGS)[number];
 
-// Mapping from old category paths to new category + tags
+// Mapping from old category paths to new 3-level paths + tags.
+// newPath uses the deepest applicable grandchild where it can be inferred;
+// otherwise stops at the 2-level parent to avoid misclassification.
 export const OLD_TO_NEW_CATEGORY_MAPPING: Record<
   string,
   { newPath: string; tags: MaterialTag[] }
 > = {
   'Internal>Paint – Standard': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Paint & Emulsion',
     tags: ['paint'],
   },
   'Internal>Paint – Custom Colour': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Paint & Emulsion',
     tags: ['paint', 'custom-colour'],
   },
   'Internal>Plaster / Microcement': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Plaster & Render',
     tags: ['plaster', 'microcement'],
   },
   'Internal>Timber Panels': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Timber Panels & Cladding',
     tags: ['timber-panels'],
   },
   'Internal>Tiles': {
-    newPath: 'Interiors>Floors',
+    newPath: 'Interiors>Floor Finishes>Ceramic & Porcelain',
     tags: ['tiles'],
   },
   'Internal>Wallpaper': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Wallcoverings & Wallpaper',
     tags: ['wallpaper'],
   },
   'Internal>Acoustic Panels': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Acoustic Wall Panels',
     tags: ['acoustic'],
   },
   'Internal>Timber Slats': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Wall Finishes>Timber Panels & Cladding',
     tags: ['timber-slats'],
   },
   'External>External Ground / Landscaping': {
-    newPath: 'Landscape>External Ground',
+    newPath: 'Landscape>Hard Landscaping',
     tags: [],
   },
   'Internal>Balustrade & Railings': {
@@ -67,7 +69,7 @@ export const OLD_TO_NEW_CATEGORY_MAPPING: Record<
     tags: [],
   },
   'Internal>Joinery & Furniture': {
-    newPath: 'Interiors>Walls',
+    newPath: 'Interiors>Internal Doors & Joinery',
     tags: [],
   },
 };

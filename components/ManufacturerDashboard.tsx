@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, BarChart2, Building2, Check, Mail, Package, Trophy } from 'lucide-react';
+import { ArrowLeft, BarChart2, Building2, Check, Mail, Package, Plus, Trophy, Upload } from 'lucide-react';
 import { useAuth } from '../auth';
 import {
   getMyBrand,
   getBrandAnalytics,
   getSampleRequests,
   updateBrand,
+  submitBrandProducts,
   type BrandSummary,
   type BrandAnalytics,
 } from '../api';
+import { ProductSubmissionForm, type ProductDraft } from './manufacturerDashboard/ProductSubmissionForm';
+import { BatchUpload } from './manufacturerDashboard/BatchUpload';
 
 type TimeRange = 'all' | 'month';
 
@@ -16,7 +19,8 @@ interface ManufacturerDashboardProps {
   onNavigate: (page: string) => void;
 }
 
-type Tab = 'analytics' | 'requests' | 'profile';
+type Tab = 'analytics' | 'requests' | 'products' | 'profile';
+type ProductsView = 'menu' | 'single' | 'batch';
 
 type SampleRequest = {
   id: string;
@@ -78,6 +82,7 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
   const [isPatching, setIsPatching] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
   const [profileForm, setProfileForm] = useState({ name: '', tagline: '', website: '', countryOfOrigin: '', logoUrl: '' });
+  const [productsView, setProductsView] = useState<ProductsView>('menu');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
 
@@ -230,11 +235,12 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
         {([
           { key: 'analytics', label: 'Analytics', icon: BarChart2 },
           { key: 'requests', label: `Sample Requests${newRequestCount > 0 ? ` (${newRequestCount})` : ''}`, icon: Mail },
+          { key: 'products', label: 'Add Products', icon: Package },
           { key: 'profile', label: 'Brand Profile', icon: Building2 },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => { setTab(key); if (key !== 'products') setProductsView('menu'); }}
             className={`flex items-center gap-2 px-4 py-3 text-[11px] font-mono uppercase tracking-widest border-b-2 transition-colors ${
               tab === key ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-black'
             }`}
@@ -445,6 +451,167 @@ const ManufacturerDashboard: React.FC<ManufacturerDashboardProps> = ({ onNavigat
                 </span>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'products' && (
+          <div className="flex-1">
+            {productsView === 'menu' && (
+              <div className="max-w-lg mx-auto px-6 py-12 space-y-6">
+                <div>
+                  <h2 className="font-display text-xl uppercase tracking-wide mb-1">Add products</h2>
+                  <p className="font-sans text-sm text-gray-500">
+                    Submit new products for Moodboard Lab review. Choose single entry for one product,
+                    or batch upload to submit multiple products from a CSV file.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setProductsView('single')}
+                    className="flex flex-col items-start gap-3 border border-gray-200 p-5 text-left hover:border-black transition-colors group"
+                  >
+                    <div className="w-8 h-8 border border-gray-200 group-hover:border-black flex items-center justify-center transition-colors">
+                      <Plus className="w-4 h-4 text-gray-500 group-hover:text-black" />
+                    </div>
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-black">Single product</p>
+                      <p className="font-sans text-xs text-gray-400 mt-0.5 leading-snug">Step-by-step form. Good for 1–5 products.</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setProductsView('batch')}
+                    className="flex flex-col items-start gap-3 border border-gray-200 p-5 text-left hover:border-black transition-colors group"
+                  >
+                    <div className="w-8 h-8 border border-gray-200 group-hover:border-black flex items-center justify-center transition-colors">
+                      <Upload className="w-4 h-4 text-gray-500 group-hover:text-black" />
+                    </div>
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-widest text-black">Batch upload (CSV)</p>
+                      <p className="font-sans text-xs text-gray-400 mt-0.5 leading-snug">Upload multiple products at once from a spreadsheet.</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {productsView === 'single' && brand && (
+              <ProductSubmissionForm
+                brandId={brand.id}
+                brandName={brand.name}
+                brandContactEmail={(brand as BrandSummary & { contactEmail?: string }).contactEmail ?? ''}
+                brandWebsite={brand.website ?? undefined}
+                brandLogoUrl={brand.logoUrl ?? undefined}
+                onCancel={() => setProductsView('menu')}
+                onSubmit={async (draft: ProductDraft) => {
+                  const token = await getAccessToken();
+                  const CATEGORIES_DATA = (await import('../data/categories')).CATEGORIES;
+                  const parent = CATEGORIES_DATA.find(c => c.id === draft.parentCategoryId);
+                  const child = parent?.children?.find(c => c.id === draft.childCategoryId);
+                  const grandchild = child?.children?.find(c => c.id === draft.grandchildCategoryId);
+                  const treePath = grandchild
+                    ? `${parent?.label}>${child?.label}>${grandchild.label}`
+                    : `${parent?.label}>${child?.label}`;
+
+                  const material: Record<string, unknown> = {
+                    name: draft.name,
+                    treePaths: [treePath],
+                    description: draft.description,
+                    imageUrl: draft.imageUrl,
+                    finish: draft.finish,
+                    tone: draft.tone,
+                    keywords: [],
+                    category: 'floor',
+                    variantMode: draft.variantMode,
+                    isVariantParent: draft.variants.length > 0,
+                    variants: draft.variants.length > 0 ? draft.variants : null,
+                    productCollection: draft.productCollection || null,
+                    productRange: draft.productRange || null,
+                    productCode: draft.productCode || null,
+                    productPageUrl: draft.productPageUrl || null,
+                    sampleRequestUrl: draft.sampleRequestUrl || null,
+                    applications: draft.applications.length > 0 ? draft.applications : null,
+                    internalExternal: draft.internalExternal || null,
+                    typicalUse: draft.typicalUse.length > 0 ? draft.typicalUse : null,
+                    dimensions: (draft.dimensionThickness || draft.dimensionWidth || draft.dimensionLength || draft.weightPerM2) ? {
+                      thickness: draft.dimensionThickness || undefined,
+                      width: draft.dimensionWidth || undefined,
+                      length: draft.dimensionLength || undefined,
+                      weightPerM2: draft.weightPerM2 || undefined,
+                    } : null,
+                    fireRating: draft.fireRating || null,
+                    acousticRating: draft.acousticRating || null,
+                    thermalValue: draft.thermalValue || null,
+                    slipResistance: draft.slipResistance || null,
+                    warranty: draft.warranty || null,
+                    priceRange: draft.priceRange || null,
+                    leadTime: draft.leadTime || null,
+                    minOrderQty: draft.minOrderQty || null,
+                    sustainability: (draft.epdAvailable || draft.headlineCarbonValue || draft.certifications.length > 0) ? {
+                      evidenceLevel: draft.evidenceLevel || 'manufacturer-declared',
+                      epd: {
+                        available: draft.epdAvailable,
+                        epdUrl: draft.epdUrl || undefined,
+                        epdProgramOperator: draft.epdOperator || undefined,
+                        standard: draft.epdStandard || undefined,
+                        validUntil: draft.epdValidUntil || undefined,
+                        declaredUnit: draft.epdDeclaredUnit || undefined,
+                        dataSource: 'manufacturer-supplied',
+                        verificationStatus: draft.evidenceLevel === 'third-party-verified' ? 'third-party-verified' : 'self-declared',
+                      },
+                      headlineCarbon: draft.headlineCarbonValue ? {
+                        value: parseFloat(draft.headlineCarbonValue),
+                        unit: draft.headlineCarbonUnit,
+                        basis: draft.headlineCarbonBasis,
+                        confidence: draft.evidenceLevel || 'manufacturer-declared',
+                      } : null,
+                      certifications: draft.certifications.length > 0 ? draft.certifications.map(c => ({
+                        scheme: c.scheme,
+                        value: c.value || undefined,
+                        verified: c.verified,
+                      })) : undefined,
+                    } : null,
+                    epdUrl: draft.epdUrl || null,
+                    embodiedCarbonA1A3: draft.headlineCarbonValue ? parseFloat(draft.headlineCarbonValue) : null,
+                    recycledContentPct: draft.recycledContentPct ? parseFloat(draft.recycledContentPct) : null,
+                    certifications: draft.certifications.map(c => c.scheme),
+                  };
+
+                  await submitBrandProducts(
+                    token,
+                    {
+                      name: brand.name,
+                      contactName: (brand as BrandSummary & { contactName?: string }).contactName ?? brand.name,
+                      contactEmail: (brand as BrandSummary & { contactEmail?: string }).contactEmail ?? '',
+                      website: brand.website,
+                      logoUrl: brand.logoUrl,
+                      tagline: brand.tagline,
+                    },
+                    [material],
+                  );
+                }}
+              />
+            )}
+
+            {productsView === 'batch' && brand && (
+              <BatchUpload
+                onCancel={() => setProductsView('menu')}
+                onSubmitBatch={async (materials) => {
+                  const token = await getAccessToken();
+                  await submitBrandProducts(
+                    token,
+                    {
+                      name: brand.name,
+                      contactName: (brand as BrandSummary & { contactName?: string }).contactName ?? brand.name,
+                      contactEmail: (brand as BrandSummary & { contactEmail?: string }).contactEmail ?? '',
+                      website: brand.website,
+                      logoUrl: brand.logoUrl,
+                      tagline: brand.tagline,
+                    },
+                    materials,
+                  );
+                }}
+              />
+            )}
           </div>
         )}
 

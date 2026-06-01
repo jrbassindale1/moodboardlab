@@ -93,7 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-      <div className="max-w-screen-2xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div className="max-w-screen-2xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
         <a
           href={getPathForPage('concept')}
           className="flex flex-col cursor-pointer group"
@@ -102,7 +102,12 @@ const Navbar: React.FC<NavbarProps> = ({
           <img
             src="/logo.svg"
             alt="Moodboard Lab"
-            className="h-7 w-auto group-hover:opacity-70 transition-opacity"
+            className="hidden md:block h-8 w-auto group-hover:opacity-70 transition-opacity"
+          />
+          <img
+            src="/logo-mark.svg"
+            alt="Moodboard Lab"
+            className="md:hidden h-9 w-9 group-hover:opacity-70 transition-opacity"
           />
         </a>
 

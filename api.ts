@@ -1625,6 +1625,35 @@ export async function updateBrand(accessToken: string, brandId: string, updates:
   return data.brand;
 }
 
+export async function submitBrandProducts(
+  accessToken: string,
+  brand: {
+    name: string;
+    contactName: string;
+    contactEmail: string;
+    website?: string | null;
+    logoUrl?: string | null;
+    tagline?: string | null;
+    countryOfOrigin?: string | null;
+  },
+  materials: Record<string, unknown>[],
+): Promise<{ id: string }> {
+  const res = await fetchWithTimeout(
+    `${getApiBase()}/api/brand-submissions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ brand, materials }),
+    },
+    20000,
+  );
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Submission failed (${res.status})${body ? `: ${body}` : ''}`);
+  }
+  return res.json() as Promise<{ id: string }>;
+}
+
 // ============================================
 // Favourites
 // ============================================

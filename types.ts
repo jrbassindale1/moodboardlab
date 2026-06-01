@@ -146,6 +146,200 @@ export type FinishFamily =
   | 'veneer'           // Wood veneer
   | 'custom';          // Custom/other finish family
 
+// ─── Sustainability data model ────────────────────────────────────────────────
+
+/**
+ * How confident we are in a given sustainability claim.
+ * Drives badge display and disclaimer copy in the UI.
+ */
+export type EvidenceLevel =
+  | 'third-party-verified'   // EPD or cert verified by an independent body
+  | 'manufacturer-declared'  // Taken from manufacturer's own literature
+  | 'published-source'       // Sourced from a public database or published report
+  | 'ai-estimated'           // Estimated by the AI — internal use only
+  | 'unknown';
+
+export interface EpdData {
+  available: boolean;
+  epdUrl?: string;
+  /** Programme operator, e.g. 'BRE', 'IBU', 'EPD International', 'MRPI' */
+  epdProgramOperator?: string;
+  epdNumber?: string;
+  /** Usually 'EN 15804+A2' for construction products */
+  standard?: string;
+  validUntil?: string;        // ISO date
+  /** How the product unit is measured, e.g. '1 m²', '1 kg', '1 item' */
+  declaredUnit?: string;
+  dataSource?: 'manufacturer-supplied' | 'third-party-database' | 'ai-estimated';
+  verificationStatus?: 'third-party-verified' | 'self-declared' | 'unverified';
+}
+
+/** GWP by EN 15804 life-cycle module — null = not declared for this module */
+export interface GwpModules {
+  A1A3?: number | null;  // Product stage: raw material extraction + transport + manufacture
+  A4?: number | null;    // Transport to site
+  A5?: number | null;    // Installation into building
+  B1B7?: number | null;  // Use stage (maintenance, repair, replacement, operational energy)
+  C1C4?: number | null;  // End of life: deconstruction + transport + waste processing + disposal
+  D?: number | null;     // Beyond system boundary: reuse / recovery / recycling potential
+}
+
+export interface SustainabilityImpacts {
+  gwp?: {
+    unit: 'kgCO2e';
+    /** Functional/declared unit the values are expressed per, e.g. '1 m²' */
+    perDeclaredUnit: string;
+    modules: GwpModules;
+  };
+}
+
+/** Simplified user-facing carbon figure derived from the full impact data */
+export interface HeadlineCarbon {
+  value: number;
+  unit: string;             // e.g. 'kgCO2e/m²', 'kgCO2e/kg'
+  basis: string;            // e.g. 'A1–A3', 'A1–A3 + C1–C4'
+  confidence: EvidenceLevel;
+}
+
+export interface SustainabilityCertification {
+  /** Scheme name, e.g. 'FSC', 'PEFC', 'BBA', 'VOC', 'Cradle to Cradle', 'BES 6001' */
+  scheme: string;
+  /** Specific level or grade, e.g. 'FSC Mix', 'A+', 'Silver', 'BBA Agrément No. 00/0000' */
+  value?: string;
+  /** Relevant for region-specific schemes, e.g. 'France' for VOC A+ */
+  region?: string;
+  certificateUrl?: string;
+  appliesTo?: 'product' | 'manufacturer' | 'chain-of-custody';
+  validUntil?: string;      // ISO date
+  verified: boolean;
+}
+
+/** Normalised claim used for UI badges and filtering — derived from structured data above */
+export interface SustainabilityClaim {
+  /** Machine-readable type: 'epd-available', 'recycled-content', 'take-back', 'low-voc', etc. */
+  type: string;
+  /** Human-readable label, e.g. '62% recycled content', 'EPD available' */
+  label: string;
+  value?: number;
+  unit?: string;
+  evidence?: string;
+  confidence: EvidenceLevel;
+}
+
+// Category-specific sustainability attributes ─────────────────────────────────
+
+export interface TextileSustainabilityAttrs {
+  recycledContentPct?: number;
+  takeBackScheme?: boolean;
+  backingType?: string;      // e.g. 'bitumen-free', 'PVC-free', 'polyolefin'
+  yarnType?: string;         // e.g. 'solution-dyed nylon', 'recycled PET'
+  lowVoc?: boolean;
+}
+
+export interface TimberSustainabilityAttrs {
+  certifiedSource?: boolean;
+  chainOfCustody?: 'FSC' | 'PEFC' | string;
+  species?: string;
+  countryOfOrigin?: string;
+  /** Formaldehyde emission class: 'E0', 'E1', 'CARB P2', 'NAF' (No Added Formaldehyde) */
+  formaldehydeClass?: string;
+}
+
+export interface InsulationSustainabilityAttrs {
+  recycledContentPct?: number;
+  ozoneDepletionPotential?: number;
+  globalWarmingPotentialBlowingAgent?: 'none' | 'low' | 'medium' | 'high';
+}
+
+export interface PaintSustainabilityAttrs {
+  vocContent?: 'zero' | 'low' | 'medium' | 'high';
+  /** VOC content in grams per litre */
+  vocGramsPerLitre?: number;
+  waterBased?: boolean;
+  /** French/EU emissions class: 'A+', 'A', 'B', 'C' */
+  emissionsClass?: string;
+}
+
+export interface StoneSustainabilityAttrs {
+  countryOfOrigin?: string;
+  quarryRegion?: string;
+  recycledContentPct?: number;
+}
+
+export interface MetalSustainabilityAttrs {
+  recycledContentPct?: number;
+  recycledAtEol?: boolean;
+  coatingType?: string;      // e.g. 'powder-coat', 'anodised', 'hot-dip galvanised'
+}
+
+export interface TileSustainabilityAttrs {
+  recycledContentPct?: number;
+  waterAbsorption?: string;  // e.g. 'BIa (<0.5%)', 'BIIa (0.5–3%)'
+  countryOfOrigin?: string;
+}
+
+/** Keyed by material category — only populate the key relevant to the product */
+export interface CategorySustainabilityAttributes {
+  textile?: TextileSustainabilityAttrs;
+  timber?: TimberSustainabilityAttrs;
+  insulation?: InsulationSustainabilityAttrs;
+  paint?: PaintSustainabilityAttrs;
+  stone?: StoneSustainabilityAttrs;
+  metal?: MetalSustainabilityAttrs;
+  tile?: TileSustainabilityAttrs;
+}
+
+export interface SustainabilityData {
+  /** Primary evidence source — populate this first */
+  epd: EpdData;
+  /** Detailed impact data by life-cycle module */
+  impacts?: SustainabilityImpacts;
+  /** Simplified headline figure for UI display */
+  headlineCarbon?: HeadlineCarbon | null;
+  /** All certifications and accreditations as flexible evidence records */
+  certifications?: SustainabilityCertification[];
+  /** Category-specific attributes — only populate the key that matches the product */
+  categoryAttributes?: CategorySustainabilityAttributes;
+  /** Normalised claims for badges and filtering */
+  claims?: SustainabilityClaim[];
+  /** Overall evidence quality for this product's sustainability data */
+  evidenceLevel: EvidenceLevel;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * How a brand's product expresses colour/finish choice.
+ *
+ * photo-variants   — brand supplies a photo per variant; user picks by image + name
+ *                    (carpet colourways, tile SKUs, LVT, brassware finishes, etc.)
+ * colour-standard  — variants are RAL / NCS / BS codes; no per-variant photo needed
+ *                    (powder coat, architectural paint, anodising)
+ * surface-finish   — same material in different surface treatments, each with a photo
+ *                    (stone polished/honed/flamed, timber oiled/lacquered/raw)
+ * none             — single product, no variants (structural, insulation, generic)
+ */
+export type VariantMode = 'photo-variants' | 'colour-standard' | 'surface-finish' | 'none';
+
+export interface ProductVariant {
+  id: string;
+  /** Manufacturer's own descriptive name — never a colour code ("Mottled Brown", "Matt Black") */
+  name: string;
+  /** Product photo for this specific variant — required for photo-variants & surface-finish */
+  imageUrl: string;
+  /** Representative hex — internal/AI colour-matching only, never shown to the user */
+  tone: string;
+  /** Manufacturer SKU for this specific variant */
+  productCode?: string;
+  /** Which variant is shown first on the product card */
+  isDefault?: boolean;
+  /**
+   * Only used for mixed-mode products (e.g. a cladding panel where you first pick
+   * a named texture with a photo, then choose a RAL colour within that texture).
+   */
+  finishFamily?: FinishFamily;
+}
+
 export interface MaterialOption {
   id: string;
   name: string;
@@ -160,7 +354,7 @@ export interface MaterialOption {
   varietyOptions?: string[]; // Material varieties (e.g., stone types: Bath, Portland, Carrara)
   selectedVariety?: string; // User-selected variety label
   treePaths?: string[];
-  carbonIntensity?: 'low' | 'medium' | 'high';
+  carbonIntensity?: 'low' | 'medium' | 'high' | 'unknown';
   tags?: string[]; // Material attribute tags (e.g., 'paint', 'timber-panels', etc.)
   isCustom?: boolean; // Whether this is a user-created custom material
   customImage?: string; // Data URL for custom material images
@@ -186,9 +380,21 @@ export interface MaterialOption {
   actionVerification?: string; // Specification to verify (recycled content, VOC levels, etc.)
   actionCircularity?: string; // End-of-life action (take-back, disassembly, reuse)
 
+  // --- Media ---
+  /** Primary representative image — required for variantMode: "none" and "colour-standard" */
+  imageUrl?: string;
+  /** Supporting images: texture closeups, installation context, scale shots */
+  galleryImageUrls?: string[];
+
   // --- Source / data quality ---
   // Drives visual stratification: generic cards are simplified, branded cards show full detail
-  source?: 'generic' | 'verified-brand' | 'partner-brand';
+  source?: 'generic' | 'verified-brand' | 'standard-brand' | 'partner-brand';
+  /** ISO date when the product data was last verified */
+  verifiedAt?: string;
+  /** Internal user, team, or process that performed verification */
+  verifiedBy?: string;
+  /** Manufacturer URL used for verification — for re-checking if specs change */
+  dataLastCheckedUrl?: string;
 
   // --- Brand attribution (populated for verified-brand / partner-brand) ---
   brandId?: string;
@@ -199,8 +405,25 @@ export interface MaterialOption {
 
   // --- Product identity ---
   productCode?: string;        // Manufacturer SKU / reference
-  productRange?: string;       // Collection or range name
+  productCollection?: string;  // Highest grouping level (e.g. "Human Nature" by Interface)
+  productRange?: string;       // Sub-collection / range name (e.g. "Cliff Edge")
   productPageUrl?: string;     // Link to product on brand's website
+  sampleRequestUrl?: string;   // URL for ordering a physical sample
+
+  // --- Product variant model ---
+  variantMode?: VariantMode;
+  /** True on the "family" document that groups all colourways/finishes under one card */
+  isVariantParent?: boolean;
+  /** materialId of the parent document (set on each individual variant) */
+  variantOf?: string;
+  /** Shared key across all variants of the same product — used to query siblings */
+  variantGroup?: string;
+  /** Colour family grouping for filtering within a brand page (e.g. "Warm Neutrals") */
+  colorFamily?: string;
+  /** Weave/pattern name where relevant (e.g. "Herringbone", "Plain Loop") */
+  patternName?: string;
+  /** Inline variant list — populated on the parent document */
+  variants?: ProductVariant[];
 
   // --- Brand-supplied assets ---
   specSheetUrl?: string;       // PDF product datasheet
@@ -221,14 +444,32 @@ export interface MaterialOption {
   slipResistance?: string;     // e.g. "R10"
   warranty?: string;           // e.g. "25 years"
 
-  // --- Verified sustainability & compliance ---
+  // --- Sustainability (structured) ---
+  /** Full nested sustainability model — use this for all new records */
+  sustainability?: SustainabilityData;
+
+  // --- Sustainability (legacy flat fields — deprecated, use sustainability{} instead) ---
+  /** @deprecated Use sustainability.epd.epdUrl */
   epdUrl?: string;
-  embodiedCarbonA1A3?: number; // kgCO2e/kg — cradle to gate
-  recycledContentPct?: number; // 0–100
+  /** @deprecated Use sustainability.impacts.gwp.modules.A1A3 and sustainability.headlineCarbon */
+  embodiedCarbonA1A3?: number;
+  /** @deprecated Use sustainability.categoryAttributes[type].recycledContentPct or sustainability.claims */
+  recycledContentPct?: number;
+  /** @deprecated Use sustainability.certifications or sustainability.claims */
   recycledAtEol?: boolean;
-  vocClass?: string;           // e.g. "A+"
-  certifications?: string[];   // e.g. ["FSC", "BRE A+", "UKCA"]
+  /** @deprecated Use sustainability.certifications with scheme: 'VOC' */
+  vocClass?: string;
+  /** @deprecated Use sustainability.certifications[] array */
+  certifications?: string[];
   nbsClause?: string;
+
+  // --- Application context ---
+  /** Where the material can be physically applied */
+  applications?: Array<'floor' | 'wall' | 'ceiling' | 'external-wall' | 'roof' | 'wet-area'>;
+  /** Whether the product is for internal use, external use, or both */
+  internalExternal?: 'internal' | 'external' | 'both';
+  /** Typical building use contexts — useful for filtering and AI recommendations */
+  typicalUse?: Array<'commercial' | 'residential' | 'education' | 'hospitality' | 'healthcare' | 'retail'>;
 
   // --- Commercial ---
   priceRange?: string;         // e.g. "£45–£65/m²"
